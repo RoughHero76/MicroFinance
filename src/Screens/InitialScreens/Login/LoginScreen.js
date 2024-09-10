@@ -15,15 +15,14 @@ const LoginScreen = () => {
 
     const { loginUser, isLoggedIn, setIsLoggedIn } = useHomeContext();
 
-    useEffect(() => {
+/*     useEffect(() => {
         // Check if the user is already logged in
         AsyncStorage.getItem('token').then((token) => {
             if (token) {
                 setIsLoggedIn(true);
-                navigation.navigate('Home');
             }
         });
-    }, []);
+    }, []); */
 
     const handleLogin = async () => {
         if (userName.trim() === '' || password.trim() === '') {
@@ -45,7 +44,6 @@ const LoginScreen = () => {
                 loginUser({ admin, token }); // Pass the entire response object
     
                 showToast('success', 'Login Successful', 'You have logged in successfully');
-                navigation.navigate('Home');
             } else {
                 showToast('error', 'Login Failed', response.message || 'Unable to log in');
             }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -49,13 +49,19 @@ const HomeScreen = () => {
         fetchDashboardData().then(() => setRefreshing(false));
     }, []);
 
+    const handleCustomerClick = () => {
 
-    const DashboardCard = ({ title, value, icon }) => (
-        <View style={styles.card}>
+        navigation.navigate('AllCustomerView');
+
+    }
+
+
+    const DashboardCard = ({ title, value, icon, onClick }) => (
+        <TouchableOpacity style={styles.card} onPress={onClick}>
             <Icon name={icon} size={40} color="#007AFF" />
             <Text style={styles.cardTitle}>{title}</Text>
             <Text style={styles.cardValue}>{value}</Text>
-        </View>
+        </TouchableOpacity>
     );
 
     const CustomerCard = ({ customer }) => (
@@ -76,7 +82,7 @@ const HomeScreen = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-
+                <ActivityIndicator size="large" color="#007AFF" />
                 <Text style={styles.loadingText}>Loading dashboard data...</Text>
             </View>
         );
@@ -92,15 +98,15 @@ const HomeScreen = () => {
             <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
 
             <View style={styles.dashboardContainer}>
-                <DashboardCard title="Total Loans" value={loanCount} icon="bank" />
-                <DashboardCard title="Total Customers" value={customerCount} icon="account-group" />
+                <DashboardCard title="Active Loans" value={loanCount} icon="bank" />
+                <DashboardCard title="Customers" value={customerCount} icon="account-group" onClick={handleCustomerClick} />
                 <DashboardCard
-                    title="Total Market Amount"
+                    title="Market Amount"
                     value={`${marketDetails.totalMarketAmmount.toLocaleString()}`}
                     icon="cash"
                 />
                 <DashboardCard
-                    title="Total Repaid"
+                    title="Repaid"
                     value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`}
                     icon="cash-check"
                 />

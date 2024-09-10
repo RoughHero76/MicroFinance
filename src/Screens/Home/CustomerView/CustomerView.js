@@ -1,216 +1,322 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
-import { useRoute, useNavigation} from "@react-navigation/native";
-import ProfilePicturePlaceHolder from '../../../assets/placeholders/profile.jpg'
+import { useRoute, useNavigation } from "@react-navigation/native";
+import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
 
 const CustomerView = () => {
-    const [customerData, setCustomerData] = useState(null);
-    const navigation = useNavigation();
-    const route = useRoute();
-    const { uid } = route.params;
+  const [customerData, setCustomerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { uid } = route.params;
 
-    useEffect(() => {
-        fetchCustomerData(uid);
-    }, [uid]);
+  useEffect(() => {
+    fetchCustomerData(uid);
+  }, [uid]);
 
-    const fetchCustomerData = async (uid) => {
-        try {
-            const response = await apiCall(`/api/admin/customer?uid=${uid}`, 'GET');
-            if (response.status === 'success') {
-                setCustomerData(response.data[0]);
-            } else {
-                console.error('Failed to fetch customer data');
-            }
-        } catch (error) {
-            console.error('Error fetching customer data:', error);
-        }
-    };
-
-    const handleRepaymentSchedule = (loanId) => {
-        // Add logic to view repayment schedule
-        console.log(`View repayment schedule for loan ID: ${loanId}`);
-        navigation.navigate("RepaymentSchedule", { loanId });
-
-    };
-
-    const handleRepaymentHistory = (loanId) => {
-        // Add logic to view repayment history
-        console.log(`View repayment history for loan ID: ${loanId}`);
-    };
-
-    if (!customerData) {
-        return (
-            <View style={styles.loadingContainer}>
-                <Text>Loading...</Text>
-            </View>
-        );
+  const fetchCustomerData = async (uid) => {
+    try {
+      setLoading(true);
+      const response = await apiCall(`/api/admin/customer?uid=${uid}`, "GET");
+      if (response.status === "success") {
+        setCustomerData(response.data[0]);
+      } else {
+        console.error("Failed to fetch customer data");
+      }
+    } catch (error) {
+      console.error("Error fetching customer data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const handleRepaymentSchedule = (loanId) => {
+    navigation.navigate("RepaymentSchedule", { loanId });
+  };
+
+  const handleRepaymentHistory = (loanId) => {
+    // Add logic for repayment history
+  };
+
+  const handleAddLoan = () => {
+    navigation.navigate("AddLoan", { customerId: uid });
+  };
+
+  const handleViewLoanDetails = (loanId) => {
+    navigation.navigate("LoanDetails", { loanId });
+  };
+
+  if (loading) {
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <View style={styles.profileContainer}>
-                    <Image
-                        source={customerData.profileImageUrl || ProfilePicturePlaceHolder}
-                        style={styles.profileImage}
-                    />
-                    <Text style={styles.customerName}>
-                        {customerData.fname} {customerData.lname}
-                    </Text>
-                </View>
-                <TouchableOpacity onPress={() => fetchCustomerData(uid)}>
-                    <Icon name="refresh" size={28} color="#4CAF50" />
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.divider} />
-
-            <Text style={styles.customerDetail}>Username: {customerData.userName}</Text>
-            <Text style={styles.customerDetail}>Email: {customerData.email}</Text>
-            <Text style={styles.customerDetail}>Phone: {customerData.phoneNumber}</Text>
-            <Text style={styles.customerDetail}>
-                Address: {customerData.address}, {customerData.city}, {customerData.state}, {customerData.country}
-            </Text>
-
-            <Text style={styles.sectionTitle}>Loans</Text>
-            {customerData.loans.length > 0 ? (
-                customerData.loans.map((loan) => (
-                    <View key={loan._id} style={styles.loanContainer}>
-                        <Text style={styles.loanDetails}>
-                            <Icon name="currency-inr" size={20} color="#4CAF50" /> Loan Amount: {loan.loanAmount}
-                        </Text>
-                        <Text style={styles.loanDetails}>
-                            <Icon name="calendar-clock" size={20} color="#4CAF50" /> Loan Duration: {loan.loanDuration}
-                        </Text>
-                        <Text style={styles.loanDetails}>
-                            <Icon name="calendar-month" size={20} color="#4CAF50" /> Installments: {loan.numberOfInstallments} ({loan.installmentFrequency})
-                        </Text>
-                        <Text style={styles.loanDetails}>
-                            <Icon name="progress-check" size={20} color={loan.status === "pending" ? "#ff9800" : loan.status === "approved" ? "#4CAF50" : "#f44336"} />
-                            Status: {loan.status}
-                        </Text>
-                        <Text style={styles.loanDetails}>
-                            <Icon name="cash" size={20} color="#4CAF50" /> Total Paid: {loan.totalPaid}
-                        </Text>
-
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={() => handleRepaymentSchedule(loan._id)}
-                            >
-                                <Text style={styles.buttonText}>View Repayment Schedule</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.button, styles.secondaryButton]}
-                                onPress={() => handleRepaymentHistory(loan._id)}
-                            >
-                                <Text style={styles.buttonText}>View Repayment History</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                ))
-            ) : (
-                <Text style={styles.noLoansText}>No Loans</Text>
-            )}
-
-        </ScrollView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
     );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Image
+            source={customerData.profileImageUrl || ProfilePicturePlaceHolder}
+            style={styles.profileImage}
+          />
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.customerName}>
+              {customerData.fname} {customerData.lname}
+            </Text>
+            <Text style={styles.customerUsername}>@{customerData.userName}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={() => fetchCustomerData(uid)}
+          >
+            <Icon name="refresh" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoCard}>
+          <InfoItem icon="email" label="Email" value={customerData.email} />
+          <InfoItem icon="phone" label="Phone" value={customerData.phoneNumber} />
+          <InfoItem
+            icon="map-marker"
+            label="Address"
+            value={`${customerData.address}, ${customerData.city}, ${customerData.state}, ${customerData.country}`}
+          />
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Loans</Text>
+          <TouchableOpacity style={styles.addLoanButton} onPress={handleAddLoan}>
+            <Icon name="plus" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {customerData.loans.length > 0 ? (
+          customerData.loans.map((loan) => (
+            <View key={loan._id} style={styles.loanCard}>
+              <View style={styles.loanHeader}>
+                <Text style={styles.loanAmount}>₹{loan.loanAmount}</Text>
+                <LoanStatus status={loan.status} />
+              </View>
+              <Text style={styles.loanInfo}>
+                Duration: {loan.loanDuration} | Installments:{" "}
+                {loan.numberOfInstallments} ({loan.installmentFrequency})
+              </Text>
+              <Text style={styles.loanInfo}>Total Paid: ₹{loan.totalPaid}</Text>
+              <View style={styles.loanButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.loanButton, styles.scheduleButton]}
+                  onPress={() => handleRepaymentSchedule(loan._id)}
+                >
+                  <Text style={styles.loanButtonText}>Schedule</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.loanButton, styles.historyButton]}
+                  onPress={() => handleRepaymentHistory(loan._id)}
+                >
+                  <Text style={styles.loanButtonText}>History</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.loanButton, styles.detailsButton]}
+                  onPress={() => handleViewLoanDetails(loan._id)}
+                >
+                  <Text style={styles.loanButtonText}>Details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noLoansText}>No loans found</Text>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const InfoItem = ({ icon, label, value }) => (
+  <View style={styles.infoItem}>
+    <Icon name={icon} size={24} color="#4CAF50" style={styles.infoIcon} />
+    <View>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  </View>
+);
+
+const LoanStatus = ({ status }) => {
+  const getStatusColor = () => {
+    switch (status) {
+      case "approved":
+        return "#4CAF50";
+      case "pending":
+        return "#FFC107";
+      default:
+        return "#F44336";
+    }
+  };
+
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
+      <Text style={styles.statusText}>{status}</Text>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f9f9f9',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    profileImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 15,
-    },
-    customerName: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#333',
-    },
-    customerDetail: {
-        fontSize: 18,
-        marginBottom: 8,
-        color: '#555',
-    },
-    sectionTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginTop: 30,
-        marginBottom: 10,
-        color: '#4CAF50',
-    },
-    loanContainer: {
-        padding: 15,
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        marginTop: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 3,
-    },
-    loanDetails: {
-        fontSize: 16,
-        marginBottom: 5,
-        color: '#333',
-    },
-    noLoansText: {
-        fontSize: 16,
-        color: '#999',
-        marginTop: 10,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#ccc',
-        marginVertical: 15,
-    },
-    buttonContainer: {
-        flexDirection: 'column',
-        marginTop: 10,
-        justifyContent: 'space-between',
-    },
-    button: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        marginVertical: 5,
-    },
-    secondaryButton: {
-        backgroundColor: '#2196F3',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginRight: 15,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  customerName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  customerUsername: {
+    fontSize: 16,
+    color: "#666",
+  },
+  refreshButton: {
+    padding: 10,
+  },
+  infoCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 15,
+    margin: 10,
+    elevation: 3,
+  },
+  infoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  infoIcon: {
+    marginRight: 10,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  infoValue: {
+    fontSize: 16,
+    color: "#333",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  addLoanButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loanCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 15,
+    margin: 10,
+    elevation: 3,
+  },
+  loanHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  loanAmount: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+  },
+  statusText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  loanInfo: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 5,
+  },
+  loanButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  loanButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  scheduleButton: {
+    backgroundColor: "#2196F3",
+  },
+  historyButton: {
+    backgroundColor: "#FF9800",
+  },
+  detailsButton: {
+    backgroundColor: "#4CAF50",
+  },
+  loanButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  noLoansText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 20,
+  },
 });
 
 export default CustomerView;

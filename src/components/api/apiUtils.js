@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_URL } from './secrets';
-import { showToast } from '../toast/CustomToast.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const apiCall = async (endpoint, method = 'GET', payload = null) => {
@@ -10,8 +9,6 @@ export const apiCall = async (endpoint, method = 'GET', payload = null) => {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
         };
-
-        //console.log('Making API request to:', `${API_URL}${endpoint}`);
 
         let response;
         switch (method.toUpperCase()) {
@@ -35,7 +32,11 @@ export const apiCall = async (endpoint, method = 'GET', payload = null) => {
     } catch (error) {
         console.error(`Error in API call to ${endpoint}:`, error.message);
         console.error('Error response:', error.response?.data);
-        showToast('error', 'Error', error.response?.data?.message || error.message || 'An unexpected error occurred');
-        throw error;
+
+        // Throw a custom error object with the API's error message
+        throw {
+            message: error.response?.data?.message || error.message || 'An unexpected error occurred',
+            status: error.response?.status
+        };
     }
 };
