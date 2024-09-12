@@ -18,7 +18,7 @@ const RepaymentSchedule = () => {
     const [showFromDatePicker, setShowFromDatePicker] = useState(false);
     const [showToDatePicker, setShowToDatePicker] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
-    const [totalEntries , setTotalEntries] = useState(0);
+    const [totalEntries, setTotalEntries] = useState(0);
     const route = useRoute();
     const { loanId } = route.params;
 
@@ -75,6 +75,11 @@ const RepaymentSchedule = () => {
         }
     };
 
+    const handleClearDateRange = () => {
+        setDateFrom(null);
+        setDateTo(null);
+    }
+
     const renderItem = useCallback(({ item }) => (
         <View style={styles.scheduleItem}>
             <View style={styles.scheduleHeader}>
@@ -110,9 +115,14 @@ const RepaymentSchedule = () => {
         <View style={styles.datePickerContainer}>
             <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerButton}>
                 <Icon name="calendar-search" size={24} color="#6200EE" />
-                <Text style={styles.datePickerLabel}>
-                    {label}: {currentDate ? currentDate.toDateString() : 'Select Date'}
-                </Text>
+                <View style={[styles.datePickerLabel, { color: currentDate ? '#6200EE' : '#9CA3AF', flexDirection: 'row', }]}>
+                    <Text style={styles.datePickerLabel}>
+                        {label}: {currentDate ? currentDate.toDateString() : 'Select Date'}
+                    </Text>
+                    <TouchableOpacity onPress={handleClearDateRange}>
+                        <Icon name="close" size={24} color="#6200EE" />
+                    </TouchableOpacity>
+                </View>
             </TouchableOpacity>
             {showPicker && (
                 <DateTimePicker
@@ -233,7 +243,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    totalRepaymentSchedules:{
+    totalRepaymentSchedules: {
         fontSize: 12,
         fontWeight: 'bold',
         color: '#6200EE',
@@ -244,7 +254,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#6200EE',
         alignSelf: 'center',
-    
+
     },
     modalContainer: {
         flex: 1,

@@ -13,6 +13,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
+import { showToast } from "../../../components/toast/CustomToast";
 
 const CustomerView = () => {
   const [customerData, setCustomerData] = useState(null);
@@ -32,7 +33,7 @@ const CustomerView = () => {
       if (response.status === "success") {
         setCustomerData(response.data[0]);
       } else {
-        console.error("Failed to fetch customer data");
+        showToast("error", "Error", response.message || "Failed to fetch customer data");
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -50,7 +51,7 @@ const CustomerView = () => {
   };
 
   const handleAddLoan = () => {
-    navigation.navigate("AddLoan", { customerId: uid });
+    navigation.navigate("CreateLoan", { customerUid: uid });
   };
 
   const handleViewLoanDetails = (loanId) => {
