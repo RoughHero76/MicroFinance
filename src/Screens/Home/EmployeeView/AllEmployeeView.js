@@ -6,23 +6,23 @@ import { useNavigation } from '@react-navigation/native';
 import ProfilePicturePlaceHolder from '../../../assets/placeholders/profile.jpg';
 import Toast from 'react-native-toast-message';
 
-const AllCustomerView = () => {
-    const [customers, setCustomers] = useState([]);
+const AllEmployeeView = () => {
+    const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const navigation = useNavigation();
 
-    const fetchCustomers = async (pageNumber) => {
+    const fetchEmployees = async (pageNumber) => {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
-            const response = await apiCall(`/api/admin/customer?page=${pageNumber}&limit=10`, 'GET');
+            const response = await apiCall(`/api/admin/employee?page=${pageNumber}&limit=10`, 'GET');
             if (response.status === 'success') {
                 if (pageNumber === 1) {
-                    setCustomers(response.data);
+                    setEmployees(response.data);
                 } else {
-                    setCustomers(prevCustomers => [...prevCustomers, ...response.data]);
+                    setEmployees(prevEmployees => [...prevEmployees, ...response.data]);
                 }
                 setHasMore(response.data.length === 10);
                 setPage(pageNumber);
@@ -30,7 +30,7 @@ const AllCustomerView = () => {
                 Toast.show({
                     type: 'error',
                     text1: 'Error',
-                    text2: 'Failed to fetch customers',
+                    text2: 'Failed to fetch employees',
                 });
             }
         } catch (error) {
@@ -46,58 +46,39 @@ const AllCustomerView = () => {
     };
 
     useEffect(() => {
-        fetchCustomers(1);
+        fetchEmployees(1);
     }, []);
 
-    const renderCustomerItem = ({ item }) => {
-        const loan = item.loans && item.loans.length > 0 ? item.loans[0] : null;
+    const renderEmployeeItem = ({ item }) => {
         return (
             <TouchableOpacity
-                style={styles.customerItem}
-                onPress={() => navigation.navigate('CustomerView', { uid: item.uid })}
+                style={styles.employeeItem}
+                onPress={() => navigation.navigate('EmployeeView', { uid: item.uid })}
             >
                 <Image
-                    source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
+                    source={item.profilePicture ? { uri: item.profilePicture } : ProfilePicturePlaceHolder}
                     style={styles.profilePicture}
                 />
-                <View style={styles.customerInfo}>
-                    <Text style={styles.customerName}>{`${item.fname} ${item.lname}`}</Text>
-                    <Text style={styles.customerPhone}>
+                <View style={styles.employeeInfo}>
+                    <Text style={styles.employeeName}>{`${item.fname} ${item.lname}`}</Text>
+                    <Text style={styles.employeeUsername}>
+                        <Icon name="account" size={14} color="#666" /> {item.userName}
+                    </Text>
+                    <Text style={styles.employeePhone}>
                         <Icon name="phone" size={14} color="#666" /> {item.phoneNumber}
                     </Text>
-                    <Text style={styles.customerAddress}>
-                        <Icon name="map-marker" size={14} color="#666" /> {item.address}, {item.city}
+                    <Text style={styles.employeeEmail}>
+                        <Icon name="email" size={14} color="#666" /> {item.email || 'N/A'}
                     </Text>
-                    {loan && (
-                        <View style={styles.loanContainer}>
-                            <Text style={styles.loanAmount}>
-                                <Icon name="currency-inr" size={14} color="#4CAF50" />{loan.loanAmount}
-                            </Text>
-                            <Text style={styles.loanDuration}>
-                                <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
-                            </Text>
-                            <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                                <Text style={styles.loanStatusText}>{loan.status}</Text>
-                            </View>
+                    <View style={styles.statusContainer}>
+                        <View style={[styles.status, { backgroundColor: item.accountStatus ? '#4CAF50' : '#F44336' }]}>
+                            <Text style={styles.statusText}>{item.accountStatus ? 'Active' : 'Inactive'}</Text>
                         </View>
-                    )}
+                    </View>
                 </View>
                 <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
             </TouchableOpacity>
         );
-    };
-
-    const getLoanStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'active':
-                return '#4CAF50';
-            case 'pending':
-                return '#FFC107';
-            case 'completed':
-                return '#2196F3';
-            default:
-                return '#9E9E9E';
-        }
     };
 
     const renderFooter = () => {
@@ -111,15 +92,15 @@ const AllCustomerView = () => {
 
     const handleLoadMore = () => {
         if (hasMore && !loading) {
-            fetchCustomers(page + 1);
+            fetchEmployees(page + 1);
         }
     };
 
     return (
         <View style={styles.container}>
             <FlatList
-                data={customers}
-                renderItem={renderCustomerItem}
+                data={employees}
+                renderItem={renderEmployeeItem}
                 keyExtractor={item => item._id}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.1}
@@ -138,7 +119,7 @@ const styles = StyleSheet.create({
     listContent: {
         paddingVertical: 12,
     },
-    customerItem: {
+    employeeItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
@@ -158,46 +139,40 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         marginRight: 16,
     },
-    customerInfo: {
+    employeeInfo: {
         flex: 1,
     },
-    customerName: {
+    employeeName: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 4,
         color: '#333',
     },
-    customerPhone: {
+    employeeUsername: {
         fontSize: 14,
         color: '#666',
         marginBottom: 2,
     },
-    customerAddress: {
+    employeePhone: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 2,
+    },
+    employeeEmail: {
         fontSize: 14,
         color: '#666',
         marginBottom: 8,
     },
-    loanContainer: {
+    statusContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        flexWrap: 'wrap',
     },
-    loanAmount: {
-        fontSize: 14,
-        color: '#4CAF50',
-        marginRight: 12,
-    },
-    loanDuration: {
-        fontSize: 14,
-        color: '#2196F3',
-        marginRight: 12,
-    },
-    loanStatus: {
+    status: {
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 12,
     },
-    loanStatusText: {
+    statusText: {
         fontSize: 12,
         color: '#FFFFFF',
         fontWeight: 'bold',
@@ -211,4 +186,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AllCustomerView;
+export default AllEmployeeView;

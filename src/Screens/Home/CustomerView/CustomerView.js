@@ -7,23 +7,31 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Alert,
+  Modal
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
-import { showToast } from "../../../components/toast/CustomToast";
+import { CustomToast, showToast } from "../../../components/toast/CustomToast";
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 
 const CustomerView = () => {
   const [customerData, setCustomerData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profilePicUploadLoading, setProfilePicUploadLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedLoanId, setSelectedLoanId] = useState(null);
   const navigation = useNavigation();
   const route = useRoute();
   const { uid } = route.params;
 
   useEffect(() => {
     fetchCustomerData(uid);
+    fetchEmployees();
   }, [uid]);
 
   const fetchCustomerData = async (uid) => {
@@ -32,6 +40,7 @@ const CustomerView = () => {
       const response = await apiCall(`/api/admin/customer?uid=${uid}`, "GET");
       if (response.status === "success") {
         setCustomerData(response.data[0]);
+        console.log(response.data[0]);
       } else {
         showToast("error", "Error", response.message || "Failed to fetch customer data");
       }
@@ -41,13 +50,99 @@ const CustomerView = () => {
       setLoading(false);
     }
   };
+  const fetchEmployees = async () => {
+    try {
+      const response = await apiCall('/api/admin/employee', 'GET');
+      if (response.status === 'success') {
+        setEmployees(response.data);
+      } else {
+        showToast("error", "Error", response.message || "Failed to fetch employees");
+      }
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      showToast("error", "Error", "Failed to fetch employees");
+    }
+  };
+
+  const handleImagePicker = () => {
+    Alert.alert(
+      "Update Profile Picture",
+      "Choose an option",
+      [
+        {
+          text: "Take Photo",
+          onPress: () => launchCamera({ mediaType: 'photo', quality: 0.3 }, handleImageSelection)
+        },
+        {
+          text: "Choose from Library",
+          onPress: () => launchImageLibrary({ mediaType: 'photo', quality: 0.3 }, handleImageSelection)
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ]
+    );
+  };
+
+
+  const handleImageSelection = async (response) => {
+    if (response.didCancel) {
+      return;
+    }
+
+    if (response.error) {
+      console.error('ImagePicker Error: ', response.error);
+      return;
+    }
+
+    try {
+      setProfilePicUploadLoading(true);
+      const asset = response.assets[0];
+
+      // Create a new File object from the asset
+      const file = {
+        uri: asset.uri,
+        type: asset.type,
+        name: 'profilePic.jpg',
+      };
+
+      const formData = new FormData();
+      formData.append('profilePic', file);
+
+
+      const uploadResponse = await apiCall(
+        `/api/admin/customer/profile/porfilePicture?uid=${customerData.uid}`,
+        'POST',
+        formData,
+        true,
+        {
+          'Content-Type': 'multipart/form-data',
+        }
+      );
+
+      console.log('Upload response:', uploadResponse);
+
+      if (uploadResponse.status === 'success') {
+        showToast("success", "Success", "Profile picture updated successfully");
+        fetchCustomerData(uid);
+      } else {
+        showToast("error", "Error", uploadResponse.message || "Failed to update profile picture");
+      }
+    } catch (error) {
+      console.error('Error processing image:', error);
+      showToast("error", "Error", "Failed to process image");
+    } finally {
+      setProfilePicUploadLoading(false);
+    }
+  };
 
   const handleRepaymentSchedule = (loanId) => {
     navigation.navigate("RepaymentSchedule", { loanId });
   };
 
   const handleRepaymentHistory = (loanId) => {
-    // Add logic for repayment history
+    navigation.navigate("PaymentHistory", { loanId });
   };
 
   const handleAddLoan = () => {
@@ -56,6 +151,35 @@ const CustomerView = () => {
 
   const handleViewLoanDetails = (loanId) => {
     navigation.navigate("LoanDetails", { loanId });
+  };
+
+  const handleAssignEmployee = (loanId) => {
+    setSelectedLoanId(loanId);
+    setModalVisible(true);
+  };
+
+  const handleCloseLoan = (loanId) => {
+    navigation.navigate("CloseLoan", { loanId });
+  };
+
+  const assignEmployee = async (employeeId) => {
+    try {
+      const response = await apiCall('/api/admin/loan/assign', 'POST', {
+        loanId: selectedLoanId,
+        employeeId: employeeId
+      });
+      if (response.status === 'success') {
+        showToast("success", "Success", "Employee assigned successfully");
+        fetchCustomerData(uid);
+      } else {
+        showToast("error", "Error", response.message || "Failed to assign employee");
+      }
+    } catch (error) {
+      console.error("Error assigning employee:", error);
+      showToast("error", "Error", "Failed to assign employee");
+    } finally {
+      setModalVisible(false);
+    }
   };
 
   if (loading) {
@@ -70,10 +194,20 @@ const CustomerView = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Image
-            source={customerData.profileImageUrl || ProfilePicturePlaceHolder}
-            style={styles.profileImage}
-          />
+          <TouchableOpacity onPress={handleImagePicker}>
+            {profilePicUploadLoading ? (
+              <ActivityIndicator size="small" color="#4CAF50" />
+            ) : (
+              <Image
+                source={customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder}
+                style={styles.profileImage}
+              />
+            )}
+
+            <View style={styles.editIconContainer}>
+              <Icon name="pencil" size={16} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <Text style={styles.customerName}>
               {customerData.fname} {customerData.lname}
@@ -113,10 +247,16 @@ const CustomerView = () => {
                 <LoanStatus status={loan.status} />
               </View>
               <Text style={styles.loanInfo}>
-                Duration: {loan.loanDuration} | Installments:{" "}
-                {loan.numberOfInstallments} ({loan.installmentFrequency})
+                Duration: {loan.loanDuration} | Installments: {loan.numberOfInstallments} ({loan.installmentFrequency})
               </Text>
               <Text style={styles.loanInfo}>Total Paid: ₹{loan.totalPaid}</Text>
+              {loan.assignedTo ? (
+                <Text style={styles.assignedEmployee}>
+                  Assigned to: {loan.assignedTo.fname} {loan.assignedTo.lname}
+                </Text>
+              ) : (
+                <Text style={styles.noAssignment}>No employee assigned</Text>
+              )}
               <View style={styles.loanButtonsContainer}>
                 <TouchableOpacity
                   style={[styles.loanButton, styles.scheduleButton]}
@@ -136,13 +276,76 @@ const CustomerView = () => {
                 >
                   <Text style={styles.loanButtonText}>Details</Text>
                 </TouchableOpacity>
+                {
+                  loan.status === "Closed" ? null : (
+                    <TouchableOpacity
+                      style={[styles.loanButton, styles.assignButton]}
+                      onPress={() => handleAssignEmployee(loan._id)}
+                    >
+                      <Text style={styles.loanButtonText}>
+                        {loan.assignedTo ? "Reassign" : "Assign"}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                }
+
+
               </View>
+              {
+                loan.status === "Closed" ? (
+                  <View style={styles.loanButtonsContainer}>
+
+                    <Text style={styles.loanButtonText}>Closed</Text>
+                  </View>
+                ) : (
+                  <View style={styles.loanButtonsContainer}>
+                    <TouchableOpacity
+                      style={[styles.loanButton, styles.closeButton]}
+                      onPress={() => handleCloseLoan(loan._id)}
+                    >
+                      <Text style={styles.loanButtonText}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                )
+              }
             </View>
           ))
         ) : (
           <Text style={styles.noLoansText}>No loans found</Text>
         )}
       </ScrollView>
+      <CustomToast />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Assign Employee</Text>
+            <ScrollView>
+              {employees.map((employee) => (
+                <TouchableOpacity
+                  key={employee._id}
+                  style={styles.employeeItem}
+                  onPress={() => assignEmployee(employee._id)}
+                >
+                  <Text style={styles.employeeName}>
+                    {employee.fname} {employee.lname}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -180,6 +383,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f0f0f0",
+  },
+  editIconContainer: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    padding: 4,
   },
   loadingContainer: {
     flex: 1,
@@ -317,6 +528,62 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     marginTop: 20,
+  },
+  assignedEmployee: {
+    fontSize: 14,
+    color: "#4CAF50",
+    fontWeight: "bold",
+    marginTop: 5,
+  },
+  noAssignment: {
+    fontSize: 14,
+    color: "#F44336",
+    fontWeight: "bold",
+    marginTop: 5,
+  },
+  assignButton: {
+    backgroundColor: "#9C27B0",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    width: "80%",
+    maxHeight: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  employeeItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+
+  },
+  employeeName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "#4CAF50",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
 

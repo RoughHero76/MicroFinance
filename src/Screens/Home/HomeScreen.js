@@ -110,6 +110,12 @@ const HomeScreen = () => {
                     value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`}
                     icon="cash-check"
                 />
+                <DashboardCard
+                    title="Approve History"
+                  /*   value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`} */
+                    icon="check-underline"
+                    onClick={() => navigation.navigate('RepaymentApprovalScreen')}
+                />
             </View>
 
             <Text style={styles.sectionTitle}>Recent Customers</Text>

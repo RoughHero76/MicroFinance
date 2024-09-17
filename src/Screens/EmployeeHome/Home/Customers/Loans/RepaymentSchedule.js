@@ -5,7 +5,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 
 const RepaymentSchedule = () => {
     const [repaymentSchedules, setRepaymentSchedules] = useState([]);
@@ -20,12 +19,6 @@ const RepaymentSchedule = () => {
     const [showToDatePicker, setShowToDatePicker] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [totalEntries, setTotalEntries] = useState(0);
-
-    //Penalty
-    const [showPenaltyModal, setShowPenaltyModal] = useState(false);
-    const [selectedSchedule, setSelectedSchedule] = useState(null);
-    const [penaltyAmount, setPenaltyAmount] = useState('');
-
     const route = useRoute();
     const { loanId } = route.params;
 
@@ -75,75 +68,6 @@ const RepaymentSchedule = () => {
         }
     };
 
-    const handleApplyPenalty = async () => {
-        if (!selectedSchedule || !penaltyAmount) {
-            Alert.alert('Error', 'Please select a schedule and enter a penalty amount.');
-            return;
-        }
-
-        Alert.alert(
-            'Confirm Penalty Application',
-            `Are you sure you want to apply a penalty of Rs.${penaltyAmount} to this schedule?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Apply',
-                    onPress: async () => {
-                        try {
-                            const response = await apiCall('/api/admin/loan/apply/planalty', 'POST', {
-                                loanId,
-                                repaymentScheduleId: selectedSchedule._id,
-                                penaltyAmount: parseFloat(penaltyAmount)
-                            });
-                            console.log(response);
-                            if (response.status === 'success') {
-                                Alert.alert('Success', 'Penalty applied successfully');
-                                setShowPenaltyModal(false);
-                                setPenaltyAmount('');
-                                fetchRepaymentSchedules(); // Refresh the list
-                            } else {
-                                showToast('Error', response.message || 'Failed to apply penalty');
-                            }
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to apply penalty. Please try again.');
-                        }
-                    }
-                }
-            ]
-        );
-    };
-
-    const handleRemovePenalty = (schedule) => {
-        Alert.alert(
-            'Confirm Penalty Removal',
-            'Are you sure you want to remove the penalty from this schedule?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Remove',
-                    onPress: async () => {
-                        try {
-                            const response = await apiCall('/api/admin/loan/remove/planalty', 'POST', {
-                                loanId,
-                                repaymentScheduleId: schedule._id
-                            });
-
-                            if (response.status === 'success') {
-                                Alert.alert('Success', 'Penalty removed successfully');
-                                fetchRepaymentSchedules(); // Refresh the list
-                            } else {
-                                Alert.alert('Error', response.message || 'Failed to remove penalty');
-                            }
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to remove penalty. Please try again.');
-                        }
-                    }
-                }
-            ]
-        );
-    };
-
-
 
     const loadMore = () => {
         if (page < totalPages) {
@@ -183,26 +107,6 @@ const RepaymentSchedule = () => {
                         Penalty: {item.penaltyApplied ? `Rs.${item.penalty.amount || '0'}` : 'N/A'}
                     </Text>
                 </View>
-            </View>
-            <View style={styles.penaltyActions}>
-                {!item.penaltyApplied ? (
-                    <TouchableOpacity
-                        onPress={() => {
-                            setSelectedSchedule(item);
-                            setShowPenaltyModal(true);
-                        }}
-                        style={styles.penaltyButton}
-                    >
-                        <Text style={styles.penaltyButtonText}>Apply Penalty</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        onPress={() => handleRemovePenalty(item)}
-                        style={[styles.penaltyButton, styles.removePenaltyButton]}
-                    >
-                        <Text style={styles.penaltyButtonText}>Remove Penalty</Text>
-                    </TouchableOpacity>
-                )}
             </View>
         </View>
     ), []);
@@ -245,7 +149,6 @@ const RepaymentSchedule = () => {
 
     return (
         <View style={styles.container}>
-            < CustomToast />
             <View style={styles.header}>
                 <Text style={styles.totalRepaymentSchedules}> Total: {totalEntries}</Text>
                 <Text style={styles.currentlyShowing}>Currently Showing: {repaymentSchedules.length}</Text>
@@ -308,32 +211,6 @@ const RepaymentSchedule = () => {
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.closeButton}>
                             <Icon name="close-outline" size={24} color="#6200EE" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-            <Modal
-                visible={showPenaltyModal}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => setShowPenaltyModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Apply Penalty</Text>
-                        <TextInput
-                            style={styles.penaltyInput}
-                            placeholder="Enter penalty amount"
-                            placeholderTextColor="#757575"
-                            keyboardType="numeric"
-                            value={penaltyAmount}
-                            onChangeText={setPenaltyAmount}
-                        />
-                        <TouchableOpacity onPress={handleApplyPenalty} style={styles.applyPenaltyButton}>
-                            <Text style={styles.applyPenaltyText}>Apply Penalty</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setShowPenaltyModal(false)} style={styles.closeButton}>
-                            <Icon name="close" size={24} color="#6200EE" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -504,47 +381,6 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: '#757575',
-    },
-    penaltyActions: {
-        marginTop: 10,
-    },
-    penaltyButton: {
-        backgroundColor: '#6200EE',
-        padding: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    removePenaltyButton: {
-        backgroundColor: '#B00020',
-    },
-    penaltyButtonText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
-        color: '#000000',
-    },
-    penaltyInput: {
-        height: 40,
-        borderColor: '#6200EE',
-        borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 15,
-        paddingHorizontal: 10,
-        color: '#000000',
-    },
-    applyPenaltyButton: {
-        backgroundColor: '#6200EE',
-        paddingVertical: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    applyPenaltyText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
     },
 });
 

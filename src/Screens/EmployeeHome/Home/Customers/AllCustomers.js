@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { apiCall } from '../../../components/api/apiUtils';
+import { apiCall } from '../../../../components/api/apiUtils';
 import { useNavigation } from '@react-navigation/native';
-import ProfilePicturePlaceHolder from '../../../assets/placeholders/profile.jpg';
+import ProfilePicturePlaceHolder from '../../../../assets/placeholders/profile.jpg';
 import Toast from 'react-native-toast-message';
 
 const AllCustomerView = () => {
@@ -17,7 +17,7 @@ const AllCustomerView = () => {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
-            const response = await apiCall(`/api/admin/customer?page=${pageNumber}&limit=10`, 'GET');
+            const response = await apiCall(`/api/employee/loan/customers?page=${pageNumber}&limit=10`, 'GET');
             if (response.status === 'success') {
                 if (pageNumber === 1) {
                     setCustomers(response.data);
@@ -51,10 +51,11 @@ const AllCustomerView = () => {
 
     const renderCustomerItem = ({ item }) => {
         const loan = item.loans && item.loans.length > 0 ? item.loans[0] : null;
+
         return (
             <TouchableOpacity
                 style={styles.customerItem}
-                onPress={() => navigation.navigate('CustomerView', { uid: item.uid })}
+                onPress={() => navigation.navigate('CustomerView', { id: item._id })}
             >
                 <Image
                     source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}

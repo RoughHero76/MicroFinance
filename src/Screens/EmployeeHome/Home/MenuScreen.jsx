@@ -2,16 +2,14 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import HomeScreen from './HomeScreen.js';
+import HomeScreen from './HomeScreen.jsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useHomeContext } from '../../components/context/HomeContext';
-import { useNavigation } from '@react-navigation/native';
+import { useHomeContext } from '../../../components/context/HomeContext.js';
+
 const Drawer = createDrawerNavigator();
 
 const CustomHeader = ({ navigation }) => {
     const { user } = useHomeContext();
-
-    console.log('user role', user?.role);
 
     return (
         <View style={styles.headerContainer}>
@@ -22,7 +20,6 @@ const CustomHeader = ({ navigation }) => {
                 <Icon name="menu" size={24} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Evi Micro Finance</Text>
-
             <View style={styles.subHeader}>
                 <TouchableOpacity style={styles.searchButton}
                     onPress={() => navigation.navigate('SearchScreen')}
@@ -33,7 +30,6 @@ const CustomHeader = ({ navigation }) => {
                     <Icon name="account-circle" size={24} color="#000" />
                 </TouchableOpacity>
             </View>
-           
         </View>
     );
 };
@@ -80,8 +76,6 @@ const CustomDrawerContent = ({ navigation }) => {
     return (
         <ScrollView style={styles.drawerContent}>
             <UserProfile />
-
-            <MenuItem icon="account-cash" title="Employees" onPress={() => navigation.navigate('AllEmployeeView')} />
             <MenuItem icon="bank" title="Savings Account" onPress={() => console.log('Savings Account pressed')} />
             <MenuItem icon="cash-multiple" title="Transactions" onPress={() => console.log('Transactions pressed')} />
             <MenuItem icon="chart-line" title="Financial Reports" onPress={() => console.log('Financial Reports pressed')} />
@@ -95,7 +89,7 @@ const CustomDrawerContent = ({ navigation }) => {
     );
 };
 
-const MenuScreen = () => {
+const MenuScreenEmployee = () => {
     return (
         <Drawer.Navigator
             drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -108,10 +102,8 @@ const MenuScreen = () => {
                 drawerInactiveTintColor: '#000',
 
             })}
-
-
         >
-            <Drawer.Screen name="Home" component={HomeScreen} />
+            <Drawer.Screen name="EmployeeHome" component={HomeScreen} />
         </Drawer.Navigator>
     );
 }
@@ -192,4 +184,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default MenuScreen;
+export default MenuScreenEmployee;

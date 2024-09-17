@@ -1,48 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, StatusBar, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState } from 'react';
+import {
+    View, Text, TextInput, StyleSheet, TouchableOpacity, StatusBar, Image, ActivityIndicator, KeyboardAvoidingView, Platform
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { CustomToast, showToast } from '../../../components/toast/CustomToast';
 import { apiCall } from '../../../components/api/apiUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useHomeContext } from '../../../components/context/HomeContext';
+import AppLogo from '../../../assets/EviLogo.png';
 
 const LoginScreen = () => {
     const navigation = useNavigation();
+    const [isLoading, setIsLoading] = useState(false);
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-
-    const { loginUser, isLoggedIn, setIsLoggedIn } = useHomeContext();
-
-/*     useEffect(() => {
-        // Check if the user is already logged in
-        AsyncStorage.getItem('token').then((token) => {
-            if (token) {
-                setIsLoggedIn(true);
-            }
-        });
-    }, []); */
+    const [isAdmin, setIsAdmin] = useState(false);
+    const { loginUser } = useHomeContext();
 
     const handleLogin = async () => {
         if (userName.trim() === '' || password.trim() === '') {
             showToast('error', 'Invalid Input', 'Username and password cannot be empty');
             return;
         }
-    
+
         setIsLoading(true);
         try {
-            // Call API to log in
-            const response = await apiCall('/api/admin/login', 'POST', { userName, password });
+            const endpoint = isAdmin ? '/api/admin/login' : '/api/employee/auth/login';
+            const response = await apiCall(endpoint, 'POST', { userName, password });
+
             if (response?.status === 'success') {
-                const { admin, token } = response;
-    
-                // Store token in AsyncStorage
+                const { user, token } = response;
                 await AsyncStorage.setItem('token', token);
-    
-                // Call the loginUser method from HomeContext to set the logged-in user
-                loginUser({ admin, token }); // Pass the entire response object
-    
+                loginUser({ user, token });
+
                 showToast('success', 'Login Successful', 'You have logged in successfully');
             } else {
                 showToast('error', 'Login Failed', response.message || 'Unable to log in');
@@ -55,16 +46,18 @@ const LoginScreen = () => {
             setIsLoading(false);
         }
     };
-    
+
+    const toggleLoginType = () => setIsAdmin((prevState) => !prevState);
+
     const renderInput = (value, setValue, placeholder, secureTextEntry, icon) => (
         <View style={styles.inputContainer}>
-            <MaterialCommunityIcons name={icon} size={24} color="#a0a0a0" style={styles.inputIcon} />
+            <MaterialCommunityIcons name={icon} size={24} color="#6B7280" style={styles.inputIcon} />
             <TextInput
                 style={styles.input}
                 onChangeText={setValue}
                 value={value}
                 placeholder={placeholder}
-                placeholderTextColor="#a0a0a0"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={secureTextEntry}
             />
         </View>
@@ -82,16 +75,24 @@ const LoginScreen = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#4c669f" />
+            <StatusBar barStyle="light-content" backgroundColor="#1F2937" />
             <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.content}
             >
-                <Text style={styles.title}>Micro Finance Login</Text>
-                <Text style={styles.subtitle}>Enter your username and password to login</Text>
+                {/* <Text style={styles.title}>Welcome to MicroFinance</Text> */}
+                <Image source={AppLogo} style={styles.logo} />
+
+                <Text style={styles.subtitle}>Login as {isAdmin ? 'Admin' : 'Employee'}</Text>
 
                 {renderInput(userName, setUserName, 'Enter Username', false, 'account')}
                 {renderInput(password, setPassword, 'Enter Password', true, 'lock')}
+
+                <TouchableOpacity onPress={toggleLoginType} style={styles.toggleButton}>
+                    <Text style={styles.toggleText}>
+                        Switch to {isAdmin ? 'Employee' : 'Admin'} Login
+                    </Text>
+                </TouchableOpacity>
 
                 {renderButton('Login', handleLogin)}
             </KeyboardAvoidingView>
@@ -103,33 +104,42 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1E2A38',
+        backgroundColor: '#1F2937', // Dark gray background
+        paddingHorizontal: 20,
+        justifyContent: 'center',
     },
     content: {
         flex: 1,
         justifyContent: 'center',
-        paddingHorizontal: 30,
+        alignItems: 'center',
+    },
+    logo: {
+        width: '90%',
+        height: '10%',
+        marginBottom: 30,
+        resizeMode: 'contain',
     },
     title: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
+        color: '#F3F4F6', // Light gray
         marginBottom: 10,
-        color: '#ffffff',
         textAlign: 'center',
     },
     subtitle: {
         fontSize: 16,
-        color: '#e0e0e0',
+        color: '#D1D5DB', // Gray for subtitles
+        marginBottom: 20,
         textAlign: 'center',
-        marginBottom: 30,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: '#374151', // Darker gray for input background
         borderRadius: 25,
         paddingHorizontal: 15,
         marginBottom: 20,
+        width: '100%',
     },
     inputIcon: {
         marginRight: 10,
@@ -138,20 +148,29 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         padding: 15,
-        color: '#ffffff',
+        color: '#F3F4F6', // Light text
     },
     button: {
-        backgroundColor: '#FFC107',
+        backgroundColor: '#10B981', // Green button
         paddingVertical: 15,
         borderRadius: 25,
         alignItems: 'center',
         elevation: 5,
-        marginTop: 10,
+        width: '100%',
+        marginTop: 20,
     },
     buttonText: {
-        color: '#192f6a',
+        color: '#FFFFFF', // White text
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    toggleButton: {
+        marginTop: 15,
+    },
+    toggleText: {
+        color: '#9CA3AF', // Lighter gray for toggle text
+        fontSize: 14,
+        textDecorationLine: 'underline',
     },
 });
 

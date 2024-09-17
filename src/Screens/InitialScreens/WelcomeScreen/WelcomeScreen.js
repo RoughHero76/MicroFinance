@@ -29,7 +29,7 @@ const WelcomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1e3c72',
+        backgroundColor: '#1F2937'
     },
     content: {
         flex: 1,

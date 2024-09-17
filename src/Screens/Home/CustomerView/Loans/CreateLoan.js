@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
-import { showToast } from '../../../../components/toast/CustomToast';
+import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -394,6 +394,7 @@ const CreateLoan = () => {
                     </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <CustomToast />
         </SafeAreaView>
     );
 };

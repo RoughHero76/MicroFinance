@@ -4,11 +4,14 @@ import React from "react";
 import Toast from "react-native-toast-message";
 import { HomeProvider } from "./src/components/context/HomeContext";
 import RootNavigator from "./src/components/navigation/RootNavigator";
+import { PaperProvider } from 'react-native-paper';
 
 const App = () => {
   return (
     <HomeProvider>
-      <RootNavigator />
+      <PaperProvider>
+        <RootNavigator />
+      </PaperProvider>
       <Toast />
     </HomeProvider>
   );
