@@ -20,7 +20,7 @@ const PaymentHistory = () => {
         if (loading || !hasMore || !loanId) return;
         setLoading(true);
         try {
-            let API_URL  = user?.role === 'admin' ? 'api/admin' : 'api/employee';
+            let API_URL = user?.role === 'admin' ? 'api/admin' : 'api/employee';
 
             const response = await apiCall(`/${API_URL}/loan/repayment/history?page=${page}&limit=10&loanId=${loanId}`, 'GET');
             if (response?.status === 'success' && Array.isArray(response.data)) {
@@ -99,15 +99,17 @@ const PaymentHistory = () => {
                         Collected by: {item.collectedBy?.fname || 'N/A'} {item.collectedBy?.lname || ''}
                     </Text>
                 </View>
-                {item.status !== 'Approved' && (
-                    <TouchableOpacity
-                        style={styles.approveButton}
-                        onPress={() => handleApprove(item._id)}
-                    >
-                        <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
-                        <Text style={styles.approveButtonText}>Approve</Text>
-                    </TouchableOpacity>
-                )}
+                <View>
+                    {item.status !== 'Approved' && user.role == 'admin' && (
+                        <TouchableOpacity
+                            style={styles.approveButton}
+                            onPress={() => handleApprove(item._id)}
+                        >
+                            <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
+                            <Text style={styles.approveButtonText}>Approve</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
         );
     };

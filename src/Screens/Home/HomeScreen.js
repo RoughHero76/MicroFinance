@@ -4,7 +4,9 @@ import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-
+import Permissions from '../../components/permissions';
+import { check, PERMISSIONS, request, RESULTS } from 'react-native-permissions';
+import SendSMS from 'react-native-sms'
 
 
 const HomeScreen = () => {
@@ -15,7 +17,39 @@ const HomeScreen = () => {
     const [recentCustomers, setRecentCustomers] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
+    const permissionsToRequest = [
 
+        PERMISSIONS.ANDROID.READ_SMS,
+        PERMISSIONS.ANDROID.SEND_SMS
+        // Add more permissions as needed
+    ];
+    const requestSMSPermissions = async () => {
+        const result = await request(PERMISSIONS.ANDROID.SEND_SMS);
+        if (result !== RESULTS.GRANTED) {
+            console.log('SEND_SMS permission not granted.');
+            return false;
+        }
+        return true;
+    };
+
+    const handleSendMsgTest = () => {
+        try {
+            requestSMSPermissions();
+            console.log('SEND_SMS permission granted.');
+            SendSMS.send({
+                body: 'The default body of the SMS!',
+                recipients: ['9024176034'],
+                successTypes: ['sent', 'queued'],
+                allowAndroidSendWithoutReadPermission: true
+            }, (completed, cancelled, error) => {
+
+                console.log('SMS Callback: completed: ' + completed + ' cancelled: ' + cancelled + 'error: ' + error);
+
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     const navigation = useNavigation();
     const fetchDashboardData = async () => {
@@ -32,6 +66,7 @@ const HomeScreen = () => {
             setMarketDetails(marketDetailsRes.data);
             setCustomerCount(customerCountRes.data);
 
+            console.log('Market Details', marketDetailsRes);
             setRecentCustomers(customersRes.data.slice(0, 5));
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -102,17 +137,17 @@ const HomeScreen = () => {
                 <DashboardCard title="Customers" value={customerCount} icon="account-group" onClick={handleCustomerClick} />
                 <DashboardCard
                     title="Market Amount"
-                    value={`${marketDetails.totalMarketAmmount.toLocaleString()}`}
+                    value={`${marketDetails.totalMarketAmount.toLocaleString()}`}
                     icon="cash"
                 />
                 <DashboardCard
                     title="Repaid"
-                    value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`}
+                    value={`${marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
                     icon="cash-check"
                 />
                 <DashboardCard
                     title="Approve History"
-                  /*   value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`} */
+                    /*   value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`} */
                     icon="check-underline"
                     onClick={() => navigation.navigate('RepaymentApprovalScreen')}
                 />
@@ -126,11 +161,25 @@ const HomeScreen = () => {
             <TouchableOpacity style={styles.viewAllButton}>
                 <Text style={styles.viewAllButtonText}>View All Customers</Text>
             </TouchableOpacity>
+            <Permissions permissionsToRequest={permissionsToRequest} />
+
+            <TouchableOpacity onPress={handleSendMsgTest} style={styles.sendMsgTest}>
+                <Text style={styles.sendMsgTestText}>Send Message</Text>
+            </TouchableOpacity>
+
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    sendMsgTest: {
+        backgroundColor: '#007AFF',
+        padding: 10,
+        marginBottom: 50,
+    },
+    sendMsgTestText: {
+        color: '#fff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',

@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     datePickerButtonText: {
-        color: '#FFFFFF',
+        color: 'black',
         fontWeight: 'bold',
     },
     picker: {

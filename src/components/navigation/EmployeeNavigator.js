@@ -8,11 +8,16 @@ import AllCustomerView from "../../Screens/EmployeeHome/Home/Customers/AllCustom
 import CustomerView from "../../Screens/EmployeeHome/Home/Customers/CustomerView";
 
 //Loans
-import PaymentHistory from "../../Screens/Shared/Customer/Loan/PaymentHistory";
+import RepaymentSchedule from "../../Screens/EmployeeHome/Home/Customers/Loans/RepaymentSchedule";
 
 //Shared Screens
 import SearchScreen from "../../Screens/Shared/Searching/SearchScreen";
+import PaymentHistory from "../../Screens/Shared/Customer/Loan/PaymentHistory";
+
+
 const EmployeeStack = createNativeStackNavigator();
+
+
 
 
 const EmployeeNavigator = () => (
@@ -23,6 +28,7 @@ const EmployeeNavigator = () => (
         <EmployeeStack.Screen name="CustomerView" component={CustomerView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Customer Details' }} />
         <EmployeeStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
         <EmployeeStack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Payment History' }} />
+        <EmployeeStack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Schedule' }} />
     </EmployeeStack.Navigator>
 );
 

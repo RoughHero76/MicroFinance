@@ -26,6 +26,8 @@ const RepaymentSchedule = () => {
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [penaltyAmount, setPenaltyAmount] = useState('');
 
+    const [loanStatus, setLoanStatus] = useState('');
+
     const route = useRoute();
     const { loanId } = route.params;
 
@@ -47,6 +49,7 @@ const RepaymentSchedule = () => {
 
             const response = await apiCall(`/api/admin/loan/repayment/schedule?${queryParams}`, 'GET');
             const { data } = response;
+            setLoanStatus(data.loanStatus);
 
             setTotalEntries(data.totalEntries || 0);
 
@@ -184,28 +187,33 @@ const RepaymentSchedule = () => {
                     </Text>
                 </View>
             </View>
-            <View style={styles.penaltyActions}>
-                {!item.penaltyApplied ? (
-                    <TouchableOpacity
-                        onPress={() => {
-                            setSelectedSchedule(item);
-                            setShowPenaltyModal(true);
-                        }}
-                        style={styles.penaltyButton}
-                    >
-                        <Text style={styles.penaltyButtonText}>Apply Penalty</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        onPress={() => handleRemovePenalty(item)}
-                        style={[styles.penaltyButton, styles.removePenaltyButton]}
-                    >
-                        <Text style={styles.penaltyButtonText}>Remove Penalty</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
+            {loanStatus.toLowerCase() !== 'closed' && (
+                <View style={styles.penaltyActions}>
+                    {!item.penaltyApplied ? (
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSelectedSchedule(item);
+                                setShowPenaltyModal(true);
+                            }}
+                            style={styles.penaltyButton}
+                        >
+                            <Text style={styles.penaltyButtonText}>Apply Penalty</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={() => handleRemovePenalty(item)}
+                            style={[styles.penaltyButton, styles.removePenaltyButton]}
+                        >
+                            <Text style={styles.penaltyButtonText}>Remove Penalty</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
+            {loanStatus.toLowerCase() === 'closed' && (
+                <Text style={styles.loanClosedText}>Loan Closed</Text>
+            )}
         </View>
-    ), []);
+    ), [loanStatus]);
 
     const renderDatePicker = (showPicker, setShowPicker, currentDate, setDate, label) => (
         <View style={styles.datePickerContainer}>
@@ -372,6 +380,13 @@ const styles = StyleSheet.create({
         color: '#6200EE',
 
     },
+    loanClosedText: {
+        color: '#6200EE',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginTop: 10,
+    },
+
     currentlyShowing: {
         fontSize: 12,
         fontWeight: 'bold',

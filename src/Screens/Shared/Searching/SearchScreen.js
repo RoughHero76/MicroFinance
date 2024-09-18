@@ -312,6 +312,7 @@ const SearchScreen = () => {
           style={styles.searchInput}
           placeholder="Search by name, email, phone, or username"
           value={searchQuery}
+          placeholderTextColor={'#999'}
           onChangeText={handleSearchChange}
         />
         {searchQuery.length > 0 && (
@@ -359,6 +360,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     fontSize: 16,
+    color: '#333',
   },
   clearButton: {
     padding: 5,
