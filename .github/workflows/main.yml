@@ -9,62 +9,75 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      # Step 2: Install Java (React Native requires Java 11)
       - name: Install Java
         uses: actions/setup-java@v3
         with:
           java-version: "11"
-          distribution: "adopt"
+          distribution: "temurin"
           cache: "gradle"
 
-      # Step 3: Validate the Gradle wrapper
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
-      # Step 4: Setup Node.js environment (React Native uses Node.js)
       - name: Setup Node  
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'
+          cache: 'npm'
 
-      # Step 5: Install NPM dependencies (No Yarn needed)
       - name: Install NPM dependencies
-        run: npm install
+        run: npm ci
 
-      # Step 6: Install Android SDK and dependencies
-      - name: Install Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v2
         with:
-          api-level: 30
-          build-tools: '30.0.3'
-          cache: true
+          api-level: 34
+          build-tools-version: 34.0.0
 
-      # Step 7: Build the React Native Android application (single APK)
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Decode Keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          echo $RELEASE_KEYSTORE_BASE64 | base64 -d > android/app/release.keystore
+
       - name: Build Android Release APK
-        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd android && ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=./app/release.keystore \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
 
-      # Step 8: Verify Android SDK Installation (optional, just for checking)
-      - name: Verify Android SDK Installation
-        run: echo $ANDROID_HOME && ls $ANDROID_HOME
-
-      # Step 9: List the .apks created in the release folder
       - name: List the .apks compiled
         run: ls ./android/app/build/outputs/apk/release/ -hal
 
-      # Step 10: Create a GitHub release and upload the APK file
-      - name: Create Release and Uploading Files
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            android/app/build/outputs/apk/release/app-release.apk
+          files: android/app/build/outputs/apk/release/app-release.apk
