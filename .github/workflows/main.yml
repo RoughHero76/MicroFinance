@@ -9,16 +9,19 @@ on:
   push:
     branches:
       - main
+  tags:
+    - '*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # runs-on: ubuntu-22.04 # this is the Ubuntu version that this was created on
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Step 2: Install Java (React Native requires Java 11)
       - name: Install Java
         uses: actions/setup-java@v3
         with:
@@ -26,32 +29,44 @@ jobs:
           distribution: "adopt"
           cache: "gradle"
 
+      # Step 3: Validate the Gradle wrapper
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
-      # Node, Yarn and NPM
+      # Step 4: Setup Node.js environment (React Native uses Node.js)
       - name: Setup Node  
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      - name: Run Yarn Install
-        run: yarn install
+      # Step 5: Install NPM dependencies (No Yarn needed)
+      - name: Install NPM dependencies
+        run: npm install
 
-      - name: Build application
-        run: yarn release
+      # Step 6: Install Android SDK and dependencies
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 30
+          build-tools: '30.0.3'
+          cache: true
 
+      # Step 7: Build the React Native Android application (single APK)
+      - name: Build Android Release APK
+        run: ./gradlew assembleRelease
+
+      # Step 8: Verify Android SDK Installation (optional, just for checking)
+      - name: Verify Android SDK Installation
+        run: echo $ANDROID_HOME && ls $ANDROID_HOME
+
+      # Step 9: List the .apks created in the release folder
       - name: List the .apks compiled
         run: ls ./android/app/build/outputs/apk/release/ -hal
 
-      - name: Rename the .apk to the tag version
-        run: mv ./android/app/build/outputs/apk/release/app-universal-release.apk ./android/app/build/outputs/apk/release/app_name_${{ github.ref_name }}.apk
-
-
-      # Creating and Uploading the releases
+      # Step 10: Create a GitHub release and upload the APK file
       - name: Create Release and Uploading Files
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            android/app/build/outputs/apk/release/app_name_${{ github.ref_name }}.apk
+            android/app/build/outputs/apk/release/app-release.apk
