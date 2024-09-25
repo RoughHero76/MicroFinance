@@ -29,7 +29,7 @@ local.properties
 .cxx/
 
 # Keystore files
-*.keystore
+#*.keystore
 *.jks
 !debug.keystore
 

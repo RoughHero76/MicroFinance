@@ -81,7 +81,7 @@ const CloseLoan = ({ route, navigation }) => {
                     <Text style={styles.detailText}>Loan Amount: ₹{loan.loanAmount}</Text>
                     <Text style={styles.detailText}>Outstanding Amount: ₹{loan.outstandingAmount}</Text>
                     <Text style={styles.detailText}>Total Paid: ₹{loan.totalPaid}</Text>
-                    <Text style={styles.detailText}>Total Penalty: ₹{loan.totalPenaltyAmmount}</Text>
+                    <Text style={styles.detailText}>Total Penalty: ₹{loan.totalPenaltyAmount}</Text>
                 </View>
             </View>
 
@@ -111,6 +111,7 @@ const CloseLoan = ({ route, navigation }) => {
                     render={({ field: { onChange, value } }) => (
                         <Checkbox.Item
                             label="All Penalties Paid"
+                            labelStyle={{ color: 'black' }}
                             status={value ? 'checked' : 'unchecked'}
                             onPress={() => onChange(!value)}
                             color="#3498db"
@@ -125,6 +126,7 @@ const CloseLoan = ({ route, navigation }) => {
                     render={({ field: { onChange, value } }) => (
                         <Checkbox.Item
                             label="Delete Loan Documents"
+                            labelStyle={{ color: 'black' }}
                             status={value ? 'checked' : 'unchecked'}
                             onPress={() => onChange(!value)}
                             color="#3498db"
@@ -210,6 +212,7 @@ const styles = StyleSheet.create({
     input: {
         marginBottom: 16,
         backgroundColor: '#ffffff',
+        color: 'black',
     },
     errorText: {
         color: '#e74c3c',

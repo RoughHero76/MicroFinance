@@ -46,26 +46,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - name: Decode Keystore
-        env:
-          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
-        run: |
-          echo $RELEASE_KEYSTORE_BASE64 | base64 -d > android/app/faizankhan76.keystore
-          mkdir -p /home/runner/.gradle/daemon/8.6/
-          cp android/app/faizankhan76.keystore /home/runner/.gradle/daemon/8.6/
-
       - name: Build Android Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cd android && ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=faizankhan76.keystore \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
-
+          cd android && ./gradlew assembleRelease
+  
       - name: List the .apks compiled
         run: ls ./android/app/build/outputs/apk/release/ -hal
 

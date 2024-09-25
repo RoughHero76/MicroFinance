@@ -7,8 +7,10 @@ import { CustomToast, showToast } from '../../../../components/toast/CustomToast
 import { useHomeContext } from '../../../../components/context/HomeContext';
 
 const PaymentHistory = () => {
+
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [updateRepaymentLoading, setUpdateRepaymentLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [error, setError] = useState(null);
@@ -58,14 +60,19 @@ const PaymentHistory = () => {
             return;
         }
         try {
-            // Implement the approval logic here
-            // For example:
-            // await apiCall(`/api/admin/loan/repayment/approve/${paymentId}`, 'POST');
-            showToast('success', 'Payment approved successfully');
-            // Refresh the payment list or update the local state
+            setUpdateRepaymentLoading(true);
+            const response = await apiCall(`/api/admin/loan/repayment/history/approve`, 'POST', { repaymentId: paymentId });
+            if (response.status === 'success') {
+                showToast('success', 'Payment approved successfully');
+                fetchPayments();
+            } else {
+                showToast('error', response.message || 'Failed to approve payment');
+            }
         } catch (error) {
             console.error('Error approving payment:', error);
             showToast('error', 'Failed to approve payment');
+        } finally {
+            setUpdateRepaymentLoading(false);
         }
     };
 
@@ -100,9 +107,12 @@ const PaymentHistory = () => {
                         <TouchableOpacity
                             style={styles.approveButton}
                             onPress={() => handleApprove(item._id)}
+                            disabled={updateRepaymentLoading}
                         >
                             <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
-                            <Text style={styles.approveButtonText}>Approve</Text>
+                            {
+                                updateRepaymentLoading ? <ActivityIndicator color="white" /> : <Text style={styles.approveButtonText}>Approve</Text>
+                            }
                         </TouchableOpacity>
                     )}
                 </View>

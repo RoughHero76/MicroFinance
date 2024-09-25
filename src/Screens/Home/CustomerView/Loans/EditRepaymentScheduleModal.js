@@ -16,8 +16,8 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
 
     const [showPaymentDatePicker, setShowPaymentDatePicker] = useState(false);
     const [showPenaltyDatePicker, setShowPenaltyDatePicker] = useState(false);
-    console.log('EditRepaymentScheduleModal', scheduleItem);
 
+    console.log('New status:', newStatus);
     useEffect(() => {
         if (scheduleItem) {
             setNewStatus(scheduleItem.status);
@@ -69,20 +69,24 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                     );
                 } else if (newStatus === 'Overdue') {
                     return renderPenaltyFields();
-                } else if (newStatus === 'Paid' || newStatus === 'AdvancePaid') {
-                    { renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker) }
+                } else if (newStatus === 'AdvancePaid') {
+                    return (
+                        <>
+                            {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
 
-                    {
-                        renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
-                            { label: 'Cash', value: 'Cash' },
-                            { label: 'Bank Transfer', value: 'BankTransfer' },
-                            { label: 'GooglePay', value: 'GooglePay' },
-                            { label: 'PhonePay', value: 'PhonePay' },
-                            { label: 'Paytm', value: 'Paytm' },
-                            { label: 'Cheque', value: 'Cheque' },
-                            { label: 'Other', value: 'Other' },
-                        ])
-                    }
+                            {
+                                renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
+                                    { label: 'Cash', value: 'Cash' },
+                                    { label: 'Bank Transfer', value: 'BankTransfer' },
+                                    { label: 'GooglePay', value: 'GooglePay' },
+                                    { label: 'PhonePay', value: 'PhonePay' },
+                                    { label: 'Paytm', value: 'Paytm' },
+                                    { label: 'Cheque', value: 'Cheque' },
+                                    { label: 'Other', value: 'Other' },
+                                ])
+                            }
+                        </>
+                    )
                 }
                 break;
             case 'Paid':
@@ -141,6 +145,50 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                     );
                 }
                 break;
+
+            case 'OverduePaid':
+                if (newStatus === 'PartiallyPaid') {
+                    return (
+                        <>
+                            {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
+                            {renderInput('Amount', amount, setAmount, 'numeric')}
+                        </>
+                    )
+                }
+
+            case 'AdvancePaid':
+                if (newStatus === 'Paid') {
+                    return (
+                        <>
+                            {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
+                            {renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
+                                { label: 'Cash', value: 'Cash' },
+                                { label: 'Bank Transfer', value: 'BankTransfer' },
+                                { label: 'GooglePay', value: 'GooglePay' },
+                                { label: 'PhonePay', value: 'PhonePay' },
+                                { label: 'Paytm', value: 'Paytm' },
+                                { label: 'Cheque', value: 'Cheque' },
+                                { label: 'Other', value: 'Other' },
+                            ])}
+                        </>
+                    )
+                } else if (newStatus === 'PartiallyPaid') {
+                    return (
+                        <>
+                            {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
+                            {renderInput('Amount', amount, setAmount, 'numeric')}
+                            {renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
+                                { label: 'Cash', value: 'Cash' },
+                                { label: 'Bank Transfer', value: 'BankTransfer' },
+                                { label: 'GooglePay', value: 'GooglePay' },
+                                { label: 'PhonePay', value: 'PhonePay' },
+                                { label: 'Paytm', value: 'Paytm' },
+                                { label: 'Cheque', value: 'Cheque' },
+                                { label: 'Other', value: 'Other' },
+                            ])}
+                        </>
+                    )
+                }
             default:
                 return null;
         }
@@ -148,9 +196,9 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
 
     const renderPenaltyFields = () => (
         <>
-            {renderInput('Penalty Amount', penaltyAmount, setPenaltyAmount, 'numeric')}
-            {renderInput('Penalty Reason', penaltyReason, setPenaltyReason)}
-            {renderDatePicker('Penalty Applied Date', penaltyAppliedDate, setPenaltyAppliedDate, showPenaltyDatePicker, setShowPenaltyDatePicker)}
+            {renderInput('Penalty Amount (Optional)', penaltyAmount, setPenaltyAmount, 'numeric')}
+            {renderInput('Penalty Reason (Optional)', penaltyReason, setPenaltyReason)}
+            {renderDatePicker('Penalty Applied Date (Optional)', penaltyAppliedDate, setPenaltyAppliedDate, showPenaltyDatePicker, setShowPenaltyDatePicker)}
         </>
     );
 
