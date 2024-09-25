@@ -24,7 +24,7 @@ jobs:
       - name: Install Java
         uses: actions/setup-java@v3
         with:
-          java-version: "17"  # Changed from "11" to "17"
+          java-version: "17"
           distribution: "temurin"
           cache: "gradle"
 
@@ -42,9 +42,6 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
-        with:
-          api-level: 34
-          build-tools-version: 34.0.0
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
@@ -62,7 +59,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android && ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=./app/release.keystore \
+            -Pandroid.injected.signing.store.file=release.keystore \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD
