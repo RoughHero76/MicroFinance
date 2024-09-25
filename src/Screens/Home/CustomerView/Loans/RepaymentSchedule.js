@@ -7,8 +7,13 @@ import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import EditRepaymentScheduleModal from './EditRepaymentScheduleModal';
+import { useNavigation } from '@react-navigation/native';
 
 const RepaymentSchedule = () => {
+
+
+    const navigation = useNavigation();
+
     const [repaymentSchedules, setRepaymentSchedules] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
@@ -59,11 +64,11 @@ const RepaymentSchedule = () => {
             const response = await apiCall('/api/admin/loan/repayment/schedule/update', 'POST', payload);
             console.log('Response:', response);
             if (response.status === 'success') {
+                setShowEditModal(false); 
+                updatedSchedule = null; 
+                navigation.goBack();
                 showToast('success', 'Repayment schedule updated successfully');
-                fetchRepaymentSchedules(); // Refresh the list
-                setShowEditModal(false); // Close the modal
-                updatedSchedule = null; // Clear the selected schedule
-                setPage(1);
+
             } else {
                 showToast('error', response.message || 'Failed to update repayment schedule');
             }
