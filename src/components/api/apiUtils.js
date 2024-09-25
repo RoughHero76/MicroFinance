@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_URL } from './secrets';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 
 export const apiCall = async (endpoint, method = 'GET', payload = null, isFormData = false) => {
     try {
@@ -31,13 +30,13 @@ export const apiCall = async (endpoint, method = 'GET', payload = null, isFormDa
                 config.data = JSON.stringify(payload);
             }
         }
-
+        console.log('Full payload:', config.data);
 
         const response = await axios(config);
-       
         return response.data;
     } catch (error) {
-        throw {
+        return {
+            error: true,
             message: error.response?.data?.message || error.message || 'An unexpected error occurred',
             status: error.response?.status
         };

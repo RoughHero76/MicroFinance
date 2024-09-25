@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
-const Permissions = ({ permissionsToRequest }) => {
+const GetPermissions = ({ permissionsToRequest }) => {
 
   const checkAndRequestPermissions = async () => {
     for (const permission of permissionsToRequest) {
@@ -55,4 +55,4 @@ const Permissions = ({ permissionsToRequest }) => {
   return null; // No UI needed for this component
 };
 
-export default Permissions;
+export default GetPermissions;

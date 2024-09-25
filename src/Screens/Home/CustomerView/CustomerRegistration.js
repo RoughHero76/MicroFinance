@@ -4,7 +4,7 @@ import { apiCall } from "../../../components/api/apiUtils";
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
-import { showToast } from "../../../components/toast/CustomToast";
+import { showToast, CustomToast } from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
 
 const CustomerRegistration = () => {
@@ -34,9 +34,11 @@ const CustomerRegistration = () => {
         }));
     };
 
+
     const handleSubmit = async () => {
         setLoading(true);
         try {
+
             const response = await apiCall("/api/admin/customer", "POST", formData);
             if (response.status === "success") {
                 showToast("success", "Success", response.message);
@@ -118,6 +120,7 @@ const CustomerRegistration = () => {
                     )}
                 </TouchableOpacity>
             </ScrollView>
+            <CustomToast />
         </KeyboardAvoidingView>
     );
 };

@@ -13,7 +13,7 @@ import RepaymentSchedule from "../../Screens/EmployeeHome/Home/Customers/Loans/R
 //Shared Screens
 import SearchScreen from "../../Screens/Shared/Searching/SearchScreen";
 import PaymentHistory from "../../Screens/Shared/Customer/Loan/PaymentHistory";
-
+import LoanCalculator from "../../Screens/Shared/LoanCalculator";
 
 const EmployeeStack = createNativeStackNavigator();
 
@@ -29,6 +29,7 @@ const EmployeeNavigator = () => (
         <EmployeeStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
         <EmployeeStack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Payment History' }} />
         <EmployeeStack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Schedule' }} />
+        <EmployeeStack.Screen name="LoanCalculator" component={LoanCalculator} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Calculator' }} />
     </EmployeeStack.Navigator>
 );
 

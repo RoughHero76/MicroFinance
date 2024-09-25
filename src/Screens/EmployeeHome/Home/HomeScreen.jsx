@@ -4,8 +4,8 @@ import { useHomeContext } from '../../../components/context/HomeContext';
 import { apiCall } from '../../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import Permissions from '../../../components/permissions';
-
+import GetPermissions from '../../../components/permissions';
+import { PERMISSIONS } from 'react-native-permissions';
 const HomeScreen = () => {
     const { user } = useHomeContext();
     const [loanCount, setLoanCount] = useState(0);
@@ -17,7 +17,8 @@ const HomeScreen = () => {
     const permissionsToRequest = [
 
         PERMISSIONS.ANDROID.READ_SMS,
-        PERMISSIONS.ANDROID.SEND_SMS
+        PERMISSIONS.ANDROID.SEND_SMS,
+        PERMISSIONS.ANDROID.WRITE_SMS
         // Add more permissions as needed
     ];
 
@@ -78,7 +79,7 @@ const HomeScreen = () => {
                 <DashboardCard title="Today's Collections" value={loanCount} icon="account-details" onClick={() => navigation.navigate('TodaysCollectionScreen')} />
                 <DashboardCard title="Customers" value={customerCount} icon="account-group" onClick={handleCustomerClick} />
             </View>
-            <Permissions permissionsToRequest={permissionsToRequest} />
+            <GetPermissions permissionsToRequest={permissionsToRequest} />
         </ScrollView>
     );
 };

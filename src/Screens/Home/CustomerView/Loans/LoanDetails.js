@@ -8,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  Alert,
   Dimensions,
 } from "react-native";
 import { CustomToast, showToast } from "../../../../components/toast/CustomToast";
@@ -23,7 +22,6 @@ const LoanDetails = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
-  const [documents, setDocuments] = useState([]);
   const [expired, setExpired] = useState(false);
 
   useEffect(() => {
@@ -39,28 +37,12 @@ const LoanDetails = ({ route, navigation }) => {
     try {
       const response = await apiCall(`/api/admin/loan?loanId=${loanId}`);
       setLoanData(response.data[0]);
-      organizeDocuments(response.data[0].documents);
       setLoading(false);
       showToast('success', 'Loan fetched successfully');
     } catch (error) {
       showToast('error', 'Something went wrong');
       setLoading(false);
     }
-  };
-
-  const organizeDocuments = (docs) => {
-    let allDocs = [];
-    if (docs.stampPaperPhotoLink) allDocs.push({ url: docs.stampPaperPhotoLink, title: "Stamp Paper" });
-    if (docs.promissoryNotePhotoLink) allDocs.push({ url: docs.promissoryNotePhotoLink, title: "Promissory Note" });
-    if (docs.blankPaper) allDocs.push({ url: docs.blankPaper, title: "Blank Paper" });
-    docs.cheques.forEach((cheque, index) => {
-      allDocs.push({ url: cheque.photoLink, title: `Cheque ${index + 1}` });
-    });
-    docs.governmentIds.forEach((id) => {
-      allDocs.push({ url: id.frontPhotoLink, title: `${id.type} Front` });
-      allDocs.push({ url: id.backPhotoLink, title: `${id.type} Back` });
-    });
-    setDocuments(allDocs);
   };
 
   const handleApproval = async () => {
@@ -86,10 +68,9 @@ const LoanDetails = ({ route, navigation }) => {
         navigation.goBack();
       } else {
         showToast('error', response?.data?.message || 'Error rejecting loan');
-
       }
     } catch (error) {
-
+      showToast('error', 'Error rejecting loan');
     }
   };
 
@@ -105,10 +86,10 @@ const LoanDetails = ({ route, navigation }) => {
         <TouchableOpacity
           key={index}
           style={styles.documentItem}
-          onPress={() => openImageModal(doc.url)}
+          onPress={() => openImageModal(doc.documentUrl)}
         >
           <Icon name="file-document-outline" size={24} color="#4a4a4a" />
-          <Text style={styles.documentText}>{doc.title}</Text>
+          <Text style={styles.documentText}>{doc.documentName}</Text>
           <Text style={styles.viewText}>View</Text>
         </TouchableOpacity>
       ))}
@@ -127,7 +108,7 @@ const LoanDetails = ({ route, navigation }) => {
     return (
       <View style={styles.expiredContainer}>
         <Text style={styles.expiredText}>This loan detail view has expired.</Text>
-        <TouchableOpacity style={styles.refreshButton} onPress={fetchLoanDetails} disabled={true}>
+        <TouchableOpacity style={styles.refreshButton} onPress={fetchLoanDetails}>
           <Text style={styles.refreshButtonText}>Refresh</Text>
         </TouchableOpacity>
       </View>
@@ -142,8 +123,6 @@ const LoanDetails = ({ route, navigation }) => {
     );
   }
 
-
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -155,6 +134,10 @@ const LoanDetails = ({ route, navigation }) => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Loan Details</Text>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Loan Number</Text>
+          <Text style={styles.detailValue}>{loanData.loanNumber}</Text>
+        </View>
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>Loan Amount</Text>
           <Text style={styles.detailValue}>₹{loanData.loanAmount}</Text>
@@ -209,13 +192,31 @@ const LoanDetails = ({ route, navigation }) => {
         </View>
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>Total Penalty Amount</Text>
-          <Text style={styles.detailValue}>₹{loanData.totalPenaltyAmmount || 0}</Text>
+          <Text style={styles.detailValue}>₹{loanData.totalPenaltyAmount}</Text>
         </View>
       </View>
 
-      {renderDocumentSection("Government IDs", documents.filter(doc => doc.title.includes("Aadhar") || doc.title.includes("PAN")))}
-      {renderDocumentSection("Cheques", documents.filter(doc => doc.title.includes("Cheque")))}
-      {renderDocumentSection("Other Documents", documents.filter(doc => !doc.title.includes("Aadhar") && !doc.title.includes("PAN") && !doc.title.includes("Cheque")))}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Business Details</Text>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Firm Name</Text>
+          <Text style={styles.detailValue}>{loanData.businessFirmName || "N/A"}</Text>
+        </View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Business Address</Text>
+          <Text style={styles.detailValue}>{loanData.businessAddress || "N/A"}</Text>
+        </View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Business Phone Number</Text>
+          <Text style={styles.detailValue}>{loanData.businessPhone || "N/A"}</Text>
+        </View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Business Email</Text>
+          <Text style={styles.detailValue}>{loanData.businessEmail || "N/A"}</Text>
+        </View>
+      </View>
+
+      {renderDocumentSection("Documents", loanData.documents)}
 
       {loanData.status === "Pending" && (
         <View style={styles.actionContainer}>
@@ -240,7 +241,7 @@ const LoanDetails = ({ route, navigation }) => {
           />
         </View>
       </Modal>
-      < CustomToast />
+      <CustomToast />
     </ScrollView>
   );
 };

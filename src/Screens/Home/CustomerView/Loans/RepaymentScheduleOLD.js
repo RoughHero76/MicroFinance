@@ -6,7 +6,6 @@ import { apiCall } from '../../../../components/api/apiUtils';
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
-import EditRepaymentScheduleModal from './EditRepaymentScheduleModal';
 
 const RepaymentSchedule = () => {
     const [repaymentSchedules, setRepaymentSchedules] = useState([]);
@@ -22,11 +21,12 @@ const RepaymentSchedule = () => {
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [totalEntries, setTotalEntries] = useState(0);
 
-    const [loanStatus, setLoanStatus] = useState('');
-
-    //Edit Modal
-    const [showEditModal, setShowEditModal] = useState(false);
+    //Penalty
+    const [showPenaltyModal, setShowPenaltyModal] = useState(false);
     const [selectedSchedule, setSelectedSchedule] = useState(null);
+    const [penaltyAmount, setPenaltyAmount] = useState('');
+
+    const [loanStatus, setLoanStatus] = useState('');
 
     const route = useRoute();
     const { loanId } = route.params;
@@ -35,43 +35,6 @@ const RepaymentSchedule = () => {
         fetchRepaymentSchedules();
     }, [page]);
 
-    const handleEditSchedule = (schedule) => {
-        setSelectedSchedule(schedule);
-        setShowEditModal(true);
-    };
-
-
-    const handleSaveSchedule = async (updatedSchedule) => {
-        try {
-            console.log('Updating repayment schedule:', updatedSchedule);
-            const payload = {
-                id: updatedSchedule.id, // Changed from updatedSchedule._id to updatedSchedule.id
-                status: updatedSchedule.status,
-                amount: updatedSchedule.amount,
-                paymentDate: updatedSchedule.paymentDate,
-                paymentMethod: updatedSchedule.paymentMethod,
-                penaltyAmount: updatedSchedule.penaltyAmount,
-                penaltyReason: updatedSchedule.penaltyReason,
-                penaltyAppliedDate: updatedSchedule.penaltyAppliedDate,
-                transactionId: updatedSchedule.transactionId
-            };
-            console.log('Payload being sent:', payload); // Add this line for debugging
-            const response = await apiCall('/api/admin/loan/repayment/schedule/update', 'POST', payload);
-            console.log('Response:', response);
-            if (response.status === 'success') {
-                showToast('success', 'Repayment schedule updated successfully');
-                fetchRepaymentSchedules(); // Refresh the list
-                setShowEditModal(false); // Close the modal
-                updatedSchedule = null; // Clear the selected schedule
-                setPage(1);
-            } else {
-                showToast('error', response.message || 'Failed to update repayment schedule');
-            }
-        } catch (error) {
-            console.error('Error updating repayment schedule:', error);
-            Alert.alert('Error', 'Failed to update repayment schedule. Please try again.');
-        }
-    };
     const fetchRepaymentSchedules = async () => {
         setLoading(true);
         try {
@@ -114,6 +77,76 @@ const RepaymentSchedule = () => {
             setLoading(false);
         }
     };
+
+    const handleApplyPenalty = async () => {
+        if (!selectedSchedule || !penaltyAmount) {
+            Alert.alert('Error', 'Please select a schedule and enter a penalty amount.');
+            return;
+        }
+
+        Alert.alert(
+            'Confirm Penalty Application',
+            `Are you sure you want to apply a penalty of Rs.${penaltyAmount} to this schedule?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Apply',
+                    onPress: async () => {
+                        try {
+                            const response = await apiCall('/api/admin/loan/apply/planalty', 'POST', {
+                                loanId,
+                                repaymentScheduleId: selectedSchedule._id,
+                                penaltyAmount: parseFloat(penaltyAmount)
+                            });
+                            console.log(response);
+                            if (response.status === 'success') {
+                                Alert.alert('Success', 'Penalty applied successfully');
+                                setShowPenaltyModal(false);
+                                setPenaltyAmount('');
+                                fetchRepaymentSchedules(); // Refresh the list
+                            } else {
+                                showToast('Error', response.message || 'Failed to apply penalty');
+                            }
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to apply penalty. Please try again.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleRemovePenalty = (schedule) => {
+        Alert.alert(
+            'Confirm Penalty Removal',
+            'Are you sure you want to remove the penalty from this schedule?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    onPress: async () => {
+                        try {
+                            const response = await apiCall('/api/admin/loan/remove/planalty', 'POST', {
+                                loanId,
+                                repaymentScheduleId: schedule._id
+                            });
+
+                            if (response.status === 'success') {
+                                Alert.alert('Success', 'Penalty removed successfully');
+                                fetchRepaymentSchedules(); // Refresh the list
+                            } else {
+                                Alert.alert('Error', response.message || 'Failed to remove penalty');
+                            }
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to remove penalty. Please try again.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+
 
     const loadMore = () => {
         if (page < totalPages) {
@@ -160,17 +193,31 @@ const RepaymentSchedule = () => {
                     </Text>
                 </View>
             </View>
-
+            {loanStatus.toLowerCase() !== 'closed' && (
+                <View style={styles.penaltyActions}>
+                    {!item.penaltyApplied ? (
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSelectedSchedule(item);
+                                setShowPenaltyModal(true);
+                            }}
+                            style={styles.penaltyButton}
+                        >
+                            <Text style={styles.penaltyButtonText}>Apply Penalty</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={() => handleRemovePenalty(item)}
+                            style={[styles.penaltyButton, styles.removePenaltyButton]}
+                        >
+                            <Text style={styles.penaltyButtonText}>Remove Penalty</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
             {loanStatus.toLowerCase() === 'closed' && (
                 <Text style={styles.loanClosedText}>Loan Closed</Text>
             )}
-
-            <TouchableOpacity
-                onPress={() => handleEditSchedule(item)}
-                style={styles.editButton}
-            >
-                <Icon name="pencil" size={24} color="#6200EE" />
-            </TouchableOpacity>
         </View>
     ), [loanStatus]);
 
@@ -212,6 +259,7 @@ const RepaymentSchedule = () => {
 
     return (
         <View style={styles.container}>
+            < CustomToast />
             <View style={styles.header}>
                 <Text style={styles.totalRepaymentSchedules}> Total: {totalEntries}</Text>
                 <Text style={styles.currentlyShowing}>Currently Showing: {repaymentSchedules.length}</Text>
@@ -278,14 +326,32 @@ const RepaymentSchedule = () => {
                     </View>
                 </View>
             </Modal>
-            <EditRepaymentScheduleModal
-                visible={showEditModal}
-                onClose={() => setShowEditModal(false)}
-                onSave={handleSaveSchedule}
-                scheduleItem={selectedSchedule}
-            />
-            < CustomToast />
-
+            <Modal
+                visible={showPenaltyModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowPenaltyModal(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Apply Penalty</Text>
+                        <TextInput
+                            style={styles.penaltyInput}
+                            placeholder="Enter penalty amount"
+                            placeholderTextColor="#757575"
+                            keyboardType="numeric"
+                            value={penaltyAmount}
+                            onChangeText={setPenaltyAmount}
+                        />
+                        <TouchableOpacity onPress={handleApplyPenalty} style={styles.applyPenaltyButton}>
+                            <Text style={styles.applyPenaltyText}>Apply Penalty</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setShowPenaltyModal(false)} style={styles.closeButton}>
+                            <Icon name="close" size={24} color="#6200EE" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -346,11 +412,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         width: '90%',
         maxHeight: '80%',
-    },
-    editButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
     },
     searchInput: {
         height: 40,
@@ -465,7 +526,47 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#757575',
     },
-
+    penaltyActions: {
+        marginTop: 10,
+    },
+    penaltyButton: {
+        backgroundColor: '#6200EE',
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    removePenaltyButton: {
+        backgroundColor: '#B00020',
+    },
+    penaltyButtonText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        color: '#000000',
+    },
+    penaltyInput: {
+        height: 40,
+        borderColor: '#6200EE',
+        borderWidth: 1,
+        borderRadius: 5,
+        marginBottom: 15,
+        paddingHorizontal: 10,
+        color: '#000000',
+    },
+    applyPenaltyButton: {
+        backgroundColor: '#6200EE',
+        paddingVertical: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    applyPenaltyText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+    },
 });
 
 export default RepaymentSchedule;

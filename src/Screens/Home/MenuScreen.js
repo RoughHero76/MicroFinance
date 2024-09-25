@@ -85,7 +85,7 @@ const CustomDrawerContent = ({ navigation }) => {
             <MenuItem icon="bank" title="Savings Account" onPress={() => console.log('Savings Account pressed')} />
             <MenuItem icon="cash-multiple" title="Transactions" onPress={() => console.log('Transactions pressed')} />
             <MenuItem icon="chart-line" title="Financial Reports" onPress={() => console.log('Financial Reports pressed')} />
-            <MenuItem icon="calculator" title="Loan Calculator" onPress={() => console.log('Loan Calculator pressed')} />
+            <MenuItem icon="calculator" title="Loan Calculator" onPress={() => navigation.navigate('LoanCalculator')} />
             <MenuItem icon="handshake" title="Support" onPress={() => console.log('Support pressed')} />
             <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />
             <MenuItem icon="shield-check" title="Security" onPress={() => console.log('Security pressed')} />

@@ -1,108 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import Permissions from '../../components/permissions';
-import { check, PERMISSIONS, request, RESULTS } from 'react-native-permissions';
-import SendSMS from 'react-native-sms'
-
+import GetPermissions from '../../components/permissions';
 
 const HomeScreen = () => {
     const { user } = useHomeContext();
-    const [loanCount, setLoanCount] = useState(0);
-    const [marketDetails, setMarketDetails] = useState({ totalMarketAmmount: 0, totalMarketAmmountRepaid: 0 });
-    const [customerCount, setCustomerCount] = useState(0);
-    const [recentCustomers, setRecentCustomers] = useState([]);
+    const [dashboardData, setDashboardData] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
-    const permissionsToRequest = [
-
-        PERMISSIONS.ANDROID.READ_SMS,
-        PERMISSIONS.ANDROID.SEND_SMS
-        // Add more permissions as needed
-    ];
-    const requestSMSPermissions = async () => {
-        const result = await request(PERMISSIONS.ANDROID.SEND_SMS);
-        if (result !== RESULTS.GRANTED) {
-            console.log('SEND_SMS permission not granted.');
-            return false;
-        }
-        return true;
-    };
-
-    const handleSendMsgTest = () => {
-        try {
-            requestSMSPermissions();
-            console.log('SEND_SMS permission granted.');
-            SendSMS.send({
-                body: 'The default body of the SMS!',
-                recipients: ['9024176034'],
-                successTypes: ['sent', 'queued'],
-                allowAndroidSendWithoutReadPermission: true
-            }, (completed, cancelled, error) => {
-
-                console.log('SMS Callback: completed: ' + completed + ' cancelled: ' + cancelled + 'error: ' + error);
-
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    }
 
     const navigation = useNavigation();
-    const fetchDashboardData = async () => {
+
+    const fetchDashboardData = useCallback(async () => {
         try {
             setLoading(true);
-            const [loanCountRes, marketDetailsRes, customerCountRes, customersRes] = await Promise.all([
-                apiCall('/api/admin/loan/count/total', 'GET'),
-                apiCall('/api/admin/loan/count/market/details', 'GET'),
-                apiCall('/api/admin/customer/count/total', 'GET'),
-                apiCall('/api/admin/customer', 'GET')
-            ]);
-
-            setLoanCount(loanCountRes.count);
-            setMarketDetails(marketDetailsRes.data);
-            setCustomerCount(customerCountRes.data);
-
-            console.log('Market Details', marketDetailsRes);
-            setRecentCustomers(customersRes.data.slice(0, 5));
+            const response = await apiCall('/api/admin/dashboard', 'GET');
+            if (response.status === 'success') {
+                setDashboardData(response.data);
+            } else {
+                throw new Error('Failed to fetch dashboard data');
+            }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+    }, [fetchDashboardData]);
 
-    const onRefresh = React.useCallback(() => {
+    const onRefresh = useCallback(() => {
         setRefreshing(true);
         fetchDashboardData().then(() => setRefreshing(false));
-    }, []);
+    }, [fetchDashboardData]);
 
-    const handleCustomerClick = () => {
-
+    const handleCustomerClick = useCallback(() => {
         navigation.navigate('AllCustomerView');
+    }, [navigation]);
 
-    }
-
-
-    const DashboardCard = ({ title, value, icon, onClick }) => (
+    const DashboardCard = useCallback(({ title, value, icon, onClick }) => (
         <TouchableOpacity style={styles.card} onPress={onClick}>
             <Icon name={icon} size={40} color="#007AFF" />
             <Text style={styles.cardTitle}>{title}</Text>
             <Text style={styles.cardValue}>{value}</Text>
         </TouchableOpacity>
-    );
+    ), []);
 
-    const CustomerCard = ({ customer }) => (
+    const CustomerCard = useCallback(({ customer }) => (
         <TouchableOpacity
             style={styles.customerCard}
-            onPress={() => navigation.navigate('CustomerView', { uid: customer.uid })} // Navigate to CustomerView with uid
+            onPress={() => navigation.navigate('CustomerView', { uid: customer.uid })}
         >
             <Text style={styles.customerName}>{`${customer.fname} ${customer.lname}`}</Text>
             <Text style={styles.customerDetail}>{`Loans: ${customer.loans.length}`}</Text>
@@ -112,7 +64,32 @@ const HomeScreen = () => {
                 </Text>
             )}
         </TouchableOpacity>
-    );
+    ), [navigation]);
+
+    const dashboardCards = useMemo(() => {
+        if (!dashboardData) return null;
+        return (
+            <>
+                <DashboardCard title="Active Loans" value={dashboardData.loanCount} icon="bank" />
+                <DashboardCard title="Customers" value={dashboardData.customerCount} icon="account-group" onClick={handleCustomerClick} />
+                <DashboardCard
+                    title="Market Amount"
+                    value={`${dashboardData.marketDetails.totalMarketAmount.toLocaleString()}`}
+                    icon="cash"
+                />
+                <DashboardCard
+                    title="Repaid"
+                    value={`${dashboardData.marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
+                    icon="cash-check"
+                />
+                <DashboardCard
+                    title="Approve History"
+                    icon="check-underline"
+                    onClick={() => navigation.navigate('RepaymentApprovalScreen')}
+                />
+            </>
+        );
+    }, [dashboardData, DashboardCard, handleCustomerClick, navigation]);
 
     if (loading) {
         return (
@@ -133,53 +110,23 @@ const HomeScreen = () => {
             <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
 
             <View style={styles.dashboardContainer}>
-                <DashboardCard title="Active Loans" value={loanCount} icon="bank" />
-                <DashboardCard title="Customers" value={customerCount} icon="account-group" onClick={handleCustomerClick} />
-                <DashboardCard
-                    title="Market Amount"
-                    value={`${marketDetails.totalMarketAmount.toLocaleString()}`}
-                    icon="cash"
-                />
-                <DashboardCard
-                    title="Repaid"
-                    value={`${marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
-                    icon="cash-check"
-                />
-                <DashboardCard
-                    title="Approve History"
-                    /*   value={`${marketDetails.totalMarketAmmountRepaid.toLocaleString()}`} */
-                    icon="check-underline"
-                    onClick={() => navigation.navigate('RepaymentApprovalScreen')}
-                />
+                {dashboardCards}
             </View>
 
             <Text style={styles.sectionTitle}>Recent Customers</Text>
-            {recentCustomers.map((customer) => (
+            {dashboardData?.recentCustomers.map((customer) => (
                 <CustomerCard key={customer.uid} customer={customer} />
             ))}
 
-            <TouchableOpacity style={styles.viewAllButton}>
+            <TouchableOpacity style={styles.viewAllButton} onPress={handleCustomerClick}>
                 <Text style={styles.viewAllButtonText}>View All Customers</Text>
             </TouchableOpacity>
-            <Permissions permissionsToRequest={permissionsToRequest} />
-
-            <TouchableOpacity onPress={handleSendMsgTest} style={styles.sendMsgTest}>
-                <Text style={styles.sendMsgTestText}>Send Message</Text>
-            </TouchableOpacity>
-
+            <GetPermissions permissionsToRequest={[]} />
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    sendMsgTest: {
-        backgroundColor: '#007AFF',
-        padding: 10,
-        marginBottom: 50,
-    },
-    sendMsgTestText: {
-        color: '#fff',
-    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',

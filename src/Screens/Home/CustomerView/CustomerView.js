@@ -25,6 +25,7 @@ const CustomerView = () => {
   const [employees, setEmployees] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedLoanId, setSelectedLoanId] = useState(null);
+  const [errorView, setErrorView] = useState(false);
   const navigation = useNavigation();
   const route = useRoute();
   const { uid } = route.params;
@@ -40,7 +41,6 @@ const CustomerView = () => {
       const response = await apiCall(`/api/admin/customer?uid=${uid}`, "GET");
       if (response.status === "success") {
         setCustomerData(response.data[0]);
-        console.log(response.data[0]);
       } else {
         showToast("error", "Error", response.message || "Failed to fetch customer data");
       }
@@ -57,6 +57,7 @@ const CustomerView = () => {
         setEmployees(response.data);
       } else {
         showToast("error", "Error", response.message || "Failed to fetch employees");
+        setErrorView(true);
       }
     } catch (error) {
       console.error("Error fetching employees:", error);
@@ -84,6 +85,14 @@ const CustomerView = () => {
       ]
     );
   };
+
+  if (errorView) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Failed to fetch customer data. Please try again later.</Text>
+      </View>
+    );
+  }
 
 
   const handleImageSelection = async (response) => {
@@ -363,10 +372,14 @@ const InfoItem = ({ icon, label, value }) => (
 const LoanStatus = ({ status }) => {
   const getStatusColor = () => {
     switch (status) {
-      case "approved":
+      case "Active":
         return "#4CAF50";
-      case "pending":
+      case "Pending":
         return "#FFC107";
+      case "Rejected":
+        return "#F44336";
+      case "Closed":
+        return "#9E9E9E";
       default:
         return "#F44336";
     }
@@ -585,6 +598,12 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  errorText: {
+    fontSize: 16,
+    color: "red",
+    textAlign: "center",
+    marginTop: 20,
+  }
 });
 
 export default CustomerView;

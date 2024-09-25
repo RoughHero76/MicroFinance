@@ -5,47 +5,52 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../../components/context/HomeContext';
+
 const PaymentHistory = () => {
-
-
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [error, setError] = useState(null);
     const route = useRoute();
     const loanId = route.params?.loanId;
-
     const { user } = useHomeContext();
+
     const fetchPayments = useCallback(async () => {
         if (loading || !hasMore || !loanId) return;
         setLoading(true);
+        setError(null);
         try {
             let API_URL = user?.role === 'admin' ? 'api/admin' : 'api/employee';
-
             const response = await apiCall(`/${API_URL}/loan/repayment/history?page=${page}&limit=10&loanId=${loanId}`, 'GET');
+
             if (response?.status === 'success' && Array.isArray(response.data)) {
-                setPayments(prevPayments => [...prevPayments, ...response.data]);
-                setHasMore(response.data.length === 10);
-                setPage(prevPage => prevPage + 1);
+                if (response.data.length === 0) {
+                    setHasMore(false);
+                } else {
+                    setPayments(prevPayments => [...prevPayments, ...response.data]);
+                    setHasMore(response.data.length === 10);
+                    setPage(prevPage => prevPage + 1);
+                }
             } else {
-                console.error('Invalid data structure:', response);
-                showToast('error', 'Failed to fetch payment data');
+                setError(` ${response?.message || 'Unknown error'}`);
+                showToast('error', ` ${response?.message || 'Unknown error'}`);
+                setHasMore(false);
             }
         } catch (error) {
             console.error('Error fetching payments:', error);
-            showToast('error', 'An error occurred while fetching payments');
+            setError('An error occurred while fetching payments');
+            setHasMore(false);
         } finally {
             setLoading(false);
         }
-    }, [loanId, page, loading, hasMore]);
+    }, [loanId, page, loading, hasMore, user?.role]);
 
     useEffect(() => {
-        if (loanId) {
+        if (loanId && hasMore && payments.length === 0) {
             fetchPayments();
-        } else {
-            showToast('error', 'Loan ID is missing');
         }
-    }, [fetchPayments, loanId]);
+    }, [fetchPayments, loanId, hasMore, payments.length]);
 
     const handleApprove = async (paymentId) => {
         if (!paymentId) {
@@ -61,15 +66,6 @@ const PaymentHistory = () => {
         } catch (error) {
             console.error('Error approving payment:', error);
             showToast('error', 'Failed to approve payment');
-        }
-    };
-
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'approved': return 'green';
-            case 'pending': return 'orange';
-            case 'rejected': return 'red';
-            default: return 'black';
         }
     };
 
@@ -96,7 +92,7 @@ const PaymentHistory = () => {
                     <Text style={styles.detailText}>Method: {item.paymentMethod || 'N/A'}</Text>
                     <Text style={styles.detailText}>Remaining Amount After Payment: ₹{item.balanceAfterPayment || 'N/A'}</Text>
                     <Text style={styles.detailText}>
-                        Collected by: {item.collectedBy?.fname || 'N/A'} {item.collectedBy?.lname || ''}
+                        Collected by: {item.collectedBy?.fname || 'Admin'} {item.collectedBy?.lname || ''}
                     </Text>
                 </View>
                 <View>
@@ -124,21 +120,25 @@ const PaymentHistory = () => {
                 data={payments}
                 renderItem={renderItem}
                 keyExtractor={item => item?._id?.toString() || Math.random().toString()}
-                onEndReached={fetchPayments}
+                onEndReached={() => {
+                    if (hasMore && !loading) {
+                        fetchPayments();
+                    }
+                }}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={loading ? <ActivityIndicator size="large" color="#6200EE" /> : null}
                 ListEmptyComponent={
-                    !loading && <Text style={styles.emptyText}>No payment history available.</Text>
+                    !loading && (
+                        <Text style={styles.emptyText}>
+                            {error || 'No payment history available.'}
+                        </Text>
+                    )
                 }
             />
             <CustomToast />
         </View>
     );
 };
-
-
-
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

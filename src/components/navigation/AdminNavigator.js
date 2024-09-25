@@ -21,7 +21,7 @@ import EmployeeRegistration from '../../Screens/Home/EmployeeView/EmployeeRegist
 
 //Shared
 import SearchScreen from '../../Screens/Shared/Searching/SearchScreen.js';
-
+import LoanCalculator from '../../Screens/Shared/LoanCalculator.js';
 
 
 const AdminStack = createNativeStackNavigator();
@@ -68,6 +68,9 @@ const AdminNavigator = ({ navigation }) => (
 
         {/* Shared */}
         <AdminStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
+        <AdminStack.Screen name="LoanCalculator" component={LoanCalculator} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Calculator' }} />
+        
+
         {/* Employee Mangement */}
 
         <AdminStack.Screen name="EmployeeRegistration" component={EmployeeRegistration} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Employee Registration' }} />

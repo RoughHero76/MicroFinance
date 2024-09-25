@@ -15,7 +15,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
-import SendSMS from 'react-native-sms'
 
 const TodaysCollectionScreen = () => {
     const [collections, setCollections] = useState([]);
