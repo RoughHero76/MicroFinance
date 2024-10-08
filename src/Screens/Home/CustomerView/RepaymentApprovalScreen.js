@@ -45,12 +45,15 @@ const RepaymentApprovalScreen = () => {
             if (filters.loanId) {
                 queryParams.append('loanId', filters.loanId);
             }
+            console.log('URL :', `/api/admin/loan/repayment/history/approve?${queryParams}`);
 
             const response = await apiCall(`/api/admin/loan/repayment/history/approve?${queryParams}`, 'GET');
             if (response.status === 'success' && Array.isArray(response.data)) {
                 setRepayments(prevRepayments => [...prevRepayments, ...response.data]);
+                console.log('Repayments:', response.data);
                 setHasMore(response.data.length === 10);
                 setPage(prevPage => prevPage + 1);
+                
             } else {
                 console.error('Invalid data structure:', response);
             }
@@ -92,10 +95,12 @@ const RepaymentApprovalScreen = () => {
             </View>
             <View style={styles.repaymentDetails}>
                 <Text style={styles.detailText}>Method: {item.paymentMethod}</Text>
-                <Text style={styles.detailText}>Remaining Amount: ₹{item.balanceAfterPayment}</Text>
-                <Text style={styles.detailText}>Collected by: {item.collectedBy}</Text>
+                <Text style={styles.detailText}>Remaining Amount: ₹{item.loan?.outstandingAmount}</Text>
+                <Text style={styles.detailText}>Collected by: {item.collectedBy || 'Admin'}</Text>
                 <Text style={styles.detailText}>Borrower: {item.loanDetails.borrower}</Text>
                 <Text style={styles.detailText}>Loan Amount: ₹{item.loanDetails.loanAmount}</Text>
+                <Text style={styles.detailText}>Transaction Note: {item.transactionId || 'N/A'} </Text>
+                <Text style={styles.detailText}>Logical Note: {item.logicNote || item.LogicNote || 'N/A'}</Text>
             </View>
             {item.status !== 'Approved' && (
                 <TouchableOpacity
@@ -340,6 +345,7 @@ const styles = StyleSheet.create({
     },
     picker: {
         marginBottom: 10,
+        color: '#424242',
     },
     applyFiltersButton: {
         backgroundColor: '#6200EE',

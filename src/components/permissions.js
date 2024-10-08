@@ -1,58 +1,56 @@
-import React, { useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
-import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
+import { check, request, PERMISSIONS, RESULTS, openSettings } from 'react-native-permissions';
+import { Alert } from 'react-native';
 
-const GetPermissions = ({ permissionsToRequest }) => {
+const GetPermission = async (permission) => {
+  try {
+    const result = await check(permission);
 
-  const checkAndRequestPermissions = async () => {
-    for (const permission of permissionsToRequest) {
-      try {
-        const result = await check(permission);
-        console.log(`Checking ${permission}: ${result}`);
-
-        switch (result) {
-          case RESULTS.UNAVAILABLE:
-            console.log(`${permission} is not available on this device.`);
-            break;
-          case RESULTS.DENIED:
-            console.log(`${permission} is denied, requesting permission...`);
-            const requestResult = await request(permission);
-            console.log(`Request result for ${permission}: ${requestResult}`);
-            handleRequestResult(permission, requestResult);
-            break;
-          case RESULTS.LIMITED:
-            console.log(`${permission} is limited.`);
-            break;
-          case RESULTS.GRANTED:
-            console.log(`${permission} is already granted.`);
-            break;
-          case RESULTS.BLOCKED:
-            console.log(`${permission} is blocked by the user.`);
-            Alert.alert('Permission Blocked', `Please enable ${permission} in your device settings.`);
-            break;
-          default:
-            console.log(`Unhandled result for ${permission}: ${result}`);
-        }
-      } catch (error) {
-        console.log(`Error requesting ${permission}: ${error}`);
-      }
+    switch (result) {
+      case RESULTS.UNAVAILABLE:
+        return false;
+      case RESULTS.DENIED:
+        const requestResult = await request(permission);
+        return handleRequestResult(permission, requestResult);
+      case RESULTS.LIMITED:
+        return true;
+      case RESULTS.GRANTED:
+        return true;
+      case RESULTS.BLOCKED:
+        Alert.alert(
+          'Permission Blocked',
+          `Please enable ${permission} in your device settings.`,
+          [
+            { text: 'OK' },
+            { text: 'Open Settings', onPress: () => openSettings() }
+          ]
+        );
+        return false;
+      default:
+        return false;
     }
-  };
-
-  const handleRequestResult = (permission, result) => {
-    if (result === RESULTS.GRANTED) {
-      console.log(`${permission} is granted.`);
-    } else {
-      console.log(`${permission} is denied.`);
-      Alert.alert('Permission Denied', `You denied ${permission}.`);
-    }
-  };
-
-  useEffect(() => {
-    checkAndRequestPermissions();
-  }, []);
-
-  return null; // No UI needed for this component
+  } catch (error) {
+    console.log(`Error requesting ${permission}: ${error}`);
+    return false;
+  }
 };
 
-export default GetPermissions;
+const handleRequestResult = (permission, result) => {
+  if (result === RESULTS.GRANTED) {
+    return true;
+  } else if (result === RESULTS.BLOCKED) {
+    Alert.alert(
+      'Permission Blocked',
+      `The permission ${permission} is blocked. Please enable it in your device settings.`,
+      [
+        { text: 'OK' },
+        { text: 'Open Settings', onPress: () => openSettings() }
+      ]
+    );
+    return false;
+  } else {
+    Alert.alert('Permission Denied', `You denied ${permission}.`);
+    return false;
+  }
+};
+
+export default GetPermission;

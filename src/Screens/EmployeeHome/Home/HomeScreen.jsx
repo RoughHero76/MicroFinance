@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useHomeContext } from '../../../components/context/HomeContext';
 import { apiCall } from '../../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import GetPermissions from '../../../components/permissions';
-import { PERMISSIONS } from 'react-native-permissions';
+
+// Skeleton loader component
+const Skeleton = ({ width, height }) => (
+    <View style={[styles.skeleton, { width, height }]} />
+);
+
 const HomeScreen = () => {
     const { user } = useHomeContext();
     const [loanCount, setLoanCount] = useState(0);
@@ -14,14 +18,7 @@ const HomeScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
 
     const navigation = useNavigation();
-    const permissionsToRequest = [
-
-        PERMISSIONS.ANDROID.READ_SMS,
-        PERMISSIONS.ANDROID.SEND_SMS,
-        PERMISSIONS.ANDROID.WRITE_SMS
-        // Add more permissions as needed
-    ];
-
+   
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
@@ -59,15 +56,6 @@ const HomeScreen = () => {
         </TouchableOpacity>
     );
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
-                <Text style={styles.loadingText}>Loading dashboard data...</Text>
-            </View>
-        );
-    }
-
     return (
         <ScrollView
             style={styles.container}
@@ -76,10 +64,19 @@ const HomeScreen = () => {
             <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
 
             <View style={styles.dashboardContainer}>
-                <DashboardCard title="Today's Collections" value={loanCount} icon="account-details" onClick={() => navigation.navigate('TodaysCollectionScreen')} />
-                <DashboardCard title="Customers" value={customerCount} icon="account-group" onClick={handleCustomerClick} />
+                {loading ? (
+                    // Show skeleton loaders when data is still loading
+                    <>
+                        <Skeleton width="48%" height={120} />
+                        <Skeleton width="48%" height={120} />
+                    </>
+                ) : (
+                    <>
+                        <DashboardCard title="Today's Collections" value={loanCount} icon="account-details" onClick={() => navigation.navigate('TodaysCollectionScreen')} />
+                        <DashboardCard title="Customers" value={customerCount} icon="account-group" onClick={handleCustomerClick} />
+                    </>
+                )}
             </View>
-            <GetPermissions permissionsToRequest={permissionsToRequest} />
         </ScrollView>
     );
 };
@@ -90,15 +87,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         padding: 20,
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
+    skeleton: {
+        backgroundColor: '#E0E0E0',
+        borderRadius: 10,
+        marginBottom: 15,
         alignItems: 'center',
-    },
-    loadingText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: 'black',
+        justifyContent: 'center',
+        elevation: 2,
     },
     welcome: {
         fontSize: 24,

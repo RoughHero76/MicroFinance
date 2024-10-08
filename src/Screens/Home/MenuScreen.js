@@ -1,6 +1,6 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from './HomeScreen.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,9 +10,6 @@ const Drawer = createDrawerNavigator();
 
 const CustomHeader = ({ navigation }) => {
     const { user } = useHomeContext();
-
-    console.log('user role', user?.role);
-
     return (
         <View style={styles.headerContainer}>
             <TouchableOpacity
@@ -29,11 +26,20 @@ const CustomHeader = ({ navigation }) => {
                 >
                     <Icon name="magnify" size={24} color="#000" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.profileButton}>
-                    <Icon name="account-circle" size={24} color="#000" />
+                <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('ProfileScreen')}>
+                    {user.profilePic ? (
+                        <Image
+                            source={{ uri: user?.profilePic }}
+                            style={styles.profileImage}
+                            resizeMode="cover"
+                            onError={() => console.log("Failed to load image")}
+                        />
+                    ) : (
+                        <Icon name="account-circle" size={24} color="#000" />
+                    )}
                 </TouchableOpacity>
             </View>
-           
+
         </View>
     );
 };
@@ -45,7 +51,16 @@ const UserProfile = () => {
         <View style={styles.userContainer}>
             <View style={styles.profileContainer}>
                 <View style={styles.profileIconContainer}>
-                    <Icon name="account-circle" size={60} color="#4a4a4a" />
+                    {user.profilePic ? (
+                        <Image
+                            source={{ uri: user?.profilePic }}
+                            style={styles.profileImage}
+                            resizeMode="cover"
+                            onError={() => console.log("Failed to load image")}
+                        />
+                    ) : (
+                        <Icon name="account-circle" size={60} color="#000" />
+                    )}
                 </View>
                 <View style={styles.profileInfo}>
                     <Text style={styles.profileName}>{`${user?.fname || 'Not'} ${user?.lname || 'Available'}  `}</Text>
@@ -144,6 +159,12 @@ const styles = StyleSheet.create({
     },
     profileButton: {
         padding: 5,
+    },
+    profileImage: {
+        width: 36,
+        height: 36,
+        borderRadius: 40,
+        marginRight: 15,
     },
     drawerContent: {
         flex: 1,

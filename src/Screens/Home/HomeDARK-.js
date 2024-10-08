@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, NativeModules } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Dimensions } from 'react-native';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { showToast, CustomToast } from '../../components/toast/CustomToast';
-import { handleSendSMS } from '../../components/sms/sendSMS';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 
-// Skeleton loader components
+const { width } = Dimensions.get('window');
+
 const Skeleton = ({ width, height }) => (
     <View style={[styles.skeleton, { width, height }]} />
 );
-
 
 const HomeScreen = () => {
     const { user } = useHomeContext();
@@ -32,6 +32,7 @@ const HomeScreen = () => {
             }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
+            showToast('error', 'Error', 'Failed to fetch dashboard data');
         } finally {
             setLoading(false);
         }
@@ -52,7 +53,7 @@ const HomeScreen = () => {
 
     const DashboardCard = useCallback(({ title, value, icon, onClick }) => (
         <TouchableOpacity style={styles.card} onPress={onClick}>
-            <Icon name={icon} size={40} color="#007AFF" />
+            <Icon name={icon} size={30} color="#10B981" />
             <Text style={styles.cardTitle}>{title}</Text>
             <Text style={styles.cardValue}>{value}</Text>
         </TouchableOpacity>
@@ -73,51 +74,81 @@ const HomeScreen = () => {
         </TouchableOpacity>
     ), [navigation]);
 
-    const dashboardCards = useMemo(() => {
+    const lineChartData = useMemo(() => {
         if (!dashboardData) return null;
-        return (
-            <>
-                <DashboardCard title="Active Loans" value={dashboardData.loanCount} icon="bank" />
-                <DashboardCard title="Customers" value={dashboardData.customerCount} icon="account-group" onClick={handleCustomerClick} />
-                <DashboardCard
-                    title="Market Amount"
-                    value={`${dashboardData.marketDetails.totalMarketAmount.toLocaleString()}`}
-                    icon="cash"
-                />
-                <DashboardCard
-                    title="Repaid"
-                    value={`${dashboardData.marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
-                    icon="cash-check"
-                />
-                <DashboardCard
-                    title="Approve History"
-                    icon="check-underline"
-                    onClick={() => navigation.navigate('RepaymentApprovalScreen')}
-                />
-            </>
-        );
-    }, [dashboardData, DashboardCard, handleCustomerClick, navigation]);
+        return {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+            datasets: [
+                {
+                    data: [
+                        Math.random() * 100,
+                        Math.random() * 100,
+                        Math.random() * 100,
+                        Math.random() * 100,
+                        Math.random() * 100,
+                        dashboardData.marketDetails.totalMarketAmount / 1000,
+                    ],
+                    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`, // Tailwind green-500
+                    strokeWidth: 2
+                }
+            ],
+        };
+    }, [dashboardData]);
+
+    const pieChartData = useMemo(() => {
+        if (!dashboardData) return null;
+        const totalAmount = dashboardData.marketDetails.totalMarketAmount;
+        const repaidAmount = dashboardData.marketDetails.totalMarketAmountRepaid;
+        return [
+            {
+                name: "Repaid",
+                population: repaidAmount,
+                color: "#10B981",
+                legendFontColor: "#F3F4F6",
+                legendFontSize: 15
+            },
+            {
+                name: "Outstanding",
+                population: totalAmount - repaidAmount,
+                color: "#3B82F6",
+                legendFontColor: "#F3F4F6",
+                legendFontSize: 15
+            }
+        ];
+    }, [dashboardData]);
+
+    const chartConfig = {
+        backgroundGradientFrom: "#374151",
+        backgroundGradientTo: "#374151",
+        decimalPlaces: 2,
+        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+        labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+        style: {
+            borderRadius: 16
+        },
+        propsForDots: {
+            r: "6",
+            strokeWidth: "2",
+            stroke: "#10B981"
+        }
+    };
 
     if (loading) {
-        // Show skeleton loader during data fetching
         return (
             <ScrollView style={styles.container}>
                 <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
-
                 <View style={styles.dashboardContainer}>
-                    {/* Skeleton loaders that match the shape of dashboard cards */}
-                    <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
+                    <Skeleton width="48%" height={100} />
+                    <Skeleton width="48%" height={100} />
+                    <Skeleton width="48%" height={100} />
+                    <Skeleton width="48%" height={100} />
                 </View>
-
+                <Skeleton width={width - 40} height={220} />
+                <Skeleton width={width - 40} height={220} />
                 <Text style={styles.sectionTitle}>Recent Customers</Text>
-                {/* Skeleton loaders for recent customers */}
                 <Skeleton width="100%" height={80} />
                 <Skeleton width="100%" height={80} />
                 <Skeleton width="100%" height={80} />
-
                 <Skeleton width="100%" height={50} />
             </ScrollView>
         );
@@ -133,8 +164,43 @@ const HomeScreen = () => {
             <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
 
             <View style={styles.dashboardContainer}>
-                {dashboardCards}
+                <DashboardCard title="Active Loans" value={dashboardData.loanCount} icon="bank" />
+                <DashboardCard title="Customers" value={dashboardData.customerCount} icon="account-group" onClick={handleCustomerClick} />
+                <DashboardCard
+                    title="Market Amount"
+                    value={`${dashboardData.marketDetails.totalMarketAmount.toLocaleString()}`}
+                    icon="cash"
+                />
+                <DashboardCard
+                    title="Repaid"
+                    value={`${dashboardData.marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
+                    icon="cash-check"
+                />
             </View>
+
+            <Text style={styles.sectionTitle}>Market Trend</Text>
+            <LineChart
+                data={lineChartData}
+                width={width - 40}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chart}
+            />
+
+            <Text style={styles.sectionTitle}>Repayment Status</Text>
+            <PieChart
+                data={pieChartData}
+                width={width - 40}
+                height={220}
+                chartConfig={chartConfig}
+                accessor={"population"}
+                backgroundColor={"transparent"}
+                paddingLeft={"15"}
+                center={[10, 10]}
+                absolute
+                style={styles.chart}
+            />
 
             <Text style={styles.sectionTitle}>Recent Customers</Text>
             {dashboardData?.recentCustomers.map((customer) => (
@@ -153,11 +219,11 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#1F2937',
         padding: 20,
     },
     skeleton: {
-        backgroundColor: '#e0e0e0',
+        backgroundColor: '#374151',
         borderRadius: 8,
         marginBottom: 15,
     },
@@ -165,7 +231,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: 'black',
+        color: '#F3F4F6',
     },
     dashboardContainer: {
         flexDirection: 'row',
@@ -175,7 +241,7 @@ const styles = StyleSheet.create({
     },
     card: {
         width: '48%',
-        backgroundColor: '#fff',
+        backgroundColor: '#374151',
         borderRadius: 10,
         padding: 15,
         marginBottom: 15,
@@ -190,24 +256,24 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     cardTitle: {
-        fontSize: 16,
-        color: '#666',
+        fontSize: 14,
+        color: '#D1D5DB',
         marginTop: 10,
     },
     cardValue: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
-        color: '#007AFF',
+        color: '#F3F4F6',
     },
     sectionTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         marginTop: 20,
         marginBottom: 10,
-        color: 'black',
+        color: '#F3F4F6',
     },
     customerCard: {
-        backgroundColor: '#fff',
+        backgroundColor: '#374151',
         borderRadius: 10,
         padding: 15,
         marginBottom: 10,
@@ -223,25 +289,29 @@ const styles = StyleSheet.create({
     customerName: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#007AFF',
+        color: '#10B981',
     },
     customerDetail: {
         fontSize: 14,
-        color: '#666',
+        color: '#D1D5DB',
         marginTop: 5,
     },
     viewAllButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#10B981',
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 25,
         alignItems: 'center',
         marginTop: 20,
         marginBottom: 30,
     },
     viewAllButtonText: {
-        color: '#fff',
+        color: '#F3F4F6',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    chart: {
+        marginVertical: 8,
+        borderRadius: 16,
     },
 });
 

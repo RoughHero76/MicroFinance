@@ -46,8 +46,8 @@ const SplashScreen = () => {
           {
             scale: withRepeat(
               withSequence(
-                withTiming(1.3, { duration: 250 }),
-                withTiming(1, { duration: 250 })
+                withTiming(1.3, { duration: 450 }),
+                withTiming(0.5, { duration: 250 })
               ),
               -1,
               false
@@ -73,6 +73,16 @@ const SplashScreen = () => {
         <Animated.View style={[styles.loadingDot, dot2Style]} />
         <Animated.View style={[styles.loadingDot, dot3Style]} />
       </View>
+
+      <View style={styles.tradeMarkAndBranding}>
+        <View style={styles.section}>
+          <Animated.Image source={require('../assets/branding/76Groups.png')} style={[styles.logo, logoAnimatedStyle]} />
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.textStyle}>© 2024-25 76Groups</Text>
+          <Text style={styles.textStyle}>Powered by 76Groups</Text>
+        </View>
+      </View>
     </View>
   );
 };
@@ -94,15 +104,40 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 60, // Adjusted for better spacing
+    bottom: 60,
   },
   loadingDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#FFDD00', // Matching accent color
+    backgroundColor: '#FFDD00',
     marginHorizontal: 6,
   },
+
+  //Brandings
+  tradeMarkAndBranding: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 10, // Adjusted for closer to the bottom
+    justifyContent: 'center', // Center the content better
+    alignItems: 'center',
+    width: '100%', // Ensures it stretches the width for spacing control
+  },
+  logo: {
+    width: 30, // Reduced size for smaller branding
+    height: 30, // Reduced size for smaller branding
+    resizeMode: 'contain',
+  },
+  section: {
+    alignItems: 'center',
+    marginHorizontal: 8, // Added margin to give slight spacing between sections
+  },
+  textStyle: {
+    fontSize: 10, // Smaller font for subtle branding
+    color: '#fff',
+    textAlign: 'center',
+  },
 });
+
 
 export default SplashScreen;

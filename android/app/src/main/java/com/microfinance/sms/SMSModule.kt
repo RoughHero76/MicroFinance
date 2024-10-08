@@ -12,7 +12,7 @@ import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.Callback
+import com.facebook.react.bridge.Promise
 
 class SMSModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
@@ -24,66 +24,54 @@ class SMSModule(private val reactContext: ReactApplicationContext) : ReactContex
 
     override fun getName(): String = "SMSModule"
 
-    private var sentReceiver: BroadcastReceiver? = null
-    private var deliveredReceiver: BroadcastReceiver? = null
-
     @ReactMethod
-    fun sendSMS(phoneNumber: String, message: String, successCallback: Callback, errorCallback: Callback) {
+    fun sendSMS(phoneNumber: String, message: String, promise: Promise) {
         Log.d(TAG, "sendSMS method called with phone: $phoneNumber, message: $message")
         try {
-            val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 reactContext.getSystemService(SmsManager::class.java)
             } else {
                 SmsManager.getDefault()
             }
             
-            val sentPI = PendingIntent.getBroadcast(reactContext, 0, Intent(SENT), PendingIntent.FLAG_IMMUTABLE)
-            val deliveredPI = PendingIntent.getBroadcast(reactContext, 0, Intent(DELIVERED), PendingIntent.FLAG_IMMUTABLE)
+            val sentIntent = PendingIntent.getBroadcast(reactContext, 0, Intent(SENT), PendingIntent.FLAG_IMMUTABLE)
+            val deliveredIntent = PendingIntent.getBroadcast(reactContext, 0, Intent(DELIVERED), PendingIntent.FLAG_IMMUTABLE)
 
-            sentReceiver = object : BroadcastReceiver() {
+            val sentReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
-                    Log.d(TAG, "sentReceiver onReceive called with resultCode: $resultCode")
                     when (resultCode) {
                         Activity.RESULT_OK -> {
                             Log.d(TAG, "SMS sent successfully")
-                            successCallback.invoke("SMS sent successfully")
+                            promise.resolve("SMS sent successfully")
                         }
-                        else -> {
-                            Log.e(TAG, "SMS sending failed with result code: $resultCode")
-                            errorCallback.invoke("SMS sending failed with result code: $resultCode")
-                        }
+                        SmsManager.RESULT_ERROR_GENERIC_FAILURE -> promise.reject("GENERIC_FAILURE", "Generic failure")
+                        SmsManager.RESULT_ERROR_NO_SERVICE -> promise.reject("NO_SERVICE", "No service")
+                        SmsManager.RESULT_ERROR_NULL_PDU -> promise.reject("NULL_PDU", "Null PDU")
+                        SmsManager.RESULT_ERROR_RADIO_OFF -> promise.reject("RADIO_OFF", "Radio off")
+                        else -> promise.reject("UNKNOWN_ERROR", "Unknown error")
                     }
                     unregisterReceiver(this)
                 }
             }
 
-            deliveredReceiver = object : BroadcastReceiver() {
+            val deliveredReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
-                    Log.d(TAG, "deliveredReceiver onReceive called with resultCode: $resultCode")
                     when (resultCode) {
-                        Activity.RESULT_OK -> {
-                            Log.d(TAG, "SMS delivered successfully")
-                            successCallback.invoke("SMS delivered successfully")
-                        }
-                        else -> {
-                            Log.e(TAG, "SMS delivery failed with result code: $resultCode")
-                            errorCallback.invoke("SMS delivery failed with result code: $resultCode")
-                        }
+                        Activity.RESULT_OK -> Log.d(TAG, "SMS delivered successfully")
+                        Activity.RESULT_CANCELED -> Log.d(TAG, "SMS not delivered")
                     }
                     unregisterReceiver(this)
                 }
             }
 
-            Log.d(TAG, "Registering receivers")
-            registerReceiver(sentReceiver!!, IntentFilter(SENT))
-            registerReceiver(deliveredReceiver!!, IntentFilter(DELIVERED))
+            registerReceiver(sentReceiver, IntentFilter(SENT))
+            registerReceiver(deliveredReceiver, IntentFilter(DELIVERED))
 
-            Log.d(TAG, "Sending SMS to $phoneNumber with message: $message")
-            smsManager.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI)
+            smsManager.sendTextMessage(phoneNumber, null, message, sentIntent, deliveredIntent)
             Log.d(TAG, "sendTextMessage called")
         } catch (e: Exception) {
             Log.e(TAG, "Exception in sendSMS: ${e.message}", e)
-            errorCallback.invoke("Failed to send SMS: ${e.message}")
+            promise.reject("SMS_SEND_FAILED", e.message, e)
         }
     }
 
@@ -95,21 +83,11 @@ class SMSModule(private val reactContext: ReactApplicationContext) : ReactContex
         }
     }
 
-    private fun unregisterReceiver(receiver: BroadcastReceiver?) {
+    private fun unregisterReceiver(receiver: BroadcastReceiver) {
         try {
-            if (receiver != null) {
-                reactContext.unregisterReceiver(receiver)
-                Log.d(TAG, "Receiver unregistered")
-            }
+            reactContext.unregisterReceiver(receiver)
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Error unregistering receiver: ${e.message}")
         }
-    }
-
-    override fun onCatalystInstanceDestroy() {
-        super.onCatalystInstanceDestroy()
-        unregisterReceiver(sentReceiver)
-        unregisterReceiver(deliveredReceiver)
-        Log.d(TAG, "Receivers unregistered in onCatalystInstanceDestroy")
     }
 }

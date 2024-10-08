@@ -259,6 +259,7 @@ const CustomerView = () => {
                 Duration: {loan.loanDuration} | Installments: {loan.numberOfInstallments} ({loan.installmentFrequency})
               </Text>
               <Text style={styles.loanInfo}>Total Paid: ₹{loan.totalPaid}</Text>
+              <Text style={[styles.loanInfo, { fontWeight: 'bold' }]}>Loan Number: #{loan.loanNumber}</Text>
               {loan.assignedTo ? (
                 <Text style={styles.assignedEmployee}>
                   Assigned to: {loan.assignedTo.fname} {loan.assignedTo.lname}

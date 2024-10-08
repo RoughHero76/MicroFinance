@@ -10,11 +10,13 @@ import {
     TextInput,
     SafeAreaView,
     StatusBar,
+    Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
+import { handleSendSMS } from '../../../../components/sms/sendSMS';
 
 const TodaysCollectionScreen = () => {
     const [collections, setCollections] = useState([]);
@@ -37,6 +39,7 @@ const TodaysCollectionScreen = () => {
             const response = await apiCall('/api/employee/loan/collection/today', 'GET');
             if (response.status === 'success' && Array.isArray(response.data)) {
                 setCollections(response.data);
+                console.log('Collections:', response.data[0]);
             } else {
                 console.error('Invalid data structure:', response);
                 showToast('error', 'Failed to fetch today\'s collections');
@@ -74,8 +77,20 @@ const TodaysCollectionScreen = () => {
                 showToast('success', 'Payment processed successfully');
                 setShowPaymentModal(false);
                 fetchTodaysCollections();
+                Alert.alert(
+                    "Send SMS",
+                    "Do you want to send SMS to customer?",
+                    [
+                        { text: "No", style: "cancel" },
+                        {
+                            text: "Yes",
+                            onPress: () => handleSendSMS(selectedItem.loan.customer.phoneNumber, `Your loan payment of Rs. ${paymentDetails.amount} is successfully processed.`,),
+                        },
+                    ]
+                )
             } else {
-                showToast('error', 'Failed to process payment');
+                showToast('error', `Failed to process payment: ${response.message || 'Unknown error'}`);
+                setShowPaymentModal(false);
             }
         } catch (error) {
             console.error('Error processing payment:', error);
@@ -97,6 +112,17 @@ const TodaysCollectionScreen = () => {
                 showToast('success', 'Penalty applied successfully');
                 setShowPenaltyModal(false);
                 fetchTodaysCollections();
+                Alert.alert(
+                    "Send SMS",
+                    "Do you want to send SMS to customer?",
+                    [
+                        { text: "No", style: "cancel" },
+                        {
+                            text: "Yes",
+                            onPress: () => handleSendSMS(selectedItem.loan.customer.phoneNumber, `A penalty of Rs. ${penaltyAmount} has been applied to your loan.`,),
+                        },
+                    ]
+                )
             } else {
                 showToast('error', 'Failed to apply penalty');
             }
@@ -124,6 +150,15 @@ const TodaysCollectionScreen = () => {
                 <View style={styles.loanDetailRow}>
                     <Icon name="numeric" size={18} color="#4A4A4A" />
                     <Text style={styles.loanDetail}>Installment: {item.loanInstallmentNumber}</Text>
+                </View>
+                <View style={styles.loanDetailRow}>
+                    <Icon name="numeric" size={18} color="#4A4A4A" />
+                    <Text style={styles.loanDetail}>Today: {item.amount}</Text>
+                </View>
+                {/* Total Overdue Amount */}
+                <View style={styles.loanDetailRow}>
+                    <Icon name="numeric" size={18} color="#4A4A4A" />
+                    <Text style={styles.loanDetail}>Total Overdue: {item.loan.totalOverdueAmount}</Text>
                 </View>
                 <View style={styles.statusContainer}>
                     <Text style={[styles.status, { backgroundColor: getStatusColor(item.status) }]}>{item.status}</Text>

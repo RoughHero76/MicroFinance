@@ -18,21 +18,22 @@ const PaymentHistory = () => {
     const loanId = route.params?.loanId;
     const { user } = useHomeContext();
 
-    const fetchPayments = useCallback(async () => {
-        if (loading || !hasMore || !loanId) return;
+    const fetchPayments = useCallback(async (resetPage = false) => {
+        if (loading || !loanId) return;
         setLoading(true);
         setError(null);
         try {
+            const currentPage = resetPage ? 1 : page;
             let API_URL = user?.role === 'admin' ? 'api/admin' : 'api/employee';
-            const response = await apiCall(`/${API_URL}/loan/repayment/history?page=${page}&limit=10&loanId=${loanId}`, 'GET');
+            const response = await apiCall(`/${API_URL}/loan/repayment/history?page=${currentPage}&limit=10&loanId=${loanId}`, 'GET');
 
             if (response?.status === 'success' && Array.isArray(response.data)) {
                 if (response.data.length === 0) {
                     setHasMore(false);
                 } else {
-                    setPayments(prevPayments => [...prevPayments, ...response.data]);
+                    setPayments(prevPayments => resetPage ? response.data : [...prevPayments, ...response.data]);
                     setHasMore(response.data.length === 10);
-                    setPage(prevPage => prevPage + 1);
+                    setPage(prevPage => resetPage ? 2 : prevPage + 1);
                 }
             } else {
                 setError(` ${response?.message || 'Unknown error'}`);
@@ -46,11 +47,11 @@ const PaymentHistory = () => {
         } finally {
             setLoading(false);
         }
-    }, [loanId, page, loading, hasMore, user?.role]);
+    }, [loanId, page, loading, user?.role]);
 
     useEffect(() => {
         if (loanId && hasMore && payments.length === 0) {
-            fetchPayments();
+            fetchPayments(true);
         }
     }, [fetchPayments, loanId, hasMore, payments.length]);
 
@@ -64,7 +65,10 @@ const PaymentHistory = () => {
             const response = await apiCall(`/api/admin/loan/repayment/history/approve`, 'POST', { repaymentId: paymentId });
             if (response.status === 'success') {
                 showToast('success', 'Payment approved successfully');
-                fetchPayments();
+                // Reset page and fetch payments again
+                setPage(1);
+                setPayments([]);
+                fetchPayments(true);
             } else {
                 showToast('error', response.message || 'Failed to approve payment');
             }
@@ -101,6 +105,8 @@ const PaymentHistory = () => {
                     <Text style={styles.detailText}>
                         Collected by: {item.collectedBy?.fname || 'Admin'} {item.collectedBy?.lname || ''}
                     </Text>
+                    <Text style={styles.detailText}>Transaction Note: {item.transactionId || 'N/A'}</Text>
+                    <Text style={styles.detailText}>Logical Note: {item.logicNote || item.LogicNote || 'N/A'}</Text>
                 </View>
                 <View>
                     {item.status !== 'Approved' && user.role == 'admin' && (

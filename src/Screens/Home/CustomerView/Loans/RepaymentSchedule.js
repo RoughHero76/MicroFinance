@@ -46,6 +46,7 @@ const RepaymentSchedule = () => {
     };
 
 
+
     const handleSaveSchedule = async (updatedSchedule) => {
         try {
             console.log('Updating repayment schedule:', updatedSchedule);
@@ -60,12 +61,11 @@ const RepaymentSchedule = () => {
                 penaltyAppliedDate: updatedSchedule.penaltyAppliedDate,
                 transactionId: updatedSchedule.transactionId
             };
-            console.log('Payload being sent:', payload); // Add this line for debugging
             const response = await apiCall('/api/admin/loan/repayment/schedule/update', 'POST', payload);
             console.log('Response:', response);
             if (response.status === 'success') {
-                setShowEditModal(false); 
-                updatedSchedule = null; 
+                setShowEditModal(false);
+                updatedSchedule = null;
                 navigation.goBack();
                 showToast('success', 'Repayment schedule updated successfully');
 
@@ -132,6 +132,7 @@ const RepaymentSchedule = () => {
     }
 
     const renderItem = useCallback(({ item }) => (
+
         <View style={styles.scheduleItem}>
             <View style={styles.scheduleHeader}>
                 <Icon name="calendar-month-outline" size={24} color="#6200EE" />
@@ -149,7 +150,7 @@ const RepaymentSchedule = () => {
                 <View style={styles.scheduleRow}>
                     <Icon name="currency-inr" size={20} color="#018786" />
                     <Text style={styles.amount}>
-                        Original Amount: {item.originalAmount || 'N/A'}
+                        Original EMI: {item.originalAmount || 'N/A'}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
@@ -161,9 +162,38 @@ const RepaymentSchedule = () => {
                 <View style={styles.scheduleRow}>
                     <Icon name="clock-alert-outline" size={20} color={item.penaltyApplied ? '#B00020' : '#757575'} />
                     <Text style={styles.penaltyApplied}>
-                        Penalty: {item.penaltyApplied ? `Rs.${item.penalty.amount || '0'}` : 'N/A'}
+                        Penalty: {item.penaltyApplied ? `Rs.${item.penalty?.amount || '0'}` : 'N/A'}
                     </Text>
                 </View>
+                <View style={styles.scheduleRow}>
+                    <Icon name="notebook-outline" size={20} color="#6200EE" />
+                    <Text style={styles.logicNote}>
+                        Logical Note: {item.logicNote || item.LogicNote || 'N/A'}
+                    </Text>
+                </View>
+
+                {/* New section for repayments */}
+                {item.repayments && item.repayments.length > 0 && (
+                    <View style={styles.repaymentsSection}>
+                        <Text style={styles.repaymentTitle}>Repayments:</Text>
+                        {item.repayments.map((repayment, index) => (
+                            <View key={index} style={styles.repaymentItem}>
+                                <Text style={styles.repaymentText}>Amount: Rs.{repayment.amount}</Text>
+                                <Text style={styles.repaymentText}>Date: {new Date(repayment.paymentDate).toLocaleString()}</Text>
+                                <Text style={styles.repaymentText}>Method: {repayment.paymentMethod}</Text>
+                                <Text style={styles.repaymentText}>Status: {repayment.status}</Text>
+                                {repayment.transactionId && (
+                                    <Text style={styles.repaymentText}>Transaction ID: {repayment.transactionId}</Text>
+                                )}
+                                {repayment.collectedBy && (
+                                    <Text style={styles.repaymentText}>
+                                        Collected By: {repayment.collectedBy.fname} {repayment.collectedBy.lname}
+                                    </Text>
+                                )}
+                            </View>
+                        ))}
+                    </View>
+                )}
             </View>
 
             {loanStatus.toLowerCase() === 'closed' && (
@@ -454,6 +484,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#757575',
     },
+    logicNote: {
+        marginLeft: 10,
+        fontSize: 16,
+        color: '#757575',
+    },
     loadMoreButton: {
         paddingVertical: 10,
         alignItems: 'center',
@@ -469,6 +504,31 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: '#757575',
+    },
+
+    /* Repayment Section */
+    repaymentsSection: {
+        marginTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        paddingTop: 10,
+    },
+    repaymentTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#6200EE',
+        marginBottom: 5,
+    },
+    repaymentItem: {
+        backgroundColor: '#F5F5F5',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 5,
+    },
+    repaymentText: {
+        fontSize: 14,
+        color: '#000000',
+        marginBottom: 2,
     },
 
 });

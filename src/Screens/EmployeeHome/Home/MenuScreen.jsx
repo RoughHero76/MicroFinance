@@ -1,6 +1,6 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from './HomeScreen.jsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,9 +26,19 @@ const CustomHeader = ({ navigation }) => {
                 >
                     <Icon name="magnify" size={24} color="#000" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.profileButton}>
-                    <Icon name="account-circle" size={24} color="#000" />
+                <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('ProfileScreen')}>
+                    {user.profilePic ? (
+                        <Image
+                            source={{ uri: user?.profilePic }}
+                            style={styles.profileImage}
+                            resizeMode="cover"
+                            onError={() => console.log("Failed to load image")}
+                        />
+                    ) : (
+                        <Icon name="account-circle" size={30} color="#000" />
+                    )}
                 </TouchableOpacity>
+
             </View>
         </View>
     );
@@ -41,7 +51,16 @@ const UserProfile = () => {
         <View style={styles.userContainer}>
             <View style={styles.profileContainer}>
                 <View style={styles.profileIconContainer}>
-                    <Icon name="account-circle" size={60} color="#4a4a4a" />
+                    {user.profilePic ? (
+                        <Image
+                            source={{ uri: user?.profilePic }}
+                            style={styles.profileImage}
+                            resizeMode="cover"
+                            onError={() => console.log("Failed to load image")}
+                        />
+                    ) : (
+                        <Icon name="account-circle" size={60} color="#000" />
+                    )}
                 </View>
                 <View style={styles.profileInfo}>
                     <Text style={styles.profileName}>{`${user?.fname || 'Not'} ${user?.lname || 'Available'}  `}</Text>
@@ -79,7 +98,7 @@ const CustomDrawerContent = ({ navigation }) => {
             <MenuItem icon="bank" title="Savings Account" onPress={() => console.log('Savings Account pressed')} />
             <MenuItem icon="cash-multiple" title="Transactions" onPress={() => console.log('Transactions pressed')} />
             <MenuItem icon="chart-line" title="Financial Reports" onPress={() => console.log('Financial Reports pressed')} />
-            <MenuItem icon="calculator" title="Loan Calculator"onPress={() => navigation.navigate('LoanCalculator')} />
+            <MenuItem icon="calculator" title="Loan Calculator" onPress={() => navigation.navigate('LoanCalculator')} />
             <MenuItem icon="handshake" title="Support" onPress={() => console.log('Support pressed')} />
             <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />
             <MenuItem icon="shield-check" title="Security" onPress={() => console.log('Security pressed')} />
@@ -137,6 +156,12 @@ const styles = StyleSheet.create({
     profileButton: {
         padding: 5,
     },
+    profileImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 40,
+        marginRight: 15,
+    },
     drawerContent: {
         flex: 1,
     },
@@ -146,6 +171,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
+
     profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',

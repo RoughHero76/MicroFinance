@@ -49,13 +49,34 @@ const AllCustomerView = () => {
         fetchCustomers(1);
     }, []);
 
-    const renderCustomerItem = ({ item }) => {
-        const loan = item.loans && item.loans.length > 0 ? item.loans[0] : null;
-        return (
-            <TouchableOpacity
-                style={styles.customerItem}
-                onPress={() => navigation.navigate('CustomerView', { uid: item.uid })}
-            >
+    const renderLoanItem = (loan) => (
+        <View style={styles.loanItem} key={loan._id}>
+            <View style={styles.loanHeader}>
+                <Text style={styles.loanNumber}>Loan #{loan.loanNumber}</Text>
+                <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
+                    <Text style={styles.loanStatusText}>{loan.status}</Text>
+                </View>
+            </View>
+            <View style={styles.loanDetails}>
+                <Text style={styles.loanAmount}>
+                    <Icon name="currency-inr" size={14} color="#4CAF50" /> {loan.loanAmount}
+                </Text>
+                <Text style={styles.loanDuration}>
+                    <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
+                </Text>
+            </View>
+            <Text style={styles.loanAssignee}>
+                <Icon name="account" size={14} color="#666" /> {loan.assignedTo.fname} {loan.assignedTo.lname}
+            </Text>
+        </View>
+    );
+
+    const renderCustomerItem = ({ item }) => (
+        <TouchableOpacity
+            style={styles.customerItem}
+            onPress={() => navigation.navigate('CustomerView', { uid: item.uid })}
+        >
+            <View style={styles.customerHeader}>
                 <Image
                     source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
                     style={styles.profilePicture}
@@ -68,24 +89,16 @@ const AllCustomerView = () => {
                     <Text style={styles.customerAddress}>
                         <Icon name="map-marker" size={14} color="#666" /> {item.address}, {item.city}
                     </Text>
-                    {loan && (
-                        <View style={styles.loanContainer}>
-                            <Text style={styles.loanAmount}>
-                                <Icon name="currency-inr" size={14} color="#4CAF50" />{loan.loanAmount}
-                            </Text>
-                            <Text style={styles.loanDuration}>
-                                <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
-                            </Text>
-                            <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                                <Text style={styles.loanStatusText}>{loan.status}</Text>
-                            </View>
-                        </View>
-                    )}
                 </View>
                 <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
-            </TouchableOpacity>
-        );
-    };
+            </View>
+            {item.loans && item.loans.length > 0 && (
+                <View style={styles.loansContainer}>
+                    {item.loans.map(renderLoanItem)}
+                </View>
+            )}
+        </TouchableOpacity>
+    );
 
     const getLoanStatusColor = (status) => {
         switch (status.toLowerCase()) {
@@ -139,9 +152,6 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     customerItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
         marginHorizontal: 16,
@@ -151,6 +161,14 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        overflow: 'hidden',
+    },
+    customerHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
     },
     profilePicture: {
         width: 60,
@@ -175,22 +193,30 @@ const styles = StyleSheet.create({
     customerAddress: {
         fontSize: 14,
         color: '#666',
+    },
+    chevron: {
+        marginLeft: 8,
+    },
+    loansContainer: {
+        padding: 16,
+        backgroundColor: '#F5F7FA',
+    },
+    loanItem: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 8,
+        padding: 12,
         marginBottom: 8,
     },
-    loanContainer: {
+    loanHeader: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        flexWrap: 'wrap',
+        marginBottom: 8,
     },
-    loanAmount: {
-        fontSize: 14,
-        color: '#4CAF50',
-        marginRight: 12,
-    },
-    loanDuration: {
-        fontSize: 14,
-        color: '#2196F3',
-        marginRight: 12,
+    loanNumber: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
     },
     loanStatus: {
         paddingHorizontal: 8,
@@ -202,8 +228,22 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
     },
-    chevron: {
-        marginLeft: 8,
+    loanDetails: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+    },
+    loanAmount: {
+        fontSize: 14,
+        color: '#4CAF50',
+    },
+    loanDuration: {
+        fontSize: 14,
+        color: '#2196F3',
+    },
+    loanAssignee: {
+        fontSize: 14,
+        color: '#666',
     },
     footer: {
         paddingVertical: 20,

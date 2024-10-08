@@ -13,6 +13,7 @@ const AllEmployeeView = () => {
     const [hasMore, setHasMore] = useState(true);
     const navigation = useNavigation();
 
+
     const fetchEmployees = async (pageNumber) => {
         if (loading || !hasMore) return;
         setLoading(true);
@@ -56,7 +57,7 @@ const AllEmployeeView = () => {
                 onPress={() => navigation.navigate('EmployeeView', { uid: item.uid })}
             >
                 <Image
-                    source={item.profilePicture ? { uri: item.profilePicture } : ProfilePicturePlaceHolder}
+                    source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
                     style={styles.profilePicture}
                 />
                 <View style={styles.employeeInfo}>

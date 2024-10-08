@@ -17,7 +17,6 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
     const [showPaymentDatePicker, setShowPaymentDatePicker] = useState(false);
     const [showPenaltyDatePicker, setShowPenaltyDatePicker] = useState(false);
 
-    console.log('New status:', newStatus);
     useEffect(() => {
         if (scheduleItem) {
             setNewStatus(scheduleItem.status);

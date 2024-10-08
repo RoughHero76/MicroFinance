@@ -30,8 +30,6 @@ export const apiCall = async (endpoint, method = 'GET', payload = null, isFormDa
                 config.data = JSON.stringify(payload);
             }
         }
-        console.log('Full payload:', config.data);
-
         const response = await axios(config);
         return response.data;
     } catch (error) {

@@ -10,7 +10,8 @@ import {
     Platform,
     ActivityIndicator,
     Image,
-    Modal
+    Modal,
+    Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -74,7 +75,7 @@ const CreateLoan = () => {
 
         const options = {
             mediaType: 'photo',
-            quality: 1,
+            quality: 0.3,
         };
 
         try {
@@ -150,7 +151,7 @@ const CreateLoan = () => {
         return isValid;
     };
 
-    const handleCreateLoan = async () => {
+    const createLoan = async () => {
         if (!validateForm()) {
             showToast('error', 'Validation Error', 'Please correct the errors before submitting');
             return;
@@ -200,6 +201,13 @@ const CreateLoan = () => {
         } finally {
             setLoading(false);
         }
+    }
+
+    const handleCreateLoan = async () => {
+        Alert.alert('Confirm Loan Creation', 'Are you sure you want to create this loan?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'OK', onPress: () => createLoan() }
+        ])
     };
 
     const renderInput = (icon, title, placeholder, name, keyboardType = 'default', value, onChangeText, disabled = false) => (
@@ -345,8 +353,8 @@ const CreateLoan = () => {
                             ], loanData.installmentFrequency, (itemValue) => handleInputChange('installmentFrequency', itemValue))}
                         </View>
                         <View style={styles.row}>
-                            {renderInput('percent', 'Interest Rate', 'Enter interest rate', 'interestRate', 'numeric', loanData.interestRate, (text) => handleInputChange('interestRate', text))}
-                            {renderInput('timer-sand', 'Grace Period', 'Enter grace period (days)', 'gracePeriod', 'numeric', loanData.gracePeriod, (text) => handleInputChange('gracePeriod', text))}
+                            {renderInput('percent', 'Interest Rate', 'Enter interest rate', 'interestRate', 'numeric', loanData.interestRate, disabled = true, (text) => handleInputChange('interestRate', text))}
+                            {renderInput('timer-sand', 'Grace Period', 'Enter grace period (days)', 'gracePeriod', 'numeric', loanData.gracePeriod, disabled = true, (text) => handleInputChange('gracePeriod', text))}
                         </View>
                         {renderDatePicker()}
                     </View>
@@ -488,7 +496,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     disabledInput: {
-        backgroundColor: '#F0F0F0',
+        //backgroundColor: '#F0F0F0',
         color: '#A0A0A0',
     },
     picker: {

@@ -8,6 +8,8 @@ export const HomeProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [settings, setSettings] = useState(null);
+
 
     useEffect(() => {
         loadLoginState();
