@@ -39,6 +39,7 @@ const AdminNavigator = ({ navigation }) => {
             'android.permission.SEND_SMS',
             'android.permission.RECEIVE_SMS',
             'android.permission.READ_PHONE_STATE',
+            'android.permission.WRITE_EXTERNAL_STORAGE'
         ],
         ios: [] // Add relevant iOS permissions if necessary
     });

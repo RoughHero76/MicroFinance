@@ -10,12 +10,17 @@ import {
   Modal,
   Dimensions,
   Alert,
+  PermissionsAndroid,
+  Platform,
 } from "react-native";
 import { CustomToast, showToast } from "../../../../components/toast/CustomToast";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../../components/api/apiUtils";
-
+import * as RNFS from '@dr.pogodin/react-native-fs';
+import ImageZoomPan from "../../../../components/ImageZoomPan";
+import { gestureHandlerRootHOC } from "react-native-gesture-handler";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
 
 const LoanDetails = ({ route, navigation }) => {
   const { loanId } = route.params;
@@ -98,6 +103,49 @@ const LoanDetails = ({ route, navigation }) => {
     setImageModalVisible(true);
   };
 
+  const downloadImage = async (imageUrl) => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'You need to grant storage permission to download the image.');
+          return;
+        }
+      }
+
+      const date = new Date();
+      const fileName = `loan_document_${date.getTime()}.jpg`;
+      let downloadDest;
+
+      if (Platform.OS === 'android') {
+        downloadDest = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+      } else {
+        downloadDest = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+      }
+
+      const options = {
+        fromUrl: imageUrl,
+        toFile: downloadDest,
+      };
+
+      const result = await RNFS.downloadFile(options).promise;
+
+      if (result.statusCode === 200) {
+        if (Platform.OS === 'ios') {
+          await RNFS.copyAssetsFileIOS(downloadDest, fileName, 0, 0);
+        }
+        Alert.alert('Success', 'Image downloaded successfully! Check your download folder!');
+      } else {
+        Alert.alert('Error', 'Failed to download the image.');
+      }
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      Alert.alert('Error', 'An error occurred while downloading the image.');
+    }
+  };
+
   const handleHiddenPress = useCallback(() => {
     setHiddenPressCount((prevCount) => {
       console.log("Hidden press count:", prevCount);
@@ -160,6 +208,29 @@ const LoanDetails = ({ route, navigation }) => {
       </View>
     );
   }
+  // Wrap the modal content with gestureHandlerRootHOC
+  const ModalContent = gestureHandlerRootHOC(({ currentImage, closeModal, downloadImage }) => (
+    <View style={styles.modalContainer}>
+      <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+        <Icon name="close" size={24} color="#ffffff" />
+      </TouchableOpacity>
+      <View style={styles.imageContainer}>
+        <ImageZoomPan imageUri={currentImage} />
+      </View>
+      <TouchableOpacity style={styles.downloadButton} onPress={() => downloadImage(currentImage)}>
+        <Icon name="download" size={24} color="#ffffff" />
+      </TouchableOpacity>
+    </View>
+  ));
+  const renderImageModal = () => (
+    <Modal visible={imageModalVisible} transparent={true} onRequestClose={() => setImageModalVisible(false)}>
+      <ModalContent
+        currentImage={currentImage}
+        closeModal={() => setImageModalVisible(false)}
+        downloadImage={downloadImage}
+      />
+    </Modal>
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -171,7 +242,7 @@ const LoanDetails = ({ route, navigation }) => {
         <TouchableOpacity onPress={handleHiddenPress} style={styles.hiddenButton} />
       </View>
 
-       
+
 
       {renderSection("Loan Details", [
         { label: "Loan Number", value: loanData.loanNumber },
@@ -226,19 +297,7 @@ const LoanDetails = ({ route, navigation }) => {
           </TouchableOpacity>
         )}
       </View>
-
-      <Modal visible={imageModalVisible} transparent={true} onRequestClose={() => setImageModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => setImageModalVisible(false)}>
-            <Icon name="close" size={24} color="#ffffff" />
-          </TouchableOpacity>
-          <Image
-            source={{ uri: currentImage }}
-            style={styles.modalImage}
-            resizeMode="contain"
-          />
-        </View>
-      </Modal>
+      {renderImageModal()}
       <CustomToast />
     </ScrollView>
   );
@@ -383,15 +442,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalImage: {
+  imageContainer: {
     width: screenWidth,
     height: screenHeight * 0.8,
   },
+
   closeButton: {
     position: 'absolute',
     top: 40,
     right: 20,
     zIndex: 1,
+  },
+  downloadButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+    borderRadius: 25,
   },
   hiddenButton: {
     position: 'absolute',
