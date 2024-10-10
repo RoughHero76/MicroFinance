@@ -105,7 +105,7 @@ const LoanDetails = ({ route, navigation }) => {
 
   const downloadImage = async (imageUrl) => {
     try {
-      if (Platform.OS === 'android') {
+/*       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
         );
@@ -113,7 +113,7 @@ const LoanDetails = ({ route, navigation }) => {
           Alert.alert('Permission Denied', 'You need to grant storage permission to download the image.');
           return;
         }
-      }
+      } */
 
       const date = new Date();
       const fileName = `loan_document_${date.getTime()}.jpg`;

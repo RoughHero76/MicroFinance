@@ -1,18 +1,23 @@
+// UpdateNotification.js
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useUpdateContext } from './context/UpdateContext';
 
 const UpdateNotification = () => {
-    const { updateAvailable, latestVersion, downloadUpdate } = useUpdateContext();
+    const { updateAvailable, latestVersion, downloadUpdate, downloading, downloadProgress } = useUpdateContext();
 
     if (!updateAvailable) return null;
 
     return (
         <View style={styles.container}>
             <Text style={styles.text}>A new version ({latestVersion}) is available!</Text>
-            <TouchableOpacity onPress={downloadUpdate} style={styles.button}>
-                <Text style={styles.buttonText}>Update Now</Text>
-            </TouchableOpacity>
+            {downloading ? (
+                <Text style={styles.progressText}>{`Downloading... ${downloadProgress.toFixed(2)}%`}</Text>
+            ) : (
+                <TouchableOpacity style={styles.button} onPress={downloadUpdate}>
+                    <Text style={styles.buttonText}>Update Now</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
@@ -26,13 +31,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
         padding: 15,
         borderRadius: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
         alignItems: 'center',
     },
     text: {
-        flex: 1,
-        marginRight: 10,
+        marginBottom: 10,
+        textAlign: 'center',
+        color: 'black',
     },
     button: {
         backgroundColor: '#007AFF',
@@ -41,8 +46,11 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     buttonText: {
-        color: 'white',
+        color: 'black',
         fontWeight: 'bold',
+    },
+    progressText: {
+        marginTop: 5,
     },
 });
 

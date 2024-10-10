@@ -6,6 +6,7 @@ import HomeScreen from './HomeScreen.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { useNavigation } from '@react-navigation/native';
+import { Menu } from 'react-native-paper';
 const Drawer = createDrawerNavigator();
 
 const CustomHeader = ({ navigation }) => {
@@ -105,6 +106,8 @@ const CustomDrawerContent = ({ navigation }) => {
             <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />
             <MenuItem icon="shield-check" title="Security" onPress={() => console.log('Security pressed')} />
             <MenuItem icon="bell-outline" title="Notifications" onPress={() => console.log('Notifications pressed')} />
+            {/* Menu Iem for About Page */}
+            <MenuItem icon="information" title="About" onPress={() => navigation.navigate('About')} />
             <MenuItem icon="logout" title="Logout" onPress={handleLogout} />
         </ScrollView>
     );

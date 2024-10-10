@@ -23,10 +23,14 @@ import EmployeeView from '../../Screens/Home/EmployeeView/EmployeeView.js';
 //Shared
 import SearchScreen from '../../Screens/Shared/Searching/SearchScreen.js';
 import LoanCalculator from '../../Screens/Shared/LoanCalculator.js';
+import About from '../../Screens/Shared/About.js';
 // Share Profile
 import ProfileScreen from '../../Screens/Shared/Profile/ProfileScreen.js';
 
 // Permissions
+import { Alert, Linking, Platform } from 'react-native';
+
+import { PERMISSIONS } from 'react-native-permissions';
 import GetPermission from '../permissions.js';
 
 const AdminStack = createNativeStackNavigator();
@@ -35,31 +39,52 @@ const AdminNavigator = ({ navigation }) => {
     const [permissionsGranted, setPermissionsGranted] = useState(false);
 
     const permissionsToRequest = Platform.select({
-        android: [
-            'android.permission.SEND_SMS',
-            'android.permission.RECEIVE_SMS',
-            'android.permission.READ_PHONE_STATE',
-            'android.permission.WRITE_EXTERNAL_STORAGE'
-        ],
+        android: Platform.Version >= 33
+            ? [
+                PERMISSIONS.ANDROID.SEND_SMS,
+                PERMISSIONS.ANDROID.RECEIVE_SMS,
+                PERMISSIONS.ANDROID.READ_PHONE_STATE,
+                PERMISSIONS.ANDROID.READ_MEDIA_IMAGES,
+                PERMISSIONS.ANDROID.READ_MEDIA_VIDEO,
+                PERMISSIONS.ANDROID.READ_MEDIA_AUDIO
+            ]
+            : Platform.Version >= 30
+                ? [
+                    PERMISSIONS.ANDROID.SEND_SMS,
+                    PERMISSIONS.ANDROID.RECEIVE_SMS,
+                    PERMISSIONS.ANDROID.READ_PHONE_STATE,
+                    PERMISSIONS.ANDROID.MANAGE_EXTERNAL_STORAGE
+                ]
+                : [
+                    PERMISSIONS.ANDROID.SEND_SMS,
+                    PERMISSIONS.ANDROID.RECEIVE_SMS,
+                    PERMISSIONS.ANDROID.READ_PHONE_STATE,
+                    PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+                    PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE
+                ],
         ios: [] // Add relevant iOS permissions if necessary
     });
 
     useEffect(() => {
         const requestPermissions = async () => {
-            for (const permission of permissionsToRequest) {
-                const granted = await GetPermission(permission);
-                if (!granted) {
-                    // Handle the case where a permission is not granted
-                    console.log(`Permission ${permission} not granted`);
-                    return;
+            try {
+                for (const permission of permissionsToRequest) {
+                    const granted = await GetPermission(permission);
+                    if (!granted) {
+                        console.log(`Permission ${permission} not granted`);
+                        setPermissionsGranted(false);
+                        return;
+                    }
                 }
+                setPermissionsGranted(true);
+            } catch (error) {
+                console.error('Error requesting permissions:', error);
+                setPermissionsGranted(false);
             }
-            setPermissionsGranted(true);
         };
 
         requestPermissions();
     }, []);
-
     /*     if (!permissionsGranted) {
             // You could return a loading screen or some other placeholder here
             return null;
@@ -110,6 +135,7 @@ const AdminNavigator = ({ navigation }) => {
             {/* Shared */}
             <AdminStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
             <AdminStack.Screen name="LoanCalculator" component={LoanCalculator} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Calculator' }} />
+            <AdminStack.Screen name="About" component={About} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'About' }} />
             {/* Profile */}
             <AdminStack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Profile' }} />
 

@@ -103,6 +103,8 @@ const CustomDrawerContent = ({ navigation }) => {
             <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />
             <MenuItem icon="shield-check" title="Security" onPress={() => console.log('Security pressed')} />
             <MenuItem icon="bell-outline" title="Notifications" onPress={() => console.log('Notifications pressed')} />
+            {/* Menu Iem for About Page */}
+            <MenuItem icon="information" title="About" onPress={() => navigation.navigate('About')} />
             <MenuItem icon="logout" title="Logout" onPress={handleLogout} />
         </ScrollView>
     );
