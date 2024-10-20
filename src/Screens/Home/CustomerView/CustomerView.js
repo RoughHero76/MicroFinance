@@ -17,22 +17,89 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
 import { CustomToast, showToast } from "../../../components/toast/CustomToast";
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { set } from "react-hook-form";
+import ImageModal from "../../../components/Image/ImageModal";
+import { useHomeContext } from "../../../components/context/HomeContext";
 
 const CustomerView = () => {
   const [customerData, setCustomerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profilePicUploadLoading, setProfilePicUploadLoading] = useState(false);
-  const [employees, setEmployees] = useState([]);
+  //const [employees, setEmployees] = useState([]);
+  const { employees } = useHomeContext();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [errorView, setErrorView] = useState(false);
+
+  //Image Related
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [currentImage, setCurrentImage] = useState(null);
+
+  const [optionModalVisible, setOptionModalVisible] = useState(false);
+  const [optionModalPosition, setOptionModalPosition] = useState({ top: 0, right: 0 });
+
+  const openOptionModal = (event) => {
+    const { pageY, pageX } = event.nativeEvent;
+    setOptionModalPosition({ top: pageY + 10, right: 10 });
+    setOptionModalVisible(true);
+  };
+
+  const closeOptionModal = () => {
+    setOptionModalVisible(false);
+  };
+
+  const handleEditCustomer = () => {
+    closeOptionModal();
+    navigation.navigate("EditCustomer", { customerData });
+  };
+
+  const handleImageOpen = () => {
+    setCurrentImage(customerData?.profilePic || ProfilePicturePlaceHolder);
+    closeOptionModal();
+    setImageModalVisible(true);
+  };
+
+  const handleDownloadProfilePicture = () => {
+    console.log('DownloadIamge')
+  };
+
+  const handleDeleteCustomer = () => {
+    closeOptionModal();
+    Alert.alert(
+      "Delete Customer",
+      "Are you sure you want to delete this customer?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await apiCall(`/api/admin/customer?uid=${customerData.uid}`, "DELETE");
+              if (response.status === "success") {
+                showToast("success", "Success", "Customer deleted successfully");
+                navigation.goBack();
+              } else {
+                showToast("error", "Error", response.message || "Failed to delete customer");
+              }
+            } catch (error) {
+              console.error("Error deleting customer:", error);
+              showToast("error", "Error", "Failed to delete customer");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+
   const navigation = useNavigation();
   const route = useRoute();
   const { uid } = route.params;
 
   useEffect(() => {
     fetchCustomerData(uid);
-    fetchEmployees();
+    //fetchEmployees();
   }, [uid]);
 
   const fetchCustomerData = async (uid) => {
@@ -46,24 +113,25 @@ const CustomerView = () => {
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
+      setErrorView(true);
     } finally {
       setLoading(false);
     }
   };
-  const fetchEmployees = async () => {
-    try {
-      const response = await apiCall('/api/admin/employee', 'GET');
-      if (response.status === 'success') {
-        setEmployees(response.data);
-      } else {
-        showToast("error", "Error", response.message || "Failed to fetch employees");
-        setErrorView(true);
+  /*   const fetchEmployees = async () => {
+      try {
+        const response = await apiCall('/api/admin/employee', 'GET');
+        if (response.status === 'success') {
+          setEmployees(response.data);
+        } else {
+          showToast("error", "Error", response.message || "Failed to fetch employees");
+          setErrorView(true);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        showToast("error", "Error", "Failed to fetch employees");
       }
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      showToast("error", "Error", "Failed to fetch employees");
-    }
-  };
+    }; */
 
   const handleImagePicker = () => {
     Alert.alert(
@@ -203,20 +271,25 @@ const CustomerView = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleImagePicker}>
-            {profilePicUploadLoading ? (
-              <ActivityIndicator size="small" color="#4CAF50" />
-            ) : (
+          {profilePicUploadLoading ? (
+            <ActivityIndicator size="small" color="#4CAF50" />
+          ) : (
+            <TouchableOpacity onPress={() => handleImageOpen()}>
               <Image
                 source={customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder}
                 style={styles.profileImage}
               />
-            )}
+            </TouchableOpacity>
+          )}
 
+          <TouchableOpacity onPress={handleImagePicker}>
             <View style={styles.editIconContainer}>
+
               <Icon name="pencil" size={16} color="#FFFFFF" />
             </View>
+
           </TouchableOpacity>
+
           <View style={styles.headerTextContainer}>
             <Text style={styles.customerName}>
               {customerData.fname} {customerData.lname}
@@ -228,6 +301,13 @@ const CustomerView = () => {
             onPress={() => fetchCustomerData(uid)}
           >
             <Icon name="refresh" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={openOptionModal}
+          >
+            <Icon name="dots-vertical" size={24} color="#4CAF50" />
           </TouchableOpacity>
         </View>
 
@@ -253,13 +333,16 @@ const CustomerView = () => {
             <View key={loan._id} style={styles.loanCard}>
               <View style={styles.loanHeader}>
                 <Text style={styles.loanAmount}>₹{loan.loanAmount}</Text>
+                <Text style={styles.loanNumber}>Loan Number: #{loan.loanNumber}</Text>
+
                 <LoanStatus status={loan.status} />
               </View>
               <Text style={styles.loanInfo}>
                 Duration: {loan.loanDuration} | Installments: {loan.numberOfInstallments} ({loan.installmentFrequency})
               </Text>
               <Text style={styles.loanInfo}>Total Paid: ₹{loan.totalPaid}</Text>
-              <Text style={[styles.loanInfo, { fontWeight: 'bold' }]}>Loan Number: #{loan.loanNumber}</Text>
+              <InfoItem icon="domain" label="Business Name" value={loan.businessFirmName} />
+              <InfoItem icon="home" label="Business Address" value={loan.businessAddress} />
               {loan.assignedTo ? (
                 <Text style={styles.assignedEmployee}>
                   Assigned to: {loan.assignedTo.fname} {loan.assignedTo.lname}
@@ -356,6 +439,37 @@ const CustomerView = () => {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={optionModalVisible}
+        onRequestClose={closeOptionModal}
+      >
+        <TouchableOpacity
+          style={styles.optionModalContainer}
+          activeOpacity={1}
+          onPress={closeOptionModal}
+        >
+          <View style={[styles.modalContent, { position: 'absolute', top: optionModalPosition.top, right: optionModalPosition.right }]}>
+            <TouchableOpacity style={styles.option} onPress={handleEditCustomer}>
+              <Icon name="account-edit" size={24} color="#4CAF50" />
+              <Text style={styles.optionText}>Edit Customer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.option} onPress={handleDeleteCustomer}>
+              <Icon name="account-remove" size={24} color="#4CAF50" />
+              <Text style={styles.optionText}>Delete Customer</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <ImageModal
+        isVisible={imageModalVisible}
+        imageUri={currentImage}
+        onDownload={handleDownloadProfilePicture}
+        onClose={() => setImageModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -365,10 +479,13 @@ const InfoItem = ({ icon, label, value }) => (
     <Icon name={icon} size={24} color="#4CAF50" style={styles.infoIcon} />
     <View>
       <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={styles.infoValue} numberOfLines={3} ellipsizeMode="tail">
+        {value}
+      </Text>
     </View>
   </View>
 );
+
 
 const LoanStatus = ({ status }) => {
   const getStatusColor = () => {
@@ -400,8 +517,8 @@ const styles = StyleSheet.create({
   },
   editIconContainer: {
     position: 'absolute',
+    top: 10,
     right: 0,
-    bottom: 0,
     backgroundColor: '#4CAF50',
     borderRadius: 12,
     padding: 4,
@@ -460,6 +577,8 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     color: "#333",
+    flexWrap: "wrap", // Allow text to wrap onto multiple lines
+    maxWidth: 250, // Adjust max width as needed
   },
   sectionHeader: {
     flexDirection: "row",
@@ -497,6 +616,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
+  },
+  loanNumber: {
+    fontSize: 16,
+    color: "black",
+    fontWeight: "bold",
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -564,6 +688,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
+
+  modalContainerAssignEmployee: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+
   modalContent: {
     backgroundColor: "white",
     borderRadius: 10,
@@ -604,7 +736,21 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     marginTop: 20,
-  }
+  },
+  optionModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+  },
+  optionText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: 'black',
+  },
 });
 
 export default CustomerView;

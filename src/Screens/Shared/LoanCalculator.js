@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import Toast from 'react-native-toast-message';
+import { showToast, CustomToast } from '../../components/toast/CustomToast';
 import { apiCall } from '../../components/api/apiUtils';
 
 const LoanCalculator = () => {
@@ -21,6 +21,7 @@ const LoanCalculator = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [loanAmount, setLoanAmount] = useState('');
+  const [principalAmount, setPrincipalAmount] = useState('');
   const [loanStartDate, setLoanStartDate] = useState(new Date());
   const [loanDuration, setLoanDuration] = useState('');
   const [installmentFrequency, setInstallmentFrequency] = useState('');
@@ -28,12 +29,12 @@ const LoanCalculator = () => {
   const [interestRate, setInterestRate] = useState('0');
 
   const onSubmit = async () => {
-    if (!loanAmount || !loanDuration || !installmentFrequency) {
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Please fill in all required fields.',
-      });
+    if (!principalAmount || !loanAmount || !loanDuration || !installmentFrequency) {
+      showToast(
+        'error',
+        'Validation Error',
+        'Please fill in all required fields.',
+      );
       return;
     }
 
@@ -48,17 +49,17 @@ const LoanCalculator = () => {
         interestRate,
       });
       setResult(response.data);
-      Toast.show({
-        type: 'success',
-        text1: 'Calculation Successful',
-        text2: 'Your loan details have been calculated.',
-      });
+      showToast(
+        'success',
+        'Calculation Successful',
+        'Your loan details have been calculated.',
+      );
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Calculation Failed',
-        text2: error.message || 'An error occurred while calculating loan details.',
-      });
+      showToast(
+        'error',
+        'Calculation Failed',
+        error.message || 'An error occurred while calculating loan details.',
+      );
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ const LoanCalculator = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.title}>Loan Calculator</Text>
-          
+
           <View style={styles.inputContainer}>
             <TextInput
               placeholder="Loan Amount"
@@ -86,7 +87,17 @@ const LoanCalculator = () => {
               onChangeText={setLoanAmount}
               keyboardType="numeric"
             />
+            <TextInput
+              placeholder="Principal Amount"
+              placeholderTextColor={styles.placeholderText.color}
+              style={styles.input}
+              value={principalAmount}
+              onChangeText={setPrincipalAmount}
+              keyboardType="numeric"
+            />
           </View>
+
+
 
           <View style={styles.inputContainer}>
             <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
@@ -172,6 +183,10 @@ const LoanCalculator = () => {
               <Text style={styles.resultValue}>{formatCurrency(result.loanAmount)}</Text>
             </View>
             <View style={styles.resultRow}>
+              <Text style={styles.resultLabel}>Principal Amount:</Text>
+              <Text style={styles.resultValue}>{formatCurrency(principalAmount)}</Text>
+            </View>
+            <View style={styles.resultRow}>
               <Text style={styles.resultLabel}>Loan Start Date:</Text>
               <Text style={styles.resultValue}>{new Date(result.loanStartDate).toLocaleDateString()}</Text>
             </View>
@@ -194,8 +209,8 @@ const LoanCalculator = () => {
           </View>
         )}
       </ScrollView>
-      <Toast />
-    </KeyboardAvoidingView>
+      <CustomToast />
+    </KeyboardAvoidingView >
   );
 };
 
@@ -229,6 +244,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#cccccc',
     borderRadius: 4,

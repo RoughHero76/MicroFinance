@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // import the icon package
 import MenuScreen from '../../Screens/Home/MenuScreen.js';
+import EditCustomerScreen from '../../Screens/Home/CustomerView/EditCustomerView.js';
 import CustomerView from '../../Screens/Home/CustomerView/CustomerView.js';
 import RepaymentSchedule from '../../Screens/Home/CustomerView/Loans/RepaymentSchedule.js';
 import AllCustomerView from '../../Screens/Home/CustomerView/AllCustomerView.js';
@@ -10,8 +11,13 @@ import CustomerRegistration from '../../Screens/Home/CustomerView/CustomerRegist
 import CreateLoan from '../../Screens/Home/CustomerView/Loans/CreateLoan.js';
 import CloseLoan from '../../Screens/Home/CustomerView/Loans/CloseLoan.js';
 
+//Reports
+import ReportsScreen from '../../Screens/Home/Reports/ReportsScreen.js';
+
 import LoanDetails from '../../Screens/Home/CustomerView/Loans/LoanDetails.js';
-import { View, TouchableOpacity } from 'react-native';
+import LoansView from '../../Screens/Home/CustomerView/Loans/LoansView.js';
+
+import { View, TouchableOpacity, Modal, Text, Pressable, StyleSheet } from 'react-native';
 // import PaymentHistory from '../../Screens/Home/CustomerView/Loans/PaymentHistory.js'; (Putting it inside Shared screebs)
 import PaymentHistory from '../../Screens/Shared/Customer/Loan/PaymentHistory.js';
 import RepaymentApprovalScreen from '../../Screens/Home/CustomerView/RepaymentApprovalScreen.js';
@@ -96,12 +102,31 @@ const AdminNavigator = ({ navigation }) => {
 
             {/* Custoemr And Loan */}
             <AdminStack.Screen name="CustomerView" component={CustomerView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Customer View' }} />
+            <AdminStack.Screen name="EditCustomer" component={EditCustomerScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Edit Customer' }} />
             <AdminStack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Schedule' }} />
             <AdminStack.Screen name="CustomerRegistration" component={CustomerRegistration} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Customer Registration' }} />
             <AdminStack.Screen name="CreateLoan" component={CreateLoan} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Create Loan' }} />
             <AdminStack.Screen name="LoanDetails" component={LoanDetails} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Details' }} />
             <AdminStack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Payment History' }} />
             <AdminStack.Screen name="CloseLoan" component={CloseLoan} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Close Loan' }} />
+            <AdminStack.Screen name="LoansView" component={LoansView} options={
+                ({ navigation }) => ({
+                    headerShown: true, headerTitleAlign: 'center', headerTitle: 'All Loans',
+                    headerRight: () => (
+                        <View>
+                            <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')}>
+                                <Icon
+                                    name="magnify"
+                                    size={28}
+                                    color="black"
+                                    style={{ marginRight: 15 }} // Adjust margin for spacing
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    ),
+                })
+            } />
+            <AdminStack.Screen name="ReportsScreen" component={ReportsScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Reports' }} />
             <AdminStack.Screen
                 name="AllEmployeeView"
                 component={AllEmployeeView}
@@ -111,13 +136,12 @@ const AdminNavigator = ({ navigation }) => {
                     headerTitle: 'All Employees',
                     headerRight: () => (
                         <View>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate('CustomerRegistration')}>
                                 <Icon
                                     name="account-plus"
                                     size={28}
                                     color="black"
                                     style={{ marginRight: 15 }}
-                                    onPress={() => navigation.navigate('EmployeeRegistration')}
                                 />
                             </TouchableOpacity>
                         </View>
@@ -151,16 +175,26 @@ const AdminNavigator = ({ navigation }) => {
                     headerTitleAlign: 'center',
                     headerTitle: 'All Customers',
                     headerRight: () => (
-                        <View>
-                            <TouchableOpacity>
+                        <View style={{ flexDirection: 'row' }}>
+                            {/* Search Icon */}
+                            <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')}>
+                                <Icon
+                                    name="magnify"
+                                    size={28}
+                                    color="black"
+                                    style={{ marginRight: 15 }} // Adjust margin for spacing
+                                />
+                            </TouchableOpacity>
+                            {/* Add Customer Icon */}
+                            <TouchableOpacity onPress={() => navigation.navigate('CustomerRegistration')}>
                                 <Icon
                                     name="account-plus"
                                     size={28}
                                     color="black"
                                     style={{ marginRight: 15 }}
-                                    onPress={() => navigation.navigate('CustomerRegistration')}
                                 />
                             </TouchableOpacity>
+
                         </View>
                     ),
                 })}

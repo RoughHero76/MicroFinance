@@ -14,6 +14,7 @@ import { apiCall } from "../../../../components/api/apiUtils";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../../assets/placeholders/profile.jpg";
 import { showToast, CustomToast } from "../../../../components/toast/CustomToast";
+import ImageModal from "../../../../components/Image/ImageModal";
 
 const CustomerView = () => {
     const [customerData, setCustomerData] = useState(null);
@@ -21,6 +22,17 @@ const CustomerView = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { id } = route.params;
+
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+    const [currentImage, setCurrentImage] = useState(null);
+    const handleImageOpen = () => {
+        setCurrentImage(customerData?.profilePic || ProfilePicturePlaceHolder);
+        setImageModalVisible(true);
+    };
+
+    const handleDownloadProfilePicture = () => {
+        console.log('DownloadIamge')
+    };
 
     useEffect(() => {
         fetchCustomerData(id);
@@ -70,11 +82,13 @@ const CustomerView = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView>
                 <View style={styles.header}>
-                    <Image
-                        source={customerData.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder}
 
-                        style={styles.profileImage}
-                    />
+                    <TouchableOpacity onPress={() => handleImageOpen()}>
+                        <Image
+                            source={customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder}
+                            style={styles.profileImage}
+                        />
+                    </TouchableOpacity>
                     <View style={styles.headerTextContainer}>
                         <Text style={styles.customerName}>
                             {customerData?.fname} {customerData?.lname}
@@ -96,7 +110,9 @@ const CustomerView = () => {
                         label="Address"
                         value={`${customerData.address}, ${customerData.city}, ${customerData.state}, ${customerData.country}`}
                     />
+
                     <InfoItem icon="email" label="Email" value={customerData.email} />
+
                 </View>
 
                 {customerData?.loans.length > 0 ? (
@@ -104,11 +120,14 @@ const CustomerView = () => {
                         <View key={loan._id} style={styles.loanCard}>
                             <View style={styles.loanHeader}>
                                 <Text style={styles.loanAmount}>₹{loan.loanAmount}</Text>
+                                <Text style={styles.loanNumber}>Loan #{loan?.loanNumber ?? 'N/A'}</Text>
                                 <LoanStatus status={loan.status} />
                             </View>
                             <Text style={styles.loanInfo}>
                                 Outstanding: ₹{loan.outstandingAmount} | Start Date: {new Date(loan.loanStartDate).toLocaleDateString()} | End Date: {new Date(loan.loanEndDate).toLocaleDateString()}
                             </Text>
+                            <InfoItem icon="domain" label="Business Name" value={loan.businessFirmName} />
+                            <InfoItem icon="home" label="Business Address" value={loan.businessAddress} />
                             <View style={styles.loanButtonsContainer}>
                                 <TouchableOpacity
                                     style={[styles.loanButton, styles.scheduleButton]}
@@ -137,6 +156,12 @@ const CustomerView = () => {
                     <Text style={styles.noLoansText}>No loans found</Text>
                 )}
             </ScrollView>
+            <ImageModal
+                isVisible={imageModalVisible}
+                imageUri={currentImage}
+                onDownload={handleDownloadProfilePicture}
+                onClose={() => setImageModalVisible(false)}
+            />
             <CustomToast />
         </SafeAreaView>
     );
@@ -147,11 +172,12 @@ const InfoItem = ({ icon, label, value }) => (
         <Icon name={icon} size={24} color="#4CAF50" style={styles.infoIcon} />
         <View>
             <Text style={styles.infoLabel}>{label}</Text>
-            <Text style={styles.infoValue}>{value}</Text>
+            <Text style={styles.infoValue} numberOfLines={3} ellipsizeMode="tail">
+                {value}
+            </Text>
         </View>
     </View>
 );
-
 const LoanStatus = ({ status }) => {
     const getStatusColor = () => {
         switch (status) {
@@ -159,6 +185,10 @@ const LoanStatus = ({ status }) => {
                 return "#4CAF50";
             case "Pending":
                 return "#FFC107";
+            case "Rejected":
+                return "#F44336";
+            case "Closed":
+                return "#9E9E9E";
             default:
                 return "#F44336";
         }
@@ -227,6 +257,8 @@ const styles = StyleSheet.create({
     infoValue: {
         fontSize: 16,
         color: "#333",
+        flexWrap: "wrap", // Allow text to wrap onto multiple lines
+        maxWidth: 250, // Adjust max width as needed
     },
     sectionHeader: {
         flexDirection: "row",
@@ -264,6 +296,11 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: "bold",
         color: "#333",
+    },
+    loanNumber: {
+        fontSize: 16,
+        color: "black",
+        fontWeight: "bold",
     },
     statusBadge: {
         paddingHorizontal: 10,

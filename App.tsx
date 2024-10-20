@@ -6,6 +6,7 @@ import RootNavigator from "./src/components/navigation/RootNavigator";
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import UpdateNotification from "./src/components/UpdateNotification";
+import { CustomToast } from "./src/components/toast/CustomToast";
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
             <RootNavigator />
             <UpdateNotification />
             <Toast />
+            <CustomToast />
           </UpdateProvider>
         </HomeProvider>
       </PaperProvider>

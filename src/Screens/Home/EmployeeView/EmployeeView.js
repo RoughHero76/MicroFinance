@@ -6,19 +6,27 @@ import {
     Image,
     ScrollView,
     ActivityIndicator,
-    RefreshControl
+    RefreshControl,
+    TouchableOpacity
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from "../../../components/api/apiUtils";
 import { showToast } from "../../../components/toast/CustomToast";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
+import ImageModal from '../../../components/Image/ImageModal';
+
 const EmployeeView = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const [employeeData, setEmployeeData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+
+
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+    const [currentImage, setCurrentImage] = useState(null);
+
     const uid = route.params.uid;
     const fetchEmployeeData = async () => {
         try {
@@ -46,6 +54,15 @@ const EmployeeView = () => {
         fetchEmployeeData();
     }, []);
 
+    const handleImageOpen = () => {
+        setCurrentImage(employeeData?.profilePic || ProfilePicturePlaceHolder);
+        setImageModalVisible(true);
+    };
+
+    const handleDownloadProfilePicture = () => {
+        console.log('DownloadIamge')
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -70,10 +87,15 @@ const EmployeeView = () => {
             }
         >
             <View style={styles.profileHeader}>
-                <Image
-                    source={employeeData.profilePic ? { uri: employeeData.profilePic } : ProfilePicturePlaceHolder}
-                    style={styles.profilePic}
-                />
+
+                <TouchableOpacity onPress={() => handleImageOpen()}>
+
+                    <Image
+                        source={employeeData.profilePic ? { uri: employeeData.profilePic } : ProfilePicturePlaceHolder}
+                        style={styles.profilePic}
+                    />
+                </TouchableOpacity>
+
                 <Text style={styles.name}>{`${employeeData.fname} ${employeeData.lname}`}</Text>
                 <Text style={styles.username}>@{employeeData.userName}</Text>
             </View>
@@ -112,6 +134,12 @@ const EmployeeView = () => {
                     value={employeeData.collectedRepayments.length.toString()}
                 />
             </View>
+            <ImageModal
+                isVisible={imageModalVisible}
+                imageUri={currentImage}
+                onDownload={handleDownloadProfilePicture}
+                onClose={() => setImageModalVisible(false)}
+            />
         </ScrollView>
     );
 };
@@ -133,6 +161,7 @@ const InfoItem = ({ icon, label, value, verified }) => (
                 )}
             </View>
         </View>
+
     </View>
 );
 

@@ -23,6 +23,7 @@ const HomeScreen = () => {
 
     const fetchDashboardData = useCallback(async () => {
         try {
+
             setLoading(true);
             const response = await apiCall('/api/admin/dashboard', 'GET');
             if (response.status === 'success') {
@@ -77,9 +78,9 @@ const HomeScreen = () => {
         if (!dashboardData) return null;
         return (
             <>
-                <DashboardCard title="Active Loans" value={dashboardData.loanCount} icon="bank" />
+                <DashboardCard title="Active Loans" value={dashboardData.loanCount} icon="bank" onClick={() => navigation.navigate('LoansView')} />
                 <DashboardCard title="Customers" value={dashboardData.customerCount} icon="account-group" onClick={handleCustomerClick} />
-                <DashboardCard
+                {/*                 <DashboardCard
                     title="Market Amount"
                     value={`${dashboardData.marketDetails.totalMarketAmount.toLocaleString()}`}
                     icon="cash"
@@ -88,7 +89,7 @@ const HomeScreen = () => {
                     title="Repaid"
                     value={`${dashboardData.marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
                     icon="cash-check"
-                />
+                /> */}
                 <DashboardCard
                     title="Approve History"
                     icon="check-underline"
@@ -109,7 +110,6 @@ const HomeScreen = () => {
                     <Skeleton width="48%" height={150} />
                     <Skeleton width="48%" height={150} />
                     <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
                 </View>
 
                 <Text style={styles.sectionTitle}>Recent Customers</Text>
@@ -117,7 +117,6 @@ const HomeScreen = () => {
                 <Skeleton width="100%" height={80} />
                 <Skeleton width="100%" height={80} />
                 <Skeleton width="100%" height={80} />
-
                 <Skeleton width="100%" height={50} />
             </ScrollView>
         );

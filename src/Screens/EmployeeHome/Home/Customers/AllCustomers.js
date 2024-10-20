@@ -24,7 +24,7 @@ const AllCustomerView = () => {
                 } else {
                     setCustomers(prevCustomers => [...prevCustomers, ...response.data]);
                 }
-                setHasMore(response.data.length === 10);
+                setHasMore(response.hasMore);
                 setPage(pageNumber);
             } else {
                 Toast.show({
@@ -45,6 +45,7 @@ const AllCustomerView = () => {
         }
     };
 
+    
     useEffect(() => {
         fetchCustomers(1);
     }, []);

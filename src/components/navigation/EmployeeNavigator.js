@@ -19,9 +19,12 @@ import LoanCalculator from "../../Screens/Shared/LoanCalculator";
 import About from "../../Screens/Shared/About.js";
 //Profile
 import ProfileScreen from "../../Screens/Shared/Profile/ProfileScreen";
-// Permissions
-import { Alert, Linking, Platform } from 'react-native';
 
+import { Alert, Linking, Platform, TouchableOpacity, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from "@react-navigation/native";
+
+// Permissions
 import { PERMISSIONS } from 'react-native-permissions';
 import GetPermission from '../permissions.js';
 
@@ -31,6 +34,8 @@ const EmployeeStack = createNativeStackNavigator();
 
 
 const EmployeeNavigator = () => {
+
+    const navigation = useNavigation();
     const [permissionsGranted, setPermissionsGranted] = useState(false);
 
     const permissionsToRequest = Platform.select({
@@ -84,9 +89,24 @@ const EmployeeNavigator = () => {
         <EmployeeStack.Navigator screenOptions={{ headerShown: false }}>
             <EmployeeStack.Screen name="MenuScreenEmployee" component={MenuScreenEmployee} />
             <EmployeeStack.Screen name="TodaysCollectionScreen" component={TodaysCollectionScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Todays Collection' }} />
-            <EmployeeStack.Screen name="AllCustomerView" component={AllCustomerView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'All Customers' }} />
+            <EmployeeStack.Screen name="AllCustomerView" component={AllCustomerView} options={{
+                headerShown: true, headerTitleAlign: 'center', headerTitle: 'All Customers', headerRight: () => {
+                    return (
+                        <>
+                            <TouchableOpacity style={styles.searchButton}
+                                onPress={() => navigation.navigate('SearchScreen')}
+                            >
+                                <Icon name="magnify" size={24} color="#000" />
+                            </TouchableOpacity>
+                        </>
+                    )
+                }
+            }} />
             <EmployeeStack.Screen name="CustomerView" component={CustomerView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Customer Details' }} />
-            <EmployeeStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
+            <EmployeeStack.Screen name="SearchScreen" component={SearchScreen} options={{
+                headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search'
+
+            }} />
             <EmployeeStack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Payment History' }} />
             <EmployeeStack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Schedule' }} />
             <EmployeeStack.Screen name="LoanCalculator" component={LoanCalculator} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Calculator' }} />
@@ -95,5 +115,11 @@ const EmployeeNavigator = () => {
         </EmployeeStack.Navigator>
     )
 }
+
+const styles = StyleSheet.create({
+    searchButton: {
+        marginRight: 10,
+    },
+})
 
 export default EmployeeNavigator

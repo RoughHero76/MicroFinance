@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     TextInput,
     Modal,
+    Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -22,7 +23,7 @@ const RepaymentApprovalScreen = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [filters, setFilters] = useState({
-        loanId: '',
+        loanNumber: '',
         defaultDate: true,
         date: new Date(),
         status: '',
@@ -42,18 +43,17 @@ const RepaymentApprovalScreen = () => {
                 status: filters.status,
             });
 
-            if (filters.loanId) {
-                queryParams.append('loanId', filters.loanId);
+            if (filters.loanNumber) {
+                queryParams.append('loanNumber', filters.loanNumber);
             }
-            console.log('URL :', `/api/admin/loan/repayment/history/approve?${queryParams}`);
 
+            console.log('Fetching repayments:', queryParams.toString());
             const response = await apiCall(`/api/admin/loan/repayment/history/approve?${queryParams}`, 'GET');
             if (response.status === 'success' && Array.isArray(response.data)) {
                 setRepayments(prevRepayments => [...prevRepayments, ...response.data]);
-                console.log('Repayments:', response.data);
                 setHasMore(response.data.length === 10);
                 setPage(prevPage => prevPage + 1);
-                
+
             } else {
                 console.error('Invalid data structure:', response);
             }
@@ -86,6 +86,37 @@ const RepaymentApprovalScreen = () => {
         }
     };
 
+    const handleConfirmReject = (repaymentId) => {
+        Alert.alert(
+            'Confirm Reject',
+            'Are you sure you want to reject this repayment? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Reject', onPress: () => handleReject(repaymentId) },
+            ]
+        )
+    }
+
+    const handleReject = async (repaymentId) => {
+        try {
+            setApproveLoadnig(true);
+            const response = await apiCall(`/api/admin/loan/repayment/history/reject`, 'POST', { repaymentId });
+            if (response.status === 'success') {
+                showToast('success', 'Repayment rejected successfully');
+            } else {
+                showToast('error', response.message || 'Failed to reject repayment');
+            }
+            setRepayments([]);
+            setPage(1);
+            setHasMore(true);
+            fetchRepayments();
+        } catch (error) {
+            showToast('error', 'Failed to reject repayment');
+        } finally {
+            setApproveLoadnig(false);
+        }
+    };
+
     const renderItem = ({ item }) => (
         <View style={styles.repaymentItem}>
             <View style={styles.repaymentInfo}>
@@ -103,14 +134,27 @@ const RepaymentApprovalScreen = () => {
                 <Text style={styles.detailText}>Logical Note: {item.logicNote || item.LogicNote || 'N/A'}</Text>
             </View>
             {item.status !== 'Approved' && (
-                <TouchableOpacity
-                    style={styles.approveButton}
-                    onPress={() => handleApprove(item._id)}
-                    disabled={approveLoadnig}
-                >
-                    <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
-                    {approveLoadnig ? <ActivityIndicator color="white" /> : <Text style={styles.approveButtonText}>Approve</Text>}
-                </TouchableOpacity>
+                <View style={[{ flexDirection: 'row', justifyContent: 'space-between' }]}>
+
+                    <TouchableOpacity
+                        style={styles.rejectButton}
+                        onPress={() => handleConfirmReject(item._id)}
+                        disabled={approveLoadnig}
+                    >
+                        <Icon name="close-circle-outline" size={20} color="#FFFFFF" />
+                        {approveLoadnig ? <ActivityIndicator color="white" /> : <Text style={styles.rejectButtonText}>Reject</Text>}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.approveButton}
+                        onPress={() => handleApprove(item._id)}
+                        disabled={approveLoadnig}
+                    >
+                        <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
+                        {approveLoadnig ? <ActivityIndicator color="white" /> : <Text style={styles.approveButtonText}>Approve</Text>}
+                    </TouchableOpacity>
+
+                </View>
             )}
         </View>
     );
@@ -127,10 +171,10 @@ const RepaymentApprovalScreen = () => {
                     <Text style={styles.filterTitle}>Filters</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="Loan ID (optional)"
-                        value={filters.loanId}
+                        placeholder="Loan Number (optional)"
+                        value={filters.loanNumber}
                         placeholderTextColor="gray"
-                        onChangeText={(text) => setFilters(prev => ({ ...prev, loanId: text }))}
+                        onChangeText={(text) => setFilters(prev => ({ ...prev, loanNumber: text }))}
                     />
                     <View style={styles.dateContainer}>
                         <Text style={styles.dateText}>Use Default Date:</Text>
@@ -277,6 +321,19 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     approveButtonText: {
+        color: '#FFFFFF',
+        marginLeft: 5,
+        fontWeight: 'bold',
+    },
+    rejectButton: {
+        backgroundColor: '#F44336',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+        borderRadius: 5,
+    },
+    rejectButtonText: {
         color: '#FFFFFF',
         marginLeft: 5,
         fontWeight: 'bold',

@@ -82,6 +82,7 @@ const CloseLoan = ({ route, navigation }) => {
                     <Text style={styles.detailText}>Outstanding Amount: ₹{loan.outstandingAmount}</Text>
                     <Text style={styles.detailText}>Total Paid: ₹{loan.totalPaid}</Text>
                     <Text style={styles.detailText}>Total Penalty: ₹{loan.totalPenaltyAmount}</Text>
+                    <Text style={styles.detailText}>Total Outstanding Amount: {loan.outstandingAmount + loan.totalPenaltyAmount}</Text>
                 </View>
             </View>
 
@@ -104,7 +105,7 @@ const CloseLoan = ({ route, navigation }) => {
                     name="totalAmountPaying"
                     defaultValue=""
                 />
-                {errors.totalAmountPaying && <Text style={styles.errorText}>Amount must be between 0 and {loan.outstandingAmount}</Text>}
+                {errors.totalAmountPaying && <Text style={styles.errorText}>Amount must be between 0 and {loan.outstandingAmount + loan.totalPenaltyAmount}</Text>}
 
                 <Controller
                     control={control}

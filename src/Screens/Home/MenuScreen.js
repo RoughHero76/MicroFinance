@@ -98,9 +98,8 @@ const CustomDrawerContent = ({ navigation }) => {
             <UserProfile />
 
             <MenuItem icon="account-cash" title="Employees" onPress={() => navigation.navigate('AllEmployeeView')} />
-            <MenuItem icon="bank" title="Savings Account" onPress={() => console.log('Savings Account pressed')} />
-            <MenuItem icon="cash-multiple" title="Transactions" onPress={() => console.log('Transactions pressed')} />
-            <MenuItem icon="chart-line" title="Financial Reports" onPress={() => console.log('Financial Reports pressed')} />
+            <MenuItem icon="cash-multiple" title="Payments" onPress={() => console.log('Transactions pressed')} />
+            <MenuItem icon="chart-line" title="Reports" onPress={() => navigation.navigate('ReportsScreen')} />
             <MenuItem icon="calculator" title="Loan Calculator" onPress={() => navigation.navigate('LoanCalculator')} />
             <MenuItem icon="handshake" title="Support" onPress={() => console.log('Support pressed')} />
             <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />

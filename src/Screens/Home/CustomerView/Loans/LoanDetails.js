@@ -10,17 +10,15 @@ import {
   Modal,
   Dimensions,
   Alert,
-  PermissionsAndroid,
-  Platform,
+  TextInput,
 } from "react-native";
 import { CustomToast, showToast } from "../../../../components/toast/CustomToast";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../../components/api/apiUtils";
 import * as RNFS from '@dr.pogodin/react-native-fs';
-import ImageZoomPan from "../../../../components/ImageZoomPan";
-import { gestureHandlerRootHOC } from "react-native-gesture-handler";
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-
+import { Picker } from '@react-native-picker/picker';
+import { launchImageLibrary } from 'react-native-image-picker';
+import ImageModal from "../../../../components/Image/ImageModal";
 
 const LoanDetails = ({ route, navigation }) => {
   const { loanId } = route.params;
@@ -31,6 +29,14 @@ const LoanDetails = ({ route, navigation }) => {
   const [expired, setExpired] = useState(false);
   const [deleteLoanLoading, setDeleteLoanLoading] = useState(false);
   const [hiddenPressCount, setHiddenPressCount] = useState(0);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+
+  // Document-related state
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [deleteDocumentLoading, setDeleteDocumentLoading] = useState(false);
+  const [newDocumentName, setNewDocumentName] = useState('');
+  const [newDocumentType, setNewDocumentType] = useState('Id Proof');
+  const [documents, setDocuments] = useState([]);
 
   useEffect(() => {
     fetchLoanDetails();
@@ -40,7 +46,7 @@ const LoanDetails = ({ route, navigation }) => {
 
   const fetchLoanDetails = async () => {
     try {
-      const response = await apiCall(`/api/admin/loan?loanId=${loanId}`);
+      const response = await apiCall(`/api/admin/loan?loanId=${loanId}&includeDocuments=true`);
       setLoanData(response.data[0]);
       setLoading(false);
       showToast('success', 'Loan fetched successfully');
@@ -103,26 +109,16 @@ const LoanDetails = ({ route, navigation }) => {
     setImageModalVisible(true);
   };
 
-  const downloadImage = async (imageUrl) => {
+  const handleDownload = async (imageUrl) => {
     try {
-/*       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('Permission Denied', 'You need to grant storage permission to download the image.');
-          return;
-        }
-      } */
-
       const date = new Date();
       const fileName = `loan_document_${date.getTime()}.jpg`;
-      let downloadDest;
+      const downloadDest = `${RNFS.DownloadDirectoryPath}/EVI/Documents/${loanData.businessFirmName}/${fileName}`;
+      const pathCheck = `${RNFS.DownloadDirectoryPath}/EVI/Documents/${loanData.businessFirmName}`;
 
-      if (Platform.OS === 'android') {
-        downloadDest = `${RNFS.DownloadDirectoryPath}/${fileName}`;
-      } else {
-        downloadDest = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+      const existsCheck = await RNFS.exists(pathCheck);
+      if (!existsCheck) {
+        await RNFS.mkdir(pathCheck);
       }
 
       const options = {
@@ -133,9 +129,6 @@ const LoanDetails = ({ route, navigation }) => {
       const result = await RNFS.downloadFile(options).promise;
 
       if (result.statusCode === 200) {
-        if (Platform.OS === 'ios') {
-          await RNFS.copyAssetsFileIOS(downloadDest, fileName, 0, 0);
-        }
         Alert.alert('Success', 'Image downloaded successfully! Check your download folder!');
       } else {
         Alert.alert('Error', 'Failed to download the image.');
@@ -148,7 +141,6 @@ const LoanDetails = ({ route, navigation }) => {
 
   const handleHiddenPress = useCallback(() => {
     setHiddenPressCount((prevCount) => {
-      console.log("Hidden press count:", prevCount);
       const newCount = prevCount + 1;
       if (newCount === 5) {
         Alert.alert(
@@ -165,19 +157,211 @@ const LoanDetails = ({ route, navigation }) => {
     });
   }, [loanData]);
 
+  const deleteDocument = async (documentId) => {
+    setDeleteDocumentLoading(true);
+    try {
+      const response = await apiCall(`/api/admin/loan/${loanId}/delete/documents`, 'DELETE', { documentIds: [documentId] });
+      console.log(response);
+      if (response.status === "success") {
+        showToast('success', 'Document deleted successfully');
+        fetchLoanDetails();
+      } else {
+        showToast('error', response.message || 'Error deleting document');
+      }
+    } catch (error) {
+      showToast('error', 'Error deleting document');
+    } finally {
+      setDeleteDocumentLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (documentId) => {
+    Alert.alert('Confirm Document Deletion', 'Are you sure you want to delete this document?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'OK', onPress: () => deleteDocument(documentId) }
+    ]);
+  };
+
+
+  const handleDocumentUpload = async () => {
+    try {
+      if (!newDocumentName.trim()) {
+        showToast('error', 'Error', 'Please enter a document name');
+        return;
+      }
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.5,
+      });
+
+      if (result.didCancel) return;
+
+      if (result.errorCode) {
+        showToast('error', 'ImagePicker Error: ' + result.errorMessage);
+        return;
+      }
+
+      const file = result.assets[0];
+      const newDocument = {
+        uri: file.uri,
+        type: file.type,
+        name: file.fileName,
+        documentName: newDocumentName,
+        documentType: newDocumentType,
+      };
+
+      setDocuments([...documents, newDocument]);
+      setNewDocumentName('');
+    } catch (error) {
+      showToast('error', 'Error selecting document');
+    }
+  };
+
+  const handleRemoveDocument = (index) => {
+    setDocuments(documents.filter((_, i) => i !== index));
+  };
+
+  const handleUploadDocuments = async () => {
+    try {
+      setUploadingDocument(true);
+      const formData = new FormData();
+
+      documents.forEach((doc, index) => {
+        formData.append('documents', {
+          uri: doc.uri,
+          type: doc.type,
+          name: doc.name,
+        });
+        formData.append(`documentNames[${index}]`, doc.documentName);
+        formData.append(`documentTypes[${index}]`, doc.documentType);
+      });
+
+      console.log(formData);
+
+      const response = await apiCall(`/api/admin/loan/${loanId}/add/documents`, 'POST', formData, true);
+      setUploadingDocument(false);
+
+      if (response.status === "success") {
+        showToast('success', 'Documents uploaded successfully');
+        setDocuments([]);
+        fetchLoanDetails();
+        setUploadModalVisible(false);
+      } else {
+        showToast('error', response.message || 'Error uploading documents');
+      }
+    } catch (error) {
+      setUploadingDocument(false);
+      showToast('error', 'Error uploading documents');
+    }
+  };
+
+  const renderDocumentUploadModal = () => (
+    <Modal
+      visible={uploadModalVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setUploadModalVisible(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Upload Document</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter document name"
+            value={newDocumentName}
+            onChangeText={setNewDocumentName}
+            placeholderTextColor={'#9CA3AF'}
+          />
+          <Picker
+            selectedValue={newDocumentType}
+            style={styles.picker}
+            onValueChange={(itemValue) => setNewDocumentType(itemValue)}
+          >
+            <Picker.Item label="Id Proof" value="Id Proof" />
+            <Picker.Item label="Bank" value="Bank" />
+            <Picker.Item label="Government" value="Goverment" />
+            <Picker.Item label="Photo" value="Photo" />
+            <Picker.Item label="Signature" value="Signature" />
+            <Picker.Item label="Other" value="Other" />
+          </Picker>
+          <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentUpload}>
+            <Icon name="file-upload" size={24} color="#fff" />
+            <Text style={styles.uploadButtonText}>Select Document</Text>
+          </TouchableOpacity>
+          <ScrollView style={styles.imagePreviewContainer}>
+            {documents.map((doc, index) => (
+              <View key={index} style={styles.uploadedImageContainer}>
+                <Image source={{ uri: doc.uri }} style={styles.uploadedImage} />
+                <Text style={styles.documentNameText}>{doc.documentName}</Text>
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={() => handleRemoveDocument(index)}
+                >
+                  <Icon name="close" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+          {documents.length > 0 && (
+            <TouchableOpacity
+              style={[styles.uploadButton, styles.submitButton]}
+              onPress={handleUploadDocuments}
+              disabled={uploadingDocument}
+            >
+              {uploadingDocument ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.uploadButtonText}>Upload All Documents</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.closeButtonDocument}
+            onPress={() => setUploadModalVisible(false)}
+          >
+            <Icon name="close" size={24} color="#4a4a4a" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <CustomToast />
+
+    </Modal>
+  );
+
   const renderDocumentSection = (title, docs) => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {docs.map((doc, index) => (
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
         <TouchableOpacity
-          key={index}
-          style={styles.documentItem}
-          onPress={() => openImageModal(doc.documentUrl)}
+          style={styles.addDocumentButton}
+          onPress={() => setUploadModalVisible(true)}
         >
-          <Icon name="file-document-outline" size={24} color="#4a4a4a" />
-          <Text style={styles.documentText}>{doc.documentName}</Text>
-          <Text style={styles.viewText}>View</Text>
+          <Icon name="plus" size={24} color="#4CAF50" />
+          <Text style={styles.addDocumentText}>Add Documents</Text>
         </TouchableOpacity>
+      </View>
+      {docs.map((doc, index) => (
+        <View key={index} style={styles.documentItem}>
+          <TouchableOpacity
+            style={styles.documentInfo}
+            onPress={() => openImageModal(doc.documentUrl)}
+          >
+            <Icon name="file-document-outline" size={24} color="#4a4a4a" />
+            <Text style={styles.documentText}>{doc.documentName}</Text>
+            <Text style={styles.viewText}>View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteDocumentButton}
+            onPress={() => handleDeleteDocument(doc._id)}
+            disabled={deleteDocumentLoading}
+          >
+            {deleteDocumentLoading ? (
+              <ActivityIndicator size="small" color="black" />
+            ) : (
+              <Icon name="delete-outline" size={24} color="#ff0000" />
+            )}
+          </TouchableOpacity>
+        </View>
       ))}
     </View>
   );
@@ -208,28 +392,27 @@ const LoanDetails = ({ route, navigation }) => {
       </View>
     );
   }
-  // Wrap the modal content with gestureHandlerRootHOC
-  const ModalContent = gestureHandlerRootHOC(({ currentImage, closeModal, downloadImage }) => (
-    <View style={styles.modalContainer}>
-      <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-        <Icon name="close" size={24} color="#ffffff" />
-      </TouchableOpacity>
-      <View style={styles.imageContainer}>
-        <ImageZoomPan imageUri={currentImage} />
-      </View>
-      <TouchableOpacity style={styles.downloadButton} onPress={() => downloadImage(currentImage)}>
-        <Icon name="download" size={24} color="#ffffff" />
-      </TouchableOpacity>
-    </View>
-  ));
+
+
   const renderImageModal = () => (
-    <Modal visible={imageModalVisible} transparent={true} onRequestClose={() => setImageModalVisible(false)}>
-      <ModalContent
-        currentImage={currentImage}
-        closeModal={() => setImageModalVisible(false)}
-        downloadImage={downloadImage}
-      />
-    </Modal>
+    <ImageModal
+      isVisible={imageModalVisible}
+      imageUri={currentImage}
+      onClose={() => setImageModalVisible(false)}
+      onDownload={() => handleDownload(currentImage)}
+    />
+  );
+
+  const renderSection = (title, items) => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {items.map((item, index) => (
+        <View key={index} style={styles.detailItem}>
+          <Text style={styles.detailLabel}>{item.label}</Text>
+          <Text style={styles.detailValue}>{item.value}</Text>
+        </View>
+      ))}
+    </View>
   );
 
   return (
@@ -241,8 +424,6 @@ const LoanDetails = ({ route, navigation }) => {
         </View>
         <TouchableOpacity onPress={handleHiddenPress} style={styles.hiddenButton} />
       </View>
-
-
 
       {renderSection("Loan Details", [
         { label: "Loan Number", value: loanData.loanNumber },
@@ -297,23 +478,13 @@ const LoanDetails = ({ route, navigation }) => {
           </TouchableOpacity>
         )}
       </View>
+
       {renderImageModal()}
+      {renderDocumentUploadModal()}
       <CustomToast />
     </ScrollView>
   );
 };
-
-const renderSection = (title, items) => (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {items.map((item, index) => (
-      <View key={index} style={styles.detailItem}>
-        <Text style={styles.detailLabel}>{item.label}</Text>
-        <Text style={styles.detailValue}>{item.value}</Text>
-      </View>
-    ))}
-  </View>
-);
 
 const styles = StyleSheet.create({
   container: {
@@ -367,11 +538,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#333333",
-    marginBottom: 12,
+  },
+  addDocumentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addDocumentText: {
+    color: '#4CAF50',
+    marginLeft: 4,
+    fontWeight: 'bold',
   },
   detailItem: {
     flexDirection: "row",
@@ -391,6 +576,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+    justifyContent: "space-between",
+  },
+  documentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
   documentText: {
     fontSize: 16,
@@ -402,6 +593,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#007AFF",
     fontWeight: "bold",
+    marginRight: 12,
+  },
+  deleteDocumentButton: {
+    padding: 8,
   },
   actionContainer: {
     flexDirection: "row",
@@ -438,13 +633,94 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  imageContainer: {
-    width: screenWidth,
-    height: screenHeight * 0.8,
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: 'black'
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 15,
+    color: 'black'
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    marginBottom: 15,
+    color: 'black'
+  },
+  uploadButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 4,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  uploadButtonText: {
+    color: '#ffffff',
+    marginLeft: 10,
+  },
+  imagePreviewContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 15,
+  },
+  uploadedImageContainer: {
+    margin: 5,
+    alignItems: 'center',
+  },
+  uploadedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 4,
+  },
+  documentNameText: {
+    marginTop: 5,
+    fontSize: 12,
+    color: 'black',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  submitButton: {
+    backgroundColor: '#007AFF',
+  },
+  closeButtonDocument: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 1,
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 
   closeButton: {
@@ -453,15 +729,7 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 1,
   },
-  downloadButton: {
-    position: 'absolute',
-    bottom: 40,
-    right: 20,
-    zIndex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
-    borderRadius: 25,
-  },
+
   hiddenButton: {
     position: 'absolute',
     top: 0,

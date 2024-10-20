@@ -12,6 +12,7 @@ import ProfileCoverImage3 from '../../../assets/bg/bgProfile3.jpg'
 import ProfileCoverImage4 from '../../../assets/bg/bgProfile4.jpg'
 import ProfileCoverImage5 from '../../../assets/bg/bgProfile5.jpg'
 import ProfileCoverImageSpecial from '../../../assets/bg/bgProfileSpecial.jpg'
+import DefaultProfilePicture from '../../../assets/placeholders/profile.jpg'
 
 const ProfileScreen = () => {
     const [profile, setProfile] = useState(null);
@@ -153,7 +154,11 @@ const ProfileScreen = () => {
                                 <ActivityIndicator size="large" color="#FFFFFF" />
                             </View>
                         ) : (
-                            <Image source={{ uri: profile.profilePic }} style={styles.profilePic} />
+                            profile.profilePic ? (
+                                <Image source={{ uri: profile.profilePic }} style={styles.profileImage} />
+                            ) : (
+                                <Image source={DefaultProfilePicture} style={styles.profileImage} />
+                            )
                         )}
                         <View style={styles.cameraIconContainer}>
                             <Icon name="camera-alt" size={20} color="#FFFFFF" />
@@ -238,6 +243,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#4A90E2',
         borderRadius: 15,
         padding: 5,
+    },
+    profileImage: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        borderWidth: 3,
+        borderColor: '#FFFFFF',
     },
     name: {
         fontSize: 28,

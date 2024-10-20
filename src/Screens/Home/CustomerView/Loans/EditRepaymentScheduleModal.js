@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ScrollView,
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useHomeContext } from '../../../../components/context/HomeContext';
 
 const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) => {
     const [newStatus, setNewStatus] = useState(scheduleItem?.status || '');
@@ -13,6 +14,15 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
     const [penaltyReason, setPenaltyReason] = useState('');
     const [penaltyAppliedDate, setPenaltyAppliedDate] = useState(new Date());
     const [transactionId, setTransactionId] = useState('');
+
+    const { employees } = useHomeContext();
+
+    const [collectedBy, setCollectedBy] = useState('');
+    const employeeItems = employees.map(emp => ({
+        label: `${emp.fname} ${emp.lname}`,
+        value: emp._id
+    }));
+
 
     const [showPaymentDatePicker, setShowPaymentDatePicker] = useState(false);
     const [showPenaltyDatePicker, setShowPenaltyDatePicker] = useState(false);
@@ -41,6 +51,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
             penaltyReason,
             penaltyAppliedDate: penaltyAppliedDate.toISOString(),
             transactionId,
+            collectedBy
         });
         onClose();
     };
@@ -50,20 +61,40 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
 
         switch (oldStatus) {
             case 'Pending':
-                if (['PartiallyPaid', 'OverduePaid'].includes(newStatus)) {
+
+                if (newStatus === 'Paid') {
+                    return (
+                        <>
+                            {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
+                        </>
+                    )
+                }
+                else if (['PartiallyPaid', 'OverduePaid'].includes(newStatus)) {
                     return (
                         <>
                             {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
                             {renderInput('Amount', amount, setAmount, 'numeric')}
                             {renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
                                 { label: 'Cash', value: 'Cash' },
-                                { label: 'Bank Transfer', value: 'BankTransfer' },
+                                { label: 'Bank Transfer', value: 'Bank Transfer' },
                                 { label: 'GooglePay', value: 'GooglePay' },
                                 { label: 'PhonePay', value: 'PhonePay' },
                                 { label: 'Paytm', value: 'Paytm' },
                                 { label: 'Cheque', value: 'Cheque' },
                                 { label: 'Other', value: 'Other' },
                             ])}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     );
                 } else if (newStatus === 'Overdue') {
@@ -83,7 +114,14 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                                     { label: 'Cheque', value: 'Cheque' },
                                     { label: 'Other', value: 'Other' },
                                 ])
+
                             }
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     )
                 }
@@ -95,10 +133,26 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                             {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
                             {renderInput('Amount', amount, setAmount, 'numeric')}
                             {renderPenaltyFields()}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     );
                 } else if (newStatus === 'AdvancePaid') {
-                    return renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker);
+                    return (
+                        <>
+                            {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
+                        </>
+                    )
                 }
                 break;
             case 'PartiallyPaid':
@@ -107,6 +161,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                         <>
                             {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
                             {renderInput('Amount', amount, setAmount, 'numeric')}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     );
                 } else if (['Overdue', 'OverduePaid'].includes(newStatus)) {
@@ -114,6 +174,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                         <>
                             {renderInput('Amount', amount, setAmount, 'numeric')}
                             {renderPenaltyFields()}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     );
                 } else if (newStatus === 'AdvancePaid') {
@@ -121,6 +187,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                         <>
                             {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
                             {renderInput('Amount', amount, setAmount, 'numeric')}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     );
                 }
@@ -140,6 +212,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                                 { label: 'Cheque', value: 'Cheque' },
                                 { label: 'Other', value: 'Other' },
                             ])}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     );
                 }
@@ -151,6 +229,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                         <>
                             {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
                             {renderInput('Amount', amount, setAmount, 'numeric')}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     )
                 }
@@ -169,6 +253,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                                 { label: 'Cheque', value: 'Cheque' },
                                 { label: 'Other', value: 'Other' },
                             ])}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     )
                 } else if (newStatus === 'PartiallyPaid') {
@@ -185,6 +275,12 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                                 { label: 'Cheque', value: 'Cheque' },
                                 { label: 'Other', value: 'Other' },
                             ])}
+                            {renderEmployeePicker(
+                                'Collected By',
+                                collectedBy,
+                                (value) => setCollectedBy(value),
+                                employeeItems
+                            )}
                         </>
                     )
                 }
@@ -232,6 +328,25 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
             </View>
         </View>
     );
+
+    const renderEmployeePicker = (label, selectedValue, onValueChange, items) => (
+        <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{label}</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={selectedValue}
+                    onValueChange={onValueChange}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Select an option" value="" />
+                    {items.map((item) => (
+                        <Picker.Item key={item.value} label={item.label} value={item.value} />
+                    ))}
+                </Picker>
+            </View>
+        </View>
+    );
+
 
     const renderDatePicker = (label, date, onDateChange, showPicker, setShowPicker) => (
         <View style={styles.inputContainer}>

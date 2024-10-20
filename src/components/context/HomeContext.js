@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { apiCall } from "../api/apiUtils";
 export const HomeContext = createContext();
 
 export const HomeProvider = ({ children }) => {
@@ -10,10 +10,30 @@ export const HomeProvider = ({ children }) => {
     const [userRole, setUserRole] = useState(null);
     const [settings, setSettings] = useState(null);
 
+    //Employees Data
+    const [employees, setEmployees] = useState(null);
+
 
     useEffect(() => {
         loadLoginState();
     }, []);
+
+    useEffect(() => {
+        if (isLoggedIn && userRole === 'admin') {
+            fetchEmployees();
+        }
+    }, [isLoggedIn]);
+
+    const fetchEmployees = async () => {
+        try {
+            const response = await apiCall('/api/admin/employee', 'GET');
+            if (response.status === 'success') {
+                setEmployees(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching employees:", error);
+        }
+    };
 
     const loginUser = async (userData) => {
         if (userData && userData.user) {
@@ -73,7 +93,8 @@ export const HomeProvider = ({ children }) => {
         setUserRole,
         loadLoginState,
         loginUser,
-        logoutUser
+        logoutUser,
+        employees
     };
 
     return (

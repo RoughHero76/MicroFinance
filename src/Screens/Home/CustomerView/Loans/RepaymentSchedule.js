@@ -49,7 +49,6 @@ const RepaymentSchedule = () => {
 
     const handleSaveSchedule = async (updatedSchedule) => {
         try {
-            console.log('Updating repayment schedule:', updatedSchedule);
             const payload = {
                 id: updatedSchedule.id, // Changed from updatedSchedule._id to updatedSchedule.id
                 status: updatedSchedule.status,
@@ -59,7 +58,8 @@ const RepaymentSchedule = () => {
                 penaltyAmount: updatedSchedule.penaltyAmount,
                 penaltyReason: updatedSchedule.penaltyReason,
                 penaltyAppliedDate: updatedSchedule.penaltyAppliedDate,
-                transactionId: updatedSchedule.transactionId
+                transactionId: updatedSchedule.transactionId,
+                collectedBy: updatedSchedule.collectedBy
             };
             const response = await apiCall('/api/admin/loan/repayment/schedule/update', 'POST', payload);
             console.log('Response:', response);
@@ -139,6 +139,9 @@ const RepaymentSchedule = () => {
                 <Text style={styles.dueDate}>
                     {item.dueDate ? new Date(item.dueDate).toLocaleDateString() : 'N/A'}
                 </Text>
+                <Text style={styles.dueDate}>
+                    #{item.loanInstallmentNumber || 'N/A'}
+                </Text>
             </View>
             <View style={styles.scheduleContent}>
                 <View style={styles.scheduleRow}>
@@ -154,7 +157,7 @@ const RepaymentSchedule = () => {
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
-                    <Icon name="alert-circle" size={20} color={getStatusColor(item.status)} />
+                    <Icon name={getIcon(item.status)} size={20} color={getStatusColor(item.status)} />
                     <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
                         {item.status || 'N/A'}
                     </Text>
@@ -181,14 +184,16 @@ const RepaymentSchedule = () => {
                                 <Text style={styles.repaymentText}>Amount: Rs.{repayment.amount}</Text>
                                 <Text style={styles.repaymentText}>Date: {new Date(repayment.paymentDate).toLocaleString()}</Text>
                                 <Text style={styles.repaymentText}>Method: {repayment.paymentMethod}</Text>
-                                <Text style={styles.repaymentText}>Status: {repayment.status}</Text>
+                                <Text style={[styles.repaymentText, { color: getStatusColor(repayment.status) }]}>Status: {repayment.status}</Text>
                                 {repayment.transactionId && (
                                     <Text style={styles.repaymentText}>Transaction ID: {repayment.transactionId}</Text>
                                 )}
-                                {repayment.collectedBy && (
+                                {repayment.collectedBy ? (
                                     <Text style={styles.repaymentText}>
-                                        Collected By: {repayment.collectedBy.fname} {repayment.collectedBy.lname}
+                                        Collected By:{repayment.collectedBy.fname} {repayment.collectedBy.lname}
                                     </Text>
+                                ) : (
+                                    <Text style={styles.repaymentText}>Collected By: Admin</Text>
                                 )}
                             </View>
                         ))}
@@ -328,13 +333,47 @@ const RepaymentSchedule = () => {
 const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
         case 'paid':
-            return '#018786';
+            return 'green';
         case 'pending':
-            return '#FFA000';
+            return 'orange';
         case 'overdue':
-            return '#B00020';
+            return 'red';
+        case 'overduepaid':
+            return '#a06025';
+        case 'advancepaid':
+            return 'blue';
+        case 'partiallypaid':
+            return '#ff6f00';
+        case 'partiallypaidfullypaid':
+            return '#a06025';
+        case 'approved':
+            return '#4CAF50';
+
         default:
             return '#6200EE';
+    }
+};
+
+const getIcon = (status) => {
+    switch (status?.toLowerCase()) {
+        case 'paid':
+            return 'check-circle';
+        case 'pending':
+            return 'clock-outline';
+        case 'overdue':
+            return 'alert-circle';
+        case 'overduepaid':
+            return 'alert-circle-check';
+        case 'advancepaid':
+            return 'calendar-check';
+        case 'partiallypaid':
+            return 'progress-check';
+        case 'partiallypaidfullypaid':
+            return 'progress-check';
+        case 'approved':
+            return 'thumb-up';
+        default:
+            return 'help-circle';
     }
 };
 

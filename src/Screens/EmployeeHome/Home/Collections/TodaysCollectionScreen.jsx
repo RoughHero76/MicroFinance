@@ -9,7 +9,7 @@ import {
     Modal,
     TextInput,
     SafeAreaView,
-    StatusBar,
+    Image,
     Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -17,6 +17,8 @@ import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import { handleSendSMS } from '../../../../components/sms/sendSMS';
+import ProfilePicturePlaceHolder from '../../../../assets/placeholders/profile.jpg';
+import ImageModal from '../../../../components/Image/ImageModal';
 
 const TodaysCollectionScreen = () => {
     const [collections, setCollections] = useState([]);
@@ -33,6 +35,9 @@ const TodaysCollectionScreen = () => {
     });
     const [penaltyAmount, setPenaltyAmount] = useState('');
 
+    const [currentImage, setCurrentImage] = useState(null);
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+
     const fetchTodaysCollections = useCallback(async () => {
         setLoading(true);
         try {
@@ -41,7 +46,7 @@ const TodaysCollectionScreen = () => {
                 setCollections(response.data);
                 console.log('Collections:', response.data[0]);
             } else {
-                console.error('Invalid data structure:', response);
+
                 showToast('error', 'Failed to fetch today\'s collections');
             }
         } catch (error) {
@@ -60,6 +65,15 @@ const TodaysCollectionScreen = () => {
     const handleRefresh = () => {
         setRefreshing(true);
         fetchTodaysCollections();
+    };
+
+    const handleImageOpen = (item) => {
+        setCurrentImage(item.loan.customer.profilePic || ProfilePicturePlaceHolder);
+        setImageModalVisible(true);
+    };
+
+    const handleDownloadProfilePicture = () => {
+        console.log('DownloadIamge');
     };
 
     const handlePayment = async () => {
@@ -135,10 +149,20 @@ const TodaysCollectionScreen = () => {
     const renderItem = ({ item }) => (
         <View style={styles.collectionItem}>
             <View style={styles.customerInfo}>
-                <Text style={styles.customerName}>{`${item.loan?.customer?.fname || 'Not'} ${item.loan?.customer?.lname || 'Available'}`} </Text>
-                <Text style={styles.phoneNumber}>{item.loan?.customer?.phoneNumber}</Text>
+                <TouchableOpacity onPress={() => handleImageOpen(item)}>
+
+                    {item.loan?.customer?.profilePic ? (<Image source={{ uri: item.loan?.customer?.profilePic }} style={styles.profilePicture} />) : (<Image source={ProfilePicturePlaceHolder} style={styles.profilePicture} />)}
+                </TouchableOpacity>
+                <View style={{ flexDirection: 'column' }}>
+                    <Text style={styles.customerName}>{`${item.loan?.customer?.fname || 'Not'} ${item.loan?.customer?.lname || 'Available'}`} </Text>
+                    <Text style={styles.phoneNumber}>{item.loan?.customer?.phoneNumber}</Text>
+                </View>
             </View>
             <View style={styles.loanInfo}>
+                <View style={styles.loanDetailRow}>
+                    <Icon name="cash" size={18} color="#4A4A4A" />
+                    <Text style={[styles.loanDetail, { fontWeight: 'bold' }]}>Loan Number: #{item.loan?.loanNumber}</Text>
+                </View>
                 <View style={styles.loanDetailRow}>
                     <Icon name="cash" size={18} color="#4A4A4A" />
                     <Text style={styles.loanDetail}>Loan: ₹{item.loan?.loanAmount}</Text>
@@ -297,6 +321,12 @@ const TodaysCollectionScreen = () => {
                 {loading && <ActivityIndicator style={styles.loader} size="large" color="#1E88E5" />}
                 {renderPaymentModal()}
                 {renderPenaltyModal()}
+                <ImageModal
+                    isVisible={imageModalVisible}
+                    imageUri={currentImage}
+                    onDownload={handleDownloadProfilePicture}
+                    onClose={() => setImageModalVisible(false)}
+                />
                 <CustomToast />
             </View>
         </SafeAreaView>
@@ -340,6 +370,7 @@ const styles = StyleSheet.create({
     },
     customerInfo: {
         marginBottom: 10,
+        flexDirection: 'row',
     },
     customerName: {
         fontSize: 18,
@@ -349,6 +380,12 @@ const styles = StyleSheet.create({
     phoneNumber: {
         fontSize: 14,
         color: '#666666',
+    },
+    profilePicture: {
+        width: 50,
+        height: 50,
+        borderRadius: 20,
+        marginRight: 10,
     },
     loanInfo: {
         marginBottom: 15,

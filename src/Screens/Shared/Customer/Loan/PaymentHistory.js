@@ -49,11 +49,43 @@ const PaymentHistory = () => {
         }
     }, [loanId, page, loading, user?.role]);
 
+
     useEffect(() => {
         if (loanId && hasMore && payments.length === 0) {
             fetchPayments(true);
         }
     }, [fetchPayments, loanId, hasMore, payments.length]);
+
+
+    const handleConfirmReject = (repaymentId) => {
+        Alert.alert(
+            'Confirm Reject',
+            'Are you sure you want to reject this repayment? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Reject', onPress: () => handleReject(repaymentId) },
+            ]
+        )
+    }
+
+    const handleReject = async (repaymentId) => {
+        try {
+            setUpdateRepaymentLoading(true);
+            const response = await apiCall(`/api/admin/loan/repayment/history/reject`, 'POST', { repaymentId });
+            if (response.status === 'success') {
+                showToast('success', 'Repayment rejected successfully');
+            } else {
+                showToast('error', response.message || 'Failed to reject repayment');
+            }
+            fetchPayments(true);
+        } catch (error) {
+            showToast('error', 'Failed to reject repayment');
+        } finally {
+            setUpdateRepaymentLoading(false);
+        }
+    };
+
+
 
     const handleApprove = async (paymentId) => {
         if (!paymentId) {
@@ -87,6 +119,9 @@ const PaymentHistory = () => {
                     return '#4CAF50';
                 case 'Pending':
                     return '#FFA000';
+
+                case 'Rejected':
+                    return '#F44336';
                 default:
                     return '#757575';
             }
@@ -109,17 +144,29 @@ const PaymentHistory = () => {
                     <Text style={styles.detailText}>Logical Note: {item.logicNote || item.LogicNote || 'N/A'}</Text>
                 </View>
                 <View>
-                    {item.status !== 'Approved' && user.role == 'admin' && (
-                        <TouchableOpacity
-                            style={styles.approveButton}
-                            onPress={() => handleApprove(item._id)}
-                            disabled={updateRepaymentLoading}
-                        >
-                            <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
-                            {
-                                updateRepaymentLoading ? <ActivityIndicator color="white" /> : <Text style={styles.approveButtonText}>Approve</Text>
-                            }
-                        </TouchableOpacity>
+                    {item.status !== 'Approved' && item.status !== 'Rejected' && user.role == 'admin' && (
+
+                        <View style={[{ flexDirection: 'row', justifyContent: 'space-between' }]}>
+                            <TouchableOpacity
+                                style={styles.rejectButton}
+                                onPress={() => handleConfirmReject(item._id)}
+                                disabled={updateRepaymentLoading}
+                            >
+                                <Icon name="close-circle-outline" size={20} color="#FFFFFF" />
+                                {updateRepaymentLoading ? <ActivityIndicator color="white" /> : <Text style={styles.rejectButtonText}>Reject</Text>}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.approveButton}
+                                onPress={() => handleApprove(item._id)}
+                                disabled={updateRepaymentLoading}
+                            >
+                                <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
+                                {
+                                    updateRepaymentLoading ? <ActivityIndicator color="white" /> : <Text style={styles.approveButtonText}>Approve</Text>
+                                }
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
             </View>
@@ -209,6 +256,19 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     approveButtonText: {
+        color: '#FFFFFF',
+        marginLeft: 5,
+        fontWeight: 'bold',
+    },
+    rejectButton: {
+        backgroundColor: 'red',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+        borderRadius: 5,
+    },
+    rejectButtonText: {
         color: '#FFFFFF',
         marginLeft: 5,
         fontWeight: 'bold',

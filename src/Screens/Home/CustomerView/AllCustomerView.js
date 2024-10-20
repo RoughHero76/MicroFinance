@@ -50,23 +50,23 @@ const AllCustomerView = () => {
     }, []);
 
     const renderLoanItem = (loan) => (
-        <View style={styles.loanItem} key={loan._id}>
+        <View style={styles.loanItem} key={loan?._id}>
             <View style={styles.loanHeader}>
-                <Text style={styles.loanNumber}>Loan #{loan.loanNumber}</Text>
-                <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                    <Text style={styles.loanStatusText}>{loan.status}</Text>
+                <Text style={styles.loanNumber}>Loan #{loan?.loanNumber ?? 'N/A'}</Text>
+                <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan?.status) }]}>
+                    <Text style={styles.loanStatusText}>{loan?.status ?? 'Unknown'}</Text>
                 </View>
             </View>
             <View style={styles.loanDetails}>
                 <Text style={styles.loanAmount}>
-                    <Icon name="currency-inr" size={14} color="#4CAF50" /> {loan.loanAmount}
+                    <Icon name="currency-inr" size={14} color="#4CAF50" /> {loan?.loanAmount ?? 'N/A'}
                 </Text>
                 <Text style={styles.loanDuration}>
-                    <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
+                    <Icon name="calendar-range" size={14} color="#2196F3" /> {loan?.loanDuration ?? 'N/A'}
                 </Text>
             </View>
             <Text style={styles.loanAssignee}>
-                <Icon name="account" size={14} color="#666" /> {loan.assignedTo.fname} {loan.assignedTo.lname}
+                <Icon name="account" size={14} color="#666" /> {loan?.assignedTo?.fname ?? 'N/A'} {loan?.assignedTo?.lname ?? ''}
             </Text>
         </View>
     );
@@ -74,25 +74,25 @@ const AllCustomerView = () => {
     const renderCustomerItem = ({ item }) => (
         <TouchableOpacity
             style={styles.customerItem}
-            onPress={() => navigation.navigate('CustomerView', { uid: item.uid })}
+            onPress={() => navigation.navigate('CustomerView', { uid: item?.uid })}
         >
             <View style={styles.customerHeader}>
                 <Image
-                    source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
+                    source={item?.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
                     style={styles.profilePicture}
                 />
                 <View style={styles.customerInfo}>
-                    <Text style={styles.customerName}>{`${item.fname} ${item.lname}`}</Text>
+                    <Text style={styles.customerName}>{`${item?.fname ?? 'Unknown'} ${item?.lname ?? ''}`}</Text>
                     <Text style={styles.customerPhone}>
-                        <Icon name="phone" size={14} color="#666" /> {item.phoneNumber}
+                        <Icon name="phone" size={14} color="#666" /> {item?.phoneNumber ?? 'N/A'}
                     </Text>
                     <Text style={styles.customerAddress}>
-                        <Icon name="map-marker" size={14} color="#666" /> {item.address}, {item.city}
+                        <Icon name="map-marker" size={14} color="#666" /> {`${item?.address ?? ''}, ${item?.city ?? ''}`}
                     </Text>
                 </View>
                 <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
             </View>
-            {item.loans && item.loans.length > 0 && (
+            {item?.loans && item.loans.length > 0 && (
                 <View style={styles.loansContainer}>
                     {item.loans.map(renderLoanItem)}
                 </View>
@@ -101,6 +101,7 @@ const AllCustomerView = () => {
     );
 
     const getLoanStatusColor = (status) => {
+        if (!status) return '#9E9E9E';
         switch (status.toLowerCase()) {
             case 'active':
                 return '#4CAF50';
@@ -133,7 +134,7 @@ const AllCustomerView = () => {
             <FlatList
                 data={customers}
                 renderItem={renderCustomerItem}
-                keyExtractor={item => item._id}
+                keyExtractor={item => item?._id}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={renderFooter}
