@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, NativeModules } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ImageBackground } from 'react-native';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { showToast, CustomToast } from '../../components/toast/CustomToast';
-import { handleSendSMS } from '../../components/sms/sendSMS';
+import EVILogo from '../../assets/EviLogo.png';
 
 // Skeleton loader components
 const Skeleton = ({ width, height }) => (
@@ -37,6 +37,7 @@ const HomeScreen = () => {
             setLoading(false);
         }
     }, []);
+
 
     useEffect(() => {
         fetchDashboardData();
@@ -95,6 +96,11 @@ const HomeScreen = () => {
                     icon="check-underline"
                     onClick={() => navigation.navigate('RepaymentApprovalScreen')}
                 />
+                <DashboardCard
+                    title="NPA Report"
+                    icon="chart-bar"
+                    onClick={() => navigation.navigate('NpaReportScreen')}
+                />
             </>
         );
     }, [dashboardData, DashboardCard, handleCustomerClick, navigation]);
@@ -110,6 +116,8 @@ const HomeScreen = () => {
                     <Skeleton width="48%" height={150} />
                     <Skeleton width="48%" height={150} />
                     <Skeleton width="48%" height={150} />
+                    <Skeleton width="48%" height={150} />
+
                 </View>
 
                 <Text style={styles.sectionTitle}>Recent Customers</Text>
@@ -123,36 +131,46 @@ const HomeScreen = () => {
     }
 
     return (
-        <ScrollView
-            style={styles.container}
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
+        <ImageBackground
+            source={EVILogo}
+            style={styles.backgroundImage}
+            resizeMode="contain"
         >
-            <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
+            <ScrollView
+                style={styles.container}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
+                <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
 
-            <View style={styles.dashboardContainer}>
-                {dashboardCards}
-            </View>
+                <View style={styles.dashboardContainer}>
+                    {dashboardCards}
+                </View>
 
-            <Text style={styles.sectionTitle}>Recent Customers</Text>
-            {dashboardData?.recentCustomers.map((customer) => (
-                <CustomerCard key={customer.uid} customer={customer} />
-            ))}
+                <Text style={styles.sectionTitle}>Recent Customers</Text>
+                {dashboardData?.recentCustomers.map((customer) => (
+                    <CustomerCard key={customer.uid} customer={customer} />
+                ))}
 
-            <TouchableOpacity style={styles.viewAllButton} onPress={() => navigation.navigate('AllCustomerView')}>
-                <Text style={styles.viewAllButtonText}>View All Customers</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.viewAllButton} onPress={() => navigation.navigate('AllCustomerView')}>
+                    <Text style={styles.viewAllButtonText}>View All Customers</Text>
+                </TouchableOpacity>
 
-            <CustomToast />
-        </ScrollView>
+                <CustomToast />
+            </ScrollView>
+        </ImageBackground>
     );
 };
 
 const styles = StyleSheet.create({
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: 'rgba(245, 245, 245, 0.55)', // Semi-transparent background
         padding: 20,
     },
     skeleton: {

@@ -41,6 +41,8 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
     }, [scheduleItem]);
 
     const handleSave = () => {
+        console.log(paymentMethod);
+
         onSave({
             id: scheduleItem._id,
             status: newStatus,
@@ -107,7 +109,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                             {
                                 renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
                                     { label: 'Cash', value: 'Cash' },
-                                    { label: 'Bank Transfer', value: 'BankTransfer' },
+                                    { label: 'Bank Transfer', value: 'Bank Transfer' },
                                     { label: 'GooglePay', value: 'GooglePay' },
                                     { label: 'PhonePay', value: 'PhonePay' },
                                     { label: 'Paytm', value: 'Paytm' },
@@ -205,7 +207,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                             {renderInput('Amount', amount, setAmount, 'numeric')}
                             {renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
                                 { label: 'Cash', value: 'Cash' },
-                                { label: 'Bank Transfer', value: 'BankTransfer' },
+                                { label: 'Bank Transfer', value: 'Bank Transfer' },
                                 { label: 'GooglePay', value: 'GooglePay' },
                                 { label: 'PhonePay', value: 'PhonePay' },
                                 { label: 'Paytm', value: 'Paytm' },
@@ -246,7 +248,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                             {renderDatePicker('Payment Date', paymentDate, setPaymentDate, showPaymentDatePicker, setShowPaymentDatePicker)}
                             {renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
                                 { label: 'Cash', value: 'Cash' },
-                                { label: 'Bank Transfer', value: 'BankTransfer' },
+                                { label: 'Bank Transfer', value: 'Bank Transfer' },
                                 { label: 'GooglePay', value: 'GooglePay' },
                                 { label: 'PhonePay', value: 'PhonePay' },
                                 { label: 'Paytm', value: 'Paytm' },
@@ -268,7 +270,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                             {renderInput('Amount', amount, setAmount, 'numeric')}
                             {renderPicker('Payment Method', paymentMethod, setPaymentMethod, [
                                 { label: 'Cash', value: 'Cash' },
-                                { label: 'Bank Transfer', value: 'BankTransfer' },
+                                { label: 'Bank Transfer', value: 'Bank Transfer' },
                                 { label: 'GooglePay', value: 'GooglePay' },
                                 { label: 'PhonePay', value: 'PhonePay' },
                                 { label: 'Paytm', value: 'Paytm' },

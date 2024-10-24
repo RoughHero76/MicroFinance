@@ -17,9 +17,9 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
 import { CustomToast, showToast } from "../../../components/toast/CustomToast";
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import { set } from "react-hook-form";
 import ImageModal from "../../../components/Image/ImageModal";
 import { useHomeContext } from "../../../components/context/HomeContext";
+import { cacheImage, deleteImage } from "../../../components/Image/ImageCache";
 
 const CustomerView = () => {
   const [customerData, setCustomerData] = useState(null);
@@ -37,6 +37,24 @@ const CustomerView = () => {
 
   const [optionModalVisible, setOptionModalVisible] = useState(false);
   const [optionModalPosition, setOptionModalPosition] = useState({ top: 0, right: 0 });
+
+  const [imageSource, setImageSource] = useState(
+    customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder
+  );
+
+  useEffect(() => {
+    const loadCachedImage = async () => {
+      if (customerData?.profilePic) {
+        const cachedUri = await cacheImage(customerData.profilePic);
+        if (cachedUri) {
+          setImageSource({ uri: cachedUri });
+        }
+      }
+    };
+
+    loadCachedImage();
+  }, [customerData?.profilePic]);
+
 
   const openOptionModal = (event) => {
     const { pageY, pageX } = event.nativeEvent;
@@ -202,6 +220,7 @@ const CustomerView = () => {
 
       if (uploadResponse.status === 'success') {
         showToast("success", "Success", "Profile picture updated successfully");
+        deleteImage(customerData.profilePic);
         fetchCustomerData(uid);
       } else {
         showToast("error", "Error", uploadResponse.message || "Failed to update profile picture");
@@ -267,6 +286,7 @@ const CustomerView = () => {
     );
   }
 
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -276,7 +296,7 @@ const CustomerView = () => {
           ) : (
             <TouchableOpacity onPress={() => handleImageOpen()}>
               <Image
-                source={customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder}
+                source={imageSource}
                 style={styles.profileImage}
               />
             </TouchableOpacity>

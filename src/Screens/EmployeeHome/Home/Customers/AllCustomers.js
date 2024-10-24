@@ -5,6 +5,136 @@ import { apiCall } from '../../../../components/api/apiUtils';
 import { useNavigation } from '@react-navigation/native';
 import ProfilePicturePlaceHolder from '../../../../assets/placeholders/profile.jpg';
 import Toast from 'react-native-toast-message';
+import * as RNFS from '@dr.pogodin/react-native-fs';
+
+// Image caching utilities
+const getImageDetails = (url) => {
+    try {
+        const uidMatch = url.match(/\/([^\/]+)\/profile\//);
+        const uid = uidMatch ? uidMatch[1] : null;
+        const fileNameMatch = url.match(/\/([^\/]+)\?/);
+        const fileName = fileNameMatch ? fileNameMatch[1] : null;
+        return { uid, fileName };
+    } catch (error) {
+        console.error('Error extracting image details:', error);
+        return { uid: null, fileName: null };
+    }
+};
+
+const getImageFilename = (url) => {
+    const { uid, fileName } = getImageDetails(url);
+    if (!uid || !fileName) {
+        console.error('Could not extract UID or filename from URL:', url);
+        return null;
+    }
+    return `${uid}_${fileName}`;
+};
+
+const checkImageInCache = async (url) => {
+    const filename = getImageFilename(url);
+    if (!filename) return null;
+    
+    const filePath = `${RNFS.PicturesDirectoryPath}/${filename}`;
+    try {
+        const exists = await RNFS.exists(filePath);
+        return exists ? `file://${filePath}` : null;
+    } catch (error) {
+        console.error('Error checking cache:', error);
+        return null;
+    }
+};
+
+const cacheImage = async (url) => {
+    try {
+        const cachedPath = await checkImageInCache(url);
+        if (cachedPath) return cachedPath;
+
+        const filename = getImageFilename(url);
+        if (!filename) return null;
+
+        const filePath = `${RNFS.PicturesDirectoryPath}/${filename}`;
+        
+        await RNFS.downloadFile({
+            fromUrl: url,
+            toFile: filePath,
+        }).promise;
+
+        return `file://${filePath}`;
+    } catch (error) {
+        console.error('Error caching image:', error);
+        return null;
+    }
+};
+
+// Customer Item Component with Image Caching
+const CustomerItem = React.memo(({ item, onPress }) => {
+    const [imageSource, setImageSource] = useState(
+        item?.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder
+    );
+
+    useEffect(() => {
+        const loadCachedImage = async () => {
+            if (item?.profilePic) {
+                const cachedUri = await cacheImage(item.profilePic);
+                if (cachedUri) {
+                    setImageSource({ uri: cachedUri });
+                }
+            }
+        };
+
+        loadCachedImage();
+    }, [item?.profilePic]);
+
+    const loan = item.loans && item.loans.length > 0 ? item.loans[0] : null;
+
+    return (
+        <TouchableOpacity
+            style={styles.customerItem}
+            onPress={onPress}
+        >
+            <Image
+                source={imageSource}
+                style={styles.profilePicture}
+            />
+            <View style={styles.customerInfo}>
+                <Text style={styles.customerName}>{`${item.fname} ${item.lname}`}</Text>
+                <Text style={styles.customerPhone}>
+                    <Icon name="phone" size={14} color="#666" /> {item.phoneNumber}
+                </Text>
+                <Text style={styles.customerAddress}>
+                    <Icon name="map-marker" size={14} color="#666" /> {item.address}, {item.city}
+                </Text>
+                {loan && (
+                    <View style={styles.loanContainer}>
+                        <Text style={styles.loanAmount}>
+                            <Icon name="currency-inr" size={14} color="#4CAF50" />{loan.loanAmount}
+                        </Text>
+                        <Text style={styles.loanDuration}>
+                            <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
+                        </Text>
+                        <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
+                            <Text style={styles.loanStatusText}>{loan.status}</Text>
+                        </View>
+                    </View>
+                )}
+            </View>
+            <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
+        </TouchableOpacity>
+    );
+});
+
+const getLoanStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+        case 'active':
+            return '#4CAF50';
+        case 'pending':
+            return '#FFC107';
+        case 'completed':
+            return '#2196F3';
+        default:
+            return '#9E9E9E';
+    }
+};
 
 const AllCustomerView = () => {
     const [customers, setCustomers] = useState([]);
@@ -45,62 +175,9 @@ const AllCustomerView = () => {
         }
     };
 
-    
     useEffect(() => {
         fetchCustomers(1);
     }, []);
-
-    const renderCustomerItem = ({ item }) => {
-        const loan = item.loans && item.loans.length > 0 ? item.loans[0] : null;
-
-        return (
-            <TouchableOpacity
-                style={styles.customerItem}
-                onPress={() => navigation.navigate('CustomerView', { id: item._id })}
-            >
-                <Image
-                    source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
-                    style={styles.profilePicture}
-                />
-                <View style={styles.customerInfo}>
-                    <Text style={styles.customerName}>{`${item.fname} ${item.lname}`}</Text>
-                    <Text style={styles.customerPhone}>
-                        <Icon name="phone" size={14} color="#666" /> {item.phoneNumber}
-                    </Text>
-                    <Text style={styles.customerAddress}>
-                        <Icon name="map-marker" size={14} color="#666" /> {item.address}, {item.city}
-                    </Text>
-                    {loan && (
-                        <View style={styles.loanContainer}>
-                            <Text style={styles.loanAmount}>
-                                <Icon name="currency-inr" size={14} color="#4CAF50" />{loan.loanAmount}
-                            </Text>
-                            <Text style={styles.loanDuration}>
-                                <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
-                            </Text>
-                            <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                                <Text style={styles.loanStatusText}>{loan.status}</Text>
-                            </View>
-                        </View>
-                    )}
-                </View>
-                <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
-            </TouchableOpacity>
-        );
-    };
-
-    const getLoanStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'active':
-                return '#4CAF50';
-            case 'pending':
-                return '#FFC107';
-            case 'completed':
-                return '#2196F3';
-            default:
-                return '#9E9E9E';
-        }
-    };
 
     const renderFooter = () => {
         if (!loading) return null;
@@ -121,7 +198,12 @@ const AllCustomerView = () => {
         <View style={styles.container}>
             <FlatList
                 data={customers}
-                renderItem={renderCustomerItem}
+                renderItem={({ item }) => (
+                    <CustomerItem
+                        item={item}
+                        onPress={() => navigation.navigate('CustomerView', { id: item._id })}
+                    />
+                )}
                 keyExtractor={item => item._id}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.1}

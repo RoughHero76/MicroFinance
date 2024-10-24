@@ -61,8 +61,9 @@ const RepaymentSchedule = () => {
                 transactionId: updatedSchedule.transactionId,
                 collectedBy: updatedSchedule.collectedBy
             };
+
+            console.log('Collected by: ', updatedSchedule.collectedBy);
             const response = await apiCall('/api/admin/loan/repayment/schedule/update', 'POST', payload);
-            console.log('Response:', response);
             if (response.status === 'success') {
                 setShowEditModal(false);
                 updatedSchedule = null;

@@ -15,7 +15,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../../assets/placeholders/profile.jpg";
 import { showToast, CustomToast } from "../../../../components/toast/CustomToast";
 import ImageModal from "../../../../components/Image/ImageModal";
-
+import { cacheImage } from "../../../../components/Image/ImageCache";
 const CustomerView = () => {
     const [customerData, setCustomerData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -37,6 +37,25 @@ const CustomerView = () => {
     useEffect(() => {
         fetchCustomerData(id);
     }, [id]);
+
+    const [imageSource, setImageSource] = useState(
+        customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder
+    );
+
+    useEffect(() => {
+        const loadCachedImage = async () => {
+            if (customerData?.profilePic) {
+                const cachedUri = await cacheImage(customerData.profilePic);
+                if (cachedUri) {
+                    setImageSource({ uri: cachedUri });
+                }
+            }
+        };
+
+        loadCachedImage();
+    }, [customerData?.profilePic]);
+
+
 
     const fetchCustomerData = async (id) => {
         try {
@@ -85,7 +104,7 @@ const CustomerView = () => {
 
                     <TouchableOpacity onPress={() => handleImageOpen()}>
                         <Image
-                            source={customerData?.profilePic ? { uri: customerData.profilePic } : ProfilePicturePlaceHolder}
+                            source={imageSource}
                             style={styles.profileImage}
                         />
                     </TouchableOpacity>

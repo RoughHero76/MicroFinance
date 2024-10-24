@@ -38,6 +38,20 @@ const TodaysCollectionScreen = () => {
     const [currentImage, setCurrentImage] = useState(null);
     const [imageModalVisible, setImageModalVisible] = useState(false);
 
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Function to filter collections based on search query
+    const filteredCollections = collections.filter(item => {
+        const customerName = `${item.loan?.customer?.fname || ''} ${item.loan?.customer?.lname || ''}`.toLowerCase();
+        const phoneNumber = item.loan?.customer?.phoneNumber?.toLowerCase() || '';
+        const loanNumber = item.loan?.loanNumber?.toString().toLowerCase() || '';
+
+        // Search based on customer's name, phone number, or loan number
+        return customerName.includes(searchQuery.toLowerCase()) ||
+            phoneNumber.includes(searchQuery.toLowerCase()) ||
+            loanNumber.includes(searchQuery.toLowerCase());
+    });
+
     const fetchTodaysCollections = useCallback(async () => {
         setLoading(true);
         try {
@@ -146,6 +160,23 @@ const TodaysCollectionScreen = () => {
         }
     };
 
+    const renderSearchBar = () => (
+        <View style={styles.searchContainer}>
+            <Icon name="magnify" size={24} color="#757575" style={styles.searchIcon} />
+            <TextInput
+                style={styles.searchInput}
+                placeholder="Search by name, phone, or loan number"
+                placeholderTextColor="#999"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                    <Icon name="close-circle" size={20} color="#757575" />
+                </TouchableOpacity>
+            )}
+        </View>
+    );
     const renderItem = ({ item }) => (
         <View style={styles.collectionItem}>
             <View style={styles.customerInfo}>
@@ -307,8 +338,9 @@ const TodaysCollectionScreen = () => {
         <SafeAreaView style={styles.safeArea}>
 
             <View style={styles.container}>
+                {renderSearchBar()}
                 <FlatList
-                    data={collections}
+                    data={filteredCollections}
                     renderItem={renderItem}
                     keyExtractor={item => item._id}
                     refreshing={refreshing}
@@ -516,6 +548,48 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    /* Search Style */
+
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 25,
+        paddingHorizontal: 15,
+        marginHorizontal: 15,
+        marginTop: 15,
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    searchIcon: {
+        marginRight: 10,
+    },
+    searchInput: {
+        flex: 1,
+        height: 50,
+        fontSize: 16,
+        color: '#333333',
+    },
+    clearButton: {
+        padding: 5,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: 50,
+    },
+    emptyText: {
+        textAlign: 'center',
+        marginTop: 20,
+        fontSize: 16,
+        color: '#666666',
+    },
+    /*  */
 });
 
 export default TodaysCollectionScreen;

@@ -16,6 +16,7 @@ const LoginScreen = () => {
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const { loginUser } = useHomeContext();
 
     const handleLogin = async () => {
@@ -49,6 +50,8 @@ const LoginScreen = () => {
 
     const toggleLoginType = () => setIsAdmin((prevState) => !prevState);
 
+    const togglePasswordVisibility = () => setShowPassword((prevState) => !prevState);
+
     const renderInput = (value, setValue, placeholder, secureTextEntry, icon) => (
         <View style={styles.inputContainer}>
             <MaterialCommunityIcons name={icon} size={24} color="#6B7280" style={styles.inputIcon} />
@@ -58,8 +61,17 @@ const LoginScreen = () => {
                 value={value}
                 placeholder={placeholder}
                 placeholderTextColor="#9CA3AF"
-                secureTextEntry={secureTextEntry}
+                secureTextEntry={secureTextEntry && !showPassword}
             />
+            {icon === 'lock' && (
+                <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+                    <MaterialCommunityIcons
+                        name={showPassword ? 'eye-off' : 'eye'}
+                        size={24}
+                        color="#6B7280"
+                    />
+                </TouchableOpacity>
+            )}
         </View>
     );
 
@@ -80,7 +92,6 @@ const LoginScreen = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.content}
             >
-                {/* <Text style={styles.title}>Welcome to MicroFinance</Text> */}
                 <Image source={AppLogo} style={styles.logo} />
 
                 <Text style={styles.subtitle}>Login as {isAdmin ? 'Admin' : 'Employee'}</Text>
@@ -140,6 +151,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         marginBottom: 20,
         width: '100%',
+    },
+    eyeIcon: {
+        padding: 10,
     },
     inputIcon: {
         marginRight: 10,

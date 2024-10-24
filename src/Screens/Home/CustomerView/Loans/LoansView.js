@@ -14,6 +14,7 @@ const LoansView = () => {
     const [filter, setFilter] = useState('');
     const [sortBy, setSortBy] = useState('loanNumber');
     const [sortOrder, setSortOrder] = useState(1);
+    const [failedToLoad, setFailedToLoad] = useState(false);
 
     const statusOptions = ['Pending', 'Approved', 'Rejected', 'Active', 'Closed'];
     const sortOptions = [
@@ -39,9 +40,11 @@ const LoansView = () => {
                 setPage(pageNumber);
             } else {
                 showToast('error', 'Error', 'Failed to fetch loans');
+                setFailedToLoad(true);
             }
         } catch (error) {
             console.error(error);
+            setFailedToLoad(true);
             showToast('error', 'Error', 'An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -164,6 +167,14 @@ const LoansView = () => {
         </View>
     );
 
+    if (failedToLoad) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.failedToLoadText}>Failed to load loans</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             {/* {renderFilterButtons()} */}
@@ -185,6 +196,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F7FA',
+    },
+    failedToLoadText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#FF0000',
+        textAlign: 'center',
+        marginTop: 20,
     },
     listContent: {
         paddingVertical: 12,

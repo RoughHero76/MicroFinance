@@ -17,6 +17,8 @@ import SearchScreen from "../../Screens/Shared/Searching/SearchScreen";
 import PaymentHistory from "../../Screens/Shared/Customer/Loan/PaymentHistory";
 import LoanCalculator from "../../Screens/Shared/LoanCalculator";
 import About from "../../Screens/Shared/About.js";
+import LoanStatusDetailsScreen from "../../Screens/Shared/Report/LoanStatusDetailsScreen.js";
+
 //Profile
 import ProfileScreen from "../../Screens/Shared/Profile/ProfileScreen";
 
@@ -102,6 +104,9 @@ const EmployeeNavigator = () => {
                     )
                 }
             }} />
+
+            <EmployeeStack.Screen name="LoanStatusDetails" component={LoanStatusDetailsScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Status Details' }} />
+
             <EmployeeStack.Screen name="CustomerView" component={CustomerView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Customer Details' }} />
             <EmployeeStack.Screen name="SearchScreen" component={SearchScreen} options={{
                 headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search'

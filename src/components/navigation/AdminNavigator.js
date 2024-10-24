@@ -13,6 +13,8 @@ import CloseLoan from '../../Screens/Home/CustomerView/Loans/CloseLoan.js';
 
 //Reports
 import ReportsScreen from '../../Screens/Home/Reports/ReportsScreen.js';
+import NpaReportScreen from '../../Screens/Shared/Report/NpaReportScreen.js';
+import LoanStatusDetailsScreen from '../../Screens/Shared/Report/LoanStatusDetailsScreen.js';
 
 import LoanDetails from '../../Screens/Home/CustomerView/Loans/LoanDetails.js';
 import LoansView from '../../Screens/Home/CustomerView/Loans/LoansView.js';
@@ -127,6 +129,8 @@ const AdminNavigator = ({ navigation }) => {
                 })
             } />
             <AdminStack.Screen name="ReportsScreen" component={ReportsScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Reports' }} />
+            <AdminStack.Screen name="NpaReportScreen" component={NpaReportScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'NPA Report' }} />
+            <AdminStack.Screen name="LoanStatusDetails" component={LoanStatusDetailsScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Status Details' }} />
             <AdminStack.Screen
                 name="AllEmployeeView"
                 component={AllEmployeeView}
