@@ -81,7 +81,7 @@ const HomeScreen = () => {
             <>
                 <DashboardCard title="Active Loans" value={dashboardData.loanCount} icon="bank" onClick={() => navigation.navigate('LoansView')} />
                 <DashboardCard title="Customers" value={dashboardData.customerCount} icon="account-group" onClick={handleCustomerClick} />
-                {/*                 <DashboardCard
+                {/*<DashboardCard
                     title="Market Amount"
                     value={`${dashboardData.marketDetails.totalMarketAmount.toLocaleString()}`}
                     icon="cash"
@@ -90,7 +90,7 @@ const HomeScreen = () => {
                     title="Repaid"
                     value={`${dashboardData.marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
                     icon="cash-check"
-                /> */}
+                />*/}
                 <DashboardCard
                     title="Approve History"
                     icon="check-underline"

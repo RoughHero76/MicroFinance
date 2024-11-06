@@ -438,7 +438,7 @@ const CustomerView = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Assign Employee</Text>
             <ScrollView>
-              {employees.map((employee) => (
+              {employees?.map((employee) => (
                 <TouchableOpacity
                   key={employee._id}
                   style={styles.employeeItem}

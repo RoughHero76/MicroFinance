@@ -39,7 +39,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
     });
     const [paymentDetails, setPaymentDetails] = useState({
         amount: '',
-        paymentMethod: 'CASH',
+        paymentMethod: 'Cash',
         transactionId: '',
     });
 
@@ -458,11 +458,16 @@ const styles = StyleSheet.create({
         color: '#263238',
     },
     scheduleButton: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        zIndex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         padding: 8,
         borderRadius: 8,
         backgroundColor: '#E3F2FD',
+        elevation: 5,
     },
     scheduleButtonText: {
         color: '#2196F3',

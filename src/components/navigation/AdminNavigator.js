@@ -140,7 +140,7 @@ const AdminNavigator = ({ navigation }) => {
                     headerTitle: 'All Employees',
                     headerRight: () => (
                         <View>
-                            <TouchableOpacity onPress={() => navigation.navigate('CustomerRegistration')}>
+                            <TouchableOpacity onPress={() => navigation.navigate('EmployeeRegistration')}>
                                 <Icon
                                     name="account-plus"
                                     size={28}

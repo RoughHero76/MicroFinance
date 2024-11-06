@@ -341,8 +341,8 @@ const ReportsScreen = () => {
                     <View style={styles.summaryContainer}>
                         <SummaryItem icon="file-document-outline" label="Total Loans" value={reportData.analysis.summary.totalLoans ?? "N/A"} />
                         <SummaryItem icon="cash" label="Total Loan Amount" value={formatCurrency(reportData.analysis.summary.totalLoanAmount) ?? "N/A"} />
-                        <SummaryItem icon="cash-multiple" label="Avg. Loan Amount" value={formatCurrency(reportData.analysis.summary.averageLoanAmount) ?? "N/A"} />
-                        <SummaryItem icon="card-bulleted-outline" label="Total Installment" value={formatCurrency(reportData.analysis.summary.totalInstallmentAmount) ?? "N/A"} />
+                        {/* <SummaryItem icon="cash-multiple" label="Avg. Loan Amount" value={formatCurrency(reportData.analysis.summary.averageLoanAmount) ?? "N/A"} /> */}
+                       {/*  <SummaryItem icon="card-bulleted-outline" label="Total Installment" value={formatCurrency(reportData.analysis.summary.totalInstallmentAmount) ?? "N/A"} /> */}
                         <SummaryItem icon="cash-check" label="Total Paid Amount" value={formatCurrency(reportData.analysis.summary.totalPaidAmount)} />
                         <SummaryItem icon="alert-circle-outline" label="Total Penalty" value={formatCurrency(reportData.analysis.summary.totalPenaltyAmount) ?? "N/A"} />
                     </View>

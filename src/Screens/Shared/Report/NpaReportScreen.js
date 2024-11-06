@@ -69,6 +69,22 @@ const NpaReportScreen = ({ navigation }) => {
         );
     };
 
+    const handleLOanStatusRefresh = async () => {
+        try {
+            setLoading(true);
+            const response = await apiCall('/api/shared/loan/statuses/update');
+            if (response.status === 'success') {
+                showToast('success', 'Loan statuses updated successfully');
+            } else {
+                showToast('error', response.message || 'Failed to update loan statuses');
+            }
+        } catch (error) {
+            showToast('error', error.message || 'Failed to update loan statuses');
+        } finally {
+            setLoading(false);
+        }
+    }
+
     // Safe getter for nested values with fallback
     const getSafeValue = (obj, path, fallback = '0') => {
         try {
@@ -168,6 +184,12 @@ const NpaReportScreen = ({ navigation }) => {
                 <Text style={styles.totalLoansContext}>
                     Showing distribution across {getSafeValue(data, 'overall.totalLoans', 0)} total loans
                 </Text>
+
+                <View style={styles.npaCardContainer}>
+                    <TouchableOpacity style={styles.npaCardWrapper} onPress={handleLOanStatusRefresh}>
+                        <Icon name="refresh" size={24} color="black" />
+                    </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
                     style={styles.npaCardWrapper}
@@ -451,6 +473,13 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
         marginLeft: 4,
+    },
+    npaCardContainer: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     npaCardWrapper: {
         width: '100%',
