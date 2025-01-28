@@ -13,8 +13,8 @@ import AppLogo from '../../../assets/EviLogo.png';
 const LoginScreen = () => {
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
-    const [userName, setUserName] = useState('');
-    const [password, setPassword] = useState('');
+    const [userName, setUserName] = useState('Admin76');
+    const [password, setPassword] = useState('Faizan@Khan76');
     const [isAdmin, setIsAdmin] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { loginUser } = useHomeContext();
@@ -29,7 +29,7 @@ const LoginScreen = () => {
         try {
             const endpoint = isAdmin ? '/api/admin/login' : '/api/employee/auth/login';
             const response = await apiCall(endpoint, 'POST', { userName, password });
-
+            console.log('Login response:', response);
             if (response?.status === 'success') {
                 const { user, token } = response;
                 await AsyncStorage.setItem('token', token);

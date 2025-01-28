@@ -53,6 +53,11 @@ const CreateLoan = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [errors, setErrors] = useState({});
 
+    const formatAmount = (amount) => {
+        if (!amount) return '';
+        return parseFloat(amount).toLocaleString('en-IN');
+    };
+
     const handleInputChange = (name, value) => {
         setLoanData({ ...loanData, [name]: value });
         if (errors[name]) {
@@ -335,8 +340,9 @@ const CreateLoan = () => {
                         {renderInput('pound-box', 'Loan Number', 'Enter loan number', 'loanNumber', 'numeric', loanData.loanNumber, (text) => handleInputChange('loanNumber', text))}
 
                         <View style={styles.row}>
-                            {renderInput('currency-inr', 'Loan Amount', 'Enter loan amount', 'loanAmount', 'numeric', loanData.loanAmount, (text) => handleInputChange('loanAmount', text))}
-                            {renderInput('cash', 'Principal Amount', 'Enter principal amount', 'principalAmount', 'numeric', loanData.principalAmount, (text) => handleInputChange('principalAmount', text))}
+                            {renderInput('currency-inr', 'Loan Amount', 'Enter loan amount', 'loanAmount', 'numeric', formatAmount(loanData.loanAmount), (text) => handleInputChange('loanAmount', text.replace(/,/g, '')))}
+                            {renderInput('cash', 'Principal Amount', 'Enter principal amount', 'principalAmount', 'numeric', formatAmount(loanData.principalAmount), (text) => handleInputChange('principalAmount', text.replace(/,/g, '')))}
+
                         </View>
                         <View style={styles.row}>
                             {renderPicker('calendar-range', 'Loan Duration', 'loanDuration', [

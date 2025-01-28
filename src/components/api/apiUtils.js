@@ -32,6 +32,7 @@ export const apiCall = async (endpoint, method = 'GET', payload = null, isFormDa
         }
         const response = await axios(config);
         return response.data;
+    
     } catch (error) {
         return {
             error: true,

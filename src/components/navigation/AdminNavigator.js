@@ -23,6 +23,7 @@ import { View, TouchableOpacity, Modal, Text, Pressable, StyleSheet } from 'reac
 // import PaymentHistory from '../../Screens/Home/CustomerView/Loans/PaymentHistory.js'; (Putting it inside Shared screebs)
 import PaymentHistory from '../../Screens/Shared/Customer/Loan/PaymentHistory.js';
 import RepaymentApprovalScreen from '../../Screens/Home/CustomerView/RepaymentApprovalScreen.js';
+import RepaymentApprovalScreenOld from '../../Screens/Home/CustomerView/RepaymentApprovalScreenOld.js';
 
 /* Employee */
 import AllEmployeeView from '../../Screens/Home/EmployeeView/AllEmployeeView.js';
@@ -158,7 +159,7 @@ const AdminNavigator = ({ navigation }) => {
             {/* Others */}
 
             <AdminStack.Screen name="RepaymentApprovalScreen" component={RepaymentApprovalScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Approval' }} />
-
+            <AdminStack.Screen name="OldRepaymentApproval" component={RepaymentApprovalScreenOld} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Approval' }} />
 
             {/* Shared */}
             <AdminStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
