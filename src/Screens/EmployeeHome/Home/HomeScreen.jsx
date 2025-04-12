@@ -62,6 +62,14 @@ const HomeScreen = () => {
         navigation.navigate('AllCustomerView');
     };
 
+    const handleLeadClick = () => {
+        navigation.navigate('LeadListScreen');
+    };
+
+    const handleCreateLead = () => {
+        navigation.navigate('CreateLeadScreen');
+    };
+
     // Helper function to safely get SMA level data
 
     const getSMALevelData = (level) => {
@@ -168,6 +176,7 @@ const HomeScreen = () => {
                                     onClick={() => navigation.navigate('LoanStatusDetails', { type: 'sma', smaLevel: 2, assignedTo: 'me' })}
                                 />
                             </View>
+
                         </>
                     )}
                 </View>

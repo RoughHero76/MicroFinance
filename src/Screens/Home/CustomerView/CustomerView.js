@@ -8,7 +8,8 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  Modal
+  Modal,
+  Linking
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -278,6 +279,7 @@ const CustomerView = () => {
     }
   };
 
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -494,9 +496,27 @@ const CustomerView = () => {
   );
 };
 
+const handleInfoIconPress = (icon, value) => {
+  if (icon === 'phone' && value) {
+    const phoneNumber = `tel:+91${value}`;
+    Linking.openURL(phoneNumber).catch((err) => console.error('An error occurred: ', err));
+  }
+  if (icon === 'email' && value) {
+    const email = `mailto:${value}`;
+    Linking.openURL(email).catch((err) => console.error('An error occurred: ', err));
+  }
+  if (icon === 'address' && value) {
+    const address = `https://www.google.com/maps/search/?api=1&query=${value}`;
+    Linking.openURL(address).catch((err) => console.error('An error occurred: ', err));
+  }
+};
 const InfoItem = ({ icon, label, value }) => (
   <View style={styles.infoItem}>
-    <Icon name={icon} size={24} color="#4CAF50" style={styles.infoIcon} />
+    <TouchableOpacity onPress={() => handleInfoIconPress(icon, value)}
+      style={styles.infoIcon}
+    >
+      <Icon name={icon} size={24} color="#4CAF50" style={styles.infoIcon} />
+    </TouchableOpacity>
     <View>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue} numberOfLines={3} ellipsizeMode="tail">

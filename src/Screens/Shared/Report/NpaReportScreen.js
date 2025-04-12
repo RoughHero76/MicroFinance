@@ -254,6 +254,14 @@ const NpaReportScreen = ({ navigation }) => {
                     label: 'Danger',
                     gradient: ['#FF5252', '#FF8A80']
                 };
+
+            case null: // NPA
+                return {
+                    icon: 'alert-decagram',
+                    color: '#F44336',
+                    label: 'Critical NPA',
+                    gradient: ['#F44336', '#EF5350']
+                }
             default:
                 return {
                     icon: 'alert-circle',

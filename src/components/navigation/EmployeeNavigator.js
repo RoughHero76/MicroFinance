@@ -11,6 +11,7 @@ import CustomerView from "../../Screens/EmployeeHome/Home/Customers/CustomerView
 
 //Loans
 import RepaymentSchedule from "../../Screens/EmployeeHome/Home/Customers/Loans/RepaymentSchedule";
+import LoanDetailsScreen from "../../Screens/EmployeeHome/Home/Customers/Loans/LoanDetalis.js";
 
 //Shared Screens
 import SearchScreen from "../../Screens/Shared/Searching/SearchScreen";
@@ -22,9 +23,14 @@ import LoanStatusDetailsScreen from "../../Screens/Shared/Report/LoanStatusDetai
 //Profile
 import ProfileScreen from "../../Screens/Shared/Profile/ProfileScreen";
 
-import { Alert, Linking, Platform, TouchableOpacity, StyleSheet } from 'react-native';
+import { Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from "@react-navigation/native";
+
+//Leads
+
+import LeadListScreen from "../../Screens/EmployeeHome/Home/LeadScreen.js";
+import CreateLeadScreen from "../../Screens/EmployeeHome/Home/CreateLeadScreen.js";
 
 // Permissions
 import { PERMISSIONS } from 'react-native-permissions';
@@ -114,6 +120,11 @@ const EmployeeNavigator = () => {
             }} />
             <EmployeeStack.Screen name="PaymentHistory" component={PaymentHistory} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Payment History' }} />
             <EmployeeStack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Schedule' }} />
+            <EmployeeStack.Screen name="LoanDetailsScreen" component={LoanDetailsScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Details' }} />
+            
+            <EmployeeStack.Screen name="LeadListScreen" component={LeadListScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Leads' }} />
+            <EmployeeStack.Screen name="CreateLeadScreen" component={CreateLeadScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Create Lead' }} />
+            
             <EmployeeStack.Screen name="LoanCalculator" component={LoanCalculator} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Loan Calculator' }} />
             <EmployeeStack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Profile' }} />
             <EmployeeStack.Screen name="About" component={About} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'About' }} />

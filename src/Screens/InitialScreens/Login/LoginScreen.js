@@ -13,8 +13,8 @@ import AppLogo from '../../../assets/EviLogo.png';
 const LoginScreen = () => {
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
-    const [userName, setUserName] = useState('Admin76');
-    const [password, setPassword] = useState('Faizan@Khan76');
+    const [userName, setUserName] = useState('');
+    const [password, setPassword] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { loginUser } = useHomeContext();

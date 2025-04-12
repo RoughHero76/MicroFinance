@@ -59,7 +59,7 @@ const RepaymentApprovalScreen = () => {
         try {
             const queryParams = new URLSearchParams({
                 page: state.page,
-                limit: 10,
+                limit: 200,
                 defaultDate: state.filters.defaultDate,
                 date: state.filters.date.toISOString().split('T')[0],
                 status: state.filters.status,
@@ -136,7 +136,7 @@ const RepaymentApprovalScreen = () => {
         );
     };
 
-    const renderRepayment = useCallback(({ item }) => (
+    const renderRepayment = useCallback(({ item, sectionIndex, itemIndex }) => (
         <View style={styles.repaymentCard}>
             <View style={styles.repaymentHeader}>
                 <Text style={styles.amount}>₹{Number(item.amount).toLocaleString()}</Text>
@@ -146,12 +146,12 @@ const RepaymentApprovalScreen = () => {
             </View>
 
             <View style={styles.details}>
-                <DetailRow key="method" icon="credit-card" label="Method" value={item.paymentMethod} />
-                <DetailRow key="remaining" icon="cash" label="Remaining" value={`₹${item.loan?.outstandingAmount}`} />
-                <DetailRow key="borrower" icon="account" label="Borrower" value={item.loanDetails.borrower} />
-                <DetailRow key="loanAmount" icon="bank" label="Loan Amount" value={`₹${item.loanDetails.loanAmount}`} />
-                <DetailRow key="transaction" icon="note" label="Transaction" value={item.transactionId || 'N/A'} />
-                <DetailRow key="note" icon="text" label="Note" value={item.logicNote || item.LogicNote || 'N/A'} />
+                <DetailRow icon="credit-card" label="Method" value={item.paymentMethod} />
+                <DetailRow icon="cash" label="Remaining" value={`₹${item.loan?.outstandingAmount}`} />
+                <DetailRow icon="account" label="Borrower" value={item.loanDetails.borrower} />
+                <DetailRow icon="bank" label="Loan Amount" value={`₹${item.loanDetails.loanAmount}`} />
+                <DetailRow icon="note" label="Transaction" value={item.transactionId || 'N/A'} />
+                <DetailRow icon="text" label="Note" value={item.logicNote || item.LogicNote || 'N/A'} />
             </View>
 
             {item.status !== 'Approved' && (
@@ -235,9 +235,9 @@ const RepaymentApprovalScreen = () => {
             </View>
             <SectionList
                 sections={groupedRepayments}
-                renderItem={({ item, section }) => (
+                renderItem={({ item, section, index: itemIndex }) => (
                     !state.collapsedSections.has(section.collector) && (
-                        <View style={styles.dateSection} key={`${section.collector}-${item.date}`}>
+                        <View style={styles.dateSection}>
                             <View style={styles.dateSectionHeader}>
                                 <Text style={styles.dateText}>{item.date}</Text>
                                 <View>
@@ -249,9 +249,13 @@ const RepaymentApprovalScreen = () => {
                                     </Text>
                                 </View>
                             </View>
-                            {item.items.map((repayment) => (
-                                <View key={repayment._id || `${repayment.transactionId}-${repayment.amount}`}>
-                                    {renderRepayment({ item: repayment })}
+                            {item.items.map((repayment, repaymentIndex) => (
+                                <View key={`${repayment._id}-${repaymentIndex}`}>
+                                    {renderRepayment({
+                                        item: repayment,
+                                        sectionIndex: groupedRepayments.indexOf(section),
+                                        itemIndex: repaymentIndex
+                                    })}
                                 </View>
                             ))}
                         </View>
