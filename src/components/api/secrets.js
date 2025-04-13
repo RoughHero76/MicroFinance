@@ -3,4 +3,4 @@
 export const API_URL = 'https://microfinanace-g4fba3bye5cdggee.centralindia-01.azurewebsites.net';
 
 //https://microfinanace-g4fba3bye5cdggee.centralindia-01.azurewebsites.net
-//http://192.168.188.57:5000
+//http://192.168.125.212:5000

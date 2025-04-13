@@ -59,7 +59,7 @@ const RepaymentApprovalScreen = () => {
         try {
             const queryParams = new URLSearchParams({
                 page: state.page,
-                limit: 200,
+                limit: 1000,
                 defaultDate: state.filters.defaultDate,
                 date: state.filters.date.toISOString().split('T')[0],
                 status: state.filters.status,

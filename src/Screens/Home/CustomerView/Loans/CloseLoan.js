@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -23,7 +24,9 @@ const CloseLoan = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const { control, handleSubmit, formState: { errors }, watch, setValue } = useForm({
+  
+  // Initialize form with more specific validation triggers
+  const { control, handleSubmit, formState: { errors }, watch, setValue, trigger } = useForm({
     mode: 'onChange',
     defaultValues: {
       totalAmountPaying: '',
@@ -51,19 +54,25 @@ const CloseLoan = ({ route, navigation }) => {
     }).start();
   }, []);
 
-  // Adjust payment validation based on forgiveLoan flag
+  // Adjust payment validation based on loan data and forgiveness options
   useEffect(() => {
-    if (forgiveLoan) {
-      // When loan forgiveness is enabled, payment can be any amount
-      setValue('totalAmountPaying', amountPaying, { shouldValidate: true });
-    } else if (loan) {
-      // When loan forgiveness is disabled, payment must cover outstanding amount
-      const minRequired = loan.outstandingAmount;
-      if (parseFloat(amountPaying || 0) < minRequired) {
-        setValue('totalAmountPaying', amountPaying, { shouldValidate: true });
+    if (loan) {
+      // When loan data is available, set initial amount if not already set
+      if (!amountPaying && !forgiveLoan) {
+        setValue('totalAmountPaying', loan.outstandingAmount.toString(), { shouldValidate: true });
       }
+      
+      // Always trigger validation when forgiveLoan changes or when loan data loads
+      trigger('totalAmountPaying');
     }
-  }, [forgiveLoan, loan]);
+  }, [loan, forgiveLoan]);
+
+  // Re-validate whenever amount changes
+  useEffect(() => {
+    if (loan) {
+      trigger('totalAmountPaying');
+    }
+  }, [amountPaying]);
 
   const fetchLoanDetails = async () => {
     try {
@@ -78,6 +87,9 @@ const CloseLoan = ({ route, navigation }) => {
   };
 
   const showConfirmationModal = () => {
+    // Validate before showing confirmation
+    if (!validateForm()) return;
+    
     setModalVisible(true);
     Animated.spring(modalAnim, {
       toValue: 1,
@@ -95,47 +107,69 @@ const CloseLoan = ({ route, navigation }) => {
     }).start(() => setModalVisible(false));
   };
 
-  const validateForm = (data) => {
-    const paymentAmount = parseFloat(data.totalAmountPaying || 0);
-    
-    if (!loan) return false;
-    
+  const validateForm = () => {
+    if (!loan) {
+      showToast('error', 'Loan data not available');
+      return false;
+    }
+
+    const paymentAmount = parseFloat(amountPaying || 0);
+    const maxAmount = loan.outstandingAmount + loan.totalPenaltyAmount;
+
+    // Validate payment amount
+    if (isNaN(paymentAmount) || paymentAmount < 0) {
+      Alert.alert(
+        "Invalid Payment",
+        "Please enter a valid payment amount."
+      );
+      return false;
+    }
+
     // If loan forgiveness is not enabled, ensure payment covers outstanding amount
-    if (!data.forgiveLoan && paymentAmount < loan.outstandingAmount) {
+    if (!forgiveLoan && paymentAmount < loan.outstandingAmount) {
       Alert.alert(
         "Invalid Payment",
-        "When not forgiving the loan, payment amount must cover the outstanding principal."
+        `When not forgiving the loan, payment amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}.`
       );
       return false;
     }
-    
+
     // Prevent overpayment
-    const totalDue = loan.outstandingAmount + loan.totalPenaltyAmount;
-    if (paymentAmount > totalDue) {
+    if (paymentAmount > maxAmount) {
       Alert.alert(
         "Invalid Payment",
-        "Payment amount cannot exceed the total due amount."
+        `Payment amount cannot exceed the total due amount of ${currencyFormatter.format(maxAmount)}.`
       );
       return false;
     }
-    
+
     return true;
   };
 
   const onSubmit = async (data) => {
-    if (!validateForm(data)) return;
+    // Final validation before submission
+    if (!validateForm()) return;
     
     try {
       setSubmitting(true);
-      await apiCall('/api/admin/loan/close', 'POST', {
+      const response = await apiCall('/api/admin/loan/close', 'POST', {
         loanId,
         totalRemainingAmountCustomerIsPaying: parseFloat(data.totalAmountPaying || 0),
         deleteLoanDocuments: data.deleteLoanDocuments,
         forgiveLoan: data.forgiveLoan,
         forgivePenalties: data.forgivePenalties,
       });
+
+      if(response.status !== 200) {
+        showToast('error', response.message || 'Unknown error');
+        return;
+      }
       showToast('success', 'Loan closed successfully');
-      navigation.goBack();
+      //Wait for 2 seconds before navigating back
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1000);
+     
     } catch (error) {
       showToast('error', error.message || 'Failed to close loan');
     } finally {
@@ -145,35 +179,35 @@ const CloseLoan = ({ route, navigation }) => {
   };
 
   const calculateRemainingBalance = () => {
-    if (!loan || !amountPaying) return 0;
-    
+    if (!loan || !amountPaying) return loan?.outstandingAmount || 0;
+
     const paymentAmount = parseFloat(amountPaying || 0);
     const outstandingAmount = loan.outstandingAmount;
-    
+
     // If forgiveLoan is true, remaining balance can be 0 regardless of payment
     if (forgiveLoan) {
       return 0;
     }
-    
+
     return Math.max(0, outstandingAmount - paymentAmount);
   };
 
   const calculateRemainingPenalties = () => {
     if (!loan || !amountPaying) return loan?.totalPenaltyAmount || 0;
-    
+
     const paymentAmount = parseFloat(amountPaying || 0);
     const outstandingAmount = loan.outstandingAmount;
     const totalPenaltyAmount = loan.totalPenaltyAmount;
-    
+
     // If forgivePenalties is true, remaining penalties are 0
     if (forgivePenalties) {
       return 0;
     }
-    
+
     // Calculate how much of the payment goes to penalties
     // First, cover the outstanding amount
     const amountForPenalties = Math.max(0, paymentAmount - outstandingAmount);
-    
+
     // Then apply the rest to penalties
     return Math.max(0, totalPenaltyAmount - amountForPenalties);
   };
@@ -192,38 +226,37 @@ const CloseLoan = ({ route, navigation }) => {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <CustomToast />
-        
+
         {/* Loan Details Card */}
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           <View style={styles.header}>
             <Icon name="bank" size={24} color="#1E88E5" />
             <Text style={styles.headerText}>Loan Summary</Text>
           </View>
-          
+
           <View style={styles.details}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Loan Amount:</Text>
               <Text style={styles.detailValue}>{currencyFormatter.format(loan.loanAmount)}</Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Outstanding Principal:</Text>
               <Text style={styles.detailValue}>{currencyFormatter.format(loan.outstandingAmount)}</Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Total Paid:</Text>
               <Text style={styles.detailValue}>{currencyFormatter.format(loan.totalPaid)}</Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Penalties:</Text>
               <Text style={styles.detailValue}>{currencyFormatter.format(loan.totalPenaltyAmount)}</Text>
             </View>
-            
+
             <View style={styles.divider} />
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.totalLabel}>Total Outstanding:</Text>
               <Text style={styles.totalValue}>
@@ -239,36 +272,45 @@ const CloseLoan = ({ route, navigation }) => {
             <Icon name="cash-multiple" size={24} color="#1E88E5" />
             <Text style={styles.headerText}>Payment Options</Text>
           </View>
-          
+
           {/* Amount Input */}
           <Text style={styles.inputLabel}>Amount Paying</Text>
           <Controller
             control={control}
             render={({ field: { onChange, onBlur, value } }) => {
               const maxAmount = loan ? loan.outstandingAmount + loan.totalPenaltyAmount : 0;
+              const minAmount = forgiveLoan ? 0 : loan.outstandingAmount;
+              
               return (
                 <View style={styles.inputContainer}>
                   <View style={styles.currencyInputContainer}>
                     <Text style={styles.currencySymbol}>₹</Text>
                     <TextInput
                       style={[
-                        styles.input, 
+                        styles.input,
                         errors.totalAmountPaying && styles.inputError
                       ]}
-                      onBlur={onBlur}
-                      onChangeText={onChange}
+                      onBlur={() => {
+                        onBlur();
+                        trigger('totalAmountPaying');
+                      }}
+                      onChangeText={(text) => {
+                        onChange(text);
+                        // Force validation on every change
+                        setTimeout(() => trigger('totalAmountPaying'), 100);
+                      }}
                       value={value}
                       placeholder="0.00"
                       placeholderTextColor="#90A4AE"
                       keyboardType="numeric"
                     />
                   </View>
-                  
+
                   {errors.totalAmountPaying && (
                     <Text style={styles.errorText}>
-                      {forgiveLoan 
-                        ? `Amount must be between 0 and ${maxAmount}` 
-                        : `Amount must be at least ${loan.outstandingAmount} and at most ${maxAmount}`}
+                      {forgiveLoan
+                        ? `Amount must be between 0 and ${currencyFormatter.format(maxAmount)}`
+                        : `Amount must be at least ${currencyFormatter.format(minAmount)} and at most ${currencyFormatter.format(maxAmount)}`}
                     </Text>
                   )}
                 </View>
@@ -276,34 +318,41 @@ const CloseLoan = ({ route, navigation }) => {
             }}
             name="totalAmountPaying"
             rules={{
-              required: true,
+              required: "Payment amount is required",
               validate: (value) => {
+                if (!loan) return true; // Skip validation if loan data isn't loaded yet
+                
                 const numValue = parseFloat(value || 0);
-                const maxAmount = loan ? loan.outstandingAmount + loan.totalPenaltyAmount : 0;
+                const maxAmount = loan.outstandingAmount + loan.totalPenaltyAmount;
                 
-                if (numValue < 0 || numValue > maxAmount) {
-                  return false;
-                }
+                if (isNaN(numValue)) return "Please enter a valid number";
+                if (numValue < 0) return "Amount cannot be negative";
+                if (numValue > maxAmount) return `Amount cannot exceed ${currencyFormatter.format(maxAmount)}`;
                 
+                // This is the key validation rule that was missing
                 if (!forgiveLoan && numValue < loan.outstandingAmount) {
-                  return "Payment must cover outstanding amount";
+                  return `When not forgiving the loan, amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}`;
                 }
                 
                 return true;
               }
             }}
           />
-          
+
           {/* Forgiveness Options */}
           <View style={styles.optionsContainer}>
             <Text style={styles.sectionTitle}>Forgiveness Options</Text>
-            
+
             <Controller
               control={control}
               render={({ field: { onChange, value } }) => (
                 <TouchableOpacity
                   style={styles.checkboxContainer}
-                  onPress={() => onChange(!value)}
+                  onPress={() => {
+                    onChange(!value);
+                    // When toggling forgiveness, re-validate the amount
+                    setTimeout(() => trigger('totalAmountPaying'), 100);
+                  }}
                 >
                   <View style={[styles.checkbox, value && styles.checkboxChecked]}>
                     {value && <Icon name="check" size={16} color="#fff" />}
@@ -318,7 +367,7 @@ const CloseLoan = ({ route, navigation }) => {
               )}
               name="forgiveLoan"
             />
-            
+
             <Controller
               control={control}
               render={({ field: { onChange, value } }) => (
@@ -340,11 +389,11 @@ const CloseLoan = ({ route, navigation }) => {
               name="forgivePenalties"
             />
           </View>
-          
+
           {/* Document Options */}
           <View style={styles.optionsContainer}>
             <Text style={styles.sectionTitle}>Document Options</Text>
-            
+
             <Controller
               control={control}
               render={({ field: { onChange, value } }) => (
@@ -367,14 +416,14 @@ const CloseLoan = ({ route, navigation }) => {
             />
           </View>
         </Animated.View>
-        
+
         {/* Payment Summary Card */}
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           <View style={styles.header}>
             <Icon name="calculator" size={24} color="#1E88E5" />
             <Text style={styles.headerText}>Payment Summary</Text>
           </View>
-          
+
           <View style={styles.details}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Payment Amount:</Text>
@@ -382,33 +431,39 @@ const CloseLoan = ({ route, navigation }) => {
                 {currencyFormatter.format(parseFloat(amountPaying || 0))}
               </Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Forgive Principal:</Text>
               <Text style={[styles.detailValue, forgiveLoan ? styles.highlightText : null]}>
                 {forgiveLoan ? 'Yes' : 'No'}
               </Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Forgive Penalties:</Text>
               <Text style={[styles.detailValue, forgivePenalties ? styles.highlightText : null]}>
                 {forgivePenalties ? 'Yes' : 'No'}
               </Text>
             </View>
-            
+
             <View style={styles.divider} />
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Remaining Principal:</Text>
-              <Text style={styles.detailValue}>
+              <Text style={[
+                styles.detailValue,
+                calculateRemainingBalance() > 0 ? styles.warningText : null
+              ]}>
                 {currencyFormatter.format(calculateRemainingBalance())}
               </Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Remaining Penalties:</Text>
-              <Text style={styles.detailValue}>
+              <Text style={[
+                styles.detailValue,
+                calculateRemainingPenalties() > 0 ? styles.warningText : null
+              ]}>
                 {currencyFormatter.format(calculateRemainingPenalties())}
               </Text>
             </View>
@@ -416,9 +471,12 @@ const CloseLoan = ({ route, navigation }) => {
         </Animated.View>
 
         <TouchableOpacity
-          style={[styles.button, submitting && styles.buttonDisabled]}
+          style={[
+            styles.button, 
+            (submitting || Object.keys(errors).length > 0) && styles.buttonDisabled
+          ]}
           onPress={handleSubmit(showConfirmationModal)}
-          disabled={submitting}
+          disabled={submitting || Object.keys(errors).length > 0}
         >
           <Text style={styles.buttonText}>Close Loan</Text>
         </TouchableOpacity>
@@ -442,53 +500,53 @@ const CloseLoan = ({ route, navigation }) => {
               <Text style={styles.modalMessage}>
                 Are you sure you want to close this loan with the following settings?
               </Text>
-              
+
               <View style={styles.modalDivider} />
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Payment Amount:</Text>
                 <Text style={styles.modalDetailValue}>
                   {currencyFormatter.format(parseFloat(amountPaying || 0))}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Outstanding Amount:</Text>
                 <Text style={styles.modalDetailValue}>
                   {currencyFormatter.format(loan.outstandingAmount)}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Penalties:</Text>
                 <Text style={styles.modalDetailValue}>
                   {currencyFormatter.format(loan.totalPenaltyAmount)}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Forgive Principal:</Text>
                 <Text style={styles.modalDetailValue}>
                   {forgiveLoan ? 'Yes' : 'No'}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Forgive Penalties:</Text>
                 <Text style={styles.modalDetailValue}>
                   {forgivePenalties ? 'Yes' : 'No'}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Delete Documents:</Text>
                 <Text style={styles.modalDetailValue}>
                   {watch('deleteLoanDocuments') ? 'Yes' : 'No'}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDivider} />
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Remaining Balance:</Text>
                 <Text style={[
@@ -498,7 +556,7 @@ const CloseLoan = ({ route, navigation }) => {
                   {currencyFormatter.format(calculateRemainingBalance())}
                 </Text>
               </View>
-              
+
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Remaining Penalties:</Text>
                 <Text style={[
@@ -508,20 +566,20 @@ const CloseLoan = ({ route, navigation }) => {
                   {currencyFormatter.format(calculateRemainingPenalties())}
                 </Text>
               </View>
-              
+
               {calculateRemainingBalance() > 0 && !forgiveLoan && (
                 <Text style={styles.modalWarning}>
                   Warning: There will be remaining principal without loan forgiveness!
                 </Text>
               )}
-              
+
               {calculateRemainingPenalties() > 0 && !forgivePenalties && (
                 <Text style={styles.modalWarning}>
                   Warning: There will be remaining penalties without penalty forgiveness!
                 </Text>
               )}
             </View>
-            
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
@@ -530,7 +588,7 @@ const CloseLoan = ({ route, navigation }) => {
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton, submitting && styles.buttonDisabled]}
                 onPress={handleSubmit(onSubmit)}
@@ -546,6 +604,8 @@ const CloseLoan = ({ route, navigation }) => {
           </Animated.View>
         </View>
       )}
+      <CustomToast />
+
     </KeyboardAvoidingView>
   );
 };
