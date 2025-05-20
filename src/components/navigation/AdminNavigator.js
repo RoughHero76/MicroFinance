@@ -42,6 +42,10 @@ import { Alert, Linking, Platform } from 'react-native';
 import { PERMISSIONS } from 'react-native-permissions';
 import GetPermission from '../permissions.js';
 
+
+//Leads
+import AdminLeadsScreen from '../../Screens/Home/Leads/AdminLeads.js';
+
 const AdminStack = createNativeStackNavigator();
 
 const AdminNavigator = ({ navigation }) => {
@@ -204,6 +208,8 @@ const AdminNavigator = ({ navigation }) => {
                     ),
                 })}
             />
+
+            <AdminStack.Screen name="AdminLeadsScreen" component={AdminLeadsScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Leads' }} />
 
         </AdminStack.Navigator>
     )

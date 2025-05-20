@@ -13,7 +13,8 @@ import {
     Alert,
 } from 'react-native';
 import { apiCall } from "../../../components/api/apiUtils";
-import { CustomToast, showToast } from "../../../components/toast/CustomToast";
+import { showToast } from "../../../components/toast/CustomToast";
+import CustomToast from '../../../components/toast/CustomToast';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { format } from 'date-fns';
@@ -95,7 +96,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
         setSelectedSchedule(schedule);
         setPaymentDetails({
             amount: schedule.amount.toString(),
-            paymentMethod: 'CASH',
+            paymentMethod: 'Cash',
             transactionId: '',
         });
         setShowPaymentModal(true);

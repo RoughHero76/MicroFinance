@@ -138,6 +138,13 @@ const HomeScreen = () => {
                                     color="#007AFF"
                                     onClick={handleCustomerClick}
                                 />
+                                <DashboardCard
+                                    title="Leads"
+                                    value={'N/A'}
+                                    icon="account-group"
+                                    color="#007AFF"
+                                    onClick={handleLeadClick}
+                                />
                             </View>
 
                             {/* NPA Section */}

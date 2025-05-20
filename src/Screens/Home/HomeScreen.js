@@ -101,6 +101,12 @@ const HomeScreen = () => {
                     icon="chart-bar"
                     onClick={() => navigation.navigate('NpaReportScreen')}
                 />
+                <DashboardCard
+                    title="Leads"
+                    value={dashboardData.newLeads}
+                    icon="lead-pencil"
+                    onClick={() => navigation.navigate('AdminLeadsScreen')}
+                />
             </>
         );
     }, [dashboardData, DashboardCard, handleCustomerClick, navigation]);

@@ -15,7 +15,45 @@ import { apiCall } from "../../../components/api/apiUtils";
 import { showToast } from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
-import { cacheImage } from "../../../components/Image/ImageCache";
+import { useHomeContext } from "../../../components/context/HomeContext";
+
+const LeadItem = ({ item, onPress }) => {
+  const [imageSource, setImageSource] = useState(
+    item.pictureUrl ? { uri: item.pictureUrl } : ProfilePicturePlaceHolder
+  );
+
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "#FFC107";
+      case "InProgress":
+        return "#2196F3";
+      case "Approved":
+        return "#4CAF50";
+      case "Rejected":
+        return "#F44336";
+      default:
+        return "#9E9E9E";
+    }
+  };
+
+  return (
+    <TouchableOpacity style={styles.leadCard} onPress={() => onPress(item._id)}>
+      <Image source={imageSource} style={styles.leadImage} />
+      <View style={styles.leadInfo}>
+        <Text style={styles.leadName}>{item.name}</Text>
+        <Text style={styles.leadDetail}>Phone: {item.phone}</Text>
+        <Text style={styles.leadDetail}>
+          Loan: ₹{item.loanAmount} ({item.loanType})
+        </Text>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+          <Text style={styles.statusText}>{item.status}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const LeadListScreen = () => {
   const [leads, setLeads] = useState([]);
@@ -25,6 +63,9 @@ const LeadListScreen = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState(null);
   const navigation = useNavigation();
+
+
+  const { user } = useHomeContext();
 
   useEffect(() => {
     fetchLeads();
@@ -55,12 +96,19 @@ const LeadListScreen = () => {
   };
 
   const handleLeadPress = (leadId) => {
-    navigation.navigate("LeadDetailsScreen", { leadId });
+    const lead = leads.find((item) => item._id === leadId);
+    if (lead) {
+      if (lead.AssignedTo === user._id) {
+        navigation.navigate('LeadDetailsScreen', { leadId });
+      } else {
+        showToast("info", "Access Denied", "Lead is not assigned to you.");
+        return
+      }
+    }
   };
-
   const handleSearch = (text) => {
     setSearchQuery(text);
-    setPage(1); // Reset to first page on search
+    setPage(1);
   };
 
   const handleNextPage = () => {
@@ -72,58 +120,6 @@ const LeadListScreen = () => {
   const handlePrevPage = () => {
     if (page > 1) {
       setPage(page - 1);
-    }
-  };
-
-  const renderLeadItem = ({ item }) => {
-    const [imageSource, setImageSource] = useState(
-      item.pictureUrl ? { uri: item.pictureUrl } : ProfilePicturePlaceHolder
-    );
-
-    useEffect(() => {
-      const loadCachedImage = async () => {
-        if (item.pictureUrl) {
-          const cachedUri = await cacheImage(item.pictureUrl);
-          if (cachedUri) {
-            setImageSource({ uri: cachedUri });
-          }
-        }
-      };
-      loadCachedImage();
-    }, [item.pictureUrl]);
-
-    return (
-      <TouchableOpacity
-        style={styles.leadCard}
-        onPress={() => handleLeadPress(item._id)}
-      >
-        <Image source={imageSource} style={styles.leadImage} />
-        <View style={styles.leadInfo}>
-          <Text style={styles.leadName}>{item.name}</Text>
-          <Text style={styles.leadDetail}>Phone: {item.phone}</Text>
-          <Text style={styles.leadDetail}>
-            Loan: ₹{item.loanAmount} ({item.loanType})
-          </Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "#FFC107";
-      case "InProgress":
-        return "#2196F3";
-      case "Approved":
-        return "#4CAF50";
-      case "Rejected":
-        return "#F44336";
-      default:
-        return "#9E9E9E";
     }
   };
 
@@ -139,13 +135,6 @@ const LeadListScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Leads</Text>
-        <TouchableOpacity onPress={fetchLeads}>
-          <Icon name="refresh" size={24} color="#4CAF50" />
-        </TouchableOpacity>
-      </View>
-
       {stats && (
         <View style={styles.statsCard}>
           <Text style={styles.statsTitle}>Lead Statistics</Text>
@@ -171,7 +160,7 @@ const LeadListScreen = () => {
 
       <FlatList
         data={leads}
-        renderItem={renderLeadItem}
+        renderItem={({ item }) => <LeadItem item={item} onPress={handleLeadPress} />}
         keyExtractor={(item) => item._id}
         ListEmptyComponent={
           <Text style={styles.noLeadsText}>No leads found</Text>
@@ -221,18 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 15,
-    backgroundColor: "#fff",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-  },
+
   statsCard: {
     backgroundColor: "#fff",
     borderRadius: 10,
