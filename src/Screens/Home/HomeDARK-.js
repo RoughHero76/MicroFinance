@@ -65,8 +65,8 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate('CustomerView', { uid: customer.uid })}
         >
             <Text style={styles.customerName}>{`${customer.fname} ${customer.lname}`}</Text>
-            <Text style={styles.customerDetail}>{`Loans: ${customer.loans.length}`}</Text>
-            {customer.loans.length > 0 && (
+            <Text style={styles.customerDetail}>{`Loans: ${customer.loans?.length ?? 0}`}</Text>
+            {customer.loans?.length > 0 && (
                 <Text style={styles.customerDetail}>
                     {`Latest Loan: ${customer.loans[0].loanAmount} (${customer.loans[0].status})`}
                 </Text>
@@ -86,7 +86,7 @@ const HomeScreen = () => {
                         Math.random() * 100,
                         Math.random() * 100,
                         Math.random() * 100,
-                        dashboardData.marketDetails.totalMarketAmount / 1000,
+                        (dashboardData.marketDetails?.totalMarketAmount ?? 0) / 1000,
                     ],
                     color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`, // Tailwind green-500
                     strokeWidth: 2
@@ -97,8 +97,8 @@ const HomeScreen = () => {
 
     const pieChartData = useMemo(() => {
         if (!dashboardData) return null;
-        const totalAmount = dashboardData.marketDetails.totalMarketAmount;
-        const repaidAmount = dashboardData.marketDetails.totalMarketAmountRepaid;
+        const totalAmount = dashboardData.marketDetails?.totalMarketAmount ?? 0;
+        const repaidAmount = dashboardData.marketDetails?.totalMarketAmountRepaid ?? 0;
         return [
             {
                 name: "Repaid",
@@ -154,6 +154,14 @@ const HomeScreen = () => {
         );
     }
 
+    if (!dashboardData) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={styles.welcome}>Unable to load dashboard data.</Text>
+            </View>
+        );
+    }
+
     return (
         <ScrollView
             style={styles.container}
@@ -168,12 +176,12 @@ const HomeScreen = () => {
                 <DashboardCard title="Customers" value={dashboardData.customerCount} icon="account-group" onClick={handleCustomerClick} />
                 <DashboardCard
                     title="Market Amount"
-                    value={`${dashboardData.marketDetails.totalMarketAmount.toLocaleString()}`}
+                    value={`${(dashboardData.marketDetails?.totalMarketAmount ?? 0).toLocaleString()}`}
                     icon="cash"
                 />
                 <DashboardCard
                     title="Repaid"
-                    value={`${dashboardData.marketDetails.totalMarketAmountRepaid.toLocaleString()}`}
+                    value={`${(dashboardData.marketDetails?.totalMarketAmountRepaid ?? 0).toLocaleString()}`}
                     icon="cash-check"
                 />
             </View>
@@ -203,7 +211,7 @@ const HomeScreen = () => {
             />
 
             <Text style={styles.sectionTitle}>Recent Customers</Text>
-            {dashboardData?.recentCustomers.map((customer) => (
+            {dashboardData?.recentCustomers?.map((customer) => (
                 <CustomerCard key={customer.uid} customer={customer} />
             ))}
 

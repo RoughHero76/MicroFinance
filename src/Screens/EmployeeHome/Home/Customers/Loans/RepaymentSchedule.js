@@ -21,7 +21,7 @@ const RepaymentSchedule = () => {
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [totalEntries, setTotalEntries] = useState(0);
     const route = useRoute();
-    const { loanId } = route.params;
+    const { loanId } = route.params || {};
 
     useEffect(() => {
         fetchRepaymentSchedules();

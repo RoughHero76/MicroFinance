@@ -18,7 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { debounce } from 'lodash';
 
 const LoanDetailsScreen = ({ route, navigation }) => {
-  const { loanId } = route.params;
+  const { loanId } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [loanDetails, setLoanDetails] = useState(null);
   const [repaymentSchedules, setRepaymentSchedules] = useState([]);

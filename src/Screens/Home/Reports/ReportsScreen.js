@@ -423,6 +423,7 @@ const ReportsScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
+                <CustomToast />
             </Modal>
             {renderDeleteConfirmationModal()}
             {renderClearAllConfirmationModal()}

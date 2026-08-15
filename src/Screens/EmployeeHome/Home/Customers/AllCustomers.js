@@ -53,7 +53,6 @@ const cacheImage = async (url) => {
         if (!filename) return null;
 
         const filePath = `${RNFS.PicturesDirectoryPath}/${filename}`;
-        
         await RNFS.downloadFile({
             fromUrl: url,
             toFile: filePath,
@@ -124,7 +123,7 @@ const CustomerItem = React.memo(({ item, onPress }) => {
 });
 
 const getLoanStatusColor = (status) => {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
         case 'active':
             return '#4CAF50';
         case 'pending':

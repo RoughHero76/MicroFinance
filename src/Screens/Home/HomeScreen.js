@@ -66,8 +66,8 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate('CustomerView', { uid: customer.uid })}
         >
             <Text style={styles.customerName}>{`${customer.fname} ${customer.lname}`}</Text>
-            <Text style={styles.customerDetail}>{`Loans: ${customer.loans.length}`}</Text>
-            {customer.loans.length > 0 && (
+            <Text style={styles.customerDetail}>{`Loans: ${customer.loans?.length ?? 0}`}</Text>
+            {customer.loans?.length > 0 && (
                 <Text style={styles.customerDetail}>
                     {`Latest Loan: ${customer.loans[0].loanAmount} (${customer.loans[0].status})`}
                 </Text>
@@ -155,7 +155,7 @@ const HomeScreen = () => {
                 </View>
 
                 <Text style={styles.sectionTitle}>Recent Customers</Text>
-                {dashboardData?.recentCustomers.map((customer) => (
+                {dashboardData?.recentCustomers?.map((customer) => (
                     <CustomerCard key={customer.uid} customer={customer} />
                 ))}
 

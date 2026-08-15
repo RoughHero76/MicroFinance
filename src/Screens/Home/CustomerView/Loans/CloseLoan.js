@@ -36,7 +36,7 @@ const CloseLoan = ({ route, navigation }) => {
     }
   });
 
-  const { loanId } = route.params;
+  const { loanId } = route.params || {};
   const fadeAnim = useState(new Animated.Value(0))[0];
   const modalAnim = useState(new Animated.Value(0))[0];
 
@@ -78,7 +78,11 @@ const CloseLoan = ({ route, navigation }) => {
     try {
       setLoading(true);
       const response = await apiCall(`/api/admin/loan?loanId=${loanId}`);
-      setLoan(response.data[0]);
+      if (response.status === 'success' && response.data?.[0]) {
+        setLoan(response.data[0]);
+      } else {
+        showToast('error', response.message || 'Failed to fetch loan details');
+      }
     } catch (error) {
       showToast('error', 'Failed to fetch loan details');
     } finally {

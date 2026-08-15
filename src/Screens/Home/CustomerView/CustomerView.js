@@ -114,7 +114,7 @@ const CustomerView = () => {
 
   const navigation = useNavigation();
   const route = useRoute();
-  const { uid } = route.params;
+  const { uid } = route.params || {};
 
   useEffect(() => {
     fetchCustomerData(uid);
@@ -125,10 +125,11 @@ const CustomerView = () => {
     try {
       setLoading(true);
       const response = await apiCall(`/api/admin/customer?uid=${uid}`, "GET");
-      if (response.status === "success") {
+      if (response.status === "success" && response.data?.[0]) {
         setCustomerData(response.data[0]);
       } else {
         showToast("error", "Error", response.message || "Failed to fetch customer data");
+        setErrorView(true);
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -350,7 +351,7 @@ const CustomerView = () => {
           </TouchableOpacity>
         </View>
 
-        {customerData.loans.length > 0 ? (
+        {customerData?.loans?.length > 0 ? (
           customerData.loans.map((loan) => (
             <View key={loan._id} style={styles.loanCard}>
               <View style={styles.loanHeader}>
@@ -460,6 +461,7 @@ const CustomerView = () => {
             </TouchableOpacity>
           </View>
         </View>
+        <CustomToast />
       </Modal>
 
       <Modal
@@ -483,6 +485,7 @@ const CustomerView = () => {
               <Text style={styles.optionText}>Delete Customer</Text>
             </TouchableOpacity>
           </View>
+          <CustomToast />
         </TouchableOpacity>
       </Modal>
 

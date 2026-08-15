@@ -25,7 +25,7 @@ import { Picker } from '@react-native-picker/picker';
 const CreateLoan = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { customerUid } = route.params;
+    const { customerUid } = route.params || {};
 
     const [selectedImage, setSelectedImage] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
@@ -411,7 +411,6 @@ const CreateLoan = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-            <CustomToast />
             <Modal visible={showImageModal} transparent={true} onRequestClose={() => setShowImageModal(false)}>
                 <View style={styles.modalContainer}>
                     <TouchableOpacity style={styles.closeButton} onPress={() => setShowImageModal(false)}>
@@ -419,6 +418,7 @@ const CreateLoan = () => {
                     </TouchableOpacity>
                     <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
                 </View>
+                <CustomToast />
             </Modal>
         </SafeAreaView>
     );

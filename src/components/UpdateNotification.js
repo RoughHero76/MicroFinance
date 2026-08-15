@@ -12,7 +12,12 @@ const UpdateNotification = () => {
         <View style={styles.container}>
             <Text style={styles.text}>A new version ({latestVersion}) is available!</Text>
             {downloading ? (
-                <Text style={styles.progressText}>{`Downloading... ${downloadProgress.toFixed(2)}%`}</Text>
+                <View style={styles.progressContainer}>
+                    <View style={styles.progressBarTrack}>
+                        <View style={[styles.progressBarFill, { width: `${downloadProgress}%` }]} />
+                    </View>
+                    <Text style={styles.progressText}>{`Downloading... ${downloadProgress.toFixed(0)}%`}</Text>
+                </View>
             ) : (
                 <TouchableOpacity style={styles.button} onPress={downloadUpdate}>
                     <Text style={styles.buttonText}>Update Now</Text>
@@ -46,11 +51,27 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     buttonText: {
-        color: 'black',
+        color: '#FFFFFF',
         fontWeight: 'bold',
+    },
+    progressContainer: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    progressBarTrack: {
+        width: '100%',
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#dcdcdc',
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#007AFF',
     },
     progressText: {
         marginTop: 5,
+        color: 'black',
     },
 });
 

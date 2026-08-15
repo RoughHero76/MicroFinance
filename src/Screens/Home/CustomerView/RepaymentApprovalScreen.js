@@ -353,6 +353,7 @@ const RepaymentApprovalScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
+                <CustomToast />
             </Modal>
 
             {state.showDatePicker && (

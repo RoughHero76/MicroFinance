@@ -21,7 +21,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import ImageModal from "../../../../components/Image/ImageModal";
 
 const LoanDetails = ({ route, navigation }) => {
-  const { loanId } = route.params;
+  const { loanId } = route.params || {};
   const [loanData, setLoanData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [imageModalVisible, setImageModalVisible] = useState(false);
@@ -47,9 +47,13 @@ const LoanDetails = ({ route, navigation }) => {
   const fetchLoanDetails = async () => {
     try {
       const response = await apiCall(`/api/admin/loan?loanId=${loanId}&includeDocuments=true`);
-      setLoanData(response.data[0]);
+      if (response.status === 'success' && response.data?.[0]) {
+        setLoanData(response.data[0]);
+        showToast('success', 'Loan fetched successfully');
+      } else {
+        showToast('error', response.message || 'Failed to fetch loan details');
+      }
       setLoading(false);
-      showToast('success', 'Loan fetched successfully');
     } catch (error) {
       showToast('error', 'Something went wrong');
       setLoading(false);

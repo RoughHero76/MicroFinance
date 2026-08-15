@@ -416,6 +416,7 @@ const AdminLeadsScreen = ({ navigation }) => {
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
+        <CustomToast />
       </View>
     </Modal>
   );
@@ -524,6 +525,7 @@ const AdminLeadsScreen = ({ navigation }) => {
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
+          <CustomToast />
         </View>
       </Modal>
       <Modal
@@ -568,6 +570,7 @@ const AdminLeadsScreen = ({ navigation }) => {
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
+          <CustomToast />
         </View>
       </Modal>
 

@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getVersion } from 'react-native-device-info';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { apiCall } from '../api/apiUtils';
 import { API_URL } from '../api/secrets';
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
@@ -28,7 +29,7 @@ export const UpdateProvider = ({ children }) => {
                 const currentVersion = getVersion();
                 const response = await apiCall(`/api/shared/app/update/check?currentVersion=${currentVersion}`, 'GET');
 
-                if (response.updateAvailable) {
+                if (response.status === 'success' && response.updateAvailable) {
                     setUpdateAvailable(true);
                     setLatestVersion(response.latestVersion);
                     setDownloadUrl(response.downloadUrl);
@@ -41,23 +42,46 @@ export const UpdateProvider = ({ children }) => {
         }
     };
 
-
-    const downloadUpdate = async () => {
-        Linking.openURL(`${API_URL}/download`);
-    };
-
     const installUpdate = async (filePath) => {
         try {
-            Alert.alert(
-                'Update Ready',
-                `The update has been downloaded to: ${filePath}. Please install it manually.`,
-                [
-                    { text: 'OK', onPress: () => console.log('OK Pressed') }
-                ]
+            await ReactNativeBlobUtil.android.actionViewIntent(
+                filePath,
+                'application/vnd.android.package-archive'
             );
         } catch (error) {
             console.error('Error installing APK:', error);
-            Alert.alert('Installation Error', error.message);
+            Alert.alert('Installation Error', 'Could not open the installer. Please try again.');
+        }
+    };
+
+    const downloadUpdate = async () => {
+        if (downloading) return;
+
+        const url = downloadUrl ? `${API_URL}${downloadUrl}` : `${API_URL}/api/shared/app/update/download`;
+        const targetPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/MicroFinance-update.apk`;
+
+        setDownloading(true);
+        setDownloadProgress(0);
+
+        try {
+            const res = await ReactNativeBlobUtil.config({
+                fileCache: true,
+                path: targetPath,
+                overwrite: true,
+            })
+                .fetch('GET', url)
+                .progress((received, total) => {
+                    if (total > 0) {
+                        setDownloadProgress((received / total) * 100);
+                    }
+                });
+
+            await installUpdate(res.path());
+        } catch (error) {
+            console.error('Error downloading update:', error);
+            Alert.alert('Download Error', 'Failed to download the update. Please try again.');
+        } finally {
+            setDownloading(false);
         }
     };
 

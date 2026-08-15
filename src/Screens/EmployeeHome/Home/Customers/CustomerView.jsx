@@ -22,7 +22,7 @@ const CustomerView = () => {
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
     const route = useRoute();
-    const { id } = route.params;
+    const { id } = route.params || {};
 
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
@@ -124,18 +124,18 @@ const CustomerView = () => {
                 </View>
 
                 <View style={styles.infoCard}>
-                    <InfoItem icon="phone" label="Phone" value={customerData.phoneNumber} />
+                    <InfoItem icon="phone" label="Phone" value={customerData?.phoneNumber || 'N/A'} />
                     <InfoItem
                         icon="map-marker"
                         label="Address"
-                        value={`${customerData.address}, ${customerData.city}, ${customerData.state}, ${customerData.country}`}
+                        value={`${customerData?.address || 'N/A'}, ${customerData?.city || 'N/A'}, ${customerData?.state || 'N/A'}, ${customerData?.country || 'N/A'}`}
                     />
 
-                    <InfoItem icon="email" label="Email" value={customerData.email} />
+                    <InfoItem icon="email" label="Email" value={customerData?.email || 'N/A'} />
 
                 </View>
 
-                {customerData?.loans.length > 0 ? (
+                {customerData?.loans?.length > 0 ? (
                     customerData.loans.map((loan) => (
                         <View key={loan._id} style={styles.loanCard}>
                             <View style={styles.loanHeader}>
@@ -146,8 +146,8 @@ const CustomerView = () => {
                             <Text style={styles.loanInfo}>
                                 Outstanding: ₹{loan.outstandingAmount} | Start Date: {new Date(loan.loanStartDate).toLocaleDateString()} | End Date: {new Date(loan.loanEndDate).toLocaleDateString()}
                             </Text>
-                            <InfoItem icon="domain" label="Business Name" value={loan.businessFirmName} />
-                            <InfoItem icon="home" label="Business Address" value={loan.businessAddress} />
+                            <InfoItem icon="domain" label="Business Name" value={loan?.businessFirmName || 'N/A'} />
+                            <InfoItem icon="home" label="Business Address" value={loan?.businessAddress || 'N/A'} />
                             <View style={styles.loanButtonsContainer}>
                                 <TouchableOpacity
                                     style={[styles.loanButton, styles.scheduleButton]}

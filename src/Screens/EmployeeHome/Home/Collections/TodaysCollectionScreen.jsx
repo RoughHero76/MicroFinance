@@ -301,6 +301,7 @@ const TodaysCollectionScreen = () => {
                         )
                     }
                 </View>
+                <CustomToast />
             </View >
         </Modal >
     );
@@ -330,6 +331,7 @@ const TodaysCollectionScreen = () => {
                         <Text style={styles.modalButtonText}>Cancel</Text>
                     </TouchableOpacity>
                 </View>
+                <CustomToast />
             </View>
         </Modal>
     );

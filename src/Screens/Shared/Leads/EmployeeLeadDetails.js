@@ -22,7 +22,7 @@ import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg"
 const LeadDetailsScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { leadId } = route.params;
+    const { leadId } = route.params || {};
     const [lead, setLead] = useState(null);
     const [loading, setLoading] = useState(true);
     const [imageSource, setImageSource] = useState(ProfilePicturePlaceHolder);

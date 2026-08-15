@@ -27,7 +27,7 @@ const EmployeeView = () => {
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
 
-    const uid = route.params.uid;
+    const uid = route.params?.uid;
     const fetchEmployeeData = async () => {
         try {
             const response = await apiCall(`/api/admin/employee?uid=${uid}&includeSensitiveData=true`, 'GET',);
@@ -61,6 +61,10 @@ const EmployeeView = () => {
 
     const handleDownloadProfilePicture = () => {
         console.log('DownloadIamge')
+    };
+
+    const handleEditEmployee = () => {
+        navigation.navigate('EditEmployee', { employeeData });
     };
 
     if (loading) {
@@ -98,6 +102,11 @@ const EmployeeView = () => {
 
                 <Text style={styles.name}>{`${employeeData.fname} ${employeeData.lname}`}</Text>
                 <Text style={styles.username}>@{employeeData.userName}</Text>
+
+                <TouchableOpacity style={styles.editButton} onPress={handleEditEmployee}>
+                    <Icon name="pencil" size={18} color="#FFFFFF" />
+                    <Text style={styles.editButtonText}>Edit Details</Text>
+                </TouchableOpacity>
             </View>
 
             <View style={styles.infoSection}>
@@ -201,6 +210,20 @@ const styles = StyleSheet.create({
     username: {
         fontSize: 16,
         color: '#666666',
+    },
+    editButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#0066CC',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        marginTop: 12,
+    },
+    editButtonText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        marginLeft: 6,
     },
     infoSection: {
         backgroundColor: '#FFFFFF',

@@ -10,7 +10,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 const EditCustomerScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { customerData } = route.params;
+    const { customerData } = route.params || {};
 
     const [formData, setFormData] = useState({
         fname: customerData.fname,

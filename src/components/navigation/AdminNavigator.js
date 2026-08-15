@@ -29,6 +29,7 @@ import RepaymentApprovalScreenOld from '../../Screens/Home/CustomerView/Repaymen
 import AllEmployeeView from '../../Screens/Home/EmployeeView/AllEmployeeView.js';
 import EmployeeRegistration from '../../Screens/Home/EmployeeView/EmployeeRegistration.js';
 import EmployeeView from '../../Screens/Home/EmployeeView/EmployeeView.js';
+import EditEmployeeView from '../../Screens/Home/EmployeeView/EditEmployeeView.js';
 //Shared
 import SearchScreen from '../../Screens/Shared/Searching/SearchScreen.js';
 import LoanCalculator from '../../Screens/Shared/LoanCalculator.js';
@@ -159,6 +160,7 @@ const AdminNavigator = ({ navigation }) => {
             />
 
             <AdminStack.Screen name="EmployeeView" component={EmployeeView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Employee Profile' }} />
+            <AdminStack.Screen name="EditEmployee" component={EditEmployeeView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Edit Employee' }} />
 
             {/* Others */}
 

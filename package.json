@@ -1,9 +1,10 @@
 {
   "name": "MicroFinance",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "build": "cd android && gradlew assembleRelease",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",

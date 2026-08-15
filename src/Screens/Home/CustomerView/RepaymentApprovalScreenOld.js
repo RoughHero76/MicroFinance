@@ -209,6 +209,7 @@ const RepaymentApprovalScreenOld = () => {
                         <Text style={styles.applyFiltersButtonText}>Apply Filters</Text>
                     </TouchableOpacity>
                 </View>
+                <CustomToast />
             </View>
         </Modal>
     );

@@ -3,6 +3,7 @@ import { View, Modal, TouchableOpacity, StyleSheet, Dimensions, Image } from 're
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import ImageZoomPan from './ImageZoomPan';
 import { gestureHandlerRootHOC } from "react-native-gesture-handler";
+import { CustomToast } from "../toast/CustomToast";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -31,6 +32,7 @@ const ImageModal = ({ isVisible, imageUri, onClose, onDownload }) => {
                 closeModal={onClose}
                 downloadImage={onDownload}
             />
+            <CustomToast />
         </Modal>
     );
 };

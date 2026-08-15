@@ -56,6 +56,8 @@ const ToastMessage = ({ type, text1, text2 }) => {
   );
 };
 
+// Any Modal that can trigger a toast while open needs its own nested <CustomToast/>,
+// since RN's Modal renders in a separate native layer above the normal view tree.
 export const CustomToast = () => (
   <Toast
     config={{

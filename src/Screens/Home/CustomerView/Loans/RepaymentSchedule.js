@@ -34,7 +34,7 @@ const RepaymentSchedule = () => {
     const [selectedSchedule, setSelectedSchedule] = useState(null);
 
     const route = useRoute();
-    const { loanId } = route.params;
+    const { loanId } = route.params || {};
 
     useEffect(() => {
         fetchRepaymentSchedules();
@@ -318,6 +318,7 @@ const RepaymentSchedule = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
+                <CustomToast />
             </Modal>
             <EditRepaymentScheduleModal
                 visible={showEditModal}

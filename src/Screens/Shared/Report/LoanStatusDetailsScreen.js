@@ -22,7 +22,7 @@ import { handleSendSMS } from '../../../components/sms/sendSMS';
 import { useHomeContext } from '../../../components/context/HomeContext';
 
 const LoanStatusDetailsScreen = ({ route, navigation }) => {
-    const { type, smaLevel, assignedTo } = route.params;
+    const { type, smaLevel, assignedTo } = route.params || {};
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -296,6 +296,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                         <Text>Loading schedule...</Text>
                     </View>
                 )}
+                <CustomToast />
             </SafeAreaView>
         </Modal>
     );
@@ -372,6 +373,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                         </TouchableOpacity>
                     </View>
                 </View>
+                <CustomToast />
             </View>
         </Modal>
     );
