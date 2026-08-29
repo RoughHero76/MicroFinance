@@ -6,8 +6,11 @@ export const getImageDetails = (url) => {
         const uidMatch = url.match(/\/([^\/]+)\/profile\//);
         const uid = uidMatch ? uidMatch[1] : null;
 
-        // Extract filename - it's after the last / before the ?
-        const fileNameMatch = url.match(/\/([^\/]+)\?/);
+        // Extract filename - the last path segment, with or without a
+        // trailing query string. Cloudinary URLs (unlike the old storage
+        // provider's presigned URLs) never have a `?`, so this can't assume
+        // one is there.
+        const fileNameMatch = url.match(/\/([^\/?]+)(?:\?.*)?$/);
         const fileName = fileNameMatch ? fileNameMatch[1] : null;
 
         return { uid, fileName };
