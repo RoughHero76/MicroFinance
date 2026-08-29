@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ImageBackground } from 'react-native';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { showToast, CustomToast } from '../../components/toast/CustomToast';
 import EVILogo from '../../assets/EviLogo.png';
-
-// Skeleton loader components
-const Skeleton = ({ width, height }) => (
-    <View style={[styles.skeleton, { width, height }]} />
-);
-
+import { colors, spacing, radii, type } from '../../theme/tokens';
+import EviCard from '../../components/ui/EviCard';
+import EviButton from '../../components/ui/EviButton';
+import Skeleton from '../../components/ui/Skeleton';
 
 const HomeScreen = () => {
     const { user } = useHomeContext();
@@ -22,9 +20,9 @@ const HomeScreen = () => {
     const navigation = useNavigation();
 
     const fetchDashboardData = useCallback(async () => {
-        try {
 
-            setLoading(true);
+        setLoading(true);
+        try {
             const response = await apiCall('/api/admin/dashboard', 'GET');
             if (response.status === 'success') {
                 setDashboardData(response.data);
@@ -53,15 +51,15 @@ const HomeScreen = () => {
     }, [navigation]);
 
     const DashboardCard = useCallback(({ title, value, icon, onClick }) => (
-        <TouchableOpacity style={styles.card} onPress={onClick}>
-            <Icon name={icon} size={40} color="#007AFF" />
+        <EviCard style={styles.card} onPress={onClick}>
+            <Icon name={icon} size={40} color={colors.brand} />
             <Text style={styles.cardTitle}>{title}</Text>
             <Text style={styles.cardValue}>{value}</Text>
-        </TouchableOpacity>
+        </EviCard>
     ), []);
 
     const CustomerCard = useCallback(({ customer }) => (
-        <TouchableOpacity
+        <EviCard
             style={styles.customerCard}
             onPress={() => navigation.navigate('CustomerView', { uid: customer.uid })}
         >
@@ -72,7 +70,7 @@ const HomeScreen = () => {
                     {`Latest Loan: ${customer.loans[0].loanAmount} (${customer.loans[0].status})`}
                 </Text>
             )}
-        </TouchableOpacity>
+        </EviCard>
     ), [navigation]);
 
     const dashboardCards = useMemo(() => {
@@ -119,19 +117,19 @@ const HomeScreen = () => {
 
                 <View style={styles.dashboardContainer}>
                     {/* Skeleton loaders that match the shape of dashboard cards */}
-                    <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
-                    <Skeleton width="48%" height={150} />
+                    <Skeleton width="48%" height={150} radius={radii.lg} style={styles.skeletonItem} />
+                    <Skeleton width="48%" height={150} radius={radii.lg} style={styles.skeletonItem} />
+                    <Skeleton width="48%" height={150} radius={radii.lg} style={styles.skeletonItem} />
+                    <Skeleton width="48%" height={150} radius={radii.lg} style={styles.skeletonItem} />
 
                 </View>
 
                 <Text style={styles.sectionTitle}>Recent Customers</Text>
                 {/* Skeleton loaders for recent customers */}
-                <Skeleton width="100%" height={80} />
-                <Skeleton width="100%" height={80} />
-                <Skeleton width="100%" height={80} />
-                <Skeleton width="100%" height={50} />
+                <Skeleton width="100%" height={80} radius={radii.lg} style={styles.skeletonItem} />
+                <Skeleton width="100%" height={80} radius={radii.lg} style={styles.skeletonItem} />
+                <Skeleton width="100%" height={80} radius={radii.lg} style={styles.skeletonItem} />
+                <Skeleton width="100%" height={50} radius={radii.lg} style={styles.skeletonItem} />
             </ScrollView>
         );
     }
@@ -145,7 +143,7 @@ const HomeScreen = () => {
             <ScrollView
                 style={styles.container}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
                 }
             >
                 <Text style={styles.welcome}>Welcome, {user?.fname || 'Admin'}!</Text>
@@ -159,9 +157,13 @@ const HomeScreen = () => {
                     <CustomerCard key={customer.uid} customer={customer} />
                 ))}
 
-                <TouchableOpacity style={styles.viewAllButton} onPress={() => navigation.navigate('AllCustomerView')}>
-                    <Text style={styles.viewAllButtonText}>View All Customers</Text>
-                </TouchableOpacity>
+                <EviButton
+                    title="View All Customers"
+                    icon="arrow-right"
+                    fullWidth
+                    onPress={() => navigation.navigate('AllCustomerView')}
+                    style={styles.viewAllButton}
+                />
 
                 <CustomToast />
             </ScrollView>
@@ -173,98 +175,67 @@ const styles = StyleSheet.create({
     backgroundImage: {
         flex: 1,
         width: '100%',
+        backgroundColor: colors.surface,
     },
     container: {
         flex: 1,
-        backgroundColor: 'rgba(245, 245, 245, 0.55)', // Semi-transparent background
-        padding: 20,
+        backgroundColor: colors.surface,
+        padding: spacing.xl,
     },
-    skeleton: {
-        backgroundColor: '#e0e0e0',
-        borderRadius: 8,
-        marginBottom: 15,
+    skeletonItem: {
+        marginBottom: spacing.lg,
     },
     welcome: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: 'black',
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        marginBottom: spacing.xl,
+        color: colors.ink,
     },
     dashboardContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: spacing.xl,
     },
     card: {
         width: '48%',
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 15,
-        marginBottom: 15,
+        marginBottom: spacing.lg,
         alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.23,
-        shadowRadius: 2.62,
-        elevation: 4,
     },
     cardTitle: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 10,
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
+        marginTop: spacing.md,
+        fontWeight: type.weights.medium,
     },
     cardValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#007AFF',
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        color: colors.brand,
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginTop: 20,
-        marginBottom: 10,
-        color: 'black',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        marginTop: spacing.xl,
+        marginBottom: spacing.md,
+        color: colors.ink,
     },
     customerCard: {
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 15,
-        marginBottom: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.23,
-        shadowRadius: 2.62,
-        elevation: 4,
+        marginBottom: spacing.md,
     },
     customerName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#007AFF',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     customerDetail: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 5,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginTop: spacing.xs,
     },
     viewAllButton: {
-        backgroundColor: '#007AFF',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 30,
-    },
-    viewAllButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        marginTop: spacing.xl,
+        marginBottom: spacing.xxl,
     },
 });
 

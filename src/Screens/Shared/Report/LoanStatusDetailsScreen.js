@@ -9,7 +9,6 @@ import {
     Modal,
     SafeAreaView,
     RefreshControl,
-    TextInput,
     Alert,
 } from 'react-native';
 import { apiCall } from "../../../components/api/apiUtils";
@@ -20,6 +19,11 @@ import { Picker } from '@react-native-picker/picker';
 import { format } from 'date-fns';
 import { handleSendSMS } from '../../../components/sms/sendSMS';
 import { useHomeContext } from '../../../components/context/HomeContext';
+import { colors, spacing, radii, type } from '../../../theme/tokens';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import EviButton from '../../../components/ui/EviButton';
+import EviTextField from '../../../components/ui/EviTextField';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const LoanStatusDetailsScreen = ({ route, navigation }) => {
     const { type, smaLevel, assignedTo } = route.params || {};
@@ -169,7 +173,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
     const renderLoanCard = ({ item }) => (
         <View style={styles.card}>
             <View style={styles.cardHeader}>
-                <View>
+                <View style={{ flex: 1, marginRight: spacing.sm }}>
                     <Text style={styles.loanNumber}>Loan #{item.loan.loanNumber}</Text>
                     <Text style={styles.customerName}>
                         {item.loan.customer.fname} {item.loan.customer.lname}
@@ -179,22 +183,22 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                     style={styles.scheduleButton}
                     onPress={() => openScheduleModal(item.loan)}
                 >
-                    <Icon name="calendar-clock" size={20} color="#2196F3" />
+                    <Icon name="calendar-clock" size={18} color={colors.brand} />
                     <Text style={styles.scheduleButtonText}>Schedule</Text>
                 </TouchableOpacity>
             </View>
 
             <View style={styles.detailsContainer}>
                 <View style={styles.detailRow}>
-                    <Icon name="phone" size={16} color="#78909C" />
+                    <Icon name="phone" size={16} color={colors.inkFaint} />
                     <Text style={styles.detailText}>{item.loan.customer.phoneNumber}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                    <Icon name="map-marker" size={16} color="#78909C" />
+                    <Icon name="map-marker" size={16} color={colors.inkFaint} />
                     <Text style={styles.detailText}>{item.loan.customer.address}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                    <Icon name="store" size={16} color="#78909C" />
+                    <Icon name="store" size={16} color={colors.inkFaint} />
                     <Text style={styles.detailText}>{item.loan.businessAddress}</Text>
                 </View>
             </View>
@@ -206,7 +210,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                 </View>
                 <View style={styles.statItem}>
                     <Text style={styles.statLabel}>Overdue</Text>
-                    <Text style={[styles.statValue, { color: '#FF5252' }]}>
+                    <Text style={[styles.statValue, { color: colors.danger }]}>
                         ₹{item.totalOverdue.toLocaleString()}
                     </Text>
                 </View>
@@ -224,12 +228,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                 <Text style={styles.installmentNumber}>
                     #{item.loanInstallmentNumber}
                 </Text>
-                <View style={[
-                    styles.statusBadge,
-                    { backgroundColor: item.status === 'Paid' ? '#4CAF50' : '#FF5252' }
-                ]}>
-                    <Text style={styles.statusText}>{item.status}</Text>
-                </View>
+                <StatusBadge status={item.status} />
             </View>
 
             <View style={styles.scheduleDetails}>
@@ -248,7 +247,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                 {item.penaltyApplied && (
                     <View style={styles.scheduleRow}>
                         <Text style={styles.scheduleLabel}>Penalty</Text>
-                        <Text style={[styles.scheduleValue, { color: '#FF5252' }]}>
+                        <Text style={[styles.scheduleValue, { color: colors.danger }]}>
                             Applied
                         </Text>
                     </View>
@@ -256,13 +255,14 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
             </View>
 
             {['Pending', 'Overdue', 'PartiallyPaid'].includes(item.status) && userRole === 'employee' && (
-                <TouchableOpacity
-                    style={styles.payButton}
+                <EviButton
+                    title="Pay Now"
+                    icon="cash"
+                    size="md"
+                    fullWidth
+                    style={{ marginTop: spacing.md }}
                     onPress={() => handlePayButtonPress(item)}
-                >
-                    <Icon name="cash" size={20} color="white" />
-                    <Text style={styles.payButtonText}>Pay Now</Text>
-                </TouchableOpacity>
+                />
             )}
         </View>
     );
@@ -280,20 +280,30 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                         onPress={() => setShowScheduleModal(false)}
                         style={styles.closeButton}
                     >
-                        <Icon name="close" size={24} color="#263238" />
+                        <Icon name="close" size={20} color={colors.ink} />
                     </TouchableOpacity>
                 </View>
 
                 {scheduleData ? (
-                    <FlatList
-                        data={scheduleData.repaymentSchedules}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderScheduleItem}
-                    />
+                    scheduleData.repaymentSchedules.length > 0 ? (
+                        <FlatList
+                            data={scheduleData.repaymentSchedules}
+                            keyExtractor={(item) => item._id}
+                            renderItem={renderScheduleItem}
+                        />
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <EmptyState
+                                icon="calendar-clock"
+                                title="No Schedule Data"
+                                message="There are no repayment installments to show."
+                            />
+                        </View>
+                    )
                 ) : (
                     <View style={styles.modalLoading}>
-                        <ActivityIndicator size="large" color="#2196F3" />
-                        <Text>Loading schedule...</Text>
+                        <ActivityIndicator size="large" color={colors.brand} />
+                        <Text style={styles.loadingText}>Loading schedule...</Text>
                     </View>
                 )}
                 <CustomToast />
@@ -316,62 +326,52 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                             onPress={() => setShowPaymentModal(false)}
                             style={styles.closeButton}
                         >
-                            <Icon name="close" size={24} color="#263238" />
+                            <Icon name="close" size={20} color={colors.ink} />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.paymentForm}>
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Amount</Text>
-                            <TextInput
-                                style={styles.input}
-                                keyboardType="numeric"
-                                value={paymentDetails.amount}
-                                onChangeText={(text) => setPaymentDetails({ ...paymentDetails, amount: text })}
-                            />
-                        </View>
+                    <EviTextField
+                        label="Amount"
+                        keyboardType="numeric"
+                        value={paymentDetails.amount}
+                        onChangeText={(text) => setPaymentDetails({ ...paymentDetails, amount: text })}
+                    />
 
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Payment Method</Text>
-                            <View style={styles.pickerContainer}>
-                                <Picker
-                                    selectedValue={paymentDetails.paymentMethod}
-                                    onValueChange={(value) => setPaymentDetails({ ...paymentDetails, paymentMethod: value })}
-                                    style={styles.picker}
-                                >
-                                    <Picker.Item label="Cash" value="Cash" />
-                                    <Picker.Item label="Bank Transfer" value="Bank Transfer" />
-                                    <Picker.Item label="Cheque" value="Cheque" />
-                                    <Picker.Item label="GooglePay" value="GooglePay" />
-                                    <Picker.Item label="PhonePay" value="PhonePay" />
-                                    <Picker.Item label="Paytm" value="Paytm" />
-                                    <Picker.Item label="Other" value="Other" />
-                                </Picker>
-                            </View>
+                    <View style={styles.formGroup}>
+                        <Text style={styles.label}>Payment Method</Text>
+                        <View style={styles.pickerWrap}>
+                            <Picker
+                                selectedValue={paymentDetails.paymentMethod}
+                                onValueChange={(value) => setPaymentDetails({ ...paymentDetails, paymentMethod: value })}
+                                style={styles.picker}
+                            >
+                                <Picker.Item label="Cash" value="Cash" />
+                                <Picker.Item label="Bank Transfer" value="Bank Transfer" />
+                                <Picker.Item label="Cheque" value="Cheque" />
+                                <Picker.Item label="GooglePay" value="GooglePay" />
+                                <Picker.Item label="PhonePay" value="PhonePay" />
+                                <Picker.Item label="Paytm" value="Paytm" />
+                                <Picker.Item label="Other" value="Other" />
+                            </Picker>
                         </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Transaction ID</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={paymentDetails.transactionId}
-                                onChangeText={(text) => setPaymentDetails({ ...paymentDetails, transactionId: text })}
-                                placeholder="Enter transaction ID"
-                            />
-                        </View>
-
-                        <TouchableOpacity
-                            style={[styles.confirmButton, confirmPaymentLoading && styles.disabledButton]}
-                            onPress={handlePayment}
-                            disabled={confirmPaymentLoading}
-                        >
-                            {confirmPaymentLoading ? (
-                                <ActivityIndicator color="white" size="small" />
-                            ) : (
-                                <Text style={styles.confirmButtonText}>Confirm Payment</Text>
-                            )}
-                        </TouchableOpacity>
                     </View>
+
+                    <EviTextField
+                        label="Transaction ID"
+                        value={paymentDetails.transactionId}
+                        onChangeText={(text) => setPaymentDetails({ ...paymentDetails, transactionId: text })}
+                        placeholder="Enter transaction ID"
+                    />
+
+                    <EviButton
+                        title="Confirm Payment"
+                        icon="cash"
+                        size="lg"
+                        fullWidth
+                        loading={confirmPaymentLoading}
+                        style={{ marginTop: spacing.lg }}
+                        onPress={handlePayment}
+                    />
                 </View>
                 <CustomToast />
             </View>
@@ -381,7 +381,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
     if (loading && !data.length) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2196F3" />
+                <ActivityIndicator size="large" color={colors.brand} />
                 <Text style={styles.loadingText}>Loading loans...</Text>
             </View>
         );
@@ -397,14 +397,27 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={[colors.brand]}
+                        tintColor={colors.brand}
+                    />
                 }
+                ListEmptyComponent={() => (
+                    <EmptyState
+                        icon="calendar-clock"
+                        title="No Loans Found"
+                        message="There are no loans in this list yet."
+                        style={{ marginTop: spacing.xxl }}
+                    />
+                )}
                 ListFooterComponent={() => (
                     loadingMore ? (
                         <ActivityIndicator
                             style={styles.footerLoader}
                             size="small"
-                            color="#2196F3"
+                            color={colors.brand}
                         />
                     ) : null
                 )}
@@ -419,46 +432,44 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
     listContainer: {
-        padding: 16,
+        padding: spacing.lg,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: colors.surface,
     },
     loadingText: {
-        marginTop: 12,
-        color: '#2196F3',
+        marginTop: spacing.md,
+        color: colors.inkSoft,
+        fontSize: type.sizes.md,
     },
     card: {
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        marginBottom: spacing.md,
+        ...{ shadowColor: colors.night, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
     },
     cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
     loanNumber: {
-        fontSize: 14,
-        color: '#78909C',
-        marginBottom: 4,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.xs,
     },
     customerName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#263238',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     scheduleButton: {
         position: 'absolute',
@@ -467,209 +478,175 @@ const styles = StyleSheet.create({
         zIndex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: '#E3F2FD',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
         elevation: 5,
     },
     scheduleButtonText: {
-        color: '#2196F3',
-        marginLeft: 4,
-        fontSize: 14,
-        fontWeight: '500',
+        color: colors.brand,
+        marginLeft: spacing.xs,
+        fontSize: type.sizes.sm,
+        fontWeight: type.weights.medium,
     },
     detailsContainer: {
-        marginBottom: 16,
+        marginBottom: spacing.lg,
     },
     detailRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     detailText: {
-        marginLeft: 8,
-        color: '#37474F',
+        marginLeft: spacing.sm,
+        color: colors.ink,
+        fontSize: type.sizes.md,
         flex: 1,
     },
     statsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
-        paddingTop: 16,
+        borderTopColor: colors.line,
+        paddingTop: spacing.lg,
     },
     statItem: {
         flex: 1,
         alignItems: 'center',
     },
     statLabel: {
-        fontSize: 12,
-        color: 'black',
-        marginBottom: 4,
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
+        marginBottom: spacing.xs,
     },
     statValue: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#263238',
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     footerLoader: {
-        marginVertical: 16,
+        marginVertical: spacing.lg,
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        backgroundColor: 'white',
+        padding: spacing.lg,
+        backgroundColor: colors.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: colors.line,
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#263238',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     closeButton: {
-        padding: 8,
+        width: 32,
+        height: 32,
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     modalLoading: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+    },
     scheduleItem: {
-        backgroundColor: 'white',
-        margin: 8,
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: colors.card,
+        margin: spacing.sm,
+        borderRadius: radii.md,
+        padding: spacing.lg,
         elevation: 1,
     },
     scheduleHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
     installmentNumber: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#263238',
-    },
-    statusBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    statusText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     scheduleDetails: {
-        backgroundColor: '#F5F7FA',
-        borderRadius: 8,
-        padding: 12,
+        backgroundColor: colors.surface,
+        borderRadius: radii.sm,
+        padding: spacing.md,
     },
     scheduleRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     scheduleLabel: {
-        color: '#78909C',
-        fontSize: 14,
+        color: colors.inkSoft,
+        fontSize: type.sizes.md,
     },
     scheduleValue: {
-        color: '#263238',
-        fontSize: 14,
-        fontWeight: '500',
+        color: colors.ink,
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.medium,
     },
     paymentModalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
         justifyContent: 'center',
         alignItems: 'center',
+        padding: spacing.lg,
     },
     paymentModalContent: {
-        backgroundColor: 'white',
-        width: '90%',
-        borderRadius: 12,
-        padding: 20,
+        backgroundColor: colors.card,
+        width: '100%',
+        maxWidth: 400,
+        borderRadius: radii.xl,
+        padding: spacing.xl,
         maxHeight: '80%',
+        overflow: 'hidden',
     },
     paymentModalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: spacing.xl,
     },
     paymentModalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#263238',
-    },
-    paymentForm: {
-        gap: 16,
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     formGroup: {
-        marginBottom: 16,
+        marginTop: spacing.lg,
     },
     label: {
-        fontSize: 14,
-        color: '#78909C',
-        marginBottom: 8,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.sm,
+        fontWeight: type.weights.medium,
     },
-    input: {
+    pickerWrap: {
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        color: 'black',
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 8,
+        borderColor: colors.line,
+        borderRadius: radii.md,
         overflow: 'hidden',
     },
     picker: {
-        height: 50,
-        color: 'black',
-    },
-    confirmButton: {
-        backgroundColor: '#2196F3',
-        padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    confirmButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    disabledButton: {
-        opacity: 0.7,
-    },
-    payButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#2196F3',
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 12,
-    },
-    payButtonText: {
-        color: 'white',
-        marginLeft: 8,
-        fontSize: 16,
-        fontWeight: '500',
+        height: 48,
+        color: colors.ink,
+        fontSize: type.sizes.md,
     },
 });
 

@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, RefreshControl } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
 import { useNavigation } from '@react-navigation/native';
 import ProfilePicturePlaceHolder from '../../../assets/placeholders/profile.jpg';
-import Toast from 'react-native-toast-message';
+import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import { colors, radii, spacing, type } from '../../../theme/tokens';
+import EviCard from '../../../components/ui/EviCard';
+import StatusBadge from '../../../components/ui/StatusBadge';
 
 const AllEmployeeView = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const navigation = useNavigation();
-
 
     const fetchEmployees = async (pageNumber) => {
         if (loading || !hasMore) return;
@@ -28,65 +31,60 @@ const AllEmployeeView = () => {
                 setHasMore(response.data.length === 10);
                 setPage(pageNumber);
             } else {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error',
-                    text2: 'Failed to fetch employees',
-                });
+                showToast('error', 'Error', 'Failed to fetch employees');
             }
         } catch (error) {
             console.error(error);
-            Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: 'An unexpected error occurred',
-            });
+            showToast('error', 'Error', 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }
     };
 
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        fetchEmployees(1).then(() => setRefreshing(false));
+    }, []);
+
     useEffect(() => {
         fetchEmployees(1);
     }, []);
 
-    const renderEmployeeItem = ({ item }) => {
-        return (
-            <TouchableOpacity
-                style={styles.employeeItem}
-                onPress={() => navigation.navigate('EmployeeView', { uid: item.uid })}
-            >
-                <Image
-                    source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
-                    style={styles.profilePicture}
-                />
-                <View style={styles.employeeInfo}>
+    const renderEmployeeItem = ({ item }) => (
+        <EviCard
+            style={styles.employeeItem}
+            onPress={() => navigation.navigate('EmployeeView', { uid: item.uid })}
+            elevated={false}
+            padding={spacing.lg}
+        >
+            <Image
+                source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceHolder}
+                style={styles.profilePicture}
+            />
+            <View style={styles.employeeInfo}>
+                <View style={styles.employeeRowTop}>
                     <Text style={styles.employeeName}>{`${item.fname} ${item.lname}`}</Text>
-                    <Text style={styles.employeeUsername}>
-                        <Icon name="account" size={14} color="#666" /> {item.userName}
-                    </Text>
-                    <Text style={styles.employeePhone}>
-                        <Icon name="phone" size={14} color="#666" /> {item.phoneNumber}
-                    </Text>
-                    <Text style={styles.employeeEmail}>
-                        <Icon name="email" size={14} color="#666" /> {item.email || 'N/A'}
-                    </Text>
-                    <View style={styles.statusContainer}>
-                        <View style={[styles.status, { backgroundColor: item.accountStatus ? '#4CAF50' : '#F44336' }]}>
-                            <Text style={styles.statusText}>{item.accountStatus ? 'Active' : 'Inactive'}</Text>
-                        </View>
-                    </View>
+                    <StatusBadge status={item.accountStatus ? 'Active' : 'Inactive'} />
                 </View>
-                <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
-            </TouchableOpacity>
-        );
-    };
+                <Text style={styles.employeeMeta}>
+                    <Icon name="account" size={14} color={colors.inkSoft} /> {item.userName}
+                </Text>
+                <Text style={styles.employeeMeta}>
+                    <Icon name="phone" size={14} color={colors.inkSoft} /> {item.phoneNumber}
+                </Text>
+                <Text style={styles.employeeMeta}>
+                    <Icon name="email" size={14} color={colors.inkSoft} /> {item.email || 'N/A'}
+                </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={colors.inkFaint} style={styles.chevron} />
+        </EviCard>
+    );
 
     const renderFooter = () => {
         if (!loading) return null;
         return (
             <View style={styles.footer}>
-                <ActivityIndicator size="small" color="#0000ff" />
+                <ActivityIndicator size="small" color={colors.brand} />
             </View>
         );
     };
@@ -107,7 +105,16 @@ const AllEmployeeView = () => {
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={renderFooter}
                 contentContainerStyle={styles.listContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.brand]}
+                        tintColor={colors.brand}
+                    />
+                }
             />
+            <CustomToast />
         </View>
     );
 };
@@ -115,71 +122,46 @@ const AllEmployeeView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
     listContent: {
-        paddingVertical: 12,
+        paddingVertical: spacing.md,
     },
     employeeItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        marginHorizontal: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
     },
     profilePicture: {
         width: 60,
         height: 60,
         borderRadius: 30,
-        marginRight: 16,
+        marginRight: spacing.lg,
     },
     employeeInfo: {
         flex: 1,
     },
-    employeeName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 4,
-        color: '#333',
-    },
-    employeeUsername: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 2,
-    },
-    employeePhone: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 2,
-    },
-    employeeEmail: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
-    },
-    statusContainer: {
+    employeeRowTop: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: spacing.sm,
     },
-    status: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
+    employeeName: {
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        flex: 1,
+        marginRight: spacing.sm,
     },
-    statusText: {
-        fontSize: 12,
-        color: '#FFFFFF',
-        fontWeight: 'bold',
+    employeeMeta: {
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: 2,
     },
     chevron: {
-        marginLeft: 8,
+        marginLeft: spacing.sm,
     },
     footer: {
         paddingVertical: 20,

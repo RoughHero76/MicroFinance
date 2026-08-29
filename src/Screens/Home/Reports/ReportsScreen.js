@@ -10,6 +10,10 @@ import ReactNativeBlobUtil from 'react-native-blob-util';
 import { API_URL } from "../../../components/api/secrets";
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import Share from 'react-native-share';
+import { colors, spacing, type, radii, shadow } from "../../../theme/tokens";
+import EviButton from "../../../components/ui/EviButton";
+import EviCard from "../../../components/ui/EviCard";
+import EmptyState from "../../../components/ui/EmptyState";
 
 const { width } = Dimensions.get("window");
 const android = ReactNativeBlobUtil.android;
@@ -198,18 +202,18 @@ const ReportsScreen = () => {
                         Are you sure you want to clear all downloads? This action cannot be undone.
                     </Text>
                     <View style={styles.deleteButtonsContainer}>
-                        <TouchableOpacity
-                            style={[styles.deleteButton, styles.cancelButton]}
+                        <EviButton
+                            title="Cancel"
+                            variant="secondary"
+                            style={styles.modalRowButton}
                             onPress={() => setShowClearAllConfirmation(false)}
-                        >
-                            <Text style={styles.deleteButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.deleteButton, styles.deleteCompletelyButton]}
+                        />
+                        <EviButton
+                            title="Clear All"
+                            variant="danger"
+                            style={styles.modalRowButton}
                             onPress={clearAllHistory}
-                        >
-                            <Text style={styles.deleteButtonText}>Clear All</Text>
-                        </TouchableOpacity>
+                        />
                     </View>
                 </View>
             </View>
@@ -230,20 +234,19 @@ const ReportsScreen = () => {
                         Do you want to delete this the file?
                     </Text>
                     <View style={styles.deleteButtonsContainer}>
-                        <TouchableOpacity
-                            style={[styles.deleteButton, styles.deleteHistoryButton]}
+                        <EviButton
+                            title="Yes, Delete"
+                            variant="danger"
+                            style={styles.modalRowButton}
                             onPress={() => deleteReport(false)}
-                        >
-                            <Text style={styles.deleteButtonText}>Yes</Text>
-                        </TouchableOpacity>
-
+                        />
+                        <EviButton
+                            title="No"
+                            variant="secondary"
+                            style={styles.modalRowButton}
+                            onPress={() => setShowDeleteConfirmation(false)}
+                        />
                     </View>
-                    <TouchableOpacity
-                        style={styles.cancelButton}
-                        onPress={() => setShowDeleteConfirmation(false)}
-                    >
-                        <Text style={styles.cancelButtonText}>No</Text>
-                    </TouchableOpacity>
                 </View>
             </View>
             <CustomToast />
@@ -281,7 +284,7 @@ const ReportsScreen = () => {
 
     const formatCurrency = (value) => {
         if (value === null) {
-            return "N/A"; 
+            return "N/A";
         }
         return `₹${value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
     };
@@ -291,11 +294,11 @@ const ReportsScreen = () => {
         <ScrollView style={styles.container}>
             <View style={styles.datePickerContainer}>
                 <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
-                    <Icon name="calendar" size={24} color="#333" />
+                    <Icon name="calendar" size={20} color={colors.brand} />
                     <Text style={styles.dateButtonText}>Start: {startDate.toDateString()}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
-                    <Icon name="calendar" size={24} color="#333" />
+                    <Icon name="calendar" size={20} color={colors.brand} />
                     <Text style={styles.dateButtonText}>End: {endDate.toDateString()}</Text>
                 </TouchableOpacity>
                 {showStartDatePicker && (
@@ -314,38 +317,54 @@ const ReportsScreen = () => {
                         onChange={(event, selectedDate) => onDateChange(event, selectedDate, false)}
                     />
                 )}
-                <TouchableOpacity style={styles.fetchButton} onPress={() => fetchReportData(startDate, endDate)}>
-                    <Text style={styles.fetchButtonText}>Fetch Report</Text>
-                </TouchableOpacity>
+                <EviButton
+                    title="Fetch Report"
+                    variant="primary"
+                    size="lg"
+                    icon="filter-variant"
+                    style={styles.fetchButton}
+                    onPress={() => fetchReportData(startDate, endDate)}
+                />
             </View>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.downloadButton} onPress={() => downloadReport('pdf')}>
-                    <Icon name="file-pdf-box" size={24} color="#fff" />
-                    <Text style={styles.buttonText}>Download PDF</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.downloadButton} onPress={() => downloadReport('xlsx')} disabled={downloadReportLoading}>
-                    <Icon name="file-excel-box" size={24} color="#fff" />
-                    {downloadReportLoading ? (<ActivityIndicator size="small" color="#fff" />) : (<Text style={styles.buttonText}>Download Xlsx</Text>)}
-                </TouchableOpacity>
+                <EviButton
+                    title="Download PDF"
+                    variant="primary"
+                    icon="file-pdf-box"
+                    style={styles.downloadButton}
+                    onPress={() => downloadReport('pdf')}
+                />
+                <EviButton
+                    title="Download Xlsx"
+                    variant="secondary"
+                    icon="file-excel-box"
+                    style={styles.downloadButton}
+                    loading={downloadReportLoading}
+                    onPress={() => downloadReport('xlsx')}
+                />
             </View>
 
-            <TouchableOpacity style={styles.historyButton} onPress={() => setShowDownloadHistory(true)}>
-                <Icon name="history" size={24} color="#fff" />
-                <Text style={styles.buttonText}>View Download History</Text>
-            </TouchableOpacity>
+            <EviButton
+                title="View Download History"
+                variant="secondary"
+                icon="history"
+                fullWidth
+                style={styles.historyButton}
+                onPress={() => setShowDownloadHistory(true)}
+            />
 
             {reportData && (
                 <View>
                     <Text style={styles.sectionTitle}>Summary</Text>
-                    <View style={styles.summaryContainer}>
+                    <EviCard style={styles.summaryCard} padding={spacing.xl}>
                         <SummaryItem icon="file-document-outline" label="Total Loans" value={reportData.analysis.summary.totalLoans ?? "N/A"} />
                         <SummaryItem icon="cash" label="Total Loan Amount" value={formatCurrency(reportData.analysis.summary.totalLoanAmount) ?? "N/A"} />
                         {/* <SummaryItem icon="cash-multiple" label="Avg. Loan Amount" value={formatCurrency(reportData.analysis.summary.averageLoanAmount) ?? "N/A"} /> */}
-                       {/*  <SummaryItem icon="card-bulleted-outline" label="Total Installment" value={formatCurrency(reportData.analysis.summary.totalInstallmentAmount) ?? "N/A"} /> */}
+                        {/* <SummaryItem icon="card-bulleted-outline" label="Total Installment" value={formatCurrency(reportData.analysis.summary.totalInstallmentAmount) ?? "N/A"} /> */}
                         <SummaryItem icon="cash-check" label="Total Paid Amount" value={formatCurrency(reportData.analysis.summary.totalPaidAmount)} />
                         <SummaryItem icon="alert-circle-outline" label="Total Penalty" value={formatCurrency(reportData.analysis.summary.totalPenaltyAmount) ?? "N/A"} />
-                    </View>
+                    </EviCard>
 
                     <Text style={styles.sectionTitle}>Loan Amount Distribution</Text>
                     <BarChart
@@ -368,7 +387,7 @@ const ReportsScreen = () => {
                             name: `₹${item.range}`,
                             population: item.count,
                             color: pieChartColors[index % pieChartColors.length],
-                            legendFontColor: "#7F7F7F",
+                            legendFontColor: colors.inkSoft,
                             legendFontSize: 12
                         }))}
                         width={width - 32}
@@ -388,39 +407,52 @@ const ReportsScreen = () => {
                 onRequestClose={() => setShowDownloadHistory(false)}
             >
                 <View style={styles.modalContainer}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={styles.historyHeaderRow}>
                         <Text style={styles.modalTitle}>Download History</Text>
-                        <TouchableOpacity style={styles.clearAllButton} onPress={() => setShowClearAllConfirmation(true)}>
-                            <Text style={styles.clearAllButtonText}>Clear All </Text>
-                        </TouchableOpacity>
+                        <EviButton
+                            title="Clear All"
+                            variant="danger"
+                            size="md"
+                            onPress={() => setShowClearAllConfirmation(true)}
+                        />
                     </View>
                     <FlatList
                         data={downloadedReports}
                         keyExtractor={(item, index) => index.toString()}
+                        ListEmptyComponent={
+                            <EmptyState
+                                icon="history"
+                                title="No Downloads Yet"
+                                message="Reports you download will appear here"
+                            />
+                        }
                         renderItem={({ item }) => (
                             <View style={styles.historyItem}>
                                 <TouchableOpacity style={styles.historyItemContent} onPress={() => openDownloadedReport(item)}>
-                                    <Icon name={item.type === 'pdf' ? 'file-pdf-box' : 'file-excel-box'} size={24} color="#333" />
+                                    <View style={styles.historyIconChip}>
+                                        <Icon name={item.type === 'pdf' ? 'file-pdf-box' : 'file-excel-box'} size={20} color={colors.brand} />
+                                    </View>
                                     <View style={styles.historyItemText}>
-                                        <Text style={styles.historyItemType}>{item.name.toUpperCase()} </Text>
+                                        <Text style={styles.historyItemType}>{item.name.toUpperCase()}</Text>
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.shareIcon} onPress={() => handleShareItem(item)}>
-                                    <Icon name="share" size={24} color="blue" />
+                                    <Icon name="share" size={22} color={colors.info} />
                                 </TouchableOpacity>
-
                                 <TouchableOpacity style={styles.deleteIcon} onPress={() => handleDeletePress(item)}>
-                                    <Icon name="delete" size={24} color="#FF0000" />
+                                    <Icon name="delete" size={22} color={colors.danger} />
                                 </TouchableOpacity>
-
                             </View>
                         )}
                     />
                     <View style={styles.historyButtonsContainer}>
-
-                        <TouchableOpacity style={styles.closeButton} onPress={() => setShowDownloadHistory(false)}>
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
+                        <EviButton
+                            title="Close"
+                            variant="secondary"
+                            size="lg"
+                            fullWidth
+                            onPress={() => setShowDownloadHistory(false)}
+                        />
                     </View>
                 </View>
                 <CustomToast />
@@ -434,38 +466,40 @@ const ReportsScreen = () => {
 
 const SummaryItem = ({ icon, label, value }) => (
     <View style={styles.summaryItem}>
-        <Icon name={icon} size={24} color="#333" />
+        <View style={styles.summaryIconChip}>
+            <Icon name={icon} size={18} color={colors.brand} />
+        </View>
         <Text style={styles.summaryLabel}>{label}</Text>
         <Text style={styles.summaryValue}>{value}</Text>
     </View>
 );
 
 const chartConfig = {
-    backgroundColor: "#6200ea",
-    backgroundGradientFrom: "#7e57c2",
-    backgroundGradientTo: "#ab47bc",
+    backgroundColor: colors.card,
+    backgroundGradientFrom: colors.brandTint,
+    backgroundGradientTo: colors.card,
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    color: (opacity = 1) => `rgba(14, 90, 58, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(18, 36, 28, ${opacity})`,
     style: {
-        borderRadius: 16
+        borderRadius: radii.lg
     },
     propsForDots: {
         r: "6",
         strokeWidth: "2",
-        stroke: "#ffa726"
+        stroke: colors.orange
     }
 };
 
 const pieChartColors = [
-    "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"
+    colors.brand, colors.success, colors.info, colors.orange, colors.warning, colors.inkFaint
 ];
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#f5f5f5',
+        padding: spacing.lg,
+        backgroundColor: colors.surface,
     },
     loadingContainer: {
         flex: 1,
@@ -473,234 +507,173 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     datePickerContainer: {
-        marginBottom: 16,
+        marginBottom: spacing.lg,
     },
     dateButton: {
+        height: 52,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
+        paddingHorizontal: spacing.lg,
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        marginBottom: 10,
-        backgroundColor: '#fff',
+        borderColor: colors.line,
+        borderRadius: radii.md,
+        marginBottom: spacing.md,
+        backgroundColor: colors.card,
     },
     dateButtonText: {
-        color: '#333',
-        marginLeft: 10,
+        color: colors.ink,
+        marginLeft: spacing.md,
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.medium,
     },
     fetchButton: {
-        backgroundColor: '#4CAF50',
-        padding: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    fetchButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
+        marginTop: spacing.sm,
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginTop: 24,
-        marginBottom: 16,
-        color: '#333',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        marginTop: spacing.xxl,
+        marginBottom: spacing.lg,
+        color: colors.ink,
     },
-    summaryContainer: {
-        backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+    summaryCard: {
+        backgroundColor: colors.card,
     },
     summaryItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: spacing.md,
+    },
+    summaryIconChip: {
+        width: 34,
+        height: 34,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
     },
     summaryLabel: {
         flex: 1,
-        marginLeft: 10,
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#666',
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.semibold,
+        color: colors.inkSoft,
     },
     summaryValue: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     chart: {
-        marginVertical: 8,
-        borderRadius: 16,
+        marginVertical: spacing.sm,
+        borderRadius: radii.lg,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginTop: 24,
-        marginBottom: 32,
+        alignItems: 'center',
+        marginTop: spacing.xl,
+        marginBottom: spacing.xl,
     },
     downloadButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#2196F3',
-        padding: 12,
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    buttonText: {
-        color: 'white',
-        marginLeft: 8,
-        fontSize: 16,
-        fontWeight: 'bold',
+        flex: 1,
+        marginHorizontal: spacing.xs,
     },
     historyButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#4CAF50',
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 16,
-        justifyContent: 'center',
+        marginTop: spacing.sm,
     },
     modalContainer: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#f5f5f5',
+        padding: spacing.lg,
+        backgroundColor: colors.surface,
     },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
-        color: '#333',
-    },
-    historyButtonsContainer: {
+    historyHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 16,
-    },
-    clearAllButton: {
-        backgroundColor: '#FF6347',
-        padding: 12,
-        borderRadius: 8,
-        marginRight: 8,
-        marginBottom: 5,
-    },
-    clearAllButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    closeButton: {
-        flex: 1,
-
-        backgroundColor: '#2196F3',
-        padding: 12,
-        borderRadius: 8,
         alignItems: 'center',
-        marginTop: 16,
+        marginBottom: spacing.lg,
     },
-    closeButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
+    modalTitle: {
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+    },
+    historyButtonsContainer: {
+        marginTop: spacing.lg,
     },
     historyItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 8,
-        marginHorizontal: 5,
+        backgroundColor: colors.card,
+        padding: spacing.md,
+        borderRadius: radii.md,
+        marginBottom: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.line,
     },
     historyItemContent: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
     },
+    historyIconChip: {
+        width: 38,
+        height: 38,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
     historyItemText: {
-        marginLeft: 12,
+        flex: 1,
     },
     historyItemType: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333',
-        marginRight: 20,
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.semibold,
+        color: colors.ink,
     },
     shareIcon: {
-        padding: 8,
+        padding: spacing.sm,
     },
     deleteIcon: {
-        padding: 8,
+        padding: spacing.sm,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 16,
+        padding: spacing.lg,
     },
     deleteConfirmationContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 16,
-        width: '80%',
+        backgroundColor: colors.card,
+        borderRadius: radii.xl,
+        overflow: 'hidden',
+        padding: spacing.xl,
+        width: '85%',
+        ...shadow.card,
     },
     deleteConfirmationTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        color: 'black',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        marginBottom: spacing.sm,
+        color: colors.ink,
     },
     deleteConfirmationText: {
-        marginBottom: 16,
-        color: 'black',
-        fontSize: 16,
+        marginBottom: spacing.lg,
+        color: colors.inkSoft,
+        fontSize: type.sizes.md,
+        lineHeight: 22,
     },
     deleteButtonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 16,
+        alignItems: 'center',
     },
-    deleteButton: {
+    modalRowButton: {
         flex: 1,
-        padding: 10,
-        borderRadius: 4,
-        alignItems: 'center',
-    },
-    deleteCompletelyButton: {
-        marginLeft: 8,
-        backgroundColor: '#DC143C',
-        marginRight: 8,
-    },
-    deleteHistoryButton: {
-        backgroundColor: '#FFA500',
-        marginRight: 8,
-    },
-
-    deleteButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-    cancelButton: {
-        padding: 10,
-        borderRadius: 4,
-        alignItems: 'center',
-        backgroundColor: '#ccc',
-    },
-    cancelButtonText: {
-        color: '#333',
-        fontWeight: 'bold',
+        marginHorizontal: spacing.xs,
     },
 });
 

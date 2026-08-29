@@ -8,9 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  Dimensions,
   Alert,
-  TextInput,
 } from "react-native";
 import { CustomToast, showToast } from "../../../../components/toast/CustomToast";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -19,6 +17,12 @@ import * as RNFS from '@dr.pogodin/react-native-fs';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import ImageModal from "../../../../components/Image/ImageModal";
+import { colors, spacing, type, radii, shadow } from "../../../../theme/tokens";
+import EviCard from "../../../../components/ui/EviCard";
+import EviButton from "../../../../components/ui/EviButton";
+import EviTextField from "../../../../components/ui/EviTextField";
+import StatusBadge from "../../../../components/ui/StatusBadge";
+import EmptyState from "../../../../components/ui/EmptyState";
 
 const LoanDetails = ({ route, navigation }) => {
   const { loanId } = route.params || {};
@@ -269,29 +273,37 @@ const LoanDetails = ({ route, navigation }) => {
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Upload Document</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter document name"
+          <EviTextField
+            label="Document Name"
             value={newDocumentName}
             onChangeText={setNewDocumentName}
-            placeholderTextColor={'#9CA3AF'}
+            placeholder="Enter document name"
+            mode="flat"
           />
-          <Picker
-            selectedValue={newDocumentType}
-            style={styles.picker}
-            onValueChange={(itemValue) => setNewDocumentType(itemValue)}
-          >
-            <Picker.Item label="Id Proof" value="Id Proof" />
-            <Picker.Item label="Bank" value="Bank" />
-            <Picker.Item label="Government" value="Goverment" />
-            <Picker.Item label="Photo" value="Photo" />
-            <Picker.Item label="Signature" value="Signature" />
-            <Picker.Item label="Other" value="Other" />
-          </Picker>
-          <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentUpload}>
-            <Icon name="file-upload" size={24} color="#fff" />
-            <Text style={styles.uploadButtonText}>Select Document</Text>
-          </TouchableOpacity>
+          <View style={styles.field}>
+            <View style={styles.pickerWrap}>
+              <Picker
+                selectedValue={newDocumentType}
+                onValueChange={(itemValue) => setNewDocumentType(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Id Proof" value="Id Proof" />
+                <Picker.Item label="Bank" value="Bank" />
+                <Picker.Item label="Government" value="Goverment" />
+                <Picker.Item label="Photo" value="Photo" />
+                <Picker.Item label="Signature" value="Signature" />
+                <Picker.Item label="Other" value="Other" />
+              </Picker>
+            </View>
+          </View>
+          <EviButton
+            title="Select Document"
+            onPress={handleDocumentUpload}
+            icon="file-upload"
+            variant="secondary"
+            size="lg"
+            style={styles.selectDocumentButton}
+          />
           <ScrollView style={styles.imagePreviewContainer}>
             {documents.map((doc, index) => (
               <View key={index} style={styles.uploadedImageContainer}>
@@ -301,29 +313,24 @@ const LoanDetails = ({ route, navigation }) => {
                   style={styles.removeImageButton}
                   onPress={() => handleRemoveDocument(index)}
                 >
-                  <Icon name="close" size={20} color="#fff" />
+                  <Icon name="close" size={14} color="#fff" />
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
           {documents.length > 0 && (
-            <TouchableOpacity
-              style={[styles.uploadButton, styles.submitButton]}
+            <EviButton
+              title="Upload All Documents"
               onPress={handleUploadDocuments}
-              disabled={uploadingDocument}
-            >
-              {uploadingDocument ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Text style={styles.uploadButtonText}>Upload All Documents</Text>
-              )}
-            </TouchableOpacity>
+              loading={uploadingDocument}
+              icon="upload"
+              variant="primary"
+              size="lg"
+              style={styles.submitUploadButton}
+            />
           )}
-          <TouchableOpacity
-            style={styles.closeButtonDocument}
-            onPress={() => setUploadModalVisible(false)}
-          >
-            <Icon name="close" size={24} color="#4a4a4a" />
+          <TouchableOpacity onPress={() => setUploadModalVisible(false)} style={styles.closeChip}>
+            <Icon name="close" size={20} color={colors.inkSoft} />
           </TouchableOpacity>
         </View>
       </View>
@@ -333,14 +340,15 @@ const LoanDetails = ({ route, navigation }) => {
   );
 
   const renderDocumentSection = (title, docs) => (
-    <View style={styles.section}>
+    <EviCard style={styles.section} elevated={false} padding={spacing.lg}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
         <TouchableOpacity
           style={styles.addDocumentButton}
           onPress={() => setUploadModalVisible(true)}
+          activeOpacity={0.7}
         >
-          <Icon name="plus" size={24} color="#4CAF50" />
+          <Icon name="plus" size={18} color={colors.brand} />
           <Text style={styles.addDocumentText}>Add Documents</Text>
         </TouchableOpacity>
       </View>
@@ -349,8 +357,11 @@ const LoanDetails = ({ route, navigation }) => {
           <TouchableOpacity
             style={styles.documentInfo}
             onPress={() => openImageModal(doc.documentUrl)}
+            activeOpacity={0.7}
           >
-            <Icon name="file-document-outline" size={24} color="#4a4a4a" />
+            <View style={styles.docIconChip}>
+              <Icon name="file-document-outline" size={18} color={colors.brand} />
+            </View>
             <Text style={styles.documentText}>{doc.documentName}</Text>
             <Text style={styles.viewText}>View</Text>
           </TouchableOpacity>
@@ -360,20 +371,20 @@ const LoanDetails = ({ route, navigation }) => {
             disabled={deleteDocumentLoading}
           >
             {deleteDocumentLoading ? (
-              <ActivityIndicator size="small" color="black" />
+              <ActivityIndicator size="small" color={colors.danger} />
             ) : (
-              <Icon name="delete-outline" size={24} color="#ff0000" />
+              <Icon name="delete-outline" size={20} color={colors.danger} />
             )}
           </TouchableOpacity>
         </View>
       ))}
-    </View>
+    </EviCard>
   );
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -381,10 +392,13 @@ const LoanDetails = ({ route, navigation }) => {
   if (expired) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.messageText}>This loan detail view has expired.</Text>
-        <TouchableOpacity style={styles.button} onPress={fetchLoanDetails}>
-          <Text style={styles.buttonText}>Refresh</Text>
-        </TouchableOpacity>
+        <EmptyState
+          icon="timer-outline"
+          title="View expired"
+          message="This loan detail view has expired. Refresh to load it again."
+          actionLabel="Refresh"
+          onAction={fetchLoanDetails}
+        />
       </View>
     );
   }
@@ -392,7 +406,12 @@ const LoanDetails = ({ route, navigation }) => {
   if (!loanData) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.messageText}>Failed to load loan details</Text>
+        <EmptyState
+          icon="alert-circle-outline"
+          title="Failed to load loan details"
+          actionLabel="Refresh"
+          onAction={fetchLoanDetails}
+        />
       </View>
     );
   }
@@ -408,7 +427,7 @@ const LoanDetails = ({ route, navigation }) => {
   );
 
   const renderSection = (title, items) => (
-    <View style={styles.section}>
+    <EviCard style={styles.section} elevated={false} padding={spacing.lg}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {items.map((item, index) => (
         <View key={index} style={styles.detailItem}>
@@ -416,16 +435,14 @@ const LoanDetails = ({ route, navigation }) => {
           <Text style={styles.detailValue}>{item.value}</Text>
         </View>
       ))}
-    </View>
+    </EviCard>
   );
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.loanId}>Loan ID: {loanData.uid}</Text>
-        <View style={[styles.statusContainer, { backgroundColor: loanData.status === 'Active' ? '#28a745' : '#dc3545' }]}>
-          <Text style={styles.status}>{loanData.status}</Text>
-        </View>
+        <Text style={styles.loanId}>Loan #{loanData.uid}</Text>
+        <StatusBadge status={loanData.status} />
         <TouchableOpacity onPress={handleHiddenPress} style={styles.hiddenButton} />
       </View>
 
@@ -460,27 +477,36 @@ const LoanDetails = ({ route, navigation }) => {
 
       {loanData.status === "Pending" && (
         <View style={styles.actionContainer}>
-          <TouchableOpacity style={[styles.button, styles.approveButton]} onPress={handleApproval}>
-            <Text style={styles.buttonText}>Approve Loan</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.rejectButton]} onPress={handleRejection}>
-            <Text style={styles.buttonText}>Reject Loan</Text>
-          </TouchableOpacity>
+          <EviButton
+            title="Approve Loan"
+            onPress={handleApproval}
+            icon="check-circle"
+            variant="primary"
+            size="lg"
+            style={styles.actionButton}
+          />
+          <EviButton
+            title="Reject Loan"
+            onPress={handleRejection}
+            icon="close-circle"
+            variant="danger"
+            size="lg"
+            style={styles.actionButton}
+          />
         </View>
       )}
 
       <View style={styles.actionContainer}>
-        {deleteLoanLoading ? (
-          <ActivityIndicator size="small" color="#0000ff" />
-        ) : (
-          <TouchableOpacity
-            style={[styles.button, styles.deleteButton]}
-            onPress={() => handleDelete(loanData._id)}
-            disabled={deleteLoanLoading}
-          >
-            <Text style={styles.buttonText}>Delete Loan</Text>
-          </TouchableOpacity>
-        )}
+        <EviButton
+          title="Delete Loan"
+          onPress={() => handleDelete(loanData._id)}
+          loading={deleteLoanLoading}
+          disabled={deleteLoanLoading}
+          icon="delete-outline"
+          variant="danger"
+          size="lg"
+          style={styles.actionButton}
+        />
       </View>
 
       {renderImageModal()}
@@ -493,93 +519,77 @@ const LoanDetails = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.surface,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
-  },
-  messageText: {
-    fontSize: 18,
-    color: "#333333",
-    marginBottom: 20,
+    backgroundColor: colors.surface,
   },
   header: {
-    flexDirection: "column",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
-    backgroundColor: "#ffffff",
+    padding: spacing.lg,
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    borderBottomColor: colors.line,
   },
   loanId: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-  statusContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  status: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#ffffff",
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    flex: 1,
   },
   section: {
-    backgroundColor: "#ffffff",
-    marginVertical: 8,
-    padding: 16,
-    borderRadius: 8,
-    marginHorizontal: 16,
-    elevation: 2,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333333",
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.md,
   },
   addDocumentButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   addDocumentText: {
-    color: '#4CAF50',
-    marginLeft: 4,
-    fontWeight: 'bold',
+    color: colors.brand,
+    marginLeft: spacing.xs,
+    fontWeight: type.weights.bold,
+    fontSize: type.sizes.sm,
   },
   detailItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: spacing.md,
+    gap: spacing.md,
   },
   detailLabel: {
-    fontSize: 16,
-    color: "#555555",
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
+    flexShrink: 1,
   },
   detailValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333333",
+    fontSize: type.sizes.md,
+    fontWeight: type.weights.semibold,
+    color: colors.ink,
+    textAlign: 'right',
+    flexShrink: 1,
   },
   documentItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
     justifyContent: "space-between",
   },
   documentInfo: {
@@ -587,153 +597,123 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
   },
+  docIconChip: {
+    width: 34,
+    height: 34,
+    borderRadius: radii.md,
+    backgroundColor: colors.brandTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
   documentText: {
-    fontSize: 16,
-    color: "#333333",
-    marginLeft: 12,
+    fontSize: type.sizes.md,
+    color: colors.ink,
     flex: 1,
   },
   viewText: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "bold",
-    marginRight: 12,
+    fontSize: type.sizes.sm,
+    color: colors.brand,
+    fontWeight: type.weights.bold,
+    marginRight: spacing.md,
   },
   deleteDocumentButton: {
-    padding: 8,
+    padding: spacing.sm,
   },
   actionContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 32,
     justifyContent: "center",
-    alignContent: "center",
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
   },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+  actionButton: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  approveButton: {
-    backgroundColor: "#4CAF50",
-    marginRight: 8,
-  },
-  rejectButton: {
-    backgroundColor: "#F44336",
-    marginLeft: 8,
-  },
-  deleteButton: {
-    backgroundColor: "#FF0000",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "bold",
+    marginHorizontal: spacing.xs,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(10, 31, 22, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 20,
-    width: '90%',
-    maxHeight: '80%',
+    backgroundColor: colors.card,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    width: '92%',
+    maxHeight: '85%',
+    overflow: 'hidden',
+    ...shadow.card,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: 'black'
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
   },
-  input: {
+  field: {
+    marginBottom: spacing.lg,
+  },
+  pickerWrap: {
+    backgroundColor: colors.card,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 15,
-    color: 'black'
+    borderColor: colors.line,
+    overflow: 'hidden',
   },
   picker: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    marginBottom: 15,
-    color: 'black'
+    height: 52,
+    color: colors.ink,
   },
-  uploadButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 4,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  uploadButtonText: {
-    color: '#ffffff',
-    marginLeft: 10,
+  selectDocumentButton: {
+    marginBottom: spacing.lg,
   },
   imagePreviewContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 15,
+    marginBottom: spacing.lg,
   },
   uploadedImageContainer: {
-    margin: 5,
+    margin: spacing.xs,
     alignItems: 'center',
   },
   uploadedImage: {
     width: 100,
     height: 100,
-    borderRadius: 4,
+    borderRadius: radii.sm,
   },
   documentNameText: {
-    marginTop: 5,
-    fontSize: 12,
-    color: 'black',
+    marginTop: spacing.xs,
+    fontSize: type.sizes.xs,
+    color: colors.inkSoft,
   },
   removeImageButton: {
     position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: 'red',
-    borderRadius: 10,
+    top: -6,
+    right: -6,
+    backgroundColor: colors.danger,
+    borderRadius: radii.pill,
     width: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  submitButton: {
-    backgroundColor: '#007AFF',
+  submitUploadButton: {
+    marginTop: spacing.xs,
   },
-  closeButtonDocument: {
+  closeChip: {
     position: 'absolute',
-    top: 20,
-    right: 20,
-    zIndex: 1,
+    top: spacing.md,
+    right: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  closeButtonText: {
-    color: 'black',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 1,
-  },
-
   hiddenButton: {
     position: 'absolute',
     top: 0,

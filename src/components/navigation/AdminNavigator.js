@@ -23,7 +23,6 @@ import { View, TouchableOpacity, Modal, Text, Pressable, StyleSheet } from 'reac
 // import PaymentHistory from '../../Screens/Home/CustomerView/Loans/PaymentHistory.js'; (Putting it inside Shared screebs)
 import PaymentHistory from '../../Screens/Shared/Customer/Loan/PaymentHistory.js';
 import RepaymentApprovalScreen from '../../Screens/Home/CustomerView/RepaymentApprovalScreen.js';
-import RepaymentApprovalScreenOld from '../../Screens/Home/CustomerView/RepaymentApprovalScreenOld.js';
 
 /* Employee */
 import AllEmployeeView from '../../Screens/Home/EmployeeView/AllEmployeeView.js';
@@ -46,6 +45,9 @@ import GetPermission from '../permissions.js';
 
 //Leads
 import AdminLeadsScreen from '../../Screens/Home/Leads/AdminLeads.js';
+
+// Brand
+import { colors, type } from '../../theme/tokens';
 
 const AdminStack = createNativeStackNavigator();
 
@@ -104,9 +106,16 @@ const AdminNavigator = ({ navigation }) => {
             return null;
         } */
     return (
-        <AdminStack.Navigator screenOptions={{ headerShown: false }}>
+        <AdminStack.Navigator screenOptions={{
+            headerShown: true,
+            headerTitleAlign: 'center',
+            headerTintColor: colors.brand,
+            headerStyle: { backgroundColor: colors.card },
+            headerShadowVisible: false,
+            headerTitleStyle: { fontSize: type.sizes.lg, fontWeight: '600', color: colors.ink },
+        }}>
 
-            <AdminStack.Screen name="Menu" component={MenuScreen} />
+            <AdminStack.Screen name="Menu" component={MenuScreen} options={{ headerShown: false }} />
 
             {/* Custoemr And Loan */}
             <AdminStack.Screen name="CustomerView" component={CustomerView} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Customer View' }} />
@@ -126,7 +135,7 @@ const AdminNavigator = ({ navigation }) => {
                                 <Icon
                                     name="magnify"
                                     size={28}
-                                    color="black"
+                                    color={colors.brand}
                                     style={{ marginRight: 15 }} // Adjust margin for spacing
                                 />
                             </TouchableOpacity>
@@ -150,7 +159,7 @@ const AdminNavigator = ({ navigation }) => {
                                 <Icon
                                     name="account-plus"
                                     size={28}
-                                    color="black"
+                                    color={colors.brand}
                                     style={{ marginRight: 15 }}
                                 />
                             </TouchableOpacity>
@@ -165,7 +174,6 @@ const AdminNavigator = ({ navigation }) => {
             {/* Others */}
 
             <AdminStack.Screen name="RepaymentApprovalScreen" component={RepaymentApprovalScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Approval' }} />
-            <AdminStack.Screen name="OldRepaymentApproval" component={RepaymentApprovalScreenOld} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Repayment Approval' }} />
 
             {/* Shared */}
             <AdminStack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Search' }} />
@@ -192,7 +200,7 @@ const AdminNavigator = ({ navigation }) => {
                                 <Icon
                                     name="magnify"
                                     size={28}
-                                    color="black"
+                                    color={colors.brand}
                                     style={{ marginRight: 15 }} // Adjust margin for spacing
                                 />
                             </TouchableOpacity>
@@ -201,7 +209,7 @@ const AdminNavigator = ({ navigation }) => {
                                 <Icon
                                     name="account-plus"
                                     size={28}
-                                    color="black"
+                                    color={colors.brand}
                                     style={{ marginRight: 15 }}
                                 />
                             </TouchableOpacity>

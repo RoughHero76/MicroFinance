@@ -1,9 +1,13 @@
 // src/shared/About.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Alert, StyleSheet, ActivityIndicator, Image, ScrollView } from 'react-native';
+import { View, Text, Alert, StyleSheet, Image, ScrollView } from 'react-native';
 import { useUpdateContext } from '../../components/context/UpdateContext';
 import { getVersion } from 'react-native-device-info';
-import AppLogo from '../../assets/branding/76Groups.png'; // Assuming this is your company logo
+import AppLogo from '../../assets/branding/76Groups.png';
+import { colors, spacing, type, radii } from '../../theme/tokens';
+import EviCard from '../../components/ui/EviCard';
+import EviButton from '../../components/ui/EviButton';
+import EviProgress from '../../components/ui/EviProgress';
 
 const About = () => {
     const { updateAvailable, latestVersion, downloadUpdate, downloading, downloadProgress, checkForUpdates } = useUpdateContext();
@@ -30,7 +34,9 @@ const About = () => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Image source={AppLogo} style={styles.logo} />
+            <View style={styles.logoRing}>
+                <Image source={AppLogo} style={styles.logo} />
+            </View>
             <Text style={styles.title}>About 76Softwares</Text>
             <Text style={styles.text}>Current Version: {currentVersion}</Text>
 
@@ -38,26 +44,28 @@ const About = () => {
                 <>
                     <Text style={styles.text}>A new version {latestVersion} is available!</Text>
                     {downloading ? (
-                        <View style={styles.progressContainer}>
-                            <Text>Downloading update: {downloadProgress}%</Text>
-                            <ActivityIndicator size="small" color="#0000ff" />
-                        </View>
+                        <EviProgress
+                            value={Number(downloadProgress) || 0}
+                            label={`Downloading update… ${downloadProgress}%`}
+                            tone="brand"
+                            style={styles.progress}
+                        />
                     ) : (
-                        <Button title="Download Update" onPress={handleDownload} />
+                        <EviButton title="Download Update" onPress={handleDownload} variant="primary" size="lg" style={styles.downloadButton} />
                     )}
                 </>
             ) : (
-                <Text style={styles.text}>Your app is up to date.</Text>
+                <Text style={styles.upToDate}>✓ Your app is up to date.</Text>
             )}
 
             {/* Legal Terms */}
-            <View style={styles.legalContainer}>
+            <EviCard style={styles.legalCard} elevated={false}>
                 <Text style={styles.legalTitle}>Legal Terms & Conditions</Text>
                 <Text style={styles.legalText}>
                     This software is the property of 76Softwares. Unauthorized copying, distribution, or modification of this app is strictly prohibited.
                     By using this software, you agree to comply with all applicable copyright laws. Violation of these terms may result in legal action.
                 </Text>
-            </View>
+            </EviCard>
         </ScrollView>
     );
 };
@@ -65,48 +73,60 @@ const About = () => {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#f5f5f5',
+        padding: spacing.xl,
+        backgroundColor: colors.surface,
+    },
+    logoRing: {
+        backgroundColor: colors.card,
+        borderRadius: radii.xl,
+        padding: spacing.md,
+        marginBottom: spacing.lg,
     },
     logo: {
         width: 150,
         height: 150,
         resizeMode: 'contain',
-        marginBottom: 20,
     },
     title: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#333',
+        fontSize: type.sizes.display,
+        fontWeight: type.weights.bold,
+        marginBottom: spacing.md,
+        color: colors.ink,
     },
     text: {
-        fontSize: 16,
-        marginVertical: 10,
-        color: '#555',
+        fontSize: type.sizes.md,
+        marginVertical: spacing.sm,
+        color: colors.inkSoft,
+        textAlign: 'center',
     },
-    progressContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 10,
+    upToDate: {
+        fontSize: type.sizes.md,
+        color: colors.success,
+        fontWeight: type.weights.medium,
+        marginVertical: spacing.sm,
     },
-    legalContainer: {
-        marginTop: 40,
-        paddingHorizontal: 20,
+    progress: {
+        width: '100%',
+        marginTop: spacing.md,
+    },
+    downloadButton: {
+        marginTop: spacing.lg,
+    },
+    legalCard: {
+        marginTop: spacing.xxl,
+        alignSelf: 'stretch',
     },
     legalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
-        alignSelf: 'center'
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        marginBottom: spacing.sm,
+        color: colors.ink,
     },
     legalText: {
-        fontSize: 14,
-        color: '#555',
-        textAlign: 'center',
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        lineHeight: 20,
     },
 });
 

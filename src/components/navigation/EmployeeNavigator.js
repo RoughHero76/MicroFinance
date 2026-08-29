@@ -37,6 +37,9 @@ import LeadDetailsScreen from "../../Screens/Shared/Leads/EmployeeLeadDetails.js
 import { PERMISSIONS } from 'react-native-permissions';
 import GetPermission from '../permissions.js';
 
+// Brand
+import { colors, type } from '../../theme/tokens';
+
 const EmployeeStack = createNativeStackNavigator();
 
 
@@ -95,8 +98,15 @@ const EmployeeNavigator = () => {
         requestPermissions();
     }, []);
     return (
-        <EmployeeStack.Navigator screenOptions={{ headerShown: false }}>
-            <EmployeeStack.Screen name="MenuScreenEmployee" component={MenuScreenEmployee} />
+        <EmployeeStack.Navigator screenOptions={{
+            headerShown: true,
+            headerTitleAlign: 'center',
+            headerTintColor: colors.brand,
+            headerStyle: { backgroundColor: colors.card },
+            headerShadowVisible: false,
+            headerTitleStyle: { fontSize: type.sizes.lg, fontWeight: '600', color: colors.ink },
+        }}>
+            <EmployeeStack.Screen name="MenuScreenEmployee" component={MenuScreenEmployee} options={{ headerShown: false }} />
             <EmployeeStack.Screen name="TodaysCollectionScreen" component={TodaysCollectionScreen} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: 'Todays Collection' }} />
             <EmployeeStack.Screen name="AllCustomerView" component={AllCustomerView} options={{
                 headerShown: true, headerTitleAlign: 'center', headerTitle: 'All Customers', headerRight: () => {
@@ -105,7 +115,7 @@ const EmployeeNavigator = () => {
                             <TouchableOpacity style={styles.searchButton}
                                 onPress={() => navigation.navigate('SearchScreen')}
                             >
-                                <Icon name="magnify" size={24} color="#000" />
+                                <Icon name="magnify" size={24} color={colors.brand} />
                             </TouchableOpacity>
                         </>
                     )
@@ -130,7 +140,7 @@ const EmployeeNavigator = () => {
                             <TouchableOpacity style={styles.searchButton}
                                 onPress={() => navigation.navigate('CreateLeadScreen')}
                             >
-                                <Icon name="plus" size={24} color="#000" />
+                                <Icon name="plus" size={24} color={colors.brand} />
                             </TouchableOpacity>
                         </>
                     )

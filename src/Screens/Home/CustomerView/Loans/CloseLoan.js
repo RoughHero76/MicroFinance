@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -18,13 +17,15 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import { currencyFormatter } from '../../../../components/utils/formatters';
+import { colors, spacing, type, radii, shadow } from '../../../../theme/tokens';
+import EviButton from '../../../../components/ui/EviButton';
 
 const CloseLoan = ({ route, navigation }) => {
   const [loan, setLoan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  
+
   // Initialize form with more specific validation triggers
   const { control, handleSubmit, formState: { errors }, watch, setValue, trigger } = useForm({
     mode: 'onChange',
@@ -61,7 +62,7 @@ const CloseLoan = ({ route, navigation }) => {
       if (!amountPaying && !forgiveLoan) {
         setValue('totalAmountPaying', loan.outstandingAmount.toString(), { shouldValidate: true });
       }
-      
+
       // Always trigger validation when forgiveLoan changes or when loan data loads
       trigger('totalAmountPaying');
     }
@@ -93,7 +94,7 @@ const CloseLoan = ({ route, navigation }) => {
   const showConfirmationModal = () => {
     // Validate before showing confirmation
     if (!validateForm()) return;
-    
+
     setModalVisible(true);
     Animated.spring(modalAnim, {
       toValue: 1,
@@ -153,7 +154,7 @@ const CloseLoan = ({ route, navigation }) => {
   const onSubmit = async (data) => {
     // Final validation before submission
     if (!validateForm()) return;
-    
+
     try {
       setSubmitting(true);
       const response = await apiCall('/api/admin/loan/close', 'POST', {
@@ -164,7 +165,7 @@ const CloseLoan = ({ route, navigation }) => {
         forgivePenalties: data.forgivePenalties,
       });
 
-      if(response.status !== 200) {
+      if (response.status !== 200) {
         showToast('error', response.message || 'Unknown error');
         return;
       }
@@ -173,7 +174,7 @@ const CloseLoan = ({ route, navigation }) => {
       setTimeout(() => {
         navigation.goBack();
       }, 1000);
-     
+
     } catch (error) {
       showToast('error', error.message || 'Failed to close loan');
     } finally {
@@ -219,7 +220,7 @@ const CloseLoan = ({ route, navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E88E5" />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -234,7 +235,9 @@ const CloseLoan = ({ route, navigation }) => {
         {/* Loan Details Card */}
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Icon name="bank" size={24} color="#1E88E5" />
+            <View style={styles.headerIconRing}>
+              <Icon name="bank" size={20} color={colors.brand} />
+            </View>
             <Text style={styles.headerText}>Loan Summary</Text>
           </View>
 
@@ -273,7 +276,9 @@ const CloseLoan = ({ route, navigation }) => {
         {/* Payment Options Card */}
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Icon name="cash-multiple" size={24} color="#1E88E5" />
+            <View style={styles.headerIconRing}>
+              <Icon name="cash-multiple" size={20} color={colors.brand} />
+            </View>
             <Text style={styles.headerText}>Payment Options</Text>
           </View>
 
@@ -284,7 +289,7 @@ const CloseLoan = ({ route, navigation }) => {
             render={({ field: { onChange, onBlur, value } }) => {
               const maxAmount = loan ? loan.outstandingAmount + loan.totalPenaltyAmount : 0;
               const minAmount = forgiveLoan ? 0 : loan.outstandingAmount;
-              
+
               return (
                 <View style={styles.inputContainer}>
                   <View style={styles.currencyInputContainer}>
@@ -305,7 +310,7 @@ const CloseLoan = ({ route, navigation }) => {
                       }}
                       value={value}
                       placeholder="0.00"
-                      placeholderTextColor="#90A4AE"
+                      placeholderTextColor={colors.inkFaint}
                       keyboardType="numeric"
                     />
                   </View>
@@ -325,19 +330,19 @@ const CloseLoan = ({ route, navigation }) => {
               required: "Payment amount is required",
               validate: (value) => {
                 if (!loan) return true; // Skip validation if loan data isn't loaded yet
-                
+
                 const numValue = parseFloat(value || 0);
                 const maxAmount = loan.outstandingAmount + loan.totalPenaltyAmount;
-                
+
                 if (isNaN(numValue)) return "Please enter a valid number";
                 if (numValue < 0) return "Amount cannot be negative";
                 if (numValue > maxAmount) return `Amount cannot exceed ${currencyFormatter.format(maxAmount)}`;
-                
+
                 // This is the key validation rule that was missing
                 if (!forgiveLoan && numValue < loan.outstandingAmount) {
                   return `When not forgiving the loan, amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}`;
                 }
-                
+
                 return true;
               }
             }}
@@ -424,7 +429,9 @@ const CloseLoan = ({ route, navigation }) => {
         {/* Payment Summary Card */}
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Icon name="calculator" size={24} color="#1E88E5" />
+            <View style={styles.headerIconRing}>
+              <Icon name="calculator" size={20} color={colors.brand} />
+            </View>
             <Text style={styles.headerText}>Payment Summary</Text>
           </View>
 
@@ -474,16 +481,15 @@ const CloseLoan = ({ route, navigation }) => {
           </View>
         </Animated.View>
 
-        <TouchableOpacity
-          style={[
-            styles.button, 
-            (submitting || Object.keys(errors).length > 0) && styles.buttonDisabled
-          ]}
+        <EviButton
+          title="Close Loan"
           onPress={handleSubmit(showConfirmationModal)}
           disabled={submitting || Object.keys(errors).length > 0}
-        >
-          <Text style={styles.buttonText}>Close Loan</Text>
-        </TouchableOpacity>
+          icon="check-circle"
+          variant="primary"
+          size="lg"
+          style={styles.closeLoanButton}
+        />
       </ScrollView>
 
       {modalVisible && (
@@ -585,25 +591,23 @@ const CloseLoan = ({ route, navigation }) => {
             </View>
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+              <EviButton
+                title="Cancel"
                 onPress={hideConfirmationModal}
                 disabled={submitting}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton, submitting && styles.buttonDisabled]}
+                variant="secondary"
+                size="lg"
+                style={styles.modalButton}
+              />
+              <EviButton
+                title="Confirm"
                 onPress={handleSubmit(onSubmit)}
+                loading={submitting}
                 disabled={submitting}
-              >
-                {submitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.confirmButtonText}>Confirm</Text>
-                )}
-              </TouchableOpacity>
+                variant="primary"
+                size="lg"
+                style={styles.modalButton}
+              />
             </View>
           </Animated.View>
         </View>
@@ -617,243 +621,231 @@ const CloseLoan = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: colors.surface,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F7FA',
+    backgroundColor: colors.surface,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
+    ...shadow.card,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
+  },
+  headerIconRing: {
+    width: 34,
+    height: 34,
+    borderRadius: radii.md,
+    backgroundColor: colors.brandTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   headerText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E88E5',
-    marginLeft: 8,
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   details: {
     borderTopWidth: 1,
-    borderTopColor: '#ECEFF1',
-    paddingTop: 12,
+    borderTopColor: colors.line,
+    paddingTop: spacing.md,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
+    gap: spacing.md,
   },
   detailLabel: {
-    fontSize: 15,
-    color: '#546E7A',
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
   },
   detailValue: {
-    fontSize: 15,
-    color: '#37474F',
-    fontWeight: '500',
+    fontSize: type.sizes.md,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
+    textAlign: 'right',
   },
   totalLabel: {
-    fontSize: 16,
-    color: '#455A64',
-    fontWeight: '600',
+    fontSize: type.sizes.lg,
+    color: colors.ink,
+    fontWeight: type.weights.semibold,
   },
   totalValue: {
-    fontSize: 16,
-    color: '#1E88E5',
-    fontWeight: '700',
+    fontSize: type.sizes.lg,
+    color: colors.brand,
+    fontWeight: type.weights.bold,
   },
   highlightText: {
-    color: '#4CAF50',
-    fontWeight: '700',
+    color: colors.success,
+    fontWeight: type.weights.bold,
   },
   warningText: {
-    color: '#F57C00',
-    fontWeight: '700',
+    color: colors.warning,
+    fontWeight: type.weights.bold,
   },
   divider: {
     height: 1,
-    backgroundColor: '#ECEFF1',
-    marginVertical: 12,
+    backgroundColor: colors.line,
+    marginVertical: spacing.md,
   },
   inputLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#455A64',
-    marginBottom: 8,
+    fontSize: type.sizes.md,
+    fontWeight: type.weights.medium,
+    color: colors.inkSoft,
+    marginBottom: spacing.sm,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   currencyInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F7FA',
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#CFD8DC',
+    borderColor: colors.line,
   },
   currencySymbol: {
-    fontSize: 16,
-    color: '#546E7A',
-    paddingLeft: 12,
-    paddingRight: 4,
+    fontSize: type.sizes.lg,
+    color: colors.inkSoft,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
   },
   input: {
     flex: 1,
-    padding: 12,
-    fontSize: 16,
-    color: '#37474F',
+    padding: spacing.md,
+    fontSize: type.sizes.lg,
+    color: colors.ink,
+    backgroundColor: 'transparent',
   },
   inputError: {
-    borderColor: '#EF5350',
+    borderColor: colors.danger,
   },
   errorText: {
-    color: '#EF5350',
-    fontSize: 14,
-    marginTop: 4,
+    color: colors.danger,
+    fontSize: type.sizes.sm,
+    marginTop: spacing.xs,
   },
   optionsContainer: {
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#455A64',
-    marginBottom: 12,
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.semibold,
+    color: colors.ink,
+    marginBottom: spacing.md,
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 4,
+    borderRadius: radii.sm,
     borderWidth: 2,
-    borderColor: '#1E88E5',
+    borderColor: colors.brand,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
     marginTop: 2,
   },
   checkboxChecked: {
-    backgroundColor: '#1E88E5',
-    borderColor: '#1E88E5',
+    backgroundColor: colors.brand,
+    borderColor: colors.brand,
   },
   checkboxTextContainer: {
     flex: 1,
   },
   checkboxLabel: {
-    fontSize: 16,
-    color: '#37474F',
-    fontWeight: '500',
+    fontSize: type.sizes.lg,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
   },
   checkboxHint: {
-    fontSize: 14,
-    color: '#78909C',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     marginTop: 2,
   },
-  button: {
-    backgroundColor: '#1E88E5',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    backgroundColor: '#90CAF9',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+  closeLoanButton: {
+    marginTop: spacing.lg,
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(10, 31, 22, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    width: '90%',
+    backgroundColor: colors.card,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    width: '92%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
+    ...shadow.card,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E88E5',
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   modalContent: {
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   modalMessage: {
-    fontSize: 16,
-    color: '#455A64',
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   modalDivider: {
     height: 1,
-    backgroundColor: '#ECEFF1',
-    marginVertical: 12,
+    backgroundColor: colors.line,
+    marginVertical: spacing.md,
   },
   modalDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+    gap: spacing.md,
   },
   modalDetailLabel: {
-    fontSize: 15,
-    color: '#546E7A',
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
   },
   modalDetailValue: {
-    fontSize: 15,
-    color: '#37474F',
-    fontWeight: '500',
+    fontSize: type.sizes.md,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
+    textAlign: 'right',
   },
   modalWarning: {
-    color: '#F44336',
-    fontSize: 14,
-    fontWeight: '500',
-    marginTop: 12,
+    color: colors.danger,
+    fontSize: type.sizes.sm,
+    fontWeight: type.weights.medium,
+    marginTop: spacing.md,
     textAlign: 'center',
   },
   modalButtons: {
@@ -862,28 +854,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  cancelButton: {
-    backgroundColor: '#ECEFF1',
-    borderWidth: 1,
-    borderColor: '#CFD8DC',
-  },
-  confirmButton: {
-    backgroundColor: '#1E88E5',
-  },
-  cancelButtonText: {
-    color: '#455A64',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  confirmButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    marginHorizontal: spacing.xs,
   },
 });
 

@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Button, Alert, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiCall } from '../../../../components/api/apiUtils';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import EditRepaymentScheduleModal from './EditRepaymentScheduleModal';
-import { useNavigation } from '@react-navigation/native';
+import { colors, spacing, type, radii, shadow } from '../../../../theme/tokens';
+import EviCard from '../../../../components/ui/EviCard';
+import EviButton from '../../../../components/ui/EviButton';
+import EviTextField from '../../../../components/ui/EviTextField';
+import EmptyState from '../../../../components/ui/EmptyState';
 
 const RepaymentSchedule = () => {
 
@@ -133,10 +137,11 @@ const RepaymentSchedule = () => {
     }
 
     const renderItem = useCallback(({ item }) => (
-
-        <View style={styles.scheduleItem}>
+        <EviCard style={styles.scheduleItem} elevated={false} padding={spacing.lg}>
             <View style={styles.scheduleHeader}>
-                <Icon name="calendar-month-outline" size={24} color="#6200EE" />
+                <View style={styles.iconChip}>
+                    <Icon name="calendar-month-outline" size={18} color={colors.brand} />
+                </View>
                 <Text style={styles.dueDate}>
                     {item.dueDate ? new Date(item.dueDate).toLocaleDateString() : 'N/A'}
                 </Text>
@@ -146,31 +151,31 @@ const RepaymentSchedule = () => {
             </View>
             <View style={styles.scheduleContent}>
                 <View style={styles.scheduleRow}>
-                    <Icon name="currency-inr" size={20} color="#018786" />
+                    <Icon name="currency-inr" size={16} color={colors.brand} style={styles.rowIcon} />
                     <Text style={styles.amount}>
                         Payment Amount: {item.amount || 'N/A'}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
-                    <Icon name="currency-inr" size={20} color="#018786" />
+                    <Icon name="currency-inr" size={16} color={colors.brand} style={styles.rowIcon} />
                     <Text style={styles.amount}>
                         Original EMI: {item.originalAmount || 'N/A'}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
-                    <Icon name={getIcon(item.status)} size={20} color={getStatusColor(item.status)} />
+                    <Icon name={getIcon(item.status)} size={16} color={getStatusColor(item.status)} style={styles.rowIcon} />
                     <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
                         {item.status || 'N/A'}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
-                    <Icon name="clock-alert-outline" size={20} color={item.penaltyApplied ? '#B00020' : '#757575'} />
+                    <Icon name="clock-alert-outline" size={16} color={item.penaltyApplied ? colors.danger : colors.inkFaint} style={styles.rowIcon} />
                     <Text style={styles.penaltyApplied}>
                         Penalty: {item.penaltyApplied ? `Rs.${item.penalty?.amount || '0'}` : 'N/A'}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
-                    <Icon name="notebook-outline" size={20} color="#6200EE" />
+                    <Icon name="notebook-outline" size={16} color={colors.info} style={styles.rowIcon} />
                     <Text style={styles.logicNote}>
                         Logical Note: {item.logicNote || item.LogicNote || 'N/A'}
                     </Text>
@@ -209,22 +214,22 @@ const RepaymentSchedule = () => {
             <TouchableOpacity
                 onPress={() => handleEditSchedule(item)}
                 style={styles.editButton}
+                activeOpacity={0.7}
             >
-                <Icon name="pencil" size={24} color="#6200EE" />
+                <Icon name="pencil" size={18} color={colors.brand} />
             </TouchableOpacity>
-        </View>
+        </EviCard>
     ), [loanStatus]);
 
     const renderDatePicker = (showPicker, setShowPicker, currentDate, setDate, label) => (
         <View style={styles.datePickerContainer}>
-            <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerButton}>
-                <Icon name="calendar-search" size={24} color="#6200EE" />
-                <View style={[styles.datePickerLabel, { color: currentDate ? '#6200EE' : '#9CA3AF', flexDirection: 'row', }]}>
-                    <Text style={styles.datePickerLabel}>
+            <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerButton} activeOpacity={0.7}>
+                <View style={[styles.datePickerLabel, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                    <Text style={[styles.datePickerLabelText, currentDate ? { color: colors.brand } : { color: colors.inkFaint }]}>
                         {label}: {currentDate ? currentDate.toDateString() : 'Select Date'}
                     </Text>
                     <TouchableOpacity onPress={handleClearDateRange}>
-                        <Icon name="close" size={24} color="#6200EE" />
+                        <Icon name="close" size={18} color={colors.inkFaint} />
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
@@ -254,10 +259,13 @@ const RepaymentSchedule = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.totalRepaymentSchedules}> Total: {totalEntries}</Text>
-                <Text style={styles.currentlyShowing}>Currently Showing: {repaymentSchedules.length}</Text>
-                <TouchableOpacity onPress={() => setShowFilterModal(true)} style={styles.filterButton}>
-                    <Icon name="filter-check-outline" size={24} color="#6200EE" />
+                <View>
+                    <Text style={styles.totalRepaymentSchedules}>Total: {totalEntries}</Text>
+                    <Text style={styles.currentlyShowing}>Showing: {repaymentSchedules.length}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowFilterModal(true)} style={styles.filterChip} activeOpacity={0.7}>
+                    <Icon name="filter-outline" size={16} color={colors.brand} />
+                    <Text style={styles.filterChipText}>Filter</Text>
                 </TouchableOpacity>
             </View>
             <FlatList
@@ -268,17 +276,26 @@ const RepaymentSchedule = () => {
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={
                     loading ? (
-                        <ActivityIndicator size="large" color="#6200EE" />
+                        <View style={styles.footer}>
+                            <ActivityIndicator size="small" color={colors.brand} />
+                        </View>
                     ) : (
                         !loading && page < totalPages && (
-                            <TouchableOpacity onPress={loadMore} style={styles.loadMoreButton}>
+                            <TouchableOpacity onPress={loadMore} style={styles.loadMoreButton} activeOpacity={0.7}>
                                 <Text style={styles.loadMoreText}>Load More</Text>
                             </TouchableOpacity>
                         )
                     )
                 }
-                ListEmptyComponent={<Text style={styles.emptyText}>No repayment schedules available.</Text>}
-                contentContainerStyle={repaymentSchedules.length === 0 ? styles.emptyContainer : {}}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <EmptyState
+                            icon="calendar-search-outline"
+                            title="No repayment schedules"
+                            message="Installment schedules for this loan will appear here."
+                        />
+                    </View>
+                }
             />
             <Modal
                 visible={showFilterModal}
@@ -288,35 +305,42 @@ const RepaymentSchedule = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search..."
-                            placeholderTextColor="#757575"
+                        <EviTextField
+                            label="Search"
                             value={searchTerm}
                             onChangeText={setSearchTerm}
+                            placeholder="Search..."
+                            mode="flat"
+                            style={styles.searchField}
                         />
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                selectedValue={statusFilter}
-                                onValueChange={(itemValue) => setStatusFilter(itemValue)}
-                                style={styles.picker}
-                                dropdownIconColor="#6200EE"
-                            >
-                                <Picker.Item label="All Statuses" value="" />
-                                <Picker.Item label="Pending" value="pending" />
-                                <Picker.Item label="Paid" value="paid" />
-                                <Picker.Item label="Overdue" value="overdue" />
-                            </Picker>
+                        <View style={styles.field}>
+                            <View style={styles.pickerWrap}>
+                                <Picker
+                                    selectedValue={statusFilter}
+                                    onValueChange={(itemValue) => setStatusFilter(itemValue)}
+                                    style={styles.picker}
+                                    dropdownIconColor={colors.brand}
+                                >
+                                    <Picker.Item label="All Statuses" value="" />
+                                    <Picker.Item label="Pending" value="pending" />
+                                    <Picker.Item label="Paid" value="paid" />
+                                    <Picker.Item label="Overdue" value="overdue" />
+                                </Picker>
+                            </View>
                         </View>
                         {renderDatePicker(showFromDatePicker, setShowFromDatePicker, dateFrom, setDateFrom, 'From Date')}
                         {renderDatePicker(showToDatePicker, setShowToDatePicker, dateTo, setDateTo, 'To Date')}
-                        <TouchableOpacity onPress={applyFilters} style={styles.applyFiltersButton}>
-                            <Text style={styles.applyFiltersText}>Apply Filters</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.closeButton}>
-                            <Icon name="close-outline" size={24} color="#6200EE" />
-                        </TouchableOpacity>
+                        <EviButton
+                            title="Apply Filters"
+                            onPress={applyFilters}
+                            icon="filter-outline"
+                            variant="primary"
+                            size="lg"
+                        />
                     </View>
+                    <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.closeButton} activeOpacity={0.7}>
+                        <Icon name="close" size={20} color={colors.inkSoft} />
+                    </TouchableOpacity>
                 </View>
                 <CustomToast />
             </Modal>
@@ -335,24 +359,24 @@ const RepaymentSchedule = () => {
 const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
         case 'paid':
-            return 'green';
+            return colors.success;
         case 'pending':
-            return 'orange';
+            return colors.warning;
         case 'overdue':
-            return 'red';
+            return colors.danger;
         case 'overduepaid':
-            return '#a06025';
+            return colors.orange;
         case 'advancepaid':
-            return 'blue';
+            return colors.info;
         case 'partiallypaid':
-            return '#ff6f00';
+            return colors.warning;
         case 'partiallypaidfullypaid':
-            return '#a06025';
+            return colors.orange;
         case 'approved':
-            return '#4CAF50';
+            return colors.success;
 
         default:
-            return '#6200EE';
+            return colors.brand;
     }
 };
 
@@ -382,196 +406,220 @@ const getIcon = (status) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.surface,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.md,
+        backgroundColor: colors.card,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.line,
     },
     totalRepaymentSchedules: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#6200EE',
-
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     loanClosedText: {
-        color: '#6200EE',
-        fontWeight: 'bold',
+        color: colors.warning,
+        fontWeight: type.weights.bold,
         textAlign: 'center',
-        marginTop: 10,
+        marginTop: spacing.md,
+        fontSize: type.sizes.sm,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
-
     currentlyShowing: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#6200EE',
-        alignSelf: 'center',
-
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
+        marginTop: 2,
     },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 10,
-        width: '90%',
-        maxHeight: '80%',
-    },
-    editButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-    },
-    searchInput: {
-        height: 40,
-        borderColor: '#6200EE',
-        borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 15,
-        paddingHorizontal: 10,
-        color: '#000000',
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#6200EE',
-        borderRadius: 5,
-        marginBottom: 15,
-        overflow: 'hidden',
-    },
-    picker: {
-        height: 50,
-
-        color: '#000000',
-    },
-    datePickerContainer: {
-        marginBottom: 15,
-    },
-    datePickerButton: {
+    filterChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#6200EE',
+        backgroundColor: colors.brandTint,
+        borderRadius: radii.pill,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
     },
-    datePickerLabel: {
-        marginLeft: 10,
-        color: '#000000',
-    },
-    applyFiltersButton: {
-        backgroundColor: '#6200EE',
-        paddingVertical: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    applyFiltersText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-    },
-    filterButton: {
-        alignSelf: 'flex-end',
-        marginBottom: 10,
+    filterChipText: {
+        fontSize: type.sizes.sm,
+        color: colors.brand,
+        fontWeight: type.weights.semibold,
+        marginLeft: spacing.xs,
     },
     scheduleItem: {
-        backgroundColor: '#FFFFFF',
-        padding: 15,
-        borderRadius: 5,
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.md,
     },
     scheduleHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: spacing.md,
+    },
+    iconChip: {
+        width: 34,
+        height: 34,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.md,
     },
     dueDate: {
-        marginLeft: 10,
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#000000',
+        marginRight: spacing.md,
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     scheduleContent: {
-        marginTop: 5,
+        marginTop: spacing.xs,
+    },
+    rowIcon: {
+        marginRight: spacing.sm,
     },
     scheduleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 5,
+        marginBottom: spacing.sm,
     },
     amount: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#000000',
+        fontSize: type.sizes.md,
+        color: colors.ink,
     },
     status: {
-        marginLeft: 10,
-        fontSize: 16,
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.semibold,
     },
     penaltyApplied: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#757575',
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
     },
     logicNote: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#757575',
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
+    },
+    editButton: {
+        position: 'absolute',
+        top: spacing.md,
+        right: spacing.md,
+        backgroundColor: colors.brandTint,
+        borderRadius: radii.pill,
+        padding: spacing.sm,
     },
     loadMoreButton: {
-        paddingVertical: 10,
+        paddingVertical: spacing.md,
         alignItems: 'center',
     },
     loadMoreText: {
-        color: '#6200EE',
+        color: colors.brand,
+        fontWeight: type.weights.semibold,
+        fontSize: type.sizes.md,
+    },
+    footer: {
+        paddingVertical: 20,
+        alignItems: 'center',
     },
     emptyContainer: {
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#757575',
+        padding: spacing.xl,
     },
 
     /* Repayment Section */
     repaymentsSection: {
-        marginTop: 10,
+        marginTop: spacing.md,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
-        paddingTop: 10,
+        borderTopColor: colors.line,
+        paddingTop: spacing.md,
     },
     repaymentTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#6200EE',
-        marginBottom: 5,
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.sm,
     },
     repaymentItem: {
-        backgroundColor: '#F5F5F5',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 5,
+        backgroundColor: colors.surface,
+        padding: spacing.md,
+        borderRadius: radii.sm,
+        marginBottom: spacing.sm,
     },
     repaymentText: {
-        fontSize: 14,
-        color: '#000000',
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
         marginBottom: 2,
     },
 
+    /* Filter Modal */
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
+    },
+    modalContent: {
+        backgroundColor: colors.card,
+        padding: spacing.xl,
+        borderRadius: radii.xl,
+        width: '92%',
+        maxHeight: '85%',
+        overflow: 'hidden',
+        ...shadow.card,
+    },
+    searchField: {
+        marginBottom: spacing.lg,
+    },
+    field: {
+        marginBottom: spacing.lg,
+    },
+    pickerWrap: {
+        backgroundColor: colors.card,
+        borderRadius: radii.md,
+        borderWidth: 1,
+        borderColor: colors.line,
+        overflow: 'hidden',
+    },
+    picker: {
+        height: 52,
+        color: colors.ink,
+    },
+    datePickerContainer: {
+        marginBottom: spacing.lg,
+    },
+    datePickerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        backgroundColor: colors.card,
+        borderRadius: radii.md,
+        borderWidth: 1,
+        borderColor: colors.line,
+        height: 52,
+    },
+    datePickerLabel: {
+        flex: 1,
+        marginLeft: spacing.sm,
+    },
+    datePickerLabelText: {
+        fontSize: type.sizes.md,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: spacing.md,
+        right: spacing.md,
+        backgroundColor: colors.surface,
+        borderRadius: radii.pill,
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 });
 
 export default RepaymentSchedule;

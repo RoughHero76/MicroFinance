@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useUpdateContext } from './context/UpdateContext';
+import { colors, radii, spacing, type } from '../theme/tokens';
 
 const UpdateNotification = () => {
     const { updateAvailable, latestVersion, downloadUpdate, downloading, downloadProgress } = useUpdateContext();
@@ -33,26 +34,36 @@ const styles = StyleSheet.create({
         bottom: 20,
         left: 20,
         right: 20,
-        backgroundColor: '#f0f0f0',
-        padding: 15,
-        borderRadius: 10,
+        backgroundColor: colors.card,
+        padding: spacing.md,
+        borderRadius: radii.md,
         flexDirection: 'column',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.brandSoft,
+        shadowColor: colors.night,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
+        elevation: 5,
     },
     text: {
-        marginBottom: 10,
+        marginBottom: spacing.md,
         textAlign: 'center',
-        color: 'black',
+        color: colors.ink,
+        fontSize: type.sizes.sm,
+        fontWeight: type.weights.medium,
     },
     button: {
-        backgroundColor: '#007AFF',
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 5,
+        backgroundColor: colors.brand,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: radii.sm,
     },
     buttonText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
+        color: colors.white,
+        fontWeight: type.weights.bold,
+        fontSize: type.sizes.sm,
     },
     progressContainer: {
         width: '100%',
@@ -62,16 +73,17 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 6,
         borderRadius: 3,
-        backgroundColor: '#dcdcdc',
+        backgroundColor: colors.brandTint,
         overflow: 'hidden',
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#007AFF',
+        backgroundColor: colors.brand,
     },
     progressText: {
         marginTop: 5,
-        color: 'black',
+        color: colors.inkSoft,
+        fontSize: type.sizes.xs,
     },
 });
 

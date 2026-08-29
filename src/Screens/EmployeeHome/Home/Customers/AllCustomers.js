@@ -4,8 +4,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { useNavigation } from '@react-navigation/native';
 import ProfilePicturePlaceHolder from '../../../../assets/placeholders/profile.jpg';
-import Toast from 'react-native-toast-message';
+import { showToast } from '../../../../components/toast/CustomToast';
+import CustomToast from '../../../../components/toast/CustomToast';
 import * as RNFS from '@dr.pogodin/react-native-fs';
+import { colors, spacing, radii, type, shadow } from '../../../../theme/tokens';
+import StatusBadge from '../../../../components/ui/StatusBadge';
+import EmptyState from '../../../../components/ui/EmptyState';
 
 // Image caching utilities
 const getImageDetails = (url) => {
@@ -33,7 +37,7 @@ const getImageFilename = (url) => {
 const checkImageInCache = async (url) => {
     const filename = getImageFilename(url);
     if (!filename) return null;
-    
+
     const filePath = `${RNFS.PicturesDirectoryPath}/${filename}`;
     try {
         const exists = await RNFS.exists(filePath);
@@ -98,42 +102,27 @@ const CustomerItem = React.memo(({ item, onPress }) => {
             <View style={styles.customerInfo}>
                 <Text style={styles.customerName}>{`${item.fname} ${item.lname}`}</Text>
                 <Text style={styles.customerPhone}>
-                    <Icon name="phone" size={14} color="#666" /> {item.phoneNumber}
+                    <Icon name="phone" size={14} color={colors.inkFaint} /> {item.phoneNumber}
                 </Text>
                 <Text style={styles.customerAddress}>
-                    <Icon name="map-marker" size={14} color="#666" /> {item.address}, {item.city}
+                    <Icon name="map-marker" size={14} color={colors.inkFaint} /> {item.address}, {item.city}
                 </Text>
                 {loan && (
                     <View style={styles.loanContainer}>
                         <Text style={styles.loanAmount}>
-                            <Icon name="currency-inr" size={14} color="#4CAF50" />{loan.loanAmount}
+                            <Icon name="currency-inr" size={14} color={colors.success} /> {loan.loanAmount}
                         </Text>
                         <Text style={styles.loanDuration}>
-                            <Icon name="calendar-range" size={14} color="#2196F3" /> {loan.loanDuration}
+                            <Icon name="calendar-range" size={14} color={colors.info} /> {loan.loanDuration}
                         </Text>
-                        <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                            <Text style={styles.loanStatusText}>{loan.status}</Text>
-                        </View>
+                        <StatusBadge status={loan.status} />
                     </View>
                 )}
             </View>
-            <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
+            <Icon name="chevron-right" size={24} color={colors.inkFaint} style={styles.chevron} />
         </TouchableOpacity>
     );
 });
-
-const getLoanStatusColor = (status) => {
-    switch ((status || '').toLowerCase()) {
-        case 'active':
-            return '#4CAF50';
-        case 'pending':
-            return '#FFC107';
-        case 'completed':
-            return '#2196F3';
-        default:
-            return '#9E9E9E';
-    }
-};
 
 const AllCustomerView = () => {
     const [customers, setCustomers] = useState([]);
@@ -156,19 +145,11 @@ const AllCustomerView = () => {
                 setHasMore(response.hasMore);
                 setPage(pageNumber);
             } else {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error',
-                    text2: 'Failed to fetch customers',
-                });
+                showToast('error', 'Failed to fetch customers');
             }
         } catch (error) {
             console.error(error);
-            Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: 'An unexpected error occurred',
-            });
+            showToast('error', 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }
@@ -182,7 +163,7 @@ const AllCustomerView = () => {
         if (!loading) return null;
         return (
             <View style={styles.footer}>
-                <ActivityIndicator size="small" color="#0000ff" />
+                <ActivityIndicator size="small" color={colors.brand} />
             </View>
         );
     };
@@ -207,8 +188,17 @@ const AllCustomerView = () => {
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={renderFooter}
+                ListEmptyComponent={
+                    <EmptyState
+                        icon="account-group-outline"
+                        title="No Customers Found"
+                        message="Customers assigned to you will appear here."
+                        style={{ marginTop: spacing.xxl }}
+                    />
+                }
                 contentContainerStyle={styles.listContent}
             />
+            <CustomToast />
         </View>
     );
 };
@@ -216,80 +206,65 @@ const AllCustomerView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
     listContent: {
-        paddingVertical: 12,
+        paddingVertical: spacing.md,
     },
     customerItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        marginHorizontal: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        padding: spacing.lg,
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+        ...shadow.card,
     },
     profilePicture: {
         width: 60,
         height: 60,
         borderRadius: 30,
-        marginRight: 16,
+        marginRight: spacing.lg,
     },
     customerInfo: {
         flex: 1,
     },
     customerName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 4,
-        color: '#333',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        marginBottom: spacing.xs,
+        color: colors.ink,
     },
     customerPhone: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
         marginBottom: 2,
     },
     customerAddress: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.sm,
     },
     loanContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         flexWrap: 'wrap',
+        gap: spacing.md,
     },
     loanAmount: {
-        fontSize: 14,
-        color: '#4CAF50',
-        marginRight: 12,
+        fontSize: type.sizes.sm,
+        color: colors.success,
     },
     loanDuration: {
-        fontSize: 14,
-        color: '#2196F3',
-        marginRight: 12,
-    },
-    loanStatus: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    loanStatusText: {
-        fontSize: 12,
-        color: '#FFFFFF',
-        fontWeight: 'bold',
+        fontSize: type.sizes.sm,
+        color: colors.info,
     },
     chevron: {
-        marginLeft: 8,
+        marginLeft: spacing.sm,
     },
     footer: {
-        paddingVertical: 20,
+        paddingVertical: spacing.xl,
         alignItems: 'center',
     },
 });

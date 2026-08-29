@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { CustomToast } from '../../../../components/toast/CustomToast';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useHomeContext } from '../../../../components/context/HomeContext';
+import { colors, spacing, type, radii, shadow } from '../../../../theme/tokens';
+import EviTextField from '../../../../components/ui/EviTextField';
+import EviButton from '../../../../components/ui/EviButton';
 
 const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) => {
     const [newStatus, setNewStatus] = useState(scheduleItem?.status || '');
@@ -301,23 +304,21 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
     );
 
     const renderInput = (label, value, onChangeText, keyboardType = 'default') => (
-        <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{label}</Text>
-            <TextInput
-                style={styles.input}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                placeholder={`Enter ${label.toLowerCase()}`}
-                placeholderTextColor="#999"
-            />
-        </View>
+        <EviTextField
+            label={label}
+            value={value}
+            onChangeText={onChangeText}
+            keyboardType={keyboardType}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            mode="flat"
+            style={styles.field}
+        />
     );
 
     const renderPicker = (label, selectedValue, onValueChange, items) => (
-        <View style={styles.inputContainer}>
+        <View style={styles.field}>
             <Text style={styles.inputLabel}>{label}</Text>
-            <View style={styles.pickerContainer}>
+            <View style={styles.pickerWrap}>
                 <Picker
                     selectedValue={selectedValue}
                     onValueChange={onValueChange}
@@ -333,9 +334,9 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
     );
 
     const renderEmployeePicker = (label, selectedValue, onValueChange, items) => (
-        <View style={styles.inputContainer}>
+        <View style={styles.field}>
             <Text style={styles.inputLabel}>{label}</Text>
-            <View style={styles.pickerContainer}>
+            <View style={styles.pickerWrap}>
                 <Picker
                     selectedValue={selectedValue}
                     onValueChange={onValueChange}
@@ -352,11 +353,11 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
 
 
     const renderDatePicker = (label, date, onDateChange, showPicker, setShowPicker) => (
-        <View style={styles.inputContainer}>
+        <View style={styles.field}>
             <Text style={styles.inputLabel}>{label}</Text>
-            <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerButton}>
-                <Text style={styles.datePickerButtonText}>{date.toLocaleDateString()}</Text>
-                <Icon name="calendar" size={24} color="#6200EE" />
+            <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.dateButton} activeOpacity={0.7}>
+                <Text style={styles.dateButtonText}>{date.toLocaleDateString()}</Text>
+                <Icon name="calendar-month" size={20} color={colors.inkFaint} style={styles.dateIcon} />
             </TouchableOpacity>
             {showPicker && (
                 <DateTimePicker
@@ -403,13 +404,18 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
 
                         {renderInput('Transaction ID', transactionId, setTransactionId)}
 
-                        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-                            <Text style={styles.saveButtonText}>Save Changes</Text>
-                        </TouchableOpacity>
+                        <EviButton
+                            title="Save Changes"
+                            onPress={handleSave}
+                            icon="check"
+                            variant="primary"
+                            size="lg"
+                            style={styles.saveButton}
+                        />
                     </ScrollView>
 
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Icon name="close" size={24} color="#6200EE" />
+                    <TouchableOpacity onPress={onClose} style={styles.closeButton} activeOpacity={0.7}>
+                        <Icon name="close" size={20} color={colors.inkSoft} />
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -423,109 +429,96 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
     },
     modalContent: {
-        backgroundColor: 'white',
-        borderRadius: 20,
-        width: '90%',
-        maxHeight: '80%',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        backgroundColor: colors.card,
+        borderRadius: radii.xl,
+        width: '92%',
+        maxHeight: '85%',
+        overflow: 'hidden',
+        ...shadow.card,
     },
     scrollViewContent: {
-        padding: 20,
+        padding: spacing.xl,
     },
     modalTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#6200EE',
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        marginBottom: spacing.lg,
+        color: colors.ink,
         textAlign: 'center',
     },
     statusContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 15,
-        backgroundColor: '#f0f0f0',
-        padding: 10,
-        borderRadius: 10,
+        marginBottom: spacing.lg,
+        backgroundColor: colors.surface,
+        padding: spacing.md,
+        borderRadius: radii.md,
+        gap: spacing.md,
     },
     statusText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: type.sizes.sm,
+        fontWeight: type.weights.medium,
+        color: colors.inkSoft,
+        flexShrink: 1,
     },
     statusValue: {
-        color: '#6200EE',
+        color: colors.brand,
+        fontWeight: type.weights.bold,
     },
-    inputContainer: {
-        marginBottom: 20,
+    field: {
+        marginBottom: spacing.lg,
     },
     inputLabel: {
-        fontSize: 16,
-        marginBottom: 5,
-        color: '#333',
-        fontWeight: '600',
+        fontSize: type.sizes.sm,
+        marginBottom: spacing.xs,
+        color: colors.inkSoft,
+        fontWeight: type.weights.medium,
     },
-    input: {
-        height: 50,
-        borderColor: '#6200EE',
+    pickerWrap: {
+        backgroundColor: colors.card,
+        borderRadius: radii.md,
         borderWidth: 1,
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        color: '#333',
-        fontSize: 16,
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#6200EE',
-        borderRadius: 10,
+        borderColor: colors.line,
         overflow: 'hidden',
     },
     picker: {
-        height: 50,
-        color: '#333',
+        height: 52,
+        color: colors.ink,
     },
-    datePickerButton: {
-        height: 50,
-        borderColor: '#6200EE',
+    dateButton: {
+        height: 52,
+        backgroundColor: colors.card,
+        borderColor: colors.line,
         borderWidth: 1,
-        borderRadius: 10,
-        paddingHorizontal: 15,
+        borderRadius: radii.md,
+        paddingHorizontal: spacing.md,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    datePickerButtonText: {
-        fontSize: 16,
-        color: '#333',
+    dateButtonText: {
+        fontSize: type.sizes.md,
+        color: colors.ink,
+    },
+    dateIcon: {
+        marginLeft: spacing.md,
     },
     saveButton: {
-        backgroundColor: '#6200EE',
-        paddingVertical: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    saveButtonText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        fontSize: 18,
+        marginTop: spacing.lg,
     },
     closeButton: {
         position: 'absolute',
-        top: 10,
-        right: 10,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 20,
-        padding: 5,
+        top: spacing.md,
+        right: spacing.md,
+        backgroundColor: colors.surface,
+        borderRadius: radii.pill,
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 

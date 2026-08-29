@@ -15,6 +15,10 @@ import { showToast } from "../../../components/toast/CustomToast";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
 import ImageModal from '../../../components/Image/ImageModal';
+import { colors, spacing, type, radii } from "../../../theme/tokens";
+import EviCard from "../../../components/ui/EviCard";
+import EviButton from "../../../components/ui/EviButton";
+import EmptyState from "../../../components/ui/EmptyState";
 
 const EmployeeView = () => {
     const route = useRoute();
@@ -70,15 +74,19 @@ const EmployeeView = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0066CC" />
+                <ActivityIndicator size="large" color={colors.brand} />
             </View>
         );
     }
 
     if (!employeeData) {
         return (
-            <View style={styles.errorContainer}>
-                <Text>No employee data found</Text>
+            <View style={styles.loadingContainer}>
+                <EmptyState
+                    icon="account-off-outline"
+                    title="No employee data found"
+                    message="Try pulling to refresh."
+                />
             </View>
         );
     }
@@ -87,13 +95,16 @@ const EmployeeView = () => {
         <ScrollView
             style={styles.container}
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={[colors.brand]}
+                    tintColor={colors.brand}
+                />
             }
         >
-            <View style={styles.profileHeader}>
-
+            <EviCard style={styles.profileHeaderCard} elevated={false}>
                 <TouchableOpacity onPress={() => handleImageOpen()}>
-
                     <Image
                         source={employeeData.profilePic ? { uri: employeeData.profilePic } : ProfilePicturePlaceHolder}
                         style={styles.profilePic}
@@ -103,13 +114,17 @@ const EmployeeView = () => {
                 <Text style={styles.name}>{`${employeeData.fname} ${employeeData.lname}`}</Text>
                 <Text style={styles.username}>@{employeeData.userName}</Text>
 
-                <TouchableOpacity style={styles.editButton} onPress={handleEditEmployee}>
-                    <Icon name="pencil" size={18} color="#FFFFFF" />
-                    <Text style={styles.editButtonText}>Edit Details</Text>
-                </TouchableOpacity>
-            </View>
+                <EviButton
+                    title="Edit Details"
+                    onPress={handleEditEmployee}
+                    icon="pencil"
+                    variant="secondary"
+                    size="md"
+                    style={styles.editButton}
+                />
+            </EviCard>
 
-            <View style={styles.infoSection}>
+            <EviCard style={styles.infoCard} elevated={false}>
                 <InfoItem
                     icon="email"
                     label="Email"
@@ -142,7 +157,7 @@ const EmployeeView = () => {
                     label="Repayments Collected"
                     value={employeeData.collectedRepayments.length.toString()}
                 />
-            </View>
+            </EviCard>
             <ImageModal
                 isVisible={imageModalVisible}
                 imageUri={currentImage}
@@ -155,7 +170,9 @@ const EmployeeView = () => {
 
 const InfoItem = ({ icon, label, value, verified }) => (
     <View style={styles.infoItem}>
-        <Icon name={icon} size={24} color="#333" style={styles.infoIcon} />
+        <View style={styles.infoIconChip}>
+            <Icon name={icon} size={18} color={colors.brand} />
+        </View>
         <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>{label}</Text>
             <View style={styles.infoValueContainer}>
@@ -164,7 +181,7 @@ const InfoItem = ({ icon, label, value, verified }) => (
                     <Icon
                         name={verified ? "check-circle" : "alert-circle"}
                         size={16}
-                        color={verified ? "#4CAF50" : "#FFC107"}
+                        color={verified ? colors.success : colors.warning}
                         style={styles.verificationIcon}
                     />
                 )}
@@ -177,73 +194,64 @@ const InfoItem = ({ icon, label, value, verified }) => (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.surface,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: colors.surface,
     },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
+    profileHeaderCard: {
         alignItems: 'center',
-    },
-    profileHeader: {
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#FFFFFF',
+        paddingVertical: spacing.xl,
+        paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: colors.line,
     },
     profilePic: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        marginBottom: 10,
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+        marginBottom: spacing.md,
     },
     name: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 5,
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.xs,
     },
     username: {
-        fontSize: 16,
-        color: '#666666',
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
     },
     editButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#0066CC',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        marginTop: 12,
+        marginTop: spacing.lg,
     },
-    editButtonText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        marginLeft: 6,
-    },
-    infoSection: {
-        backgroundColor: '#FFFFFF',
-        marginTop: 10,
-        padding: 15,
+    infoCard: {
+        marginTop: spacing.md,
+        paddingVertical: spacing.sm,
     },
     infoItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: spacing.lg,
     },
-    infoIcon: {
-        marginRight: 15,
+    infoIconChip: {
+        width: 34,
+        height: 34,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.md,
     },
     infoContent: {
         flex: 1,
     },
     infoLabel: {
-        fontSize: 14,
-        color: '#666666',
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
         marginBottom: 2,
     },
     infoValueContainer: {
@@ -251,11 +259,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     infoValue: {
-        fontSize: 16,
-        color: '#333333',
+        fontSize: type.sizes.md,
+        color: colors.ink,
+        fontWeight: type.weights.medium,
     },
     verificationIcon: {
-        marginLeft: 5,
+        marginLeft: spacing.sm,
     },
 });
 

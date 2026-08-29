@@ -13,6 +13,9 @@ import ProfileCoverImage4 from '../../../assets/bg/bgProfile4.jpg'
 import ProfileCoverImage5 from '../../../assets/bg/bgProfile5.jpg'
 import ProfileCoverImageSpecial from '../../../assets/bg/bgProfileSpecial.jpg'
 import DefaultProfilePicture from '../../../assets/placeholders/profile.jpg'
+import { colors, spacing, type, radii } from '../../../theme/tokens';
+import EviCard from '../../../components/ui/EviCard';
+import StatusBadge from '../../../components/ui/StatusBadge';
 
 const ProfileScreen = () => {
     const [profile, setProfile] = useState(null);
@@ -118,12 +121,14 @@ const ProfileScreen = () => {
         });
     };
 
-    const ProfileItem = ({ icon, label, value }) => (
+    const ProfileItem = ({ icon, label, value, badge }) => (
         <View style={styles.profileItem}>
-            <Icon name={icon} size={24} color="#4A90E2" style={styles.icon} />
+            <View style={styles.iconChip}>
+                <Icon name={icon} size={20} color={colors.brand} />
+            </View>
             <View style={styles.profileItemContent}>
                 <Text style={styles.label}>{label}</Text>
-                <Text style={styles.value}>{value || 'N/A'}</Text>
+                {badge ? badge : <Text style={styles.value}>{value || 'N/A'}</Text>}
             </View>
         </View>
     );
@@ -131,7 +136,7 @@ const ProfileScreen = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#4A90E2" />
+                <ActivityIndicator size="large" color={colors.brand} />
             </View>
         );
     }
@@ -169,7 +174,7 @@ const ProfileScreen = () => {
                 </View>
             </ImageBackground>
 
-            <View style={styles.infoContainer}>
+            <EviCard style={styles.infoCard} elevated={false} padding={spacing.sm}>
                 <ProfileItem icon="email" label="Email" value={profile.email} />
                 <ProfileItem icon="phone" label="Phone" value={profile.phoneNumber} />
                 <ProfileItem icon="person" label="Username" value={profile.userName} />
@@ -182,14 +187,14 @@ const ProfileScreen = () => {
                 <ProfileItem
                     icon="verified-user"
                     label="Account Status"
-                    value={profile.accountStatus ? 'Active' : 'Inactive'}
+                    badge={<StatusBadge status={profile.accountStatus ? 'Active' : 'Inactive'} />}
                 />
                 <ProfileItem
                     icon="access-time"
                     label="Last Login"
                     value={new Date(profile.lastLogin || profile.loginHistory?.date).toLocaleString()}
                 />
-            </View>
+            </EviCard>
             <CustomToast />
         </ScrollView>
     );
@@ -198,12 +203,13 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F0F4F8',
+        backgroundColor: colors.surface,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: colors.surface,
     },
     errorContainer: {
         flex: 1,
@@ -211,93 +217,85 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     errorText: {
-        fontSize: 18,
-        color: '#E57373',
+        fontSize: type.sizes.lg,
+        color: colors.danger,
     },
     header: {
-        padding: 30,
-
+        padding: spacing.xl,
     },
     headerContent: {
         alignItems: 'center',
     },
-    profilePic: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        borderWidth: 3,
-        borderColor: '#FFFFFF',
-    },
     uploadingContainer: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        width: 130,
+        height: 130,
+        borderRadius: 65,
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     cameraIconContainer: {
         position: 'absolute',
-        bottom: 5,
-        right: 5,
-        backgroundColor: '#4A90E2',
+        bottom: 4,
+        right: 4,
+        backgroundColor: colors.brand,
         borderRadius: 15,
-        padding: 5,
+        padding: spacing.sm,
+        borderWidth: 2,
+        borderColor: colors.white,
     },
     profileImage: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
+        width: 130,
+        height: 130,
+        borderRadius: 65,
         borderWidth: 3,
-        borderColor: '#FFFFFF',
+        borderColor: colors.white,
     },
     name: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginTop: 15,
-        color: '#FFFFFF',
+        fontSize: type.sizes.display,
+        fontWeight: type.weights.bold,
+        marginTop: spacing.lg,
+        color: colors.white,
     },
     role: {
-        fontSize: 18,
-        color: '#E3F2FD',
+        fontSize: type.sizes.lg,
+        color: colors.brandSoft,
         textTransform: 'capitalize',
-        marginTop: 5,
+        marginTop: spacing.xs,
     },
-    infoContainer: {
-        backgroundColor: '#FFFFFF',
-        marginTop: 20,
-        marginHorizontal: 15,
-        borderRadius: 10,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+    infoCard: {
+        marginTop: spacing.xl,
+        marginHorizontal: spacing.lg,
     },
     profileItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: colors.line,
+    },
+    iconChip: {
+        width: 34,
+        height: 34,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     profileItemContent: {
         flex: 1,
-        marginLeft: 15,
-    },
-    icon: {
-        width: 30,
+        marginLeft: spacing.md,
     },
     label: {
-        fontSize: 14,
-        color: '#757575',
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
+        marginBottom: 2,
     },
     value: {
-        fontSize: 16,
-        color: '#333333',
+        fontSize: type.sizes.md,
+        color: colors.ink,
         fontWeight: '500',
-        marginTop: 2,
     },
 });
 

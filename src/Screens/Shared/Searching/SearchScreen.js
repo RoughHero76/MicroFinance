@@ -16,9 +16,14 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
 import { useHomeContext } from '../../../components/context/HomeContext';
-import Toast from 'react-native-toast-message';
+import CustomToast from '../../../components/toast/CustomToast';
+import { showToast } from '../../../components/toast/CustomToast';
 import ProfilePicturePlaceholder from '../../../assets/placeholders/profile.jpg';
 import { PieChart } from 'react-native-chart-kit';
+import { colors, spacing, radii, type, shadow } from '../../../theme/tokens';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import EviButton from '../../../components/ui/EviButton';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const SearchScreen = () => {
   const { user } = useHomeContext();
@@ -51,19 +56,11 @@ const SearchScreen = () => {
         setHasMore(newResults.length === 10);
         setPage(pageNumber);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to fetch search results',
-        });
+        showToast('error', 'Failed to fetch search results');
       }
     } catch (error) {
       console.error(error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'An unexpected error occurred',
-      });
+      showToast('error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -119,41 +116,30 @@ const SearchScreen = () => {
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{item.name || 'N/A'}</Text>
           <Text style={styles.customerDetail}>
-            <Icon name="phone" size={14} color="#666" /> {item.phoneNumber || 'N/A'}
+            <Icon name="phone" size={14} color={colors.inkFaint} /> {item.phoneNumber || 'N/A'}
           </Text>
           <Text style={styles.customerDetail}>
-            <Icon name="email" size={14} color="#666" /> {item.email || 'N/A'}
+            <Icon name="email" size={14} color={colors.inkFaint} /> {item.email || 'N/A'}
           </Text>
           {loan && (
             <View style={styles.loanInfo}>
               <Text style={styles.loanAmount}>
-                <Icon name="currency-inr" size={14} color="#4CAF50" /> {loan.loanAmount || 0}
+                <Icon name="currency-inr" size={14} color={colors.success} /> {loan.loanAmount || 0}
               </Text>
-              <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                <Text style={styles.loanStatusText}>{loan.status || 'N/A'}</Text>
-              </View>
+              <StatusBadge status={loan.status || 'N/A'} />
             </View>
           )}
         </View>
-        <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
+        <Icon name="chevron-right" size={22} color={colors.inkFaint} style={styles.chevron} />
       </TouchableOpacity>
     );
-  };
-
-  const getLoanStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'active': return '#4CAF50';
-      case 'pending': return '#FFC107';
-      case 'completed': return '#2196F3';
-      default: return '#9E9E9E';
-    }
   };
 
   const renderFooter = () => {
     if (!loading) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#0000ff" />
+        <ActivityIndicator size="small" color={colors.brand} />
       </View>
     );
   };
@@ -163,9 +149,9 @@ const SearchScreen = () => {
     const loan = selectedCustomer.loans && selectedCustomer.loans.length > 0 ? selectedCustomer.loans[0] : null;
 
     const chartConfig = {
-      backgroundGradientFrom: "#fff",
-      backgroundGradientTo: "#fff",
-      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+      backgroundGradientFrom: colors.card,
+      backgroundGradientTo: colors.card,
+      color: (opacity = 1) => `rgba(18, 36, 28, ${opacity})`,
     };
 
     const screenWidth = Dimensions.get("window").width;
@@ -174,15 +160,15 @@ const SearchScreen = () => {
       {
         name: "Paid",
         population: loan.loanAmount - loan.outstandingAmount,
-        color: "#4CAF50",
-        legendFontColor: "#7F7F7F",
+        color: colors.success,
+        legendFontColor: colors.inkSoft,
         legendFontSize: 12
       },
       {
         name: "Outstanding",
         population: loan.outstandingAmount,
-        color: "#FFA000",
-        legendFontColor: "#7F7F7F",
+        color: colors.orange,
+        legendFontColor: colors.inkSoft,
         legendFontSize: 12
       }
     ] : [];
@@ -221,9 +207,7 @@ const SearchScreen = () => {
                     </View>
                     <View style={styles.loanOverviewItem}>
                       <Text style={styles.loanOverviewLabel}>Status</Text>
-                      <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                        <Text style={styles.loanStatusText}>{loan.status}</Text>
-                      </View>
+                      <StatusBadge status={loan.status} />
                     </View>
                   </View>
 
@@ -243,42 +227,42 @@ const SearchScreen = () => {
 
                   <View style={styles.loanDetails}>
                     <View style={styles.loanDetailItem}>
-                      <Icon name="calendar-start" size={24} color="#4CAF50" />
+                      <Icon name="calendar-start" size={24} color={colors.brand} />
                       <View style={styles.loanDetailText}>
                         <Text style={styles.loanDetailLabel}>Start Date</Text>
                         <Text style={styles.loanDetailValue}>{new Date(loan.loanStartDate).toLocaleDateString()}</Text>
                       </View>
                     </View>
                     <View style={styles.loanDetailItem}>
-                      <Icon name="calendar-end" size={24} color="#F44336" />
+                      <Icon name="calendar-end" size={24} color={colors.danger} />
                       <View style={styles.loanDetailText}>
                         <Text style={styles.loanDetailLabel}>End Date</Text>
                         <Text style={styles.loanDetailValue}>{new Date(loan.loanEndDate).toLocaleDateString()}</Text>
                       </View>
                     </View>
                     <View style={styles.loanDetailItem}>
-                      <Icon name="file-document-outline" size={24} color="#2196F3" />
+                      <Icon name="file-document-outline" size={24} color={colors.info} />
                       <View style={styles.loanDetailText}>
                         <Text style={styles.loanDetailLabel}>Documents</Text>
                         <Text style={styles.loanDetailValue}>{loan.documentsSummary}</Text>
                       </View>
                     </View>
                     <View style={styles.loanDetailItem}>
-                      <Icon name="calendar-clock" size={24} color="#9C27B0" />
+                      <Icon name="calendar-clock" size={24} color={colors.warning} />
                       <View style={styles.loanDetailText}>
                         <Text style={styles.loanDetailLabel}>Repayment Schedule</Text>
                         <Text style={styles.loanDetailValue}>{loan.repaymentSchedulesSummary}</Text>
                       </View>
                     </View>
                     <View style={styles.loanDetailItem}>
-                      <Icon name="cash-multiple" size={24} color="#009688" />
+                      <Icon name="cash-multiple" size={24} color={colors.success} />
                       <View style={styles.loanDetailText}>
                         <Text style={styles.loanDetailLabel}>Repayments</Text>
                         <Text style={styles.loanDetailValue}>{loan.repaymentsSummary}</Text>
                       </View>
                     </View>
                     <View style={styles.loanDetailItem}>
-                      <Icon name="alert-circle-outline" size={24} color="#FF5722" />
+                      <Icon name="alert-circle-outline" size={24} color={colors.orange} />
                       <View style={styles.loanDetailText}>
                         <Text style={styles.loanDetailLabel}>Penalties</Text>
                         <Text style={styles.loanDetailValue}>{loan.penaltiesSummary}</Text>
@@ -287,16 +271,27 @@ const SearchScreen = () => {
                   </View>
                 </>
               ) : (
-                <Text style={styles.noLoanText}>No active loans</Text>
+                <EmptyState
+                  icon="file-off-outline"
+                  title="No active loans"
+                  style={{ marginTop: spacing.xl }}
+                />
               )}
             </ScrollView>
             <View style={styles.modalButtonContainer}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleViewProfile}>
-                <Text style={styles.modalButtonText}>View Full Profile</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, styles.modalCloseButton]} onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Close</Text>
-              </TouchableOpacity>
+              <EviButton
+                title="View Full Profile"
+                size="md"
+                style={styles.modalButton}
+                onPress={handleViewProfile}
+              />
+              <EviButton
+                title="Close"
+                variant="secondary"
+                size="md"
+                style={styles.modalButton}
+                onPress={() => setModalVisible(false)}
+              />
             </View>
           </View>
         </View>
@@ -307,17 +302,17 @@ const SearchScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Icon name="magnify" size={24} color="#999" style={styles.searchIcon} />
+        <Icon name="magnify" size={22} color={colors.inkFaint} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name, email, phone, or username"
           value={searchQuery}
-          placeholderTextColor={'#999'}
+          placeholderTextColor={colors.inkFaint}
           onChangeText={handleSearchChange}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => handleSearchChange('')} style={styles.clearButton}>
-            <Icon name="close-circle" size={20} color="#999" />
+            <Icon name="close-circle" size={20} color={colors.inkFaint} />
           </TouchableOpacity>
         )}
       </View>
@@ -329,12 +324,25 @@ const SearchScreen = () => {
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {searchQuery.trim() ? 'No results found' : 'Enter search criteria'}
-          </Text>
+          searchQuery.trim() ? (
+            <EmptyState
+              icon="magnify"
+              title="No Results Found"
+              message="Try a different name, email, or phone number."
+              style={{ marginTop: spacing.xxl }}
+            />
+          ) : (
+            <EmptyState
+              icon="account-search-outline"
+              title="Start Searching"
+              message="Enter a name, email, phone, or username above."
+              style={{ marginTop: spacing.xxl }}
+            />
+          )
         }
       />
       {renderLoanDetailsModal()}
+      <CustomToast />
     </View>
   );
 };
@@ -342,207 +350,166 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: colors.surface,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
-    margin: 16,
-    paddingHorizontal: 16,
-    elevation: 3,
+    backgroundColor: colors.card,
+    borderRadius: radii.pill,
+    margin: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    ...shadow.card,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
     height: 50,
-    fontSize: 16,
-    color: '#333',
+    fontSize: type.sizes.md,
+    color: colors.ink,
   },
   clearButton: {
-    padding: 5,
+    padding: spacing.xs,
   },
   customerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 12,
+    padding: spacing.lg,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
     elevation: 2,
   },
   profilePicture: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginRight: 16,
+    marginRight: spacing.lg,
   },
   customerInfo: {
     flex: 1,
   },
   customerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#333',
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    marginBottom: spacing.xs,
+    color: colors.ink,
   },
   customerDetail: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     marginBottom: 2,
   },
   loanInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   loanAmount: {
-    fontSize: 14,
-    color: '#4CAF50',
-    marginRight: 12,
-  },
-  loanStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  loanStatusText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontSize: type.sizes.sm,
+    color: colors.success,
+    marginRight: spacing.md,
   },
   chevron: {
-    marginLeft: 8,
+    marginLeft: spacing.sm,
   },
   footer: {
-    paddingVertical: 20,
+    paddingVertical: spacing.xl,
     alignItems: 'center',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    color: '#666',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(10, 31, 22, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: spacing.lg,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
+    backgroundColor: colors.card,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    width: '100%',
     maxHeight: '90%',
+    overflow: 'hidden',
+    ...shadow.card,
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   modalProfilePic: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginRight: 16,
+    marginRight: spacing.lg,
   },
   modalHeaderText: {
     flex: 1,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: type.sizes.xxl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   modalSubtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
   },
   loanOverview: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   loanOverviewItem: {
     alignItems: 'center',
   },
   loanOverviewLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
+    marginBottom: spacing.xs,
   },
   loanOverviewValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  loanStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  loanStatusText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   chartContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   loanDetails: {
-    marginTop: 20,
+    marginTop: spacing.xl,
   },
   loanDetailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   loanDetailText: {
-    marginLeft: 16,
+    marginLeft: spacing.lg,
     flex: 1,
   },
   loanDetailLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
   },
   loanDetailValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  noLoanText: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 20,
+    fontSize: type.sizes.md,
+    color: colors.ink,
+    fontWeight: type.weights.bold,
   },
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: spacing.xl,
   },
   modalButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  modalCloseButton: {
-    backgroundColor: '#F44336',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginHorizontal: spacing.xs,
   },
 });
 

@@ -11,6 +11,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { colors, radii, spacing, type } from '../../theme/tokens';
 
 export const showToast = (type, text1, text2) => {
   Toast.show({ type, text1, text2 });
@@ -72,41 +73,42 @@ const styles = StyleSheet.create({
   toastContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 16,
+    padding: spacing.lg,
+    borderRadius: radii.md,
+    marginHorizontal: spacing.lg,
     marginTop: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowColor: colors.night,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 6,
     zIndex: 99999,
   },
   successToast: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.success,
   },
   errorToast: {
-    backgroundColor: '#F44336',
+    backgroundColor: colors.danger,
   },
   infoToast: {
-    backgroundColor: '#2196F3',
+    backgroundColor: colors.info,
   },
   iconContainer: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   textContainer: {
     flex: 1,
   },
   toastText1: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: colors.white,
+    fontWeight: type.weights.bold,
+    fontSize: type.sizes.md + 1,
   },
   toastText2: {
-    color: 'white',
-    fontSize: 14,
-    marginTop: 4,
+    color: colors.white,
+    opacity: 0.92,
+    fontSize: type.sizes.sm + 1,
+    marginTop: spacing.xs,
   },
 });
 

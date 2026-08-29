@@ -21,6 +21,9 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import { colors, spacing, type, radii, shadow } from '../../../../theme/tokens';
+import EviCard from '../../../../components/ui/EviCard';
+import EviButton from '../../../../components/ui/EviButton';
 
 const CreateLoan = () => {
     const navigation = useNavigation();
@@ -219,11 +222,11 @@ const CreateLoan = () => {
         <View style={styles.inputWrapper}>
             <Text style={styles.inputTitle}>{title}</Text>
             <View style={styles.inputContainer}>
-                <Icon name={icon} size={24} color="#6366F1" style={styles.inputIcon} />
+                <Icon name={icon} size={20} color={colors.brand} style={styles.inputIcon} />
                 <TextInput
                     style={[styles.input, disabled && styles.disabledInput]}
                     placeholder={placeholder}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.inkFaint}
                     keyboardType={keyboardType}
                     value={value}
                     onChangeText={onChangeText}
@@ -237,8 +240,8 @@ const CreateLoan = () => {
     const renderPicker = (icon, title, name, options, value, onValueChange) => (
         <View style={styles.inputWrapper}>
             <Text style={styles.inputTitle}>{title}</Text>
-            <View style={styles.inputContainer}>
-                <Icon name={icon} size={24} color="#6366F1" style={styles.inputIcon} />
+            <View style={styles.pickerWrap}>
+                <Icon name={icon} size={20} color={colors.brand} style={styles.inputIcon} />
                 <Picker
                     selectedValue={value}
                     style={styles.picker}
@@ -260,7 +263,7 @@ const CreateLoan = () => {
                 style={styles.datePickerButton}
                 onPress={() => setShowDatePicker(true)}
             >
-                <Icon name="calendar" size={24} color="#6366F1" style={styles.inputIcon} />
+                <Icon name="calendar" size={20} color={colors.brand} style={styles.inputIcon} />
                 <Text style={styles.datePickerButtonText}>
                     {loanData.loanStartDate.toDateString()}
                 </Text>
@@ -285,7 +288,7 @@ const CreateLoan = () => {
                     placeholder="Enter document name"
                     value={newDocumentName}
                     onChangeText={setNewDocumentName}
-                    placeholderTextColor={'#9CA3AF'}
+                    placeholderTextColor={colors.inkFaint}
                 />
                 <Picker
                     selectedValue={newDocumentType}
@@ -301,13 +304,14 @@ const CreateLoan = () => {
 
                 </Picker>
             </View>
-            <TouchableOpacity
+            <EviButton
+                title="Upload Document"
+                icon="file-upload"
+                variant="secondary"
+                size="md"
                 style={styles.uploadButton}
                 onPress={handleDocumentUpload}
-            >
-                <Icon name="file-upload" size={24} color="#fff" />
-                <Text style={styles.uploadButtonText}>Upload Document</Text>
-            </TouchableOpacity>
+            />
             <View style={styles.imagePreviewContainer}>
                 {documents.map((doc, index) => (
                     <View key={index} style={styles.uploadedImageContainer}>
@@ -319,7 +323,7 @@ const CreateLoan = () => {
                             style={styles.removeImageButton}
                             onPress={() => handleRemoveDocument(index)}
                         >
-                            <Icon name="close" size={20} color="#fff" />
+                            <Icon name="close" size={14} color={colors.white} />
                         </TouchableOpacity>
                     </View>
                 ))}
@@ -335,7 +339,7 @@ const CreateLoan = () => {
                 style={styles.keyboardAvoidingView}
             >
                 <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                    <View style={styles.section}>
+                    <EviCard elevated={false} style={styles.section}>
                         <Text style={styles.sectionTitle}>Loan Details</Text>
                         {renderInput('pound-box', 'Loan Number', 'Enter loan number', 'loanNumber', 'numeric', loanData.loanNumber, (text) => handleInputChange('loanNumber', text))}
 
@@ -382,39 +386,36 @@ const CreateLoan = () => {
                             {renderInput('timer-sand', 'Grace Period', 'Enter grace period (days)', 'gracePeriod', 'numeric', loanData.gracePeriod, disabled = true, (text) => handleInputChange('gracePeriod', text))}
                         </View>
                         {renderDatePicker()}
-                    </View>
+                    </EviCard>
 
-                    <View style={styles.section}>
+                    <EviCard elevated={false} style={styles.section}>
                         <Text style={styles.sectionTitle}>Business Details</Text>
                         {renderInput('domain', 'Business Firm Name', 'Enter business firm name', 'businessFirmName', 'default', loanData.businessFirmName, (text) => handleInputChange('businessFirmName', text))}
                         {renderInput('map-marker', 'Business Address', 'Enter business address', 'businessAddress', 'default', loanData.businessAddress, (text) => handleInputChange('businessAddress', text))}
                         {renderInput('phone', 'Business Phone', 'Enter business phone', 'businessPhone', 'phone-pad', loanData.businessPhone, (text) => handleInputChange('businessPhone', text))}
                         {renderInput('email', 'Business Email', 'Enter business email', 'businessEmail', 'email-address', loanData.businessEmail, (text) => handleInputChange('businessEmail', text))}
-                    </View>
-                    <View style={styles.section}>
+                    </EviCard>
+                    <EviCard elevated={false} style={styles.section}>
                         <Text style={styles.sectionTitle}>Document Upload</Text>
                         {renderDocumentUpload()}
-                    </View>
+                    </EviCard>
 
-                    <View style={styles.createLoanButtonContainer}>
-                        <TouchableOpacity
-                            style={styles.createButton}
-                            onPress={handleCreateLoan}
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <ActivityIndicator size="small" color="#ffffff" />
-                            ) : (
-                                <Text style={styles.createButtonText}>Create Loan</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
+                    <EviButton
+                        title="Create Loan"
+                        onPress={handleCreateLoan}
+                        disabled={loading}
+                        loading={loading}
+                        icon="plus-circle"
+                        variant="primary"
+                        size="lg"
+                        style={styles.createLoanButton}
+                    />
                 </ScrollView>
             </KeyboardAvoidingView>
             <Modal visible={showImageModal} transparent={true} onRequestClose={() => setShowImageModal(false)}>
                 <View style={styles.modalContainer}>
                     <TouchableOpacity style={styles.closeButton} onPress={() => setShowImageModal(false)}>
-                        <Icon name="close" size={30} color="#fff" />
+                        <Icon name="close" size={20} color={colors.inkSoft} />
                     </TouchableOpacity>
                     <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
                 </View>
@@ -428,165 +429,158 @@ const CreateLoan = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: colors.surface,
     },
     keyboardAvoidingView: {
         flex: 1,
     },
     scrollViewContent: {
+        padding: spacing.lg,
+        paddingBottom: spacing.xxl,
     },
     errorText: {
-        color: 'red',
-        fontSize: 12,
-        marginTop: 4,
+        color: colors.danger,
+        fontSize: type.sizes.sm,
+        marginTop: spacing.xs,
     },
     section: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginBottom: spacing.lg,
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#374151',
-        marginBottom: 16,
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.lg,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 16,
+        gap: spacing.md,
+        marginBottom: spacing.md,
     },
     inputWrapper: {
         flex: 1,
-        marginRight: 8,
-        marginBottom: 16,
+        marginRight: spacing.sm,
+        marginBottom: spacing.lg,
     },
     inputTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#4B5563',
-        marginBottom: 4,
+        fontSize: type.sizes.sm,
+        fontWeight: type.weights.semibold,
+        color: colors.inkSoft,
+        marginBottom: spacing.xs,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        paddingHorizontal: 12,
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        paddingHorizontal: spacing.md,
         borderWidth: 1,
-        borderColor: '#D1D5DB',
+        borderColor: colors.line,
     },
     inputIcon: {
-        marginRight: 8,
+        marginRight: spacing.sm,
     },
     input: {
         flex: 1,
-        fontSize: 16,
-        paddingVertical: 12,
-        color: '#111827',
+        fontSize: type.sizes.md,
+        paddingVertical: spacing.md,
+        color: colors.ink,
     },
     documentInputContainer: {
         flexDirection: 'row',
-        marginBottom: 8,
+        alignItems: 'center',
+        marginBottom: spacing.md,
     },
     documentInput: {
         flex: 1.2,
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        marginRight: 8,
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        marginRight: spacing.sm,
         borderWidth: 1,
-        borderColor: '#D1D5DB',
-        color: '#111827',
+        borderColor: colors.line,
+        color: colors.ink,
+        fontSize: type.sizes.md,
     },
     documentTypePicker: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
         borderWidth: 1,
-        borderColor: '#D1D5DB',
-        color: '#111827',
+        borderColor: colors.line,
+        color: colors.ink,
     },
     documentNameText: {
-        fontSize: 12,
-        color: '#4B5563',
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
         textAlign: 'center',
-        marginTop: 4,
+        marginTop: spacing.xs,
     },
     disabledInput: {
-        //backgroundColor: '#F0F0F0',
-        color: '#A0A0A0',
+        color: colors.inkFaint,
+    },
+    pickerWrap: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        borderWidth: 1,
+        borderColor: colors.line,
+        paddingHorizontal: spacing.md,
     },
     picker: {
         flex: 1,
-        height: 50,
-        color: '#111827',
+        height: 48,
+        color: colors.ink,
     },
     datePickerButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 12,
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
+        padding: spacing.md,
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
         borderWidth: 1,
-        borderColor: '#D1D5DB',
+        borderColor: colors.line,
     },
     datePickerButtonText: {
-        marginLeft: 8,
-        fontSize: 16,
-        color: '#111827',
+        marginLeft: spacing.sm,
+        fontSize: type.sizes.md,
+        color: colors.ink,
     },
     uploadWrapper: {
-        marginBottom: 16,
+        marginBottom: spacing.md,
     },
     uploadButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#6366F1',
-        paddingVertical: 12,
-        borderRadius: 8,
-        marginBottom: 8,
-    },
-    uploadButtonText: {
-        marginLeft: 8,
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        marginBottom: spacing.sm,
     },
     imagePreviewContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginTop: 8,
+        marginTop: spacing.sm,
     },
     uploadedImageContainer: {
         position: 'relative',
-        marginRight: 8,
-        marginBottom: 8,
+        marginRight: spacing.sm,
+        marginBottom: spacing.sm,
     },
     uploadedImage: {
         width: 80,
         height: 80,
-        borderRadius: 8,
+        borderRadius: radii.md,
     },
     removeImageButton: {
         position: 'absolute',
-        top: 4,
-        right: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 12,
-        padding: 4,
+        top: spacing.xs,
+        right: spacing.xs,
+        backgroundColor: colors.danger,
+        borderRadius: radii.pill,
+        padding: spacing.xs,
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        backgroundColor: 'rgba(10, 31, 22, 0.92)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -596,31 +590,19 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         position: 'absolute',
-        top: 40,
-        right: 20,
+        top: spacing.xl,
+        right: spacing.lg,
         zIndex: 1,
-    },
-    createLoanButtonContainer: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    createButton: {
-        backgroundColor: '#6366F1',
-        paddingVertical: 16,
-        borderRadius: 8,
+        width: 36,
+        height: 36,
+        borderRadius: radii.pill,
+        backgroundColor: colors.card,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    createButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+    createLoanButton: {
+        marginTop: spacing.sm,
+        marginBottom: spacing.lg,
     },
 });
 export default CreateLoan;

@@ -1,10 +1,15 @@
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiCall } from '../../../components/api/apiUtils';
 import { showToast } from '../../../components/toast/CustomToast';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { colors, spacing, type, radii } from '../../../theme/tokens';
+import EviTextField from '../../../components/ui/EviTextField';
+import EviButton from '../../../components/ui/EviButton';
+import EviCard from '../../../components/ui/EviCard';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const EditEmployeeView = () => {
     const navigation = useNavigation();
@@ -72,11 +77,17 @@ const EditEmployeeView = () => {
         }
     };
 
+    const fieldLeft = (icon) => <Icon name={icon} size={20} color={colors.inkFaint} style={styles.iconPad} />;
+
     if (!employeeData) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.errorContainer}>
-                    <Text>No employee data provided</Text>
+                    <EmptyState
+                        icon="account-off-outline"
+                        title="No employee data provided"
+                        message="Go back and open the employee again."
+                    />
                 </View>
             </SafeAreaView>
         );
@@ -84,127 +95,114 @@ const EditEmployeeView = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <View style={styles.card}>
-                    <Text style={styles.heading}>Edit Employee</Text>
-
-                    <View style={styles.inputContainer}>
-                        <Icon name="account-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="First Name"
-                            value={formData.fname}
-                            onChangeText={(value) => handleChange('fname', value)}
-                        />
+            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+                <View style={styles.header}>
+                    <View style={styles.headerIconRing}>
+                        <Icon name="account-edit" size={26} color={colors.brand} />
                     </View>
+                    <Text style={styles.headerText}>Edit Employee</Text>
+                    <Text style={styles.headerSub}>Update account and contact details</Text>
+                </View>
 
-                    <View style={styles.inputContainer}>
-                        <Icon name="account-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Last Name"
-                            value={formData.lname}
-                            onChangeText={(value) => handleChange('lname', value)}
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Icon name="email-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Email"
-                            value={formData.email}
-                            onChangeText={(value) => handleChange('email', value)}
-                            keyboardType="email-address"
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Icon name="account-circle-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Username"
-                            value={formData.userName}
-                            onChangeText={(value) => handleChange('userName', value)}
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Icon name="phone-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Phone Number"
-                            value={formData.phoneNumber}
-                            onChangeText={(value) => handleChange('phoneNumber', value)}
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Icon name="home-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Address"
-                            value={formData.address}
-                            onChangeText={(value) => handleChange('address', value)}
-                            multiline
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Icon name="phone-alert" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Emergency Contact"
-                            value={formData.emergencyContact}
-                            onChangeText={(value) => handleChange('emergencyContact', value)}
-                            keyboardType="phone-pad"
-                        />
-                    </View>
+                <EviCard elevated={false} style={styles.formCard}>
+                    <EviTextField
+                        label="First Name"
+                        value={formData.fname}
+                        onChangeText={(value) => handleChange('fname', value)}
+                        left={fieldLeft("account")}
+                    />
+                    <EviTextField
+                        label="Last Name"
+                        value={formData.lname}
+                        onChangeText={(value) => handleChange('lname', value)}
+                        left={fieldLeft("account")}
+                    />
+                    <EviTextField
+                        label="Email"
+                        value={formData.email}
+                        onChangeText={(value) => handleChange('email', value)}
+                        keyboardType="email-address"
+                        left={fieldLeft("email")}
+                    />
+                    <EviTextField
+                        label="Username"
+                        value={formData.userName}
+                        onChangeText={(value) => handleChange('userName', value)}
+                        left={fieldLeft("account-circle")}
+                    />
+                    <EviTextField
+                        label="Phone Number"
+                        value={formData.phoneNumber}
+                        onChangeText={(value) => handleChange('phoneNumber', value)}
+                        keyboardType="phone-pad"
+                        left={fieldLeft("phone")}
+                    />
+                    <EviTextField
+                        label="Address"
+                        value={formData.address}
+                        onChangeText={(value) => handleChange('address', value)}
+                        left={fieldLeft("home")}
+                    />
+                    <EviTextField
+                        label="Emergency Contact"
+                        value={formData.emergencyContact}
+                        onChangeText={(value) => handleChange('emergencyContact', value)}
+                        keyboardType="phone-pad"
+                        left={fieldLeft("phone-alert")}
+                    />
 
                     <View style={styles.switchRow}>
                         <View style={styles.switchLabelContainer}>
-                            <Icon name="account-check-outline" size={20} color="#666" style={styles.icon} />
+                            <Icon name="account-check-outline" size={20} color={colors.inkSoft} style={styles.switchIcon} />
                             <Text style={styles.switchLabel}>Account Active</Text>
                         </View>
                         <Switch
                             value={formData.accountStatus}
                             onValueChange={(value) => handleChange('accountStatus', value)}
+                            trackColor={{ false: colors.line, true: colors.brandSoft }}
+                            thumbColor={formData.accountStatus ? colors.brand : colors.inkFaint}
                         />
                     </View>
+                </EviCard>
 
-                    <View style={styles.sectionDivider} />
-                    <Text style={styles.sectionLabel}>Reset Password (optional)</Text>
+                <Text style={styles.sectionLabel}>Reset Password (optional)</Text>
 
-                    <View style={styles.inputContainer}>
-                        <Icon name="lock-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="New Password"
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            secureTextEntry={!showPassword}
-                        />
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                            <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#666" />
-                        </TouchableOpacity>
-                    </View>
+                <EviCard elevated={false} style={styles.formCard}>
+                    <EviTextField
+                        label="New Password"
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        secureTextEntry={!showPassword}
+                        left={fieldLeft("lock")}
+                        right={
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                <Icon
+                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                                    size={20}
+                                    color={colors.inkFaint}
+                                    style={styles.iconPad}
+                                />
+                            </TouchableOpacity>
+                        }
+                    />
+                    <EviTextField
+                        label="Confirm New Password"
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        secureTextEntry={!showPassword}
+                        left={fieldLeft("lock-check")}
+                    />
+                </EviCard>
 
-                    <View style={styles.inputContainer}>
-                        <Icon name="lock-check-outline" size={20} color="#666" style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Confirm New Password"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry={!showPassword}
-                        />
-                    </View>
-
-                    <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-                        <Text style={styles.buttonText}>{loading ? 'Updating...' : 'Update Employee'}</Text>
-                    </TouchableOpacity>
-                </View>
+                <EviButton
+                    title="Update Employee"
+                    onPress={handleSubmit}
+                    loading={loading}
+                    icon="check-circle"
+                    variant="primary"
+                    size="lg"
+                    style={styles.submitButton}
+                />
             </ScrollView>
         </SafeAreaView>
     );
@@ -213,90 +211,77 @@ const EditEmployeeView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#e5e5e5',
+        backgroundColor: colors.surface,
     },
     scrollContainer: {
+        padding: spacing.xl,
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        padding: spacing.xl,
     },
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    heading: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    inputContainer: {
-        flexDirection: 'row',
+    header: {
         alignItems: 'center',
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        paddingLeft: 10,
-        paddingRight: 10,
-        marginBottom: 15,
+        marginBottom: spacing.xl,
     },
-    input: {
-        flex: 1,
-        padding: 10,
-        fontSize: 16,
-        color: '#333',
+    headerIconRing: {
+        width: 56,
+        height: 56,
+        borderRadius: radii.xl,
+        backgroundColor: colors.brandTint,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.md,
     },
-    icon: {
-        marginRight: 10,
+    headerText: {
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+    },
+    headerSub: {
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginTop: spacing.xs,
+    },
+    formCard: {
+        padding: spacing.md,
+        marginBottom: spacing.md,
+    },
+    iconPad: {
+        margin: spacing.md,
     },
     switchRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        marginBottom: 15,
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        marginBottom: spacing.md,
     },
     switchLabelContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    switchLabel: {
-        fontSize: 16,
-        color: '#333',
+    switchIcon: {
+        marginRight: spacing.sm,
     },
-    sectionDivider: {
-        height: 1,
-        backgroundColor: '#e0e0e0',
-        marginVertical: 15,
+    switchLabel: {
+        fontSize: type.sizes.md,
+        color: colors.ink,
+        fontWeight: type.weights.medium,
     },
     sectionLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 15,
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.md,
     },
-    button: {
-        backgroundColor: '#4CAF50',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+    submitButton: {
+        marginTop: spacing.lg,
     },
 });
 

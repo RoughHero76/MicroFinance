@@ -7,11 +7,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import UpdateNotification from "./src/components/UpdateNotification";
 import { CustomToast } from "./src/components/toast/CustomToast";
 import ErrorBoundary from "./src/components/ErrorBoundary";
+import { eviPaperTheme } from "./src/theme/paperTheme";
 
 const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider>
+      <PaperProvider theme={eviPaperTheme}>
         <HomeProvider>
           <UpdateProvider>
             <ErrorBoundary>

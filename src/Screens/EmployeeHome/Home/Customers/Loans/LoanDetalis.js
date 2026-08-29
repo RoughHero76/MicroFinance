@@ -16,6 +16,10 @@ import { format } from 'date-fns';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { debounce } from 'lodash';
+import { colors, spacing, radii, type, shadow } from '../../../../../theme/tokens';
+import StatusBadge from '../../../../../components/ui/StatusBadge';
+import EmptyState from '../../../../../components/ui/EmptyState';
+import EviButton from '../../../../../components/ui/EviButton';
 
 const LoanDetailsScreen = ({ route, navigation }) => {
   const { loanId } = route.params || {};
@@ -133,16 +137,16 @@ const LoanDetailsScreen = ({ route, navigation }) => {
       case 'PartiallyPaidFullyPaid':
       case 'OverduePaid':
       case 'Waived':
-        return '#4CAF50';
+        return colors.success;
       case 'AdvancePaid':
-        return '#2196F3';
+        return colors.info;
       case 'Overdue':
-        return '#F44336';
+        return colors.danger;
       case 'Pending':
       case 'PartiallyPaid':
-        return '#FF9800';
+        return colors.orange;
       default:
-        return '#757575';
+        return colors.inkSoft;
     }
   }, []);
 
@@ -199,8 +203,11 @@ const LoanDetailsScreen = ({ route, navigation }) => {
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Penalty Details</Text>
-            <TouchableOpacity onPress={() => setPenaltyModalVisible(false)}>
-              <Icon name="close" size={24} color="#333" />
+            <TouchableOpacity
+              style={styles.closeChip}
+              onPress={() => setPenaltyModalVisible(false)}
+            >
+              <Icon name="close" size={20} color={colors.ink} />
             </TouchableOpacity>
           </View>
           <FlatList
@@ -218,7 +225,12 @@ const LoanDetailsScreen = ({ route, navigation }) => {
             maxToRenderPerBatch={5}
             windowSize={5}
             ListEmptyComponent={
-              <Text style={styles.emptyMessage}>No penalty information available</Text>
+              <EmptyState
+                icon="alert-circle-outline"
+                title="No Penalty Information"
+                message="No penalty information available."
+                style={{ marginTop: spacing.xl }}
+              />
             }
           />
         </View>
@@ -246,9 +258,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
           </View>
           <View style={styles.repaymentAmount}>
             <Text style={styles.repaymentAmountText}>{formatCurrency(item.amount)}</Text>
-            <View style={[styles.repaymentStatus, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.repaymentStatusText}>{item.status}</Text>
-            </View>
+            <StatusBadge status={item.status} style={{ marginTop: spacing.xs }} />
           </View>
         </View>
 
@@ -282,7 +292,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
 
         {item.penaltyApplied && (
           <View style={styles.penaltyWarning}>
-            <Icon name="warning" size={16} color="#FFC107" />
+            <Icon name="warning" size={16} color={colors.warning} />
             <Text style={styles.penaltyWarningText}>Penalty Applied</Text>
           </View>
         )}
@@ -321,7 +331,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
               <Icon
                 name={isExpanded ? 'expand-less' : 'expand-more'}
                 size={24}
-                color="#666"
+                color={colors.inkSoft}
               />
             </TouchableOpacity>
           )}
@@ -350,7 +360,10 @@ const LoanDetailsScreen = ({ route, navigation }) => {
 
     return (
       <View style={styles.tabContent}>
-        <LinearGradient colors={['#f5f7fa', '#e4e7eb']} style={styles.summaryCard}>
+        <LinearGradient
+          colors={['#ffffff', colors.brand + '14']}
+          style={styles.summaryCard}
+        >
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Total Loan</Text>
@@ -363,7 +376,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
               </Text>
             </View>
           </View>
-          <View style={styles.summaryRow}>
+          <View style={styles.summaryRowLast}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Paid</Text>
               <Text style={styles.summaryValue}>{formatCurrency(loanDetails.totalPaid)}</Text>
@@ -373,7 +386,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
               <TouchableOpacity onPress={() => setPenaltyModalVisible(true)}>
                 <Text style={[styles.summaryValue, styles.linkText]}>
                   {formatCurrency(loanDetails.totalPenaltyAmount)}{' '}
-                  <Icon name="info-outline" size={16} />
+                  <Icon name="info-outline" size={16} color={colors.brand} />
                 </Text>
               </TouchableOpacity>
             </View>
@@ -387,11 +400,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
             { label: 'Loan Type', value: loanDetails.loanType },
             {
               label: 'Status',
-              value: (
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(loanDetails.status) }]}>
-                  <Text style={styles.statusText}>{loanDetails.status}</Text>
-                </View>
-              ),
+              value: <StatusBadge status={loanDetails.status} />,
             },
             { label: 'Principal Amount', value: formatCurrency(loanDetails.principalAmount) },
             { label: 'Interest Rate', value: `${loanDetails.interestRate}%` },
@@ -464,16 +473,18 @@ const LoanDetailsScreen = ({ route, navigation }) => {
         ListFooterComponent={
           loading && hasMoreRepayments ? (
             <View style={styles.loaderFooter}>
-              <ActivityIndicator size="small" color="#0066cc" />
+              <ActivityIndicator size="small" color={colors.brand} />
               <Text style={styles.loaderText}>Loading more...</Text>
             </View>
           ) : null
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="receipt-long" size={64} color="#ccc" />
-            <Text style={styles.emptyMessage}>No repayment schedules found</Text>
-          </View>
+          <EmptyState
+            icon="receipt-outline"
+            title="No Repayment Schedules"
+            message="No repayment schedules found yet."
+            style={{ marginTop: spacing.xxl }}
+          />
         }
       />
     </View>
@@ -482,16 +493,21 @@ const LoanDetailsScreen = ({ route, navigation }) => {
   const renderCustomerInfo = () => {
     if (!customerProfile) {
       return (
-        <View style={styles.emptyContainer}>
-          <Icon name="person-off" size={64} color="#ccc" />
-          <Text style={styles.emptyMessage}>Customer information not available</Text>
-        </View>
+        <EmptyState
+          icon="account-off-outline"
+          title="Customer Not Found"
+          message="Customer information not available."
+          style={{ marginTop: spacing.xxl }}
+        />
       );
     }
 
     return (
       <View style={styles.tabContent}>
-        <LinearGradient colors={['#f5f7fa', '#e4e7eb']} style={styles.customerCard}>
+        <LinearGradient
+          colors={['#ffffff', colors.brand + '14']}
+          style={styles.customerCard}
+        >
           <View style={styles.customerHeader}>
             {customerProfile.profilePic ? (
               <Image source={{ uri: customerProfile.profilePic }} style={styles.customerImage} />
@@ -532,7 +548,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
               },
             ].map((item, index) => (
               <View key={index} style={styles.customerDetailItem}>
-                <Icon name={item.icon} size={20} color="#555" style={styles.customerDetailIcon} />
+                <Icon name={item.icon} size={20} color={colors.inkSoft} style={styles.customerDetailIcon} />
                 <View>
                   <Text style={styles.customerDetailLabel}>{item.label}</Text>
                   <Text style={styles.customerDetailValue}>{item.value || 'N/A'}</Text>
@@ -542,16 +558,9 @@ const LoanDetailsScreen = ({ route, navigation }) => {
 
             <View style={styles.customerStatusItem}>
               <Text style={styles.customerStatusLabel}>Account Status</Text>
-              <View
-                style={[
-                  styles.customerStatus,
-                  { backgroundColor: customerProfile.accountStatus ? '#4CAF50' : '#F44336' },
-                ]}
-              >
-                <Text style={styles.customerStatusText}>
-                  {customerProfile.accountStatus ? 'Active' : 'Inactive'}
-                </Text>
-              </View>
+              <StatusBadge
+                status={customerProfile.accountStatus ? 'Active' : 'Inactive'}
+              />
             </View>
           </View>
         </LinearGradient>
@@ -573,7 +582,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
   if (loading && !loanDetails) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
+        <ActivityIndicator size="large" color={colors.brand} />
         <Text style={styles.loadingText}>Loading loan details...</Text>
       </View>
     );
@@ -595,7 +604,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
             <Icon
               name={tab.icon}
               size={22}
-              color={activeTab === tab.id ? '#0066cc' : '#666'}
+              color={activeTab === tab.id ? colors.brand : colors.inkSoft}
             />
             <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
               {tab.label}
@@ -607,9 +616,14 @@ const LoanDetailsScreen = ({ route, navigation }) => {
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchLoanDetails}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+          <EviButton
+            title="Retry"
+            variant="secondary"
+            size="md"
+            icon="refresh"
+            style={{ marginTop: spacing.sm }}
+            onPress={fetchLoanDetails}
+          />
         </View>
       )}
 
@@ -629,215 +643,200 @@ const LoanDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.surface,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     flexDirection: 'row',
     justifyContent: 'center',
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: '#0066cc',
+    borderBottomColor: colors.brand,
   },
   tabText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     marginLeft: 6,
   },
   activeTabText: {
-    color: '#0066cc',
-    fontWeight: '600',
+    color: colors.brand,
+    fontWeight: type.weights.semibold,
   },
   content: {
     flex: 1,
   },
   tabContent: {
-    padding: 16,
+    padding: spacing.lg,
   },
   summaryCard: {
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 3,
+    borderRadius: radii.md,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
+    ...shadow.card,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
+  },
+  summaryRowLast: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   summaryItem: {
     alignItems: 'center',
     flex: 1,
   },
   summaryLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     marginBottom: 6,
   },
   summaryValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   linkText: {
-    color: '#0066cc',
-    fontSize: 16,
+    color: colors.brand,
+    fontSize: type.sizes.lg,
   },
   detailsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 3,
+    backgroundColor: colors.card,
+    borderRadius: radii.md,
+    padding: spacing.xl,
+    ...shadow.card,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 8,
+    borderBottomColor: colors.line,
+    paddingBottom: spacing.sm,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   detailLabel: {
-    fontSize: 15,
-    color: '#666',
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
     flex: 1,
   },
   detailValue: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
+    fontSize: type.sizes.md,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
     flex: 1,
     textAlign: 'right',
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.surface,
   },
   loadingText: {
-    marginTop: 12,
-    color: '#666',
-    fontSize: 16,
+    marginTop: spacing.md,
+    color: colors.inkSoft,
+    fontSize: type.sizes.lg,
   },
   groupContainer: {
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   groupHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 16,
-    elevation: 2,
+    backgroundColor: colors.card,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    ...shadow.card,
   },
   groupHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   groupTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   groupDate: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
   },
   groupItems: {
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   repaymentItem: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 8,
-    elevation: 2,
+    backgroundColor: colors.card,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    marginBottom: spacing.sm,
+    ...shadow.card,
   },
   repaymentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   repaymentHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   repaymentIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   repaymentInstallment: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   repaymentDate: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
   },
   repaymentAmount: {
     alignItems: 'flex-end',
   },
   repaymentAmountText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  repaymentStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  repaymentStatusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.xs,
   },
   paymentDetails: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
+    padding: spacing.md,
+    marginTop: spacing.sm,
   },
   paymentDetailsTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 10,
+    fontSize: type.sizes.md,
+    fontWeight: type.weights.semibold,
+    color: colors.ink,
+    marginBottom: spacing.sm + 2,
   },
   paymentItem: {
-    marginBottom: 10,
+    marginBottom: spacing.sm + 2,
   },
   paymentRow: {
     flexDirection: 'row',
@@ -845,79 +844,78 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   paymentLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     flex: 1,
   },
   paymentValue: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: type.sizes.sm,
+    color: colors.ink,
     flex: 2,
   },
   penaltyWarning: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF8E1',
+    backgroundColor: colors.warningTint,
     padding: 10,
-    borderRadius: 6,
-    marginTop: 8,
+    borderRadius: radii.sm,
+    marginTop: spacing.sm,
   },
   penaltyWarningText: {
-    color: '#F57C00',
-    fontSize: 14,
+    color: colors.warning,
+    fontSize: type.sizes.sm,
     marginLeft: 6,
+    fontWeight: type.weights.medium,
   },
   loaderFooter: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.lg,
   },
   loaderText: {
-    marginLeft: 8,
-    color: '#666',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-  },
-  emptyMessage: {
-    marginTop: 12,
-    color: '#666',
-    fontSize: 16,
-    textAlign: 'center',
+    marginLeft: spacing.sm,
+    color: colors.inkSoft,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(10, 31, 22, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     width: '90%',
     maxHeight: '80%',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 5,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    overflow: 'hidden',
+    ...shadow.card,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+  },
+  closeChip: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   penaltyItem: {
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
   },
   penaltyRow: {
     flexDirection: 'row',
@@ -925,118 +923,97 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   penaltyLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     flex: 1,
   },
   penaltyValue: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: type.sizes.sm,
+    color: colors.ink,
     flex: 2,
   },
   penaltyStatus: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: type.sizes.sm,
+    fontWeight: type.weights.medium,
   },
   customerCard: {
-    borderRadius: 12,
-    padding: 20,
-    elevation: 3,
+    borderRadius: radii.md,
+    padding: spacing.xl,
+    ...shadow.card,
   },
   customerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   customerImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginRight: 16,
+    marginRight: spacing.lg,
   },
   customerImagePlaceholder: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.brandTint,
     justifyContent: 'center',
     alignItems: 'center',
   },
   customerInitials: {
-    fontSize: 32,
-    color: '#666',
-    fontWeight: 'bold',
+    fontSize: type.sizes.display,
+    color: colors.brand,
+    fontWeight: type.weights.bold,
   },
   customerNameContainer: {
     flex: 1,
   },
   customerName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   customerUsername: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: type.sizes.lg,
+    color: colors.inkSoft,
     marginTop: 4,
   },
   customerDetails: {
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   customerDetailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   customerDetailIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   customerDetailLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
   },
   customerDetailValue: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
+    fontSize: type.sizes.md,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
   },
   customerStatusItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: spacing.md,
   },
   customerStatusLabel: {
-    fontSize: 15,
-    color: '#666',
-  },
-  customerStatus: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  customerStatusText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
   },
   errorContainer: {
-    padding: 16,
-    backgroundColor: '#FFEBEE',
+    padding: spacing.lg,
+    backgroundColor: colors.dangerTint,
     alignItems: 'center',
   },
   errorText: {
-    color: '#D32F2F',
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  retryButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    color: colors.danger,
+    fontSize: type.sizes.lg,
+    marginBottom: spacing.sm,
   },
 });
 

@@ -4,6 +4,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast } from '../../../../components/toast/CustomToast';
 import { useNavigation } from '@react-navigation/native';
+import { colors, spacing, type, radii } from '../../../../theme/tokens';
+import EviCard from '../../../../components/ui/EviCard';
+import StatusBadge from '../../../../components/ui/StatusBadge';
+import ErrorState from '../../../../components/ui/ErrorState';
 
 const LoansView = () => {
     const navigation = useNavigation();
@@ -81,36 +85,38 @@ const LoansView = () => {
     }, [filter, sortBy, sortOrder]);
 
     const renderLoanItem = ({ item }) => (
-        <TouchableOpacity
+        <EviCard
             style={styles.loanItem}
             onPress={() => handleLoanPress(item)}
+            elevated={false}
+            padding={spacing.lg}
         >
             <View style={styles.loanHeader}>
                 <Text style={styles.loanNumber}>Loan #{item.loanNumber}</Text>
-                <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(item.status) }]}>
-                    <Text style={styles.loanStatusText}>{item.status}</Text>
-                </View>
+                <StatusBadge status={item.status} />
             </View>
-            <Text style={styles.customerName}>{item.customer.fname} {item.customer.lname}</Text>
+            <Text style={styles.customerName}>
+                <Icon name="account" size={14} color={colors.inkSoft} /> {item.customer.fname} {item.customer.lname}
+            </Text>
             <View style={styles.loanDetails}>
                 <Text style={styles.loanAmount}>
-                    <Icon name="currency-inr" size={14} color="#4CAF50" /> {item.loanAmount}
+                    <Icon name="currency-inr" size={14} color={colors.brand} /> {item.loanAmount}
                 </Text>
                 <Text style={styles.loanDuration}>
-                    <Icon name="calendar-range" size={14} color="#2196F3" /> {item.loanDuration}
+                    <Icon name="calendar-range" size={14} color={colors.info} /> {item.loanDuration}
                 </Text>
             </View>
             <Text style={styles.loanAssignee}>
-                <Icon name="account" size={14} color="#666" /> {item.assignedTo?.fname} {item.assignedTo?.lname}
+                <Icon name="account-tie" size={14} color={colors.inkSoft} /> {item.assignedTo?.fname} {item.assignedTo?.lname}
             </Text>
-        </TouchableOpacity>
+        </EviCard>
     );
 
     const renderFooter = () => {
         if (!loading) return null;
         return (
             <View style={styles.footer}>
-                <ActivityIndicator size="small" color="#0000ff" />
+                <ActivityIndicator size="small" color={colors.brand} />
             </View>
         );
     };
@@ -159,7 +165,7 @@ const LoansView = () => {
                         <Icon
                             name={sortOrder === 1 ? 'arrow-up' : 'arrow-down'}
                             size={16}
-                            color={sortBy === option.value ? '#FFFFFF' : '#666'}
+                            color={colors.white}
                         />
                     )}
                 </TouchableOpacity>
@@ -170,7 +176,16 @@ const LoansView = () => {
     if (failedToLoad) {
         return (
             <View style={styles.container}>
-                <Text style={styles.failedToLoadText}>Failed to load loans</Text>
+                <ErrorState
+                    message="Failed to load loans"
+                    retryLabel="Retry"
+                    onRetry={() => {
+                        setFailedToLoad(false);
+                        setHasMore(true);
+                        fetchLoans(1);
+                    }}
+                    style={styles.errorState}
+                />
             </View>
         );
     }
@@ -195,72 +210,51 @@ const LoansView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
-    failedToLoadText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#FF0000',
-        textAlign: 'center',
-        marginTop: 20,
+    errorState: {
+        marginTop: spacing.xxl,
     },
     listContent: {
-        paddingVertical: 12,
+        paddingVertical: spacing.md,
     },
     loanItem: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        marginHorizontal: 16,
-        marginBottom: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
     },
     loanHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     loanNumber: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    loanStatus: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    loanStatusText: {
-        fontSize: 12,
-        color: '#FFFFFF',
-        fontWeight: 'bold',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     customerName: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.sm,
     },
     loanDetails: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     loanAmount: {
-        fontSize: 14,
-        color: '#4CAF50',
+        fontSize: type.sizes.md,
+        color: colors.brand,
+        fontWeight: type.weights.medium,
     },
     loanDuration: {
-        fontSize: 14,
-        color: '#2196F3',
+        fontSize: type.sizes.md,
+        color: colors.info,
     },
     loanAssignee: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
     },
     footer: {
         paddingVertical: 20,
@@ -269,70 +263,54 @@ const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        paddingVertical: 10,
-        backgroundColor: '#FFFFFF',
+        paddingVertical: spacing.sm,
+        backgroundColor: colors.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: colors.line,
     },
     filterButton: {
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: '#F0F0F0',
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface,
     },
     filterButtonActive: {
-        backgroundColor: '#2196F3',
+        backgroundColor: colors.brand,
     },
     filterButtonText: {
-        fontSize: 12,
-        color: '#666',
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
     },
     filterButtonTextActive: {
-        color: '#FFFFFF',
+        color: colors.white,
     },
     sortContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        paddingVertical: 10,
-        backgroundColor: '#FFFFFF',
+        paddingVertical: spacing.sm,
+        backgroundColor: colors.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: colors.line,
     },
     sortButton: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: '#F0F0F0',
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface,
     },
     sortButtonActive: {
-        backgroundColor: '#2196F3',
+        backgroundColor: colors.brand,
     },
     sortButtonText: {
-        fontSize: 12,
-        color: '#666',
-        marginRight: 4,
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
+        marginRight: spacing.xs,
     },
     sortButtonTextActive: {
-        color: '#FFFFFF',
+        color: colors.white,
     },
 });
-
-const getLoanStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-        case 'active':
-            return '#4CAF50';
-        case 'pending':
-        case 'approved':
-            return '#FFC107';
-        case 'rejected':
-            return '#F44336';
-        case 'closed':
-            return '#9E9E9E';
-        default:
-            return '#9E9E9E';
-    }
-};
 
 export default LoansView;

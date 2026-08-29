@@ -16,8 +16,13 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { apiCall } from "../../../components/api/apiUtils";
 import { showToast } from "../../../components/toast/CustomToast";
+import CustomToast from "../../../components/toast/CustomToast";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
+import { colors, spacing, radii, type, shadow } from "../../../theme/tokens";
+import StatusBadge from "../../../components/ui/StatusBadge";
+import EviButton from "../../../components/ui/EviButton";
+import EmptyState from "../../../components/ui/EmptyState";
 
 const LeadDetailsScreen = () => {
     const navigation = useNavigation();
@@ -76,21 +81,6 @@ const LeadDetailsScreen = () => {
             navigation.goBack();
         } finally {
             setLoading(false);
-        }
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "Pending":
-                return "#FFC107";
-            case "InProgress":
-                return "#2196F3";
-            case "Approved":
-                return "#4CAF50";
-            case "Rejected":
-                return "#F44336";
-            default:
-                return "#9E9E9E";
         }
     };
 
@@ -188,7 +178,7 @@ const LeadDetailsScreen = () => {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#4CAF50" />
+                    <ActivityIndicator size="large" color={colors.brand} />
                 </View>
             </SafeAreaView>
         );
@@ -197,12 +187,14 @@ const LeadDetailsScreen = () => {
     if (!lead) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>Lead not found</Text>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Go Back</Text>
-                    </TouchableOpacity>
-                </View>
+                <EmptyState
+                    icon="file-question-outline"
+                    title="Lead Not Found"
+                    message="This lead could not be loaded."
+                    actionLabel="Go Back"
+                    onAction={() => navigation.goBack()}
+                    style={{ flex: 1, justifyContent: 'center' }}
+                />
             </SafeAreaView>
         );
     }
@@ -218,8 +210,8 @@ const LeadDetailsScreen = () => {
                         <Text style={styles.profileName}>{lead.name}</Text>
                         <Text style={styles.profileDetail}>Phone: {lead.phone}</Text>
                         {lead.email && <Text style={styles.profileDetail}>Email: {lead.email}</Text>}
-                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(lead.status) }]}>
-                            <Text style={styles.statusText}>{lead.status}</Text>
+                        <View style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}>
+                            <StatusBadge status={lead.status} />
                         </View>
                     </View>
                 </View>
@@ -271,9 +263,7 @@ const LeadDetailsScreen = () => {
                     </View>
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Current Status</Text>
-                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(lead.status) }]}>
-                            <Text style={styles.statusText}>{lead.status}</Text>
-                        </View>
+                        <StatusBadge status={lead.status} />
                     </View>
                     {lead.followupDate && (
                         <View style={styles.detailRow}>
@@ -288,7 +278,7 @@ const LeadDetailsScreen = () => {
                                 style={[
                                     styles.detailValue,
                                     {
-                                        color: lead.followupStatus === "Completed" ? "#4CAF50" : "#FFC107"
+                                        color: lead.followupStatus === "Completed" ? colors.success : colors.warning
                                     }
                                 ]}
                             >
@@ -322,7 +312,7 @@ const LeadDetailsScreen = () => {
                         <Text style={styles.dateText}>
                             {followupDate.toLocaleDateString('en-IN')}
                         </Text>
-                        <Icon name="calendar" size={20} color="#666" />
+                        <Icon name="calendar" size={20} color={colors.brand} />
                     </TouchableOpacity>
 
                     {showDatePicker && (
@@ -375,23 +365,21 @@ const LeadDetailsScreen = () => {
                     <TextInput
                         style={styles.inputMultiline}
                         placeholder="Enter your remarks about this lead..."
+                        placeholderTextColor={colors.inkFaint}
                         value={remarks}
                         onChangeText={setRemarks}
                         multiline
                         numberOfLines={4}
                     />
 
-                    <TouchableOpacity
-                        style={[styles.submitButton, submitting && styles.disabledButton]}
+                    <EviButton
+                        title="Update Followup"
+                        size="lg"
+                        fullWidth
+                        loading={submitting}
+                        style={{ marginTop: spacing.lg }}
                         onPress={handleUpdateFollowup}
-                        disabled={submitting}
-                    >
-                        {submitting ? (
-                            <ActivityIndicator color="#fff" size="small" />
-                        ) : (
-                            <Text style={styles.submitButtonText}>Update Followup</Text>
-                        )}
-                    </TouchableOpacity>
+                    />
                 </View>
 
                 {/* Request Conversion - Only available if followup is completed */}
@@ -403,31 +391,29 @@ const LeadDetailsScreen = () => {
                         <TextInput
                             style={styles.inputMultiline}
                             placeholder="Enter detailed remarks for conversion request..."
+                            placeholderTextColor={colors.inkFaint}
                             value={conversionRemarks}
                             onChangeText={setConversionRemarks}
                             multiline
                             numberOfLines={4}
                         />
 
-                        <TouchableOpacity
-                            style={[styles.submitButton, submitting && styles.disabledButton]}
+                        <EviButton
+                            title="Request Conversion"
+                            size="lg"
+                            fullWidth
+                            loading={submitting}
+                            style={{ marginTop: spacing.lg }}
                             onPress={handleRequestConversion}
-                            disabled={submitting}
-                        >
-                            {submitting ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : (
-                                <Text style={styles.submitButtonText}>Request Conversion</Text>
-                            )}
-                        </TouchableOpacity>
+                        />
                     </View>
                 )}
 
                 {/* If conversion is already requested (status is InProgress) */}
                 {lead.status === "InProgress" && (
                     <View style={styles.card}>
-                        <View style={styles.infoBox}>
-                            <Icon name="information-outline" size={24} color="#2196F3" />
+                        <View style={[styles.infoBox, { backgroundColor: colors.infoTint }]}>
+                            <Icon name="information-outline" size={24} color={colors.info} />
                             <Text style={styles.infoText}>
                                 Conversion request has been submitted and is pending approval from admin.
                             </Text>
@@ -438,11 +424,14 @@ const LeadDetailsScreen = () => {
                 {/* If lead is already approved/rejected */}
                 {(lead.status === "Approved" || lead.status === "Rejected") && (
                     <View style={styles.card}>
-                        <View style={styles.infoBox}>
+                        <View style={[
+                            styles.infoBox,
+                            { backgroundColor: lead.status === "Approved" ? colors.successTint : colors.dangerTint }
+                        ]}>
                             <Icon
                                 name={lead.status === "Approved" ? "check-circle-outline" : "close-circle-outline"}
                                 size={24}
-                                color={lead.status === "Approved" ? "#4CAF50" : "#F44336"}
+                                color={lead.status === "Approved" ? colors.success : colors.danger}
                             />
                             <Text style={styles.infoText}>
                                 This lead has been {lead.status.toLowerCase()}. {lead.remarksByAdmin ? `Admin remarks: ${lead.remarksByAdmin}` : ''}
@@ -451,6 +440,7 @@ const LeadDetailsScreen = () => {
                     </View>
                 )}
             </ScrollView>
+            <CustomToast />
         </SafeAreaView>
     );
 };
@@ -458,218 +448,167 @@ const LeadDetailsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f0f0f0",
+        backgroundColor: colors.surface,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
     },
-    errorContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-    },
-    errorText: {
-        fontSize: 18,
-        color: "#F44336",
-        marginBottom: 20,
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 15,
-        backgroundColor: "#fff",
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
-    },
     scrollView: {
         flex: 1,
     },
     profileCard: {
         flexDirection: "row",
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 15,
-        margin: 10,
-        elevation: 3,
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        margin: spacing.sm,
+        ...shadow.card,
     },
     profileImage: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        marginRight: 15,
+        marginRight: spacing.lg,
     },
     profileInfo: {
         flex: 1,
         justifyContent: "center",
     },
     profileName: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
-        marginBottom: 5,
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.sm,
     },
     profileDetail: {
-        fontSize: 14,
-        color: "#666",
-        marginBottom: 3,
-    },
-    statusBadge: {
-        alignSelf: "flex-start",
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 15,
-        marginTop: 5,
-    },
-    statusText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 12,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.xs,
     },
     card: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 15,
-        margin: 10,
-        elevation: 3,
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        margin: spacing.sm,
+        ...shadow.card,
     },
     cardTitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        color: "#333",
-        marginBottom: 15,
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.lg,
     },
     detailRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 10,
+        marginBottom: spacing.md,
         alignItems: "center",
     },
     detailLabel: {
-        fontSize: 14,
-        color: "#666",
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
         flex: 1,
     },
     detailValue: {
-        fontSize: 16,
-        color: "#333",
-        fontWeight: "500",
+        fontSize: type.sizes.md,
+        color: colors.ink,
+        fontWeight: type.weights.medium,
         flex: 2,
         textAlign: "right",
     },
     remarksRow: {
-        marginTop: 10,
-        marginBottom: 10,
+        marginTop: spacing.md,
+        marginBottom: spacing.md,
     },
     remarksText: {
-        fontSize: 14,
-        color: "#333",
-        marginTop: 5,
-        backgroundColor: "#f9f9f9",
-        padding: 10,
-        borderRadius: 5,
+        fontSize: type.sizes.sm,
+        color: colors.ink,
+        marginTop: spacing.sm,
+        backgroundColor: colors.surface,
+        padding: spacing.md,
+        borderRadius: radii.sm,
     },
     formCard: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 15,
-        margin: 10,
-        elevation: 3,
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        margin: spacing.sm,
+        ...shadow.card,
     },
     inputLabel: {
-        fontSize: 14,
-        color: "#666",
-        marginBottom: 5,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.sm,
+        fontWeight: type.weights.medium,
     },
     datePickerButton: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: "#f5f5f5",
-        padding: 12,
-        borderRadius: 5,
-        marginBottom: 15,
+        height: 52,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.line,
+        borderRadius: radii.md,
+        paddingHorizontal: spacing.md,
+        marginBottom: spacing.lg,
     },
     dateText: {
-        fontSize: 16,
-        color: "#333",
+        fontSize: type.sizes.md,
+        color: colors.ink,
+        fontWeight: type.weights.medium,
     },
     statusButtons: {
         flexDirection: "row",
-        marginBottom: 15,
+        marginBottom: spacing.lg,
     },
     statusButton: {
         flex: 1,
-        padding: 10,
+        paddingVertical: spacing.sm,
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#ccc",
-        marginHorizontal: 5,
-        borderRadius: 5,
+        borderColor: colors.line,
+        marginHorizontal: spacing.xs,
+        borderRadius: radii.md,
+        backgroundColor: colors.surface,
     },
     statusButtonActive: {
-        backgroundColor: "#4CAF50",
-        borderColor: "#4CAF50",
+        backgroundColor: colors.brand,
+        borderColor: colors.brand,
     },
     statusButtonText: {
-        color: "#666",
-        fontWeight: "bold",
+        color: colors.inkSoft,
+        fontWeight: type.weights.bold,
+        fontSize: type.sizes.sm,
     },
     statusButtonTextActive: {
-        color: "#fff",
+        color: colors.white,
     },
     inputMultiline: {
-        backgroundColor: "#f5f5f5",
-        borderRadius: 5,
-        padding: 10,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.line,
+        borderRadius: radii.md,
+        padding: spacing.md,
         textAlignVertical: "top",
         minHeight: 100,
-        fontSize: 16,
-        color: "#333",
-        marginBottom: 15,
-    },
-    submitButton: {
-        backgroundColor: "#4CAF50",
-        padding: 15,
-        borderRadius: 5,
-        alignItems: "center",
-    },
-    disabledButton: {
-        backgroundColor: "#a5d6a7",
-    },
-    submitButtonText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 16,
+        fontSize: type.sizes.md,
+        color: colors.ink,
+        marginBottom: spacing.lg,
     },
     infoBox: {
         flexDirection: "row",
-        backgroundColor: "#e3f2fd",
-        padding: 15,
-        borderRadius: 5,
+        padding: spacing.lg,
+        borderRadius: radii.md,
         alignItems: "center",
     },
     infoText: {
-        marginLeft: 10,
+        marginLeft: spacing.md,
         flex: 1,
-        color: "#333",
-        fontSize: 14,
-    },
-    button: {
-        backgroundColor: "#4CAF50",
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-    },
-    buttonText: {
-        color: "#fff",
-        fontWeight: "bold",
+        color: colors.ink,
+        fontSize: type.sizes.sm,
     },
 });
 

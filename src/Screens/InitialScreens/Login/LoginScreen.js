@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    View, Text, TextInput, StyleSheet, TouchableOpacity, StatusBar, Image, ActivityIndicator, KeyboardAvoidingView, Platform
+    Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, StatusBar, Text, TextInput, View
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { CustomToast, showToast } from '../../../components/toast/CustomToast';
@@ -8,14 +8,21 @@ import { apiCall } from '../../../components/api/apiUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useHomeContext } from '../../../components/context/HomeContext';
+import { colors, spacing, tokens } from '../../../theme/tokens';
+import { EviButton } from '../../../components/ui/EviButton';
 import AppLogo from '../../../assets/EviLogo.png';
+
+const ROLES = [
+    { key: 'employee', label: 'Employee' },
+    { key: 'admin', label: 'Admin' },
+];
 
 const LoginScreen = () => {
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [role, setRole] = useState('employee');
     const [showPassword, setShowPassword] = useState(false);
     const { loginUser } = useHomeContext();
 
@@ -27,7 +34,7 @@ const LoginScreen = () => {
 
         setIsLoading(true);
         try {
-            const endpoint = isAdmin ? '/api/admin/login' : '/api/employee/auth/login';
+            const endpoint = role === 'admin' ? '/api/admin/login' : '/api/employee/auth/login';
             const response = await apiCall(endpoint, 'POST', { userName, password });
             console.log('Login response:', response);
             if (response?.status === 'success') {
@@ -48,143 +55,189 @@ const LoginScreen = () => {
         }
     };
 
-    const toggleLoginType = () => setIsAdmin((prevState) => !prevState);
-
-    const togglePasswordVisibility = () => setShowPassword((prevState) => !prevState);
-
-    const renderInput = (value, setValue, placeholder, secureTextEntry, icon) => (
-        <View style={styles.inputContainer}>
-            <MaterialCommunityIcons name={icon} size={24} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-                style={styles.input}
-                onChangeText={setValue}
-                value={value}
-                placeholder={placeholder}
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry={secureTextEntry && !showPassword}
-            />
-            {icon === 'lock' && (
-                <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-                    <MaterialCommunityIcons
-                        name={showPassword ? 'eye-off' : 'eye'}
-                        size={24}
-                        color="#6B7280"
-                    />
-                </TouchableOpacity>
-            )}
-        </View>
-    );
-
-    const renderButton = (title, onPress) => (
-        <TouchableOpacity style={styles.button} onPress={onPress} disabled={isLoading}>
-            {isLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-            ) : (
-                <Text style={styles.buttonText}>{title}</Text>
-            )}
-        </TouchableOpacity>
-    );
-
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1F2937" />
+            <StatusBar barStyle="light-content" backgroundColor={colors.night} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.content}
             >
-                <Image source={AppLogo} style={styles.logo} />
+                <Image source={AppLogo} style={styles.logo} resizeMode="contain" />
+                <Text style={styles.title}>Welcome back</Text>
+                <Text style={styles.subtitle}>Sign in to your Evi Finance workspace</Text>
 
-                <Text style={styles.subtitle}>Login as {isAdmin ? 'Admin' : 'Employee'}</Text>
+                {/* Role toggle */}
+                <View style={styles.segment}>
+                    {ROLES.map((r) => {
+                        const active = r.key === role;
+                        return (
+                            <Pressable
+                                key={r.key}
+                                onPress={() => setRole(r.key)}
+                                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                            >
+                                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
+                                    {r.label}
+                                </Text>
+                            </Pressable>
+                        );
+                    })}
+                </View>
 
-                {renderInput(userName, setUserName, 'Enter Username', false, 'account')}
-                {renderInput(password, setPassword, 'Enter Password', true, 'lock')}
+                {/* Username */}
+                <View style={styles.inputRow}>
+                    <MaterialCommunityIcons name="account-outline" size={22} color={colors.nightText} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        value={userName}
+                        onChangeText={setUserName}
+                        placeholder="Username"
+                        placeholderTextColor={colors.nightText}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        textAlignVertical="center"
+                    />
+                </View>
 
-                <TouchableOpacity onPress={toggleLoginType} style={styles.toggleButton}>
-                    <Text style={styles.toggleText}>
-                        Switch to {isAdmin ? 'Employee' : 'Admin'} Login
-                    </Text>
-                </TouchableOpacity>
+                {/* Password */}
+                <View style={styles.inputRow}>
+                    <MaterialCommunityIcons name="lock-outline" size={22} color={colors.nightText} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Password"
+                        placeholderTextColor={colors.nightText}
+                        secureTextEntry={!showPassword}
+                        textAlignVertical="center"
+                        onSubmitEditing={handleLogin}
+                    />
+                    <Pressable onPress={() => setShowPassword((s) => !s)} hitSlop={12} accessibilityRole="button">
+                        <MaterialCommunityIcons
+                            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                            size={22}
+                            color={colors.nightText}
+                            style={styles.eye}
+                        />
+                    </Pressable>
+                </View>
 
-                {renderButton('Login', handleLogin)}
+                <EviButton
+                    title="Sign In"
+                    icon="login"
+                    onPress={handleLogin}
+                    loading={isLoading}
+                    style={styles.loginBtn}
+                />
+
+                <View style={styles.hintRow}>
+                    <MaterialCommunityIcons name="shield-check-outline" size={14} color={colors.nightText} />
+                    <Text style={styles.hint}>Secured for {role === 'admin' ? 'admin' : 'field'} accounts</Text>
+                </View>
             </KeyboardAvoidingView>
             <CustomToast />
         </View>
     );
 };
 
+const { type } = tokens;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1F2937', // Dark gray background
-        paddingHorizontal: 20,
-        justifyContent: 'center',
+        backgroundColor: colors.night,
+        paddingHorizontal: spacing.xl,
     },
     content: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
     },
     logo: {
-        width: '90%',
-        height: '10%',
-        marginBottom: 30,
-        resizeMode: 'contain',
+        width: 88,
+        height: 88,
+        alignSelf: 'center',
+        marginBottom: spacing.xl,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#F3F4F6', // Light gray
-        marginBottom: 10,
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        color: colors.white,
         textAlign: 'center',
+        letterSpacing: -0.3,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#D1D5DB', // Gray for subtitles
-        marginBottom: 20,
+        fontSize: type.sizes.md,
+        color: colors.nightText,
         textAlign: 'center',
+        marginTop: spacing.xs,
+        marginBottom: spacing.xl,
     },
-    inputContainer: {
+    segment: {
+        flexDirection: 'row',
+        backgroundColor: colors.nightSoft,
+        borderRadius: tokens.radii.pill,
+        padding: 4,
+        marginBottom: spacing.xl,
+        borderWidth: 1,
+        borderColor: colors.nightLine,
+    },
+    segmentBtn: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: tokens.radii.pill,
+    },
+    segmentBtnActive: {
+        backgroundColor: colors.brand,
+    },
+    segmentText: {
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.medium,
+        color: colors.nightText,
+    },
+    segmentTextActive: {
+        color: colors.white,
+        fontWeight: type.weights.semibold,
+    },
+    inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#374151', // Darker gray for input background
-        borderRadius: 25,
-        paddingHorizontal: 15,
-        marginBottom: 20,
-        width: '100%',
-    },
-    eyeIcon: {
-        padding: 10,
+        backgroundColor: colors.nightSoft,
+        borderRadius: tokens.radii.md,
+        borderWidth: 1,
+        borderColor: colors.nightLine,
+        paddingHorizontal: spacing.md,
+        marginBottom: spacing.md,
     },
     inputIcon: {
-        marginRight: 10,
+        marginRight: spacing.sm,
     },
     input: {
         flex: 1,
-        fontSize: 16,
-        padding: 15,
-        color: '#F3F4F6', // Light text
-    },
-    button: {
-        backgroundColor: '#10B981', // Green button
         paddingVertical: 15,
-        borderRadius: 25,
+        fontSize: type.sizes.md,
+        color: colors.white,
+    },
+    eye: {
+        padding: 6,
+    },
+    loginBtn: {
+        marginTop: spacing.sm,
+    },
+    hintRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        elevation: 5,
-        width: '100%',
-        marginTop: 20,
+        justifyContent: 'center',
+        marginTop: spacing.lg,
     },
-    buttonText: {
-        color: '#FFFFFF', // White text
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    toggleButton: {
-        marginTop: 15,
-    },
-    toggleText: {
-        color: '#9CA3AF', // Lighter gray for toggle text
-        fontSize: 14,
-        textDecorationLine: 'underline',
+    hint: {
+        fontSize: type.sizes.xs,
+        color: colors.nightText,
+        marginLeft: 6,
+        opacity: 0.8,
     },
 });
 

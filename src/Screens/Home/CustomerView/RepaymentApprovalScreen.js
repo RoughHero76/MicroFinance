@@ -9,6 +9,10 @@ import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../components/toast/CustomToast';
 import { useNavigation } from '@react-navigation/native';
+import { colors, spacing, type, radii, shadow } from '../../../theme/tokens';
+import EviButton from '../../../components/ui/EviButton';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const RepaymentApprovalScreen = () => {
     const navigation = useNavigation();
@@ -140,9 +144,7 @@ const RepaymentApprovalScreen = () => {
         <View style={styles.repaymentCard}>
             <View style={styles.repaymentHeader}>
                 <Text style={styles.amount}>₹{Number(item.amount).toLocaleString()}</Text>
-                <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
-                    {item.status}
-                </Text>
+                <StatusBadge status={item.status || 'Unknown'} />
             </View>
 
             <View style={styles.details}>
@@ -156,23 +158,24 @@ const RepaymentApprovalScreen = () => {
 
             {item.status !== 'Approved' && (
                 <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.rejectButton]}
+                    <EviButton
+                        title="Reject"
+                        icon="close-circle-outline"
+                        variant="danger"
+                        size="md"
+                        disabled={state.approveLoading}
+                        style={styles.actionButton}
                         onPress={() => handleAction(item._id, 'reject')}
+                    />
+                    <EviButton
+                        title="Approve"
+                        icon="check-circle-outline"
+                        variant="primary"
+                        size="md"
                         disabled={state.approveLoading}
-                    >
-                        <Icon name="close-circle-outline" size={20} color="#FFFFFF" />
-                        <Text style={styles.actionText}>Reject</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.approveButton]}
+                        style={styles.actionButton}
                         onPress={() => handleAction(item._id, 'approve')}
-                        disabled={state.approveLoading}
-                    >
-                        <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
-                        <Text style={styles.actionText}>Approve</Text>
-                    </TouchableOpacity>
+                    />
                 </View>
             )}
         </View>
@@ -189,7 +192,7 @@ const RepaymentApprovalScreen = () => {
                     <Icon
                         name={state.collapsedSections.has(section.collector) ? 'chevron-down' : 'chevron-up'}
                         size={24}
-                        color="#6200EE"
+                        color={colors.brand}
                     />
                 </View>
                 {!state.collapsedSections.has(section.collector) && (
@@ -208,7 +211,7 @@ const RepaymentApprovalScreen = () => {
 
     const DetailRow = ({ icon, label, value }) => (
         <View style={styles.detailRow}>
-            <Icon name={icon} size={16} color="#666666" />
+            <Icon name={icon} size={16} color={colors.inkFaint} />
             <Text style={styles.detailLabel}>{label}:</Text>
             <Text style={styles.detailValue}>{value}</Text>
         </View>
@@ -221,16 +224,8 @@ const RepaymentApprovalScreen = () => {
                     style={styles.filterButton}
                     onPress={() => setState(prev => ({ ...prev, showFilters: true }))}
                 >
-                    <Icon name="filter-variant" size={24} color="#6200EE" />
+                    <Icon name="filter-variant" size={20} color={colors.brand} />
                     <Text style={styles.filterButtonText}>Filters</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.switchButton}
-                    onPress={() => navigation.navigate('OldRepaymentApproval')}
-                >
-                    <Icon name="swap-horizontal" size={24} color="#6200EE" />
-                    <Text style={styles.filterButtonText}>Old Version</Text>
                 </TouchableOpacity>
             </View>
             <SectionList
@@ -265,9 +260,15 @@ const RepaymentApprovalScreen = () => {
                 keyExtractor={(item, index) => `${item.date}-${index}`}
                 onEndReached={fetchRepayments}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={state.loading && <ActivityIndicator size="large" color="#6200EE" />}
+                ListFooterComponent={state.loading && <ActivityIndicator size="large" color={colors.brand} />}
                 ListEmptyComponent={!state.loading && (
-                    <Text style={styles.emptyText}>No repayments to approve</Text>
+                    <View style={styles.emptyWrap}>
+                        <EmptyState
+                            icon="inbox-outline"
+                            title="No repayments to approve"
+                            message="Repayments awaiting approval will appear here."
+                        />
+                    </View>
                 )}
                 stickySectionHeadersEnabled
             />
@@ -285,7 +286,7 @@ const RepaymentApprovalScreen = () => {
                             style={styles.input}
                             placeholder="Loan Number (optional)"
                             value={state.filters.loanNumber}
-                            placeholderTextColor="#666666"
+                            placeholderTextColor={colors.inkFaint}
                             onChangeText={(loanNumber) => setState(prev => ({
                                 ...prev,
                                 filters: { ...prev.filters, loanNumber }
@@ -316,7 +317,7 @@ const RepaymentApprovalScreen = () => {
                                 style={styles.dateButton}
                                 onPress={() => setState(prev => ({ ...prev, showDatePicker: true }))}
                             >
-                                <Icon name="calendar" size={20} color="#6200EE" />
+                                <Icon name="calendar" size={20} color={colors.brand} />
                                 <Text style={styles.dateButtonText}>
                                     {state.filters.date.toLocaleDateString()}
                                 </Text>
@@ -336,7 +337,11 @@ const RepaymentApprovalScreen = () => {
                             <Picker.Item label="Approved" value="Approved" />
                         </Picker>
 
-                        <TouchableOpacity
+                        <EviButton
+                            title="Apply Filters"
+                            icon="filter-outline"
+                            variant="primary"
+                            size="lg"
                             style={styles.applyButton}
                             onPress={() => {
                                 setState(prev => ({
@@ -348,9 +353,7 @@ const RepaymentApprovalScreen = () => {
                                 }));
                                 fetchRepayments();
                             }}
-                        >
-                            <Text style={styles.applyButtonText}>Apply Filters</Text>
-                        </TouchableOpacity>
+                        />
                     </View>
                 </View>
                 <CustomToast />
@@ -379,16 +382,11 @@ const RepaymentApprovalScreen = () => {
     );
 };
 
-const getStatusColor = (status) => ({
-    'Approved': '#4CAF50',
-    'Pending': '#FFA000'
-}[status] || '#757575');
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
-        padding: 16
+        backgroundColor: colors.surface,
+        padding: spacing.lg
     },
     collectorHeader: {
         width: '100%',
@@ -397,212 +395,166 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     collectorSection: {
-        backgroundColor: '#FFFFFF',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 8,
-        elevation: 2,
-    },
-    headerButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    headerButtonText: {
-        color: '#6200EE',
-        marginLeft: 8,
-        fontSize: 14,
-        fontWeight: '600',
+        backgroundColor: colors.card,
+        padding: spacing.lg,
+        borderRadius: radii.lg,
+        marginBottom: spacing.sm,
+        ...shadow.card,
     },
     headerControls: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 16,
+        justifyContent: 'flex-start',
+        marginBottom: spacing.lg,
     },
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        padding: 12,
-        borderRadius: 12,
-        elevation: 2,
-        flex: 0.48,
-    },
-    switchButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        padding: 12,
-        borderRadius: 12,
-        elevation: 2,
-        flex: 0.48,
-        justifyContent: 'center',
+        backgroundColor: colors.brandTint,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.pill,
     },
     filterButtonText: {
-        marginLeft: 8,
-        color: '#6200EE',
-        fontWeight: '600'
-    },
-    collectorSection: {
-        backgroundColor: '#FFFFFF',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 8,
-        elevation: 2
+        marginLeft: spacing.sm,
+        color: colors.brand,
+        fontWeight: type.weights.semibold,
+        fontSize: type.sizes.sm,
     },
     collectorName: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#000000',
-        marginBottom: 8
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     collectorSummary: {
         flexDirection: 'row',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        gap: spacing.md,
     },
     dateSection: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        elevation: 2
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+        ...shadow.card,
     },
     dateSectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16
+        marginBottom: spacing.lg,
     },
     dateText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#6200EE'
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.semibold,
+        color: colors.brand
     },
     summaryText: {
-        fontSize: 14,
-        color: '#666666',
-        marginBottom: 4
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.xs
     },
     repaymentCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        elevation: 3
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        padding: spacing.lg,
+        marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.line,
     },
     repaymentHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12
+        marginBottom: spacing.md,
+        gap: spacing.md,
     },
     amount: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#000000'
-    },
-    status: {
-        fontSize: 14,
-        fontWeight: '600',
-        padding: 6,
-        borderRadius: 6,
-        overflow: 'hidden'
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink
     },
     details: {
-        marginTop: 8
+        marginTop: spacing.sm
     },
     detailRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8
+        marginBottom: spacing.sm
     },
     detailLabel: {
-        marginLeft: 8,
-        color: '#666666',
+        marginLeft: spacing.sm,
+        color: colors.inkSoft,
         width: 80
     },
     detailValue: {
         flex: 1,
-        color: '#000000'
+        color: colors.ink
     },
     actions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 16
+        marginTop: spacing.lg,
+        gap: spacing.md,
     },
     actionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 12,
-        borderRadius: 8,
-        flex: 0.48
-    },
-    actionText: {
-        color: '#FFFFFF',
-        marginLeft: 8,
-        fontWeight: '600'
-    },
-    approveButton: {
-        backgroundColor: '#4CAF50'
-    },
-    rejectButton: {
-        backgroundColor: '#FF5252'
+        flex: 1,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
         justifyContent: 'flex-end'
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 24,
+        backgroundColor: colors.card,
+        borderTopLeftRadius: radii.xl,
+        borderTopRightRadius: radii.xl,
+        padding: spacing.xl,
         maxHeight: '80%'
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#000000',
-        marginBottom: 24
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.xl
     },
     input: {
-        backgroundColor: '#F5F5F5',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-        color: '#000000'
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        padding: spacing.md,
+        marginBottom: spacing.lg,
+        color: colors.ink,
+        borderWidth: 1,
+        borderColor: colors.line,
     },
     toggleContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 16
+        marginBottom: spacing.lg
     },
     toggleLabel: {
-        fontSize: 16,
-        color: '#000000'
+        fontSize: type.sizes.md,
+        color: colors.ink
     },
     toggle: {
         width: 50,
         height: 28,
-        borderRadius: 14,
-        backgroundColor: '#E0E0E0',
+        borderRadius: radii.pill,
+        backgroundColor: colors.line,
         padding: 2,
         justifyContent: 'center'
     },
     toggleActive: {
-        backgroundColor: '#6200EE'
+        backgroundColor: colors.brand
     },
     toggleHandle: {
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.white,
         elevation: 2
     },
     toggleHandleActive: {
@@ -611,37 +563,29 @@ const styles = StyleSheet.create({
     dateButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 16
+        backgroundColor: colors.surface,
+        padding: spacing.md,
+        borderRadius: radii.md,
+        marginBottom: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.line,
     },
     dateButtonText: {
-        marginLeft: 8,
-        color: '#000000',
-        fontSize: 16
+        marginLeft: spacing.sm,
+        color: colors.ink,
+        fontSize: type.sizes.md
     },
     picker: {
-        backgroundColor: '#F5F5F5',
-        marginBottom: 16,
-        borderRadius: 8
+        backgroundColor: colors.surface,
+        marginBottom: spacing.lg,
+        borderRadius: radii.md,
+        color: colors.ink,
     },
     applyButton: {
-        backgroundColor: '#6200EE',
-        padding: 16,
-        borderRadius: 8,
-        alignItems: 'center'
+        marginTop: spacing.sm,
     },
-    applyButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600'
-    },
-    emptyText: {
-        textAlign: 'center',
-        color: '#666666',
-        fontSize: 16,
-        marginTop: 24
+    emptyWrap: {
+        marginTop: spacing.xl,
     }
 });
 

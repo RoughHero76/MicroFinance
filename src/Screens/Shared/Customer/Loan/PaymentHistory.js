@@ -5,6 +5,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../../components/context/HomeContext';
+import { colors, spacing, type, radii } from '../../../../theme/tokens';
+import EviCard from '../../../../components/ui/EviCard';
+import StatusBadge from '../../../../components/ui/StatusBadge';
+import EmptyState from '../../../../components/ui/EmptyState';
 
 const PaymentHistory = () => {
 
@@ -113,68 +117,64 @@ const PaymentHistory = () => {
     };
 
     const renderItem = ({ item }) => {
-        const getStatusColor = (status) => {
-            switch (status) {
-                case 'Approved':
-                    return '#4CAF50';
-                case 'Pending':
-                    return '#FFA000';
-
-                case 'Rejected':
-                    return '#F44336';
-                default:
-                    return '#757575';
-            }
-        };
         if (!item) return null;
+        const showActions = item.status !== 'Approved' && item.status !== 'Rejected' && user.role == 'admin';
         return (
-            <View style={styles.paymentItem}>
-                <View style={styles.paymentInfo}>
+            <EviCard style={styles.paymentItem} elevated={false} padding={spacing.lg}>
+                <View style={styles.paymentHeader}>
                     <Text style={styles.amount}>₹{item.amount || 'N/A'}</Text>
-                    <Text style={styles.date}>{item.paymentDate ? new Date(item.paymentDate).toLocaleDateString() : 'N/A'}</Text>
-                    <Text style={[styles.status, { color: getStatusColor(item.status) }]}>{item.status || 'Unknown'}</Text>
+                    <StatusBadge status={item.status || 'Unknown'} />
                 </View>
+                <Text style={styles.date}>
+                    <Icon name="calendar" size={14} color={colors.inkFaint} /> {item.paymentDate ? new Date(item.paymentDate).toLocaleDateString() : 'N/A'}
+                </Text>
+                <View style={styles.divider} />
                 <View style={styles.paymentDetails}>
-                    <Text style={styles.detailText}>Method: {item.paymentMethod || 'N/A'}</Text>
-                    <Text style={styles.detailText}>Remaining Amount After Payment: ₹{item.balanceAfterPayment || 'N/A'}</Text>
                     <Text style={styles.detailText}>
-                        Collected by: {item.collectedBy?.fname || 'Admin'} {item.collectedBy?.lname || ''}
+                        <Icon name="credit-card" size={14} color={colors.inkFaint} /> Method: {item.paymentMethod || 'N/A'}
                     </Text>
-                    <Text style={styles.detailText}>Transaction Note: {item.transactionId || 'N/A'}</Text>
-                    <Text style={styles.detailText}>Logical Note: {item.logicNote || item.LogicNote || 'N/A'}</Text>
+                    <Text style={styles.detailText}>
+                        <Icon name="wallet" size={14} color={colors.inkFaint} /> Remaining After Payment: ₹{item.balanceAfterPayment || 'N/A'}
+                    </Text>
+                    <Text style={styles.detailText}>
+                        <Icon name="account" size={14} color={colors.inkFaint} /> Collected by: {item.collectedBy?.fname || 'Admin'} {item.collectedBy?.lname || ''}
+                    </Text>
+                    <Text style={styles.detailText}>
+                        <Icon name="receipt-outline" size={14} color={colors.inkFaint} /> Transaction: {item.transactionId || 'N/A'}
+                    </Text>
+                    <Text style={styles.detailText}>
+                        <Icon name="note-text-outline" size={14} color={colors.inkFaint} /> Logical Note: {item.logicNote || item.LogicNote || 'N/A'}
+                    </Text>
                 </View>
-                <View>
-                    {item.status !== 'Approved' && item.status !== 'Rejected' && user.role == 'admin' && (
-
-                        <View style={[{ flexDirection: 'row', justifyContent: 'space-between' }]}>
-                            <TouchableOpacity
-                                style={styles.rejectButton}
-                                onPress={() => handleConfirmReject(item._id)}
-                                disabled={updateRepaymentLoading}
-                            >
-                                <Icon name="close-circle-outline" size={20} color="#FFFFFF" />
-                                {updateRepaymentLoading ? <ActivityIndicator color="white" /> : <Text style={styles.rejectButtonText}>Reject</Text>}
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.approveButton}
-                                onPress={() => handleApprove(item._id)}
-                                disabled={updateRepaymentLoading}
-                            >
-                                <Icon name="check-circle-outline" size={20} color="#FFFFFF" />
-                                {
-                                    updateRepaymentLoading ? <ActivityIndicator color="white" /> : <Text style={styles.approveButtonText}>Approve</Text>
-                                }
-                            </TouchableOpacity>
+                {showActions && (
+                    <View style={styles.actionRow}>
+                        <View style={styles.rejectButton}>
+                            <Icon name="close-circle-outline" size={18} color={colors.danger} />
+                            {updateRepaymentLoading ? <ActivityIndicator size="small" color={colors.danger} /> : <Text style={styles.rejectButtonText}>Reject</Text>}
                         </View>
-                    )}
-                </View>
-            </View>
+                        <View style={styles.approveButton}>
+                            <Icon name="check-circle-outline" size={18} color={colors.white} />
+                            {
+                                updateRepaymentLoading ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={styles.approveButtonText}>Approve</Text>
+                            }
+                        </View>
+                    </View>
+                )}
+            </EviCard>
         );
     };
 
     if (!loanId) {
-        return <Text style={styles.errorText}>Error: Loan ID is missing</Text>;
+        return (
+            <View style={styles.container}>
+                <EmptyState
+                    icon="alert-circle-outline"
+                    title="Loan ID is missing"
+                    message="Go back and open the loan again."
+                    style={styles.emptyState}
+                />
+            </View>
+        );
     }
 
     return (
@@ -189,12 +189,22 @@ const PaymentHistory = () => {
                     }
                 }}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={loading ? <ActivityIndicator size="large" color="#6200EE" /> : null}
+                ListFooterComponent={
+                    loading ? (
+                        <View style={styles.footer}>
+                            <ActivityIndicator size="small" color={colors.brand} />
+                        </View>
+                    ) : null
+                }
                 ListEmptyComponent={
                     !loading && (
-                        <Text style={styles.emptyText}>
-                            {error || 'No payment history available.'}
-                        </Text>
+                        <View style={styles.emptyState}>
+                            <EmptyState
+                                icon="receipt-outline"
+                                title={error ? 'Failed to load payments' : 'No payment history'}
+                                message={error || 'Payments for this loan will appear here.'}
+                            />
+                        </View>
                     )
                 }
             />
@@ -205,79 +215,83 @@ const PaymentHistory = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
-        padding: 10,
+        backgroundColor: colors.surface,
     },
-    errorText: {
-        fontSize: 16,
-        color: 'red',
-        textAlign: 'center',
-        marginTop: 20,
+    emptyState: {
+        marginTop: spacing.xl,
     },
     paymentItem: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 10,
-        elevation: 2,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
     },
-    paymentInfo: {
+    paymentHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10,
+        alignItems: 'center',
+        marginBottom: spacing.sm,
     },
     amount: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#000000',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     date: {
-        fontSize: 14,
-        color: '#757575',
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.md,
     },
-    status: {
-        fontSize: 14,
-        fontWeight: 'bold',
+    divider: {
+        height: 1,
+        backgroundColor: colors.line,
+        marginBottom: spacing.md,
     },
     paymentDetails: {
-        marginBottom: 10,
+        marginBottom: spacing.md,
     },
     detailText: {
-        fontSize: 14,
-        color: '#424242',
-        marginBottom: 2,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.sm,
+    },
+    actionRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
     },
     approveButton: {
-        backgroundColor: '#6200EE',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: colors.brand,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.sm,
+        marginLeft: spacing.md,
     },
     approveButtonText: {
-        color: '#FFFFFF',
-        marginLeft: 5,
-        fontWeight: 'bold',
+        color: colors.white,
+        marginLeft: spacing.sm,
+        fontWeight: type.weights.bold,
+        fontSize: type.sizes.sm,
     },
     rejectButton: {
-        backgroundColor: 'red',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: colors.dangerTint,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.sm,
     },
     rejectButtonText: {
-        color: '#FFFFFF',
-        marginLeft: 5,
-        fontWeight: 'bold',
+        color: colors.danger,
+        marginLeft: spacing.sm,
+        fontWeight: type.weights.bold,
+        fontSize: type.sizes.sm,
     },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 16,
-        color: '#757575',
+    footer: {
+        paddingVertical: 20,
+        alignItems: 'center',
     },
 });
 

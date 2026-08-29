@@ -19,6 +19,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
 import CustomToast, { showToast } from '../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../components/context/HomeContext';
+import { colors, spacing, type, radii, shadow } from '../../../theme/tokens';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import EmptyState from '../../../components/ui/EmptyState';
+import EviButton from '../../../components/ui/EviButton';
 
 const AdminLeadsScreen = ({ navigation }) => {
   const [leads, setLeads] = useState([]);
@@ -227,18 +231,14 @@ const AdminLeadsScreen = ({ navigation }) => {
           </View>
         </View>
         <View style={styles.leadStatusContainer}>
-          <View style={{ alignItems: 'flex-end', marginBottom: 4 }}>
+          <View style={{ alignItems: 'flex-end', marginBottom: spacing.xs }}>
             <Text style={styles.leadDetailLabel}>Status</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end', marginBottom: 4, marginTop: 12 }}>
+          <StatusBadge status={item.status || 'Unknown'} />
+          <View style={{ alignItems: 'flex-end', marginBottom: spacing.xs, marginTop: spacing.md }}>
             <Text style={styles.leadDetailLabel}>Follow Up</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.followupStatus) }]}>
-            <Text style={styles.statusText}>{item.followupStatus || 'N/A'}</Text>
-          </View>
+          <StatusBadge status={item.followupStatus || 'N/A'} />
         </View>
       </View>
 
@@ -294,7 +294,7 @@ const AdminLeadsScreen = ({ navigation }) => {
             setModalVisible(true);
           }}
         >
-          <Icon name="account-arrow-right" size={18} color="#43A047" />
+          <Icon name="account-arrow-right" size={18} color={colors.success} />
           <Text style={styles.actionText}>Assign</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -304,14 +304,14 @@ const AdminLeadsScreen = ({ navigation }) => {
             setStatusModalVisible(true);
           }}
         >
-          <Icon name="clipboard-check" size={18} color="#FF9800" />
+          <Icon name="clipboard-check" size={18} color={colors.warning} />
           <Text style={styles.actionText}>Status</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => handleDeleteLead(item._id)}
         >
-          <Icon name="delete" size={18} color="#F44336" />
+          <Icon name="delete" size={18} color={colors.danger} />
           <Text style={styles.actionText}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -319,21 +319,23 @@ const AdminLeadsScreen = ({ navigation }) => {
   );
 
   const getStatusColor = (status) => {
-    const colors = {
-      Pending: '#FFB300',
-      InProgress: '#8E24AA',
-      Approved: '#4CAF50',
-      Rejected: '#F44336',
-      Converted: '#00BCD4'
+    const colorMap = {
+      Pending: colors.warning,
+      InProgress: colors.info,
+      Approved: colors.success,
+      Rejected: colors.danger,
+      Converted: colors.brand
     };
-    return colors[status] || '#E3F2FD';
+    return colorMap[status] || colors.inkFaint;
   };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Icon name="file-search-outline" size={64} color="#90A4AE" />
-      <Text style={styles.emptyText}>No Leads Available</Text>
-      <Text style={styles.emptySubtext}>Try adjusting filters or create a new lead</Text>
+      <EmptyState
+        icon="file-search-outline"
+        title="No Leads Available"
+        message="Try adjusting filters or create a new lead"
+      />
     </View>
   );
 
@@ -354,7 +356,7 @@ const AdminLeadsScreen = ({ navigation }) => {
               style={[styles.filterButton, !filters.status && styles.filterButtonActive]}
               onPress={() => handleFilterChange('status', '')}
             >
-              <Text style={styles.filterButtonText}>All</Text>
+              <Text style={[styles.filterButtonText, !filters.status && styles.filterButtonTextActive]}>All</Text>
             </TouchableOpacity>
             {statusOptions.map((status) => (
               <TouchableOpacity
@@ -362,7 +364,7 @@ const AdminLeadsScreen = ({ navigation }) => {
                 style={[styles.filterButton, filters.status === status && styles.filterButtonActive]}
                 onPress={() => handleFilterChange('status', status)}
               >
-                <Text style={styles.filterButtonText}>{status}</Text>
+                <Text style={[styles.filterButtonText, filters.status === status && styles.filterButtonTextActive]}>{status}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -373,7 +375,7 @@ const AdminLeadsScreen = ({ navigation }) => {
               style={[styles.filterButton, !filters.followupStatus && styles.filterButtonActive]}
               onPress={() => handleFilterChange('followupStatus', '')}
             >
-              <Text style={styles.filterButtonText}>All</Text>
+              <Text style={[styles.filterButtonText, !filters.followupStatus && styles.filterButtonTextActive]}>All</Text>
             </TouchableOpacity>
             {followupOptions.map((status) => (
               <TouchableOpacity
@@ -381,7 +383,7 @@ const AdminLeadsScreen = ({ navigation }) => {
                 style={[styles.filterButton, filters.followupStatus === status && styles.filterButtonActive]}
                 onPress={() => handleFilterChange('followupStatus', status)}
               >
-                <Text style={styles.filterButtonText}>{status}</Text>
+                <Text style={[styles.filterButtonText, filters.followupStatus === status && styles.filterButtonTextActive]}>{status}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -392,7 +394,7 @@ const AdminLeadsScreen = ({ navigation }) => {
               style={[styles.filterButton, !filters.assignedTo && styles.filterButtonActive]}
               onPress={() => handleFilterChange('assignedTo', '')}
             >
-              <Text style={styles.filterButtonText}>All</Text>
+              <Text style={[styles.filterButtonText, !filters.assignedTo && styles.filterButtonTextActive]}>All</Text>
             </TouchableOpacity>
             {employees?.map((employee) => (
               <TouchableOpacity
@@ -400,21 +402,22 @@ const AdminLeadsScreen = ({ navigation }) => {
                 style={[styles.filterButton, filters.assignedTo === employee._id && styles.filterButtonActive]}
                 onPress={() => handleFilterChange('assignedTo', employee._id)}
               >
-                <Text style={styles.filterButtonText}>{employee.fname} {employee.lname}</Text>
+                <Text style={[styles.filterButtonText, filters.assignedTo === employee._id && styles.filterButtonTextActive]}>{employee.fname} {employee.lname}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          <TouchableOpacity
+          <EviButton
+            title="Close"
+            variant="secondary"
+            size="lg"
             style={styles.closeButton}
             onPress={() => {
               setStatusModalVisible(false);
               setAdminRemarks('');
               setSelectedStatus(null); // Reset selected status
             }}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
+          />
         </View>
         <CustomToast />
       </View>
@@ -434,21 +437,21 @@ const AdminLeadsScreen = ({ navigation }) => {
             onSubmitEditing={fetchLeads}
           />
           <TouchableOpacity style={styles.searchButton} onPress={fetchLeads}>
-            <Icon name="magnify" size={24} color="#FFFFFF" />
+            <Icon name="magnify" size={24} color={colors.white} />
           </TouchableOpacity>
         </View>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={styles.topFilterButton}
           onPress={() => setFilterModalVisible(true)}
         >
-          <Icon name="filter" size={20} color="#FFFFFF" />
-          <Text style={styles.filterButtonText}>Filter</Text>
+          <Icon name="filter" size={20} color={colors.white} />
+          <Text style={styles.topFilterButtonText}>Filter</Text>
         </TouchableOpacity>
       </View>
 
       {loading && leads.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1E88E5" />
+          <ActivityIndicator size="large" color={colors.brand} />
           <Text style={styles.loadingText}>Loading leads...</Text>
         </View>
       ) : (
@@ -462,7 +465,8 @@ const AdminLeadsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#1E88E5"]}
+              colors={[colors.brand]}
+              tintColor={colors.brand}
             />
           }
         />
@@ -478,7 +482,7 @@ const AdminLeadsScreen = ({ navigation }) => {
             onPress={() => handlePageChange(pagination.currentPage - 1)}
             disabled={pagination.currentPage === 1}
           >
-            <Icon name="chevron-left" size={24} color={pagination.currentPage === 1 ? "#BDBDBD" : "#1E88E5"} />
+            <Icon name="chevron-left" size={24} color={pagination.currentPage === 1 ? colors.inkFaint : colors.brand} />
           </TouchableOpacity>
           <Text style={styles.paginationText}>
             Page {pagination.currentPage} of {pagination.totalPages}
@@ -491,7 +495,7 @@ const AdminLeadsScreen = ({ navigation }) => {
             onPress={() => handlePageChange(pagination.currentPage + 1)}
             disabled={pagination.currentPage === pagination.totalPages}
           >
-            <Icon name="chevron-right" size={24} color={pagination.currentPage === pagination.totalPages ? "#BDBDBD" : "#1E88E5"} />
+            <Icon name="chevron-right" size={24} color={pagination.currentPage === pagination.totalPages ? colors.inkFaint : colors.brand} />
           </TouchableOpacity>
         </View>
       )}
@@ -518,12 +522,13 @@ const AdminLeadsScreen = ({ navigation }) => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity
+            <EviButton
+              title="Close"
+              variant="secondary"
+              size="lg"
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+            />
           </View>
           <CustomToast />
         </View>
@@ -559,16 +564,18 @@ const AdminLeadsScreen = ({ navigation }) => {
               onChangeText={setAdminRemarks}
               multiline
               numberOfLines={3}
+              placeholderTextColor={colors.inkFaint}
             />
-            <TouchableOpacity
+            <EviButton
+              title="Close"
+              variant="secondary"
+              size="lg"
               style={styles.closeButton}
               onPress={() => {
                 setStatusModalVisible(false);
                 setAdminRemarks('');
               }}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+            />
           </View>
           <CustomToast />
         </View>
@@ -583,11 +590,11 @@ const AdminLeadsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surface,
   },
   topBar: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    backgroundColor: colors.card,
+    padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 4,
@@ -604,45 +611,48 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 44,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 22,
-    paddingHorizontal: 16,
-    fontSize: 14,
-    marginRight: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.lg,
+    fontSize: type.sizes.sm,
+    marginRight: spacing.md,
+    color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   searchButton: {
-    backgroundColor: '#1E88E5',
+    backgroundColor: colors.brand,
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radii.pill,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  filterButton: {
-    backgroundColor: '#1E88E5',
+  topFilterButton: {
+    backgroundColor: colors.brand,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 22,
-    marginLeft: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    marginLeft: spacing.md,
   },
-  filterButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+  topFilterButtonText: {
+    color: colors.white,
+    fontSize: type.sizes.sm,
+    fontWeight: type.weights.semibold,
+    marginLeft: spacing.xs,
   },
 
   leadsList: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 100,
   },
   leadCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -653,7 +663,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   leadNameContainer: {
     flexDirection: 'row',
@@ -664,124 +674,102 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   avatarPlaceholder: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.brandTint,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   avatarInitial: {
-    color: '#64748B',
-    fontSize: 24,
-    fontWeight: '700',
+    color: colors.brand,
+    fontSize: type.sizes.display,
+    fontWeight: type.weights.bold,
   },
   leadInfo: {
     flex: 1,
   },
   leadName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 4,
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.xs,
   },
   leadContact: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
     marginBottom: 2,
   },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
   leadDetails: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   detailItem: {
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   leadDetailLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 4,
+    fontSize: type.sizes.xs,
+    fontWeight: type.weights.semibold,
+    color: colors.inkSoft,
+    marginBottom: spacing.xs,
   },
   leadDetail: {
-    fontSize: 14,
-    color: '#1E293B',
+    fontSize: type.sizes.sm,
+    color: colors.ink,
   },
   leadActions: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 16,
+    borderTopColor: colors.line,
+    paddingTop: spacing.lg,
     justifyContent: 'space-between',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    padding: spacing.sm,
   },
   actionText: {
     marginLeft: 6,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1E293B',
+    fontSize: type.sizes.sm,
+    fontWeight: type.weights.medium,
+    color: colors.ink,
   },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
+    padding: spacing.lg,
+    backgroundColor: colors.card,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.line,
   },
   paginationButton: {
-    padding: 8,
+    padding: spacing.sm,
   },
   paginationButtonDisabled: {
     opacity: 0.5,
   },
   paginationText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#1E293B',
-    fontWeight: '500',
+    marginHorizontal: spacing.lg,
+    fontSize: type.sizes.sm,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 8,
-    textAlign: 'center',
+    padding: spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
@@ -789,71 +777,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#64748B',
+    marginTop: spacing.md,
+    fontSize: type.sizes.md,
+    color: colors.inkSoft,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(10, 31, 22, 0.6)',
   },
   modalContent: {
     width: '85%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
     elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 20,
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
   employeeList: {
     maxHeight: 320,
   },
   employeeItem: {
-    paddingVertical: 14,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: colors.line,
   },
   employeeName: {
-    fontSize: 16,
-    color: '#1E293B',
-    fontWeight: '500',
+    fontSize: type.sizes.md,
+    color: colors.ink,
+    fontWeight: type.weights.medium,
   },
   closeButton: {
-    backgroundColor: '#1E88E5',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  closeButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
+    marginTop: spacing.xl,
   },
   statusButtonsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   statusButton: {
     width: '48%',
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: radii.md,
+    marginBottom: spacing.md,
   },
   statusButtonSelected: {
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.white,
     elevation: 5, // Add shadow for Android
     shadowColor: '#000', // Add shadow for iOS
     shadowOffset: { width: 0, height: 2 },
@@ -861,31 +840,51 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   statusButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
+    color: colors.white,
+    fontWeight: type.weights.bold,
+    fontSize: type.sizes.sm,
   },
   remarksInput: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 12,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    padding: spacing.md,
     textAlignVertical: 'top',
-    marginBottom: 12,
-    fontSize: 14,
+    marginBottom: spacing.md,
+    fontSize: type.sizes.sm,
+    backgroundColor: colors.card,
+    color: colors.ink,
   },
   filterScroll: {
-    marginBottom: 20,
+    marginBottom: spacing.lg,
+  },
+  filterButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    marginRight: spacing.sm,
+  },
+  filterButtonText: {
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
+    fontWeight: type.weights.medium,
+  },
+  filterButtonTextActive: {
+    color: colors.white,
   },
   filterButtonActive: {
-    backgroundColor: 'green',
+    backgroundColor: colors.brand,
+    borderColor: colors.brand,
   },
 
   filterLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#1E293B',
+    fontSize: type.sizes.md,
+    fontWeight: type.weights.semibold,
+    marginBottom: spacing.md,
+    color: colors.ink,
   },
 });
 

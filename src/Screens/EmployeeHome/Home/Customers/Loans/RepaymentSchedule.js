@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Button, Alert, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { apiCall } from '../../../../components/api/apiUtils';
+import { apiCall } from '../../../../../components/api/apiUtils';
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { colors, spacing, radii, type, shadow } from '../../../../../theme/tokens';
+import EviButton from '../../../../../components/ui/EviButton';
+import EmptyState from '../../../../../components/ui/EmptyState';
 
 const RepaymentSchedule = () => {
     const [repaymentSchedules, setRepaymentSchedules] = useState([]);
@@ -12,7 +15,7 @@ const RepaymentSchedule = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     const [statusFilter, setStatusFilter] = useState('');
     const [dateFrom, setDateFrom] = useState(null);
     const [dateTo, setDateTo] = useState(null);
@@ -84,14 +87,16 @@ const RepaymentSchedule = () => {
     const renderItem = useCallback(({ item }) => (
         <View style={styles.scheduleItem}>
             <View style={styles.scheduleHeader}>
-                <Icon name="calendar-month-outline" size={24} color="#6200EE" />
+                <View style={styles.dueDateChip}>
+                    <Icon name="calendar-month-outline" size={20} color={colors.brand} />
+                </View>
                 <Text style={styles.dueDate}>
                     {item.dueDate ? new Date(item.dueDate).toLocaleDateString() : 'N/A'}
                 </Text>
             </View>
             <View style={styles.scheduleContent}>
                 <View style={styles.scheduleRow}>
-                    <Icon name="currency-inr" size={20} color="#018786" />
+                    <Icon name="currency-inr" size={20} color={colors.success} />
                     <Text style={styles.amount}>
                         {item.amount || 'N/A'}
                     </Text>
@@ -103,7 +108,7 @@ const RepaymentSchedule = () => {
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
-                    <Icon name="clock-alert-outline" size={20} color={item.penaltyApplied ? '#B00020' : '#757575'} />
+                    <Icon name="clock-alert-outline" size={20} color={item.penaltyApplied ? colors.danger : colors.inkSoft} />
                     <Text style={styles.penaltyApplied}>
                         Penalty: {item.penaltyApplied ? `Rs.${item.penalty.amount || '0'}` : 'N/A'}
                     </Text>
@@ -115,13 +120,13 @@ const RepaymentSchedule = () => {
     const renderDatePicker = (showPicker, setShowPicker, currentDate, setDate, label) => (
         <View style={styles.datePickerContainer}>
             <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerButton}>
-                <Icon name="calendar-search" size={24} color="#6200EE" />
-                <View style={[styles.datePickerLabel, { color: currentDate ? '#6200EE' : '#9CA3AF', flexDirection: 'row', }]}>
-                    <Text style={styles.datePickerLabel}>
+                <Icon name="calendar-search" size={22} color={colors.brand} />
+                <View style={styles.datePickerLabelRow}>
+                    <Text style={[styles.datePickerLabel, currentDate && styles.datePickerLabelActive]}>
                         {label}: {currentDate ? currentDate.toDateString() : 'Select Date'}
                     </Text>
                     <TouchableOpacity onPress={handleClearDateRange}>
-                        <Icon name="close" size={24} color="#6200EE" />
+                        <Icon name="close" size={20} color={colors.inkSoft} />
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
@@ -151,10 +156,12 @@ const RepaymentSchedule = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.totalRepaymentSchedules}> Total: {totalEntries}</Text>
-                <Text style={styles.currentlyShowing}>Currently Showing: {repaymentSchedules.length}</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.totalRepaymentSchedules}> Total: {totalEntries}</Text>
+                    <Text style={styles.currentlyShowing}>Currently Showing: {repaymentSchedules.length}</Text>
+                </View>
                 <TouchableOpacity onPress={() => setShowFilterModal(true)} style={styles.filterButton}>
-                    <Icon name="filter-check-outline" size={24} color="#6200EE" />
+                    <Icon name="filter-check-outline" size={24} color={colors.brand} />
                 </TouchableOpacity>
             </View>
             <FlatList
@@ -165,17 +172,29 @@ const RepaymentSchedule = () => {
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={
                     loading ? (
-                        <ActivityIndicator size="large" color="#6200EE" />
+                        <ActivityIndicator size="large" color={colors.brand} style={{ marginVertical: spacing.lg }} />
                     ) : (
                         !loading && page < totalPages && (
-                            <TouchableOpacity onPress={loadMore} style={styles.loadMoreButton}>
-                                <Text style={styles.loadMoreText}>Load More</Text>
-                            </TouchableOpacity>
+                            <EviButton
+                                title="Load More"
+                                variant="secondary"
+                                size="md"
+                                fullWidth
+                                style={{ marginTop: spacing.lg }}
+                                onPress={loadMore}
+                            />
                         )
                     )
                 }
-                ListEmptyComponent={<Text style={styles.emptyText}>No repayment schedules available.</Text>}
-                contentContainerStyle={repaymentSchedules.length === 0 ? styles.emptyContainer : {}}
+                ListEmptyComponent={
+                    <EmptyState
+                        icon="calendar-search-outline"
+                        title="No Schedules Found"
+                        message="No repayment schedules available."
+                        style={{ marginTop: spacing.xxl }}
+                    />
+                }
+                contentContainerStyle={repaymentSchedules.length === 0 ? styles.emptyContainer : styles.listContent}
             />
             <Modal
                 visible={showFilterModal}
@@ -185,10 +204,11 @@ const RepaymentSchedule = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Filter Schedules</Text>
                         <TextInput
                             style={styles.searchInput}
                             placeholder="Search..."
-                            placeholderTextColor="#757575"
+                            placeholderTextColor={colors.inkFaint}
                             value={searchTerm}
                             onChangeText={setSearchTerm}
                         />
@@ -197,7 +217,7 @@ const RepaymentSchedule = () => {
                                 selectedValue={statusFilter}
                                 onValueChange={(itemValue) => setStatusFilter(itemValue)}
                                 style={styles.picker}
-                                dropdownIconColor="#6200EE"
+                                dropdownIconColor={colors.brand}
                             >
                                 <Picker.Item label="All Statuses" value="" />
                                 <Picker.Item label="Pending" value="pending" />
@@ -207,11 +227,19 @@ const RepaymentSchedule = () => {
                         </View>
                         {renderDatePicker(showFromDatePicker, setShowFromDatePicker, dateFrom, setDateFrom, 'From Date')}
                         {renderDatePicker(showToDatePicker, setShowToDatePicker, dateTo, setDateTo, 'To Date')}
-                        <TouchableOpacity onPress={applyFilters} style={styles.applyFiltersButton}>
-                            <Text style={styles.applyFiltersText}>Apply Filters</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setShowFilterModal(false)} style={styles.closeButton}>
-                            <Icon name="close-outline" size={24} color="#6200EE" />
+                        <EviButton
+                            title="Apply Filters"
+                            variant="primary"
+                            size="md"
+                            fullWidth
+                            style={{ marginTop: spacing.sm }}
+                            onPress={applyFilters}
+                        />
+                        <TouchableOpacity
+                            style={styles.closeChip}
+                            onPress={() => setShowFilterModal(false)}
+                        >
+                            <Icon name="close" size={20} color={colors.ink} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -223,165 +251,183 @@ const RepaymentSchedule = () => {
 const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
         case 'paid':
-            return '#018786';
+            return colors.success;
         case 'pending':
-            return '#FFA000';
+            return colors.warning;
         case 'overdue':
-            return '#B00020';
+            return colors.danger;
         default:
-            return '#6200EE';
+            return colors.brand;
     }
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#F5F5F5',
+        padding: spacing.lg,
+        backgroundColor: colors.surface,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginBottom: spacing.md,
     },
     totalRepaymentSchedules: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#6200EE',
-
+        fontSize: type.sizes.sm,
+        fontWeight: type.weights.bold,
+        color: colors.brand,
     },
     currentlyShowing: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#6200EE',
-        alignSelf: 'center',
-
+        fontSize: type.sizes.sm,
+        fontWeight: type.weights.bold,
+        color: colors.inkSoft,
+        marginTop: 2,
     },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(10, 31, 22, 0.55)',
     },
     modalContent: {
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 10,
+        backgroundColor: colors.card,
+        padding: spacing.xl,
+        borderRadius: radii.xl,
         width: '90%',
         maxHeight: '80%',
+        overflow: 'hidden',
+        ...shadow.card,
+    },
+    modalTitle: {
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.lg,
     },
     searchInput: {
-        height: 40,
-        borderColor: '#6200EE',
+        height: 48,
+        borderColor: colors.line,
         borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 15,
-        paddingHorizontal: 10,
-        color: '#000000',
+        borderRadius: radii.sm,
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.md,
+        color: colors.ink,
+        fontSize: type.sizes.md,
+        backgroundColor: colors.surface,
     },
     pickerContainer: {
         borderWidth: 1,
-        borderColor: '#6200EE',
-        borderRadius: 5,
-        marginBottom: 15,
+        borderColor: colors.line,
+        borderRadius: radii.sm,
+        marginBottom: spacing.md,
         overflow: 'hidden',
+        backgroundColor: colors.surface,
     },
     picker: {
         height: 50,
-
-        color: '#000000',
+        color: colors.ink,
+        fontSize: type.sizes.md,
     },
     datePickerContainer: {
-        marginBottom: 15,
+        marginBottom: spacing.md,
     },
     datePickerButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 5,
+        padding: spacing.md,
+        backgroundColor: colors.surface,
+        borderRadius: radii.sm,
         borderWidth: 1,
-        borderColor: '#6200EE',
+        borderColor: colors.line,
+    },
+    datePickerLabelRow: {
+        marginLeft: spacing.md,
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     datePickerLabel: {
-        marginLeft: 10,
-        color: '#000000',
+        color: colors.inkSoft,
+        fontSize: type.sizes.md,
     },
-    applyFiltersButton: {
-        backgroundColor: '#6200EE',
-        paddingVertical: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    applyFiltersText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
+    datePickerLabelActive: {
+        color: colors.brand,
+        fontWeight: type.weights.medium,
     },
     filterButton: {
         alignSelf: 'flex-end',
-        marginBottom: 10,
     },
     scheduleItem: {
-        backgroundColor: '#FFFFFF',
-        padding: 15,
-        borderRadius: 5,
-        marginBottom: 10,
+        backgroundColor: colors.card,
+        padding: spacing.lg,
+        borderRadius: radii.md,
+        marginBottom: spacing.md,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: colors.line,
     },
     scheduleHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: spacing.md,
+    },
+    dueDateChip: {
+        width: 36,
+        height: 36,
+        borderRadius: radii.md,
+        backgroundColor: colors.brandTint,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     dueDate: {
-        marginLeft: 10,
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#000000',
+        marginLeft: spacing.md,
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     scheduleContent: {
-        marginTop: 5,
+        marginTop: spacing.xs,
     },
     scheduleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 5,
+        marginBottom: spacing.sm,
     },
     amount: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#000000',
+        marginLeft: spacing.md,
+        fontSize: type.sizes.lg,
+        color: colors.ink,
+        fontWeight: type.weights.medium,
     },
     status: {
-        marginLeft: 10,
-        fontSize: 16,
+        marginLeft: spacing.md,
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.medium,
     },
     penaltyApplied: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#757575',
+        marginLeft: spacing.md,
+        fontSize: type.sizes.lg,
+        color: colors.inkSoft,
     },
-    loadMoreButton: {
-        paddingVertical: 10,
+    closeChip: {
+        position: 'absolute',
+        top: spacing.md,
+        right: spacing.md,
+        width: 32,
+        height: 32,
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    loadMoreText: {
-        color: '#6200EE',
+    listContent: {
+        paddingBottom: spacing.xl,
     },
     emptyContainer: {
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#757575',
     },
 });
 

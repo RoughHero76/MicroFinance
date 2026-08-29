@@ -13,30 +13,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
 import { showToast } from "../../../components/toast/CustomToast";
+import CustomToast from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
 import { useHomeContext } from "../../../components/context/HomeContext";
+import { colors, spacing, radii, type, shadow } from "../../../theme/tokens";
+import StatusBadge from "../../../components/ui/StatusBadge";
+import EmptyState from "../../../components/ui/EmptyState";
 
 const LeadItem = ({ item, onPress }) => {
   const [imageSource, setImageSource] = useState(
     item.pictureUrl ? { uri: item.pictureUrl } : ProfilePicturePlaceHolder
   );
 
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "#FFC107";
-      case "InProgress":
-        return "#2196F3";
-      case "Approved":
-        return "#4CAF50";
-      case "Rejected":
-        return "#F44336";
-      default:
-        return "#9E9E9E";
-    }
-  };
 
   return (
     <TouchableOpacity style={styles.leadCard} onPress={() => onPress(item._id)}>
@@ -47,8 +36,8 @@ const LeadItem = ({ item, onPress }) => {
         <Text style={styles.leadDetail}>
           Loan: ₹{item.loanAmount} ({item.loanType})
         </Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status}</Text>
+        <View style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}>
+          <StatusBadge status={item.status} />
         </View>
       </View>
     </TouchableOpacity>
@@ -127,7 +116,7 @@ const LeadListScreen = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color={colors.brand} />
         </View>
       </SafeAreaView>
     );
@@ -149,11 +138,12 @@ const LeadListScreen = () => {
       )}
 
       <View style={styles.searchContainer}>
-        <Icon name="magnify" size={20} color="#666" style={styles.searchIcon} />
+        <Icon name="magnify" size={20} color={colors.inkFaint} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search leads..."
           value={searchQuery}
+          placeholderTextColor={colors.inkFaint}
           onChangeText={handleSearch}
         />
       </View>
@@ -163,7 +153,12 @@ const LeadListScreen = () => {
         renderItem={({ item }) => <LeadItem item={item} onPress={handleLeadPress} />}
         keyExtractor={(item) => item._id}
         ListEmptyComponent={
-          <Text style={styles.noLeadsText}>No leads found</Text>
+          <EmptyState
+            icon="file-search-outline"
+            title="No Leads Found"
+            message="There are no leads to show yet."
+            style={{ marginTop: spacing.xxl }}
+          />
         }
         contentContainerStyle={styles.listContainer}
       />
@@ -189,6 +184,7 @@ const LeadListScreen = () => {
           </TouchableOpacity>
         </View>
       )}
+      <CustomToast />
     </SafeAreaView>
   );
 };
@@ -203,7 +199,7 @@ const StatItem = ({ label, value }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.surface,
   },
   loadingContainer: {
     flex: 1,
@@ -212,17 +208,17 @@ const styles = StyleSheet.create({
   },
 
   statsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
-    elevation: 3,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    margin: spacing.sm,
+    ...shadow.card,
   },
   statsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
+    fontSize: type.sizes.xl,
+    fontWeight: type.weights.bold,
+    marginBottom: spacing.md,
+    color: colors.ink,
   },
   statsRow: {
     flexDirection: "row",
@@ -232,108 +228,90 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: "center",
     width: "30%",
-    marginBottom: 10,
+    marginBottom: spacing.md,
   },
   statLabel: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: type.sizes.md,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    margin: 10,
-    paddingHorizontal: 10,
-    elevation: 3,
+    backgroundColor: colors.card,
+    borderRadius: radii.md,
+    margin: spacing.sm,
+    paddingHorizontal: spacing.md,
+    ...shadow.card,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: spacing.md,
   },
   searchInput: {
     flex: 1,
     height: 40,
-    fontSize: 16,
-    color: "#333",
+    fontSize: type.sizes.md,
+    color: colors.ink,
   },
   listContainer: {
-    paddingBottom: 20,
+    paddingBottom: spacing.xl,
   },
   leadCard: {
     flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 10,
-    marginVertical: 5,
-    elevation: 3,
+    backgroundColor: colors.card,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    marginHorizontal: spacing.sm,
+    marginVertical: spacing.xs,
+    ...shadow.card,
   },
   leadImage: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginRight: 15,
+    marginRight: spacing.lg,
   },
   leadInfo: {
     flex: 1,
   },
   leadName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
+    fontSize: type.sizes.lg,
+    fontWeight: type.weights.bold,
+    color: colors.ink,
+    marginBottom: spacing.sm,
   },
   leadDetail: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 3,
-  },
-  statusBadge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    marginTop: 5,
-  },
-  statusText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
-  noLeadsText: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 20,
+    fontSize: type.sizes.sm,
+    color: colors.inkSoft,
+    marginBottom: spacing.xs,
   },
   pagination: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 15,
-    backgroundColor: "#fff",
+    padding: spacing.lg,
+    backgroundColor: colors.card,
   },
   pageButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    backgroundColor: colors.brand,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.sm,
   },
   disabledButton: {
-    backgroundColor: "#ccc",
+    backgroundColor: colors.line,
   },
   pageButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: colors.white,
+    fontWeight: type.weights.bold,
   },
   pageInfo: {
-    fontSize: 16,
-    color: "#333",
+    fontSize: type.sizes.md,
+    color: colors.ink,
   },
 });
 

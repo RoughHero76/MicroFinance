@@ -13,6 +13,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from "../../../components/api/apiUtils";
 import { CustomToast, showToast } from "../../../components/toast/CustomToast";
 import LinearGradient from 'react-native-linear-gradient';
+import { colors, spacing, type, radii, shadow } from "../../../theme/tokens";
+import ErrorState from "../../../components/ui/ErrorState";
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -113,7 +115,7 @@ const NpaReportScreen = ({ navigation }) => {
                             {displayValue}
                         </Text>
                         {trend !== undefined && trend !== null && (
-                            <View style={[styles.trendBadge, { backgroundColor: trend > 0 ? '#FF5252' : '#4CAF50' }]}>
+                            <View style={[styles.trendBadge, { backgroundColor: trend > 0 ? colors.danger : colors.success }]}>
                                 <Icon
                                     name={trend > 0 ? 'trending-up' : 'trending-down'}
                                     size={16}
@@ -145,26 +147,26 @@ const NpaReportScreen = ({ navigation }) => {
                         title="Total Loans"
                         value={totalLoans}
                         subtitle="Active Loans"
-                        color="#2196F3"
+                        color={colors.info}
                     />
                     <MetricCard
                         title="NPA Percentage"
                         value={npaPercentage}
                         subtitle={`${getSafeValue(data, 'overall.totalNPA', 0)} NPAs`}
-                        color="#FF5252"
+                        color={colors.danger}
                         isPercentage
                     />
                     <MetricCard
                         title="Total Overdue"
                         value={`₹${(totalOverdue / 1000).toFixed(1)}K`}
                         subtitle="Outstanding Amount"
-                        color="#FFC107"
+                        color={colors.warning}
                     />
                     <MetricCard
                         title="Average Overdue"
                         value={`₹${(averageOverdue / 1000).toFixed(1)}K`}
                         subtitle="Per Loan"
-                        color="#4CAF50"
+                        color={colors.success}
                     />
                 </View>
             </View>
@@ -187,7 +189,7 @@ const NpaReportScreen = ({ navigation }) => {
 
                 <View style={styles.npaCardContainer}>
                     <TouchableOpacity style={styles.npaCardWrapper} onPress={handleLOanStatusRefresh}>
-                        <Icon name="refresh" size={24} color="black" />
+                        <Icon name="refresh" size={22} color={colors.ink} />
                     </TouchableOpacity>
                 </View>
 
@@ -196,7 +198,7 @@ const NpaReportScreen = ({ navigation }) => {
                     onPress={() => navigation.navigate('LoanStatusDetails', { type: 'npa' })}
                 >
                     <LinearGradient
-                        colors={['#F44336' + '60', '#EF5350' + '05']}
+                        colors={[colors.danger + '60', colors.danger + '05']}
                         style={styles.npaCard}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
@@ -206,21 +208,21 @@ const NpaReportScreen = ({ navigation }) => {
                         </View>
                         <View style={styles.npaHeaderRow}>
                             <Text style={styles.npaTitle}>NPA Accounts</Text>
-                            <View style={[styles.npaBadge, { backgroundColor: '#F44336' }]}>
+                            <View style={[styles.npaBadge, { backgroundColor: colors.danger }]}>
                                 <Icon name="alert-decagram" size={14} color="white" />
                                 <Text style={styles.npaBadgeText}>Critical</Text>
                             </View>
                         </View>
                         <View style={styles.npaContent}>
                             <View style={styles.npaRow}>
-                                <Icon name="percent" size={16} color="#F44336" />
-                                <Text style={[styles.npaPercentage, { color: '#F44336' }]}>
+                                <Icon name="percent" size={16} color={colors.danger} />
+                                <Text style={[styles.npaPercentage, { color: colors.danger }]}>
                                     {npaPercentage}%
                                 </Text>
                             </View>
                             <View style={styles.npaRow}>
-                                <Icon name="currency-inr" size={16} color="#F44336" />
-                                <Text style={[styles.npaOverdue, { color: '#F44336' }]}>
+                                <Icon name="currency-inr" size={16} color={colors.danger} />
+                                <Text style={[styles.npaOverdue, { color: colors.danger }]}>
                                     {(totalOverdue / 1000).toFixed(1)}K
                                 </Text>
                             </View>
@@ -236,38 +238,38 @@ const NpaReportScreen = ({ navigation }) => {
             case 0:
                 return {
                     icon: 'alert-circle-outline',
-                    color: '#FFC107',
+                    color: colors.warning,
                     label: 'Warning',
-                    gradient: ['#FFC107', '#FFE082']
+                    gradient: [colors.warning, colors.warningTint]
                 };
             case 1:
                 return {
                     icon: 'alert-octagon-outline',
-                    color: '#FF9800',
+                    color: colors.orange,
                     label: 'Alert',
-                    gradient: ['#FF9800', '#FFB74D']
+                    gradient: [colors.orange, colors.orangeTint]
                 };
             case 2:
                 return {
                     icon: 'alert-octagram',
-                    color: '#FF5252',
+                    color: colors.danger,
                     label: 'Danger',
-                    gradient: ['#FF5252', '#FF8A80']
+                    gradient: [colors.danger, colors.dangerTint]
                 };
 
             case null: // NPA
                 return {
                     icon: 'alert-decagram',
-                    color: '#F44336',
+                    color: colors.danger,
                     label: 'Critical NPA',
-                    gradient: ['#F44336', '#EF5350']
+                    gradient: [colors.danger, colors.orange]
                 }
             default:
                 return {
                     icon: 'alert-circle',
-                    color: '#757575',
+                    color: colors.inkFaint,
                     label: 'Unknown',
-                    gradient: ['#757575', '#BDBDBD']
+                    gradient: [colors.inkFaint, colors.line]
                 };
         }
     };
@@ -359,7 +361,7 @@ const NpaReportScreen = ({ navigation }) => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2196F3" />
+                <ActivityIndicator size="large" color={colors.brand} />
                 <Text style={styles.loadingText}>Loading report...</Text>
             </View>
         );
@@ -368,15 +370,11 @@ const NpaReportScreen = ({ navigation }) => {
     if (error) {
         return (
             <View style={styles.errorContainer}>
-                <Icon name="alert-circle-outline" size={48} color="#FF5252" />
-                <Text style={styles.errorTitle}>Error Loading Data</Text>
-                <Text style={styles.errorText}>{error}</Text>
-                <TouchableOpacity
-                    style={styles.retryButton}
-                    onPress={fetchData}
-                >
-                    <Text style={styles.retryButtonText}>Retry</Text>
-                </TouchableOpacity>
+                <ErrorState
+                    message={error}
+                    retryLabel="Retry"
+                    onRetry={fetchData}
+                />
             </View>
         );
     }
@@ -385,7 +383,7 @@ const NpaReportScreen = ({ navigation }) => {
         <ScrollView
             style={styles.container}
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={fetchData} />
+                <RefreshControl refreshing={refreshing} onRefresh={fetchData} colors={[colors.brand]} tintColor={colors.brand} />
             }
         >
             {data && (
@@ -403,36 +401,32 @@ const NpaReportScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F5F7FA',
+        backgroundColor: colors.surface,
     },
     loadingText: {
-        marginTop: 12,
-        color: '#2196F3',
-        fontSize: 16,
+        marginTop: spacing.md,
+        color: colors.inkSoft,
+        fontSize: type.sizes.md,
     },
     sectionContainer: {
-        padding: 20,
-        backgroundColor: 'white',
-        marginBottom: 12,
-        borderRadius: 16,
-        margin: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        padding: spacing.xl,
+        backgroundColor: colors.card,
+        borderRadius: radii.lg,
+        margin: spacing.md,
+        marginBottom: spacing.md,
+        ...shadow.card,
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#263238',
-        marginBottom: 16,
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.lg,
     },
     metricsGrid: {
         flexDirection: 'row',
@@ -441,19 +435,19 @@ const styles = StyleSheet.create({
     },
     metricCard: {
         width: '48%',
-        borderRadius: 16,
-        marginBottom: 16,
+        borderRadius: radii.lg,
+        marginBottom: spacing.lg,
         overflow: 'hidden',
     },
     metricContent: {
-        padding: 16,
+        padding: spacing.lg,
         borderLeftWidth: 4,
     },
     metricTitle: {
-        fontSize: 14,
-        color: '#37474F',
-        marginBottom: 8,
-        fontWeight: '600',
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
+        marginBottom: spacing.sm,
+        fontWeight: type.weights.semibold,
     },
     metricValueContainer: {
         flexDirection: 'row',
@@ -461,199 +455,177 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     metricValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: type.sizes.display,
+        fontWeight: type.weights.bold,
     },
     metricSubtitle: {
-        fontSize: 12,
-        color: '#78909C',
-        marginTop: 4,
+        fontSize: type.sizes.xs,
+        color: colors.inkSoft,
+        marginTop: spacing.xs,
     },
     trendBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.md,
     },
     trendText: {
         color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginLeft: 4,
+        fontSize: type.sizes.xs,
+        fontWeight: type.weights.bold,
+        marginLeft: spacing.xs,
     },
     npaCardContainer: {
         position: 'absolute',
-        top: 10,
-        right: 10,
+        top: spacing.sm,
+        right: spacing.sm,
         justifyContent: 'center',
         alignItems: 'center',
     },
     npaCardWrapper: {
         width: '100%',
-        marginBottom: 16,
+        marginBottom: spacing.lg,
     },
     npaCard: {
-        borderRadius: 16,
-        padding: 16,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
         position: 'relative',
     },
     npaHeaderRow: {
         flexDirection: 'column',
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
     npaBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        marginTop: 8,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.pill,
+        marginTop: spacing.sm,
         alignSelf: 'flex-start',
     },
     npaBadgeText: {
         color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginLeft: 4,
+        fontSize: type.sizes.xs,
+        fontWeight: type.weights.bold,
+        marginLeft: spacing.xs,
     },
     npaContent: {
-        marginTop: 8,
+        marginTop: spacing.sm,
     },
     npaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.md,
     },
     npaTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#263238',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     npaPercentage: {
-        fontSize: 16,
-        marginLeft: 8,
-        fontWeight: '600',
+        fontSize: type.sizes.lg,
+        marginLeft: spacing.md,
+        fontWeight: type.weights.semibold,
     },
     npaOverdue: {
-        fontSize: 16,
-        marginLeft: 8,
-        fontWeight: '600',
+        fontSize: type.sizes.lg,
+        marginLeft: spacing.md,
+        fontWeight: type.weights.semibold,
     },
     smaDetailsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginTop: 16,
+        marginTop: spacing.lg,
     },
     smaCardWrapper: {
         width: '31%',
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
     smaCard: {
-        borderRadius: 16,
-        padding: 12,
+        borderRadius: radii.lg,
+        padding: spacing.md,
         height: 160,
         position: 'relative',
     },
     loanNumberBadge: {
         position: 'absolute',
-        top: -10,
-        right: -10,
-        backgroundColor: '#2196F3',
-        borderRadius: 12,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        top: -spacing.sm,
+        right: -spacing.sm,
+        backgroundColor: colors.brand,
+        borderRadius: radii.md,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
         elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        ...shadow.card,
     },
     loanNumberText: {
         color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
+        fontSize: type.sizes.xs,
+        fontWeight: type.weights.bold,
     },
     smaHeaderRow: {
         flexDirection: 'column',
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
     smaBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        marginTop: 8,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.pill,
+        marginTop: spacing.sm,
         alignSelf: 'flex-start',
     },
     smaBadgeText: {
         color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginLeft: 4,
+        fontSize: type.sizes.xs,
+        fontWeight: type.weights.bold,
+        marginLeft: spacing.xs,
     },
     smaContent: {
-        marginTop: 8,
+        marginTop: spacing.sm,
     },
     smaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.md,
     },
     smaTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#263238',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     smaPercentage: {
-        fontSize: 14,
-        marginLeft: 8,
-        fontWeight: '600',
+        fontSize: type.sizes.md,
+        marginLeft: spacing.md,
+        fontWeight: type.weights.semibold,
     },
     smaOverdue: {
-        fontSize: 14,
-        marginLeft: 8,
-        fontWeight: '600',
+        fontSize: type.sizes.md,
+        marginLeft: spacing.md,
+        fontWeight: type.weights.semibold,
     },
     totalLoansContext: {
-        fontSize: 14,
-        color: '#78909C',
-        marginBottom: 16,
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
+        marginBottom: spacing.lg,
         fontStyle: 'italic',
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#F5F7FA',
-    },
-    errorTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FF5252',
-        marginTop: 16,
-        marginBottom: 8,
+        padding: spacing.xl,
+        backgroundColor: colors.surface,
     },
     errorText: {
-        fontSize: 14,
-        color: '#78909C',
+        fontSize: type.sizes.md,
+        color: colors.inkSoft,
         textAlign: 'center',
-        marginBottom: 16,
-    },
-    retryButton: {
-        backgroundColor: '#2196F3',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
-        elevation: 2,
-    },
-    retryButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        marginBottom: spacing.lg,
     },
 });
 

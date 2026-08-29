@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { apiCall } from "../../../components/api/apiUtils";
-import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { showToast, CustomToast } from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
+import { colors, spacing, type, radii } from "../../../theme/tokens";
+import EviTextField from "../../../components/ui/EviTextField";
+import EviButton from "../../../components/ui/EviButton";
+import EviCard from "../../../components/ui/EviCard";
 
 const CustomerRegistration = () => {
 
@@ -34,7 +37,6 @@ const CustomerRegistration = () => {
         }));
     };
 
-
     const handleSubmit = async () => {
         setLoading(true);
         try {
@@ -54,71 +56,112 @@ const CustomerRegistration = () => {
         }
     };
 
-    const renderInput = (name, placeholder, icon, keyboardType = "default") => (
-        <View style={styles.inputContainer}>
-            <Icon name={icon} size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-                style={styles.input}
-                placeholder={placeholder}
-                placeholderTextColor="#9CA3AF"
-                value={formData[name]}
-                onChangeText={(text) => handleInputChange(name, text)}
-                keyboardType={keyboardType}
-            />
-        </View>
-    );
+    const fieldLeft = (icon) => <Icon name={icon} size={20} color={colors.inkFaint} style={styles.iconPad} />;
 
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.container}
         >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
                 <View style={styles.header}>
-                    <Icon name="account-plus" size={40} color="#4F46E5" />
+                    <View style={styles.headerIconRing}>
+                        <Icon name="account-plus" size={26} color={colors.brand} />
+                    </View>
                     <Text style={styles.headerText}>Customer Registration</Text>
+                    <Text style={styles.headerSub}>Create a new customer profile</Text>
                 </View>
 
-                {renderInput("fname", "First Name", "account")}
-                {renderInput("lname", "Last Name", "account")}
+                <EviCard elevated={false} style={styles.formCard}>
+                    <EviTextField
+                        label="First Name"
+                        value={formData.fname}
+                        onChangeText={(text) => handleInputChange("fname", text)}
+                        left={fieldLeft("account")}
+                    />
+                    <EviTextField
+                        label="Last Name"
+                        value={formData.lname}
+                        onChangeText={(text) => handleInputChange("lname", text)}
+                        left={fieldLeft("account")}
+                    />
 
-                <View style={styles.inputContainer}>
-                    <Icon name="gender-male-female" size={20} color="#6B7280" style={styles.inputIcon} />
-                    <Picker
-                        selectedValue={formData.gender}
-                        style={styles.picker}
-                        onValueChange={(itemValue) => handleInputChange("gender", itemValue)}
-                    >
-                        <Picker.Item label="Select Gender" value="" />
-                        <Picker.Item label="Male" value="Male" />
-                        <Picker.Item label="Female" value="Female" />
-                        <Picker.Item label="Other" value="Other" />
-                    </Picker>
-                </View>
+                    <View style={styles.pickerWrap}>
+                        <Icon name="gender-male-female" size={20} color={colors.inkFaint} style={styles.iconPad} />
+                        <Picker
+                            selectedValue={formData.gender}
+                            style={styles.picker}
+                            onValueChange={(itemValue) => handleInputChange("gender", itemValue)}
+                        >
+                            <Picker.Item label="Select Gender" value="" />
+                            <Picker.Item label="Male" value="Male" />
+                            <Picker.Item label="Female" value="Female" />
+                            <Picker.Item label="Other" value="Other" />
+                        </Picker>
+                    </View>
 
-                {renderInput("email", "Email", "email", "email-address")}
-                {renderInput("userName", "Username", "account-circle")}
-                {renderInput("phoneNumber", "Phone Number", "phone", "phone-pad")}
-                {renderInput("address", "Address", "home")}
-                {renderInput("city", "City", "city")}
-                {renderInput("state", "State", "map-marker")}
-                {renderInput("country", "Country", "flag")}
-                {renderInput("pincode", "Pincode", "postage-stamp", "numeric")}
+                    <EviTextField
+                        label="Email"
+                        value={formData.email}
+                        onChangeText={(text) => handleInputChange("email", text)}
+                        keyboardType="email-address"
+                        left={fieldLeft("email")}
+                    />
+                    <EviTextField
+                        label="Username"
+                        value={formData.userName}
+                        onChangeText={(text) => handleInputChange("userName", text)}
+                        left={fieldLeft("account-circle")}
+                    />
+                    <EviTextField
+                        label="Phone Number"
+                        value={formData.phoneNumber}
+                        onChangeText={(text) => handleInputChange("phoneNumber", text)}
+                        keyboardType="phone-pad"
+                        left={fieldLeft("phone")}
+                    />
+                    <EviTextField
+                        label="Address"
+                        value={formData.address}
+                        onChangeText={(text) => handleInputChange("address", text)}
+                        left={fieldLeft("home")}
+                    />
+                    <EviTextField
+                        label="City"
+                        value={formData.city}
+                        onChangeText={(text) => handleInputChange("city", text)}
+                        left={fieldLeft("city")}
+                    />
+                    <EviTextField
+                        label="State"
+                        value={formData.state}
+                        onChangeText={(text) => handleInputChange("state", text)}
+                        left={fieldLeft("map-marker")}
+                    />
+                    <EviTextField
+                        label="Country"
+                        value={formData.country}
+                        onChangeText={(text) => handleInputChange("country", text)}
+                        left={fieldLeft("flag")}
+                    />
+                    <EviTextField
+                        label="Pincode"
+                        value={formData.pincode}
+                        onChangeText={(text) => handleInputChange("pincode", text)}
+                        keyboardType="numeric"
+                        left={fieldLeft("postage-stamp")}
+                    />
+                </EviCard>
 
-                <TouchableOpacity
-                    style={styles.submitButton}
+                <EviButton
+                    title="Register Customer"
                     onPress={handleSubmit}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                        <>
-                            <Icon name="check-circle" size={20} color="#FFFFFF" style={styles.submitIcon} />
-                            <Text style={styles.submitButtonText}>Register Customer</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+                    loading={loading}
+                    icon="check-circle"
+                    variant="primary"
+                    size="lg"
+                    style={styles.submitButton}
+                />
             </ScrollView>
             <CustomToast />
         </KeyboardAvoidingView>
@@ -128,69 +171,56 @@ const CustomerRegistration = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F3F4F6",
+        backgroundColor: colors.surface,
     },
     scrollContainer: {
-        padding: 20,
+        padding: spacing.xl,
     },
     header: {
         alignItems: "center",
-        marginBottom: 30,
+        marginBottom: spacing.xl,
+    },
+    headerIconRing: {
+        width: 56,
+        height: 56,
+        borderRadius: radii.xl,
+        backgroundColor: colors.brandTint,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.md,
     },
     headerText: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#1F2937",
-        marginTop: 10,
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
-    inputContainer: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        marginBottom: 16,
+    headerSub: {
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginTop: spacing.xs,
+    },
+    formCard: {
+        padding: spacing.md,
+    },
+    pickerWrap: {
         flexDirection: "row",
         alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        backgroundColor: colors.card,
+        borderRadius: radii.md,
+        borderWidth: 1,
+        borderColor: colors.line,
+        marginBottom: spacing.md,
     },
-    inputIcon: {
-        padding: 10,
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 12,
-        paddingRight: 10,
-        fontSize: 16,
-        color: "#1F2937",
+    iconPad: {
+        margin: spacing.md,
     },
     picker: {
         flex: 1,
-        height: 50,
-        color: "#1F2937",
+        height: 56,
+        color: colors.ink,
     },
     submitButton: {
-        backgroundColor: "#4F46E5",
-        borderRadius: 12,
-        paddingVertical: 14,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        marginTop: 20,
-        shadowColor: "#4F46E5",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    submitIcon: {
-        marginRight: 8,
-    },
-    submitButtonText: {
-        color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "bold",
+        marginTop: spacing.lg,
     },
 });
 

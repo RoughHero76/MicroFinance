@@ -7,7 +7,6 @@ import {
     StyleSheet,
     TouchableOpacity,
     Image,
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     Alert,
@@ -20,6 +19,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { apiCall } from "../../../components/api/apiUtils";
 import { showToast } from "../../../components/toast/CustomToast";
+import CustomToast from "../../../components/toast/CustomToast";
+import { colors, spacing, radii, type, shadow } from "../../../theme/tokens";
+import EviButton from "../../../components/ui/EviButton";
+import EviCard from "../../../components/ui/EviCard";
 
 const loanTypes = [
     'Personal Loan',
@@ -131,7 +134,7 @@ const CreateLeadScreen = () => {
         try {
             // Create form data properly
             const formData = new FormData();
-            
+
             // Append all form fields with proper data types
             formData.append('name', data.name.trim());
             formData.append('phone', data.phone.trim());
@@ -176,15 +179,19 @@ const CreateLeadScreen = () => {
 
     return (
         <LinearGradient
-            colors={['#f8f9fa', '#e9ecef']}
+            colors={['#ffffff', colors.brandTint]}
             style={styles.container}
         >
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
             >
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     <View style={styles.header}>
+                        <View style={styles.headerIcon}>
+                            <Icon name="file-plus-outline" size={28} color={colors.brand} />
+                        </View>
+                        <Text style={styles.headerTitle}>Create Lead</Text>
                         <Text style={styles.headerSubtitle}>Add a potential loan applicant</Text>
                     </View>
 
@@ -195,7 +202,7 @@ const CreateLeadScreen = () => {
                                 {picture ? (
                                     <Image source={{ uri: picture.uri }} style={styles.selectedImage} />
                                 ) : (
-                                    <Icon name="account-circle" size={80} color="#ccc" />
+                                    <Icon name="account-circle" size={80} color={colors.inkFaint} />
                                 )}
                             </View>
                             <View style={styles.imageButtonsContainer}>
@@ -203,14 +210,14 @@ const CreateLeadScreen = () => {
                                     style={styles.imageButton}
                                     onPress={() => pickImage('camera')}
                                 >
-                                    <Icon name="camera" size={20} color="#fff" />
+                                    <Icon name="camera" size={18} color={colors.brand} />
                                     <Text style={styles.imageButtonText}>Camera</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.imageButton}
                                     onPress={() => pickImage('gallery')}
                                 >
-                                    <Icon name="image" size={20} color="#fff" />
+                                    <Icon name="image" size={18} color={colors.brand} />
                                     <Text style={styles.imageButtonText}>Gallery</Text>
                                 </TouchableOpacity>
                             </View>
@@ -220,14 +227,14 @@ const CreateLeadScreen = () => {
                         </View>
 
                         {/* Personal Information */}
-                        <View style={styles.sectionContainer}>
+                        <EviCard elevated={false} style={styles.sectionCard}>
                             <Text style={styles.sectionTitle}>Personal Information</Text>
 
                             <View style={styles.inputContainer}>
                                 <Text style={styles.label}>Full Name *</Text>
                                 <Controller
                                     control={control}
-                                    rules={{ 
+                                    rules={{
                                         required: "Name is required",
                                         minLength: { value: 3, message: "Name must be at least 3 characters" }
                                     }}
@@ -235,6 +242,7 @@ const CreateLeadScreen = () => {
                                         <TextInput
                                             style={[styles.input, errors.name && styles.errorInput]}
                                             placeholder="Enter full name"
+                                            placeholderTextColor={colors.inkFaint}
                                             onBlur={onBlur}
                                             onChangeText={onChange}
                                             value={value}
@@ -249,7 +257,7 @@ const CreateLeadScreen = () => {
                                 <Text style={styles.label}>Phone Number *</Text>
                                 <Controller
                                     control={control}
-                                    rules={{ 
+                                    rules={{
                                         required: "Phone number is required",
                                         pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit phone number" }
                                     }}
@@ -257,6 +265,7 @@ const CreateLeadScreen = () => {
                                         <TextInput
                                             style={[styles.input, errors.phone && styles.errorInput]}
                                             placeholder="Enter 10-digit phone number"
+                                            placeholderTextColor={colors.inkFaint}
                                             onBlur={onBlur}
                                             onChangeText={onChange}
                                             value={value}
@@ -273,16 +282,17 @@ const CreateLeadScreen = () => {
                                 <Text style={styles.label}>Email Address</Text>
                                 <Controller
                                     control={control}
-                                    rules={{ 
-                                        pattern: { 
-                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 
-                                            message: "Enter a valid email address or leave empty" 
+                                    rules={{
+                                        pattern: {
+                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            message: "Enter a valid email address or leave empty"
                                         }
                                     }}
                                     render={({ field: { onChange, onBlur, value } }) => (
                                         <TextInput
                                             style={[styles.input, errors.email && styles.errorInput]}
                                             placeholder="Enter email address (optional)"
+                                            placeholderTextColor={colors.inkFaint}
                                             onBlur={onBlur}
                                             onChangeText={onChange}
                                             value={value}
@@ -294,17 +304,17 @@ const CreateLeadScreen = () => {
                                 />
                                 {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
                             </View>
-                        </View>
+                        </EviCard>
 
                         {/* Address Information */}
-                        <View style={styles.sectionContainer}>
+                        <EviCard elevated={false} style={styles.sectionCard}>
                             <Text style={styles.sectionTitle}>Address Information</Text>
 
                             <View style={styles.inputContainer}>
                                 <Text style={styles.label}>Address *</Text>
                                 <Controller
                                     control={control}
-                                    rules={{ 
+                                    rules={{
                                         required: "Address is required",
                                         minLength: { value: 5, message: "Address must be at least 5 characters" }
                                     }}
@@ -312,6 +322,7 @@ const CreateLeadScreen = () => {
                                         <TextInput
                                             style={[styles.input, errors.address && styles.errorInput]}
                                             placeholder="Enter street address"
+                                            placeholderTextColor={colors.inkFaint}
                                             onBlur={onBlur}
                                             onChangeText={onChange}
                                             value={value}
@@ -323,17 +334,18 @@ const CreateLeadScreen = () => {
                             </View>
 
                             <View style={styles.rowContainer}>
-                                <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+                                <View style={[styles.inputContainer, { flex: 1, marginRight: spacing.xs }]}>
                                     <Text style={styles.label}>City *</Text>
                                     <Controller
                                         control={control}
-                                        rules={{ 
+                                        rules={{
                                             required: "City is required"
                                         }}
                                         render={({ field: { onChange, onBlur, value } }) => (
                                             <TextInput
                                                 style={[styles.input, errors.city && styles.errorInput]}
                                                 placeholder="Enter city"
+                                                placeholderTextColor={colors.inkFaint}
                                                 onBlur={onBlur}
                                                 onChangeText={onChange}
                                                 value={value}
@@ -344,17 +356,18 @@ const CreateLeadScreen = () => {
                                     {errors.city && <Text style={styles.errorText}>{errors.city.message}</Text>}
                                 </View>
 
-                                <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
+                                <View style={[styles.inputContainer, { flex: 1, marginLeft: spacing.xs }]}>
                                     <Text style={styles.label}>State *</Text>
                                     <Controller
                                         control={control}
-                                        rules={{ 
+                                        rules={{
                                             required: "State is required"
                                         }}
                                         render={({ field: { onChange, onBlur, value } }) => (
                                             <TextInput
                                                 style={[styles.input, errors.state && styles.errorInput]}
                                                 placeholder="Enter state"
+                                                placeholderTextColor={colors.inkFaint}
                                                 onBlur={onBlur}
                                                 onChangeText={onChange}
                                                 value={value}
@@ -365,10 +378,10 @@ const CreateLeadScreen = () => {
                                     {errors.state && <Text style={styles.errorText}>{errors.state.message}</Text>}
                                 </View>
                             </View>
-                        </View>
+                        </EviCard>
 
                         {/* Loan Information */}
-                        <View style={styles.sectionContainer}>
+                        <EviCard elevated={false} style={styles.sectionCard}>
                             <Text style={styles.sectionTitle}>Loan Details</Text>
 
                             <View style={styles.inputContainer}>
@@ -397,9 +410,9 @@ const CreateLeadScreen = () => {
                                 <Text style={styles.label}>Loan Amount (₹) *</Text>
                                 <Controller
                                     control={control}
-                                    rules={{ 
+                                    rules={{
                                         required: "Loan amount is required",
-                                        pattern: { 
+                                        pattern: {
                                             value: /^[0-9]+(\.[0-9]{1,2})?$/,
                                             message: "Enter a valid amount (numbers only)"
                                         },
@@ -409,6 +422,7 @@ const CreateLeadScreen = () => {
                                         <TextInput
                                             style={[styles.input, errors.loanAmount && styles.errorInput]}
                                             placeholder="Enter loan amount"
+                                            placeholderTextColor={colors.inkFaint}
                                             onBlur={onBlur}
                                             onChangeText={onChange}
                                             value={value}
@@ -446,7 +460,7 @@ const CreateLeadScreen = () => {
                                 <Text style={styles.label}>Loan Purpose *</Text>
                                 <Controller
                                     control={control}
-                                    rules={{ 
+                                    rules={{
                                         required: "Loan purpose is required",
                                         minLength: { value: 10, message: "Please provide a detailed purpose (min 10 characters)" }
                                     }}
@@ -454,6 +468,7 @@ const CreateLeadScreen = () => {
                                         <TextInput
                                             style={[styles.input, errors.loanPurpose && styles.errorInput, styles.textArea]}
                                             placeholder="Describe loan purpose"
+                                            placeholderTextColor={colors.inkFaint}
                                             onBlur={onBlur}
                                             onChangeText={onChange}
                                             value={value}
@@ -466,25 +481,23 @@ const CreateLeadScreen = () => {
                                 />
                                 {errors.loanPurpose && <Text style={styles.errorText}>{errors.loanPurpose.message}</Text>}
                             </View>
-                        </View>
+                        </EviCard>
 
                         {/* Submit Button */}
-                        <TouchableOpacity
+                        <EviButton
+                            title="Create Lead"
+                            variant="primary"
+                            size="lg"
+                            fullWidth
+                            icon="check-circle"
+                            loading={loading}
                             style={styles.submitButton}
                             onPress={handleSubmit(onSubmit)}
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <ActivityIndicator size="small" color="#fff" />
-                            ) : (
-                                <>
-                                    <Icon name="check-circle" size={20} color="#fff" style={styles.buttonIcon} />
-                                    <Text style={styles.submitButtonText}>Create Lead</Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
+                        />
+                        <View style={{ height: spacing.xxl }} />
                     </View>
                 </ScrollView>
+                <CustomToast />
             </KeyboardAvoidingView>
         </LinearGradient>
     );
@@ -495,32 +508,46 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 10,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.md,
+    },
+    headerIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: radii.xl,
+        backgroundColor: colors.brandTint,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    headerTitle: {
+        fontSize: type.sizes.xxl,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.xs,
     },
     headerSubtitle: {
-        fontSize: 16,
-        color: '#64748b',
-        marginTop: 4,
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
     },
     formContainer: {
-        padding: 16,
+        padding: spacing.lg,
     },
     imageSection: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: spacing.xl,
     },
     imagePicker: {
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.surface,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
         borderWidth: 2,
-        borderColor: '#e2e8f0',
+        borderColor: colors.line,
     },
     selectedImage: {
         width: '100%',
@@ -528,108 +555,88 @@ const styles = StyleSheet.create({
     },
     imageButtonsContainer: {
         flexDirection: 'row',
-        marginTop: 12,
+        marginTop: spacing.md,
     },
     imageButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#3b82f6',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        marginHorizontal: 6,
+        backgroundColor: colors.brandTint,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: radii.pill,
+        marginHorizontal: spacing.xs,
     },
     imageButtonText: {
-        color: '#fff',
-        marginLeft: 4,
-        fontWeight: '500',
+        color: colors.brand,
+        marginLeft: spacing.xs,
+        fontWeight: type.weights.medium,
+        fontSize: type.sizes.sm,
     },
     requiredFieldText: {
-        color: '#ef4444',
-        fontSize: 12,
-        marginTop: 8,
+        color: colors.danger,
+        fontSize: type.sizes.xs,
+        marginTop: spacing.sm,
     },
-    sectionContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
+    sectionCard: {
+        marginBottom: spacing.lg,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1e293b',
-        marginBottom: 16,
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
+        marginBottom: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
-        paddingBottom: 8,
+        borderBottomColor: colors.line,
+        paddingBottom: spacing.sm,
     },
     inputContainer: {
-        marginBottom: 16,
+        marginBottom: spacing.lg,
     },
     rowContainer: {
         flexDirection: 'row',
     },
     label: {
-        fontSize: 14,
-        color: '#475569',
-        marginBottom: 6,
-        fontWeight: '500',
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginBottom: spacing.xs,
+        fontWeight: type.weights.medium,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#cbd5e1',
-        borderRadius: 8,
-        paddingHorizontal: 12,
+        borderColor: colors.line,
+        borderRadius: radii.sm,
+        paddingHorizontal: spacing.md,
         paddingVertical: 10,
-        fontSize: 16,
-        backgroundColor: '#f8fafc',
-        color: '#000000',
+        fontSize: type.sizes.md,
+        backgroundColor: colors.surface,
+        color: colors.ink,
     },
     textArea: {
-        minHeight: 80,
-        paddingTop: 10,
+        minHeight: 96,
+        paddingTop: spacing.sm,
     },
     errorInput: {
-        borderColor: '#ef4444',
+        borderColor: colors.danger,
     },
     errorText: {
-        color: '#ef4444',
-        fontSize: 12,
-        marginTop: 4,
+        color: colors.danger,
+        fontSize: type.sizes.xs,
+        marginTop: spacing.xs,
     },
     pickerContainer: {
         borderWidth: 1,
-        borderColor: '#cbd5e1',
-        borderRadius: 8,
+        borderColor: colors.line,
+        borderRadius: radii.sm,
         overflow: 'hidden',
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.surface,
     },
     picker: {
-        height: 45,
+        flex: 1,
+        height: 48,
+        color: colors.ink,
     },
     submitButton: {
-        backgroundColor: '#1e3a8a',
-        borderRadius: 8,
-        paddingVertical: 14,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 8,
-        marginBottom: 30,
-    },
-    buttonIcon: {
-        marginRight: 8,
-    },
-    submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        marginTop: spacing.xs,
     },
 });
 

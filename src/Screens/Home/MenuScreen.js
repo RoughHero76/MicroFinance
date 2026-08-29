@@ -6,7 +6,7 @@ import HomeScreen from './HomeScreen.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHomeContext } from '../../components/context/HomeContext';
 import { useNavigation } from '@react-navigation/native';
-import { Menu } from 'react-native-paper';
+import { colors, spacing, radii, type, touchTarget } from '../../theme/tokens';
 const Drawer = createDrawerNavigator();
 
 const CustomHeader = ({ navigation }) => {
@@ -17,7 +17,7 @@ const CustomHeader = ({ navigation }) => {
                 onPress={() => navigation.toggleDrawer()}
                 style={styles.menuButton}
             >
-                <Icon name="menu" size={24} color="#000" />
+                <Icon name="menu" size={24} color={colors.brand} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Evi Micro Finance</Text>
 
@@ -25,7 +25,7 @@ const CustomHeader = ({ navigation }) => {
                 <TouchableOpacity style={styles.searchButton}
                     onPress={() => navigation.navigate('SearchScreen')}
                 >
-                    <Icon name="magnify" size={24} color="#000" />
+                    <Icon name="magnify" size={24} color={colors.ink} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('ProfileScreen')}>
                     {user.profilePic ? (
@@ -36,7 +36,7 @@ const CustomHeader = ({ navigation }) => {
                             onError={() => console.log("Failed to load image")}
                         />
                     ) : (
-                        <Icon name="account-circle" size={24} color="#000" />
+                        <Icon name="account-circle" size={24} color={colors.ink} />
                     )}
                 </TouchableOpacity>
             </View>
@@ -55,12 +55,12 @@ const UserProfile = () => {
                     {user.profilePic ? (
                         <Image
                             source={{ uri: user?.profilePic }}
-                            style={styles.profileImage}
+                            style={styles.profileImageLg}
                             resizeMode="cover"
                             onError={() => console.log("Failed to load image")}
                         />
                     ) : (
-                        <Icon name="account-circle" size={60} color="#000" />
+                        <Icon name="account-circle" size={60} color={colors.brand} />
                     )}
                 </View>
                 <View style={styles.profileInfo}>
@@ -74,9 +74,9 @@ const UserProfile = () => {
 
 const MenuItem = ({ icon, title, onPress }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-        <Icon name={icon} size={24} color="#4a4a4a" style={styles.menuIcon} />
+        <Icon name={icon} size={24} color={colors.brand} style={styles.menuIcon} />
         <Text style={styles.menuTitle}>{title}</Text>
-        <Icon name="chevron-right" size={24} color="#4a4a4a" />
+        <Icon name="chevron-right" size={24} color={colors.inkFaint} />
     </TouchableOpacity>
 );
 
@@ -120,9 +120,10 @@ const MenuScreen = () => {
                 header: () => <CustomHeader navigation={navigation} />,
                 drawerStyle: {
                     width: '70%',
+                    backgroundColor: colors.card,
                 },
-                drawerActiveTintColor: '#007AFF',
-                drawerInactiveTintColor: '#000',
+                drawerActiveTintColor: colors.brand,
+                drawerInactiveTintColor: colors.inkSoft,
 
             })}
 
@@ -138,80 +139,89 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingTop: 10,
-        paddingBottom: 5,
-        backgroundColor: '#fff',
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+        backgroundColor: colors.card,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.line,
     },
     subHeader: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     searchButton: {
-        padding: 5,
-        marginRight: 10,
+        padding: spacing.md,
+        marginRight: spacing.xs,
     },
     menuButton: {
-        padding: 5,
+        padding: spacing.md,
     },
     headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: 'black',
+        fontSize: type.sizes.xl,
+        fontWeight: type.weights.semibold,
+        color: colors.ink,
     },
     profileButton: {
-        padding: 5,
+        padding: spacing.md,
     },
     profileImage: {
         width: 36,
         height: 36,
-        borderRadius: 40,
-        marginRight: 15,
+        borderRadius: radii.pill,
+        marginRight: spacing.md,
+    },
+    profileImageLg: {
+        width: 60,
+        height: 60,
+        borderRadius: radii.pill,
     },
     drawerContent: {
         flex: 1,
+        backgroundColor: colors.card,
     },
     userContainer: {
-        backgroundColor: '#f0f0f0',
-        padding: 20,
+        backgroundColor: colors.brandTint,
+        padding: spacing.xl,
         borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
+        borderBottomColor: colors.brandSoft,
     },
     profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     profileIconContainer: {
-        marginRight: 16,
+        marginRight: spacing.lg,
     },
     profileInfo: {
         flex: 1,
     },
     profileName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#4a4a4a',
+        fontSize: type.sizes.lg,
+        fontWeight: type.weights.bold,
+        color: colors.ink,
     },
     profileEmail: {
-        fontSize: 14,
-        color: '#666',
-
+        fontSize: type.sizes.sm,
+        color: colors.inkSoft,
+        marginTop: spacing.xs,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        padding: spacing.lg,
+        minHeight: touchTarget,
         borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
+        borderBottomColor: colors.line,
     },
     menuIcon: {
-        marginRight: 16,
+        marginRight: spacing.lg,
     },
     menuTitle: {
         flex: 1,
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#4a4a4a',
+        fontSize: type.sizes.md,
+        fontWeight: type.weights.medium,
+        color: colors.ink,
     },
 });
 
