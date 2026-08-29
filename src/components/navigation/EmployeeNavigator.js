@@ -24,7 +24,7 @@ import LoanStatusDetailsScreen from "../../Screens/Shared/Report/LoanStatusDetai
 import ProfileScreen from "../../Screens/Shared/Profile/ProfileScreen";
 
 import { Platform, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from '../../design/Icon';;
 import { useNavigation } from "@react-navigation/native";
 
 //Leads

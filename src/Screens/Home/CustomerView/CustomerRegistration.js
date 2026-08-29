@@ -1,197 +1,174 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
-import { apiCall } from "../../../components/api/apiUtils";
-import Toast from "react-native-toast-message";
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import { showToast, CustomToast } from "../../../components/toast/CustomToast";
-import { useNavigation } from "@react-navigation/native";
+import { apiCall } from '../../../components/api/apiUtils';
+import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import Screen from '../../../design/components/Screen';
+import Button from '../../../design/components/Button';
+import TextField from '../../../design/components/TextField';
+import Icon from '../../../design/Icon';
+import { colors, spacing, radius, type } from '../../../design/tokens';
+
+/**
+ * CustomerRegistration — rebuilt on the "Ink & Amber" design system.
+ *  - grouped form (Personal / Contact / Address) using design TextFields
+ *    with leading icons, a styled gender Picker matching the field chrome,
+ *    and an accent submit button with loading state
+ *  - original payload (fname…pincode) and `POST /api/admin/customer` kept
+ *    exactly; success still routes to Menu
+ *  - icon names swapped to the verified custom SVG set (flag→earth,
+ *    postage-stamp→pin)
+ */
+
+const SectionLabel = ({ children }) => (
+  <Text
+    style={[
+      type.caption,
+      {
+        color: colors.inkMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+        marginTop: spacing.xl,
+        marginBottom: spacing.sm,
+      },
+    ]}
+  >
+    {children}
+  </Text>
+);
+
+const GenderPicker = ({ value, onChange }) => (
+  <View>
+    <Text style={[type.caption, { color: colors.inkSecondary, marginBottom: 6 }]}>Gender</Text>
+    <View style={styles.pickerWrap}>
+      <Icon name="users" size={20} color={colors.inkMuted} />
+      <Picker
+        selectedValue={value || undefined}
+        onValueChange={(itemValue) => onChange(itemValue)}
+        style={[styles.picker, value === '' && { color: colors.inkMuted }]}
+      >
+        <Picker.Item label="Select Gender" value="" />
+        <Picker.Item label="Male" value="Male" />
+        <Picker.Item label="Female" value="Female" />
+        <Picker.Item label="Other" value="Other" />
+      </Picker>
+      <Icon name="chevron-down" size={18} color={colors.inkMuted} />
+    </View>
+  </View>
+);
 
 const CustomerRegistration = () => {
+  const navigation = useNavigation();
 
-    const navigation = useNavigation();
+  const [formData, setFormData] = useState({
+    fname: '',
+    lname: '',
+    gender: '',
+    email: '',
+    userName: '',
+    phoneNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    pincode: '',
+  });
 
-    const [formData, setFormData] = useState({
-        fname: "",
-        lname: "",
-        gender: "",
-        email: "",
-        userName: "",
-        phoneNumber: "",
-        address: "",
-        city: "",
-        state: "",
-        country: "",
-        pincode: "",
-    });
+  const [loading, setLoading] = useState(false);
 
-    const [loading, setLoading] = useState(false);
+  const handleInputChange = (name, value) => {
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
 
-    const handleInputChange = (name, value) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
-    };
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const response = await apiCall('/api/admin/customer', 'POST', formData);
+      if (response.status === 'success') {
+        showToast('success', 'Success', response.message);
+        navigation.navigate('Menu');
+      } else {
+        showToast('error', 'Error', response.message || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      console.error(error);
+      showToast('error', 'Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const field = (name, label, placeholder, icon, props = {}) => (
+    <TextField
+      label={label}
+      value={formData[name]}
+      onChangeText={(text) => handleInputChange(name, text)}
+      placeholder={placeholder}
+      leftIcon={icon}
+      style={{ marginBottom: spacing.md }}
+      {...props}
+    />
+  );
 
-    const handleSubmit = async () => {
-        setLoading(true);
-        try {
-
-            const response = await apiCall("/api/admin/customer", "POST", formData);
-            if (response.status === "success") {
-                showToast("success", "Success", response.message);
-                navigation.navigate('Menu')
-            } else {
-                showToast("error", "Error", response.message || "Registration failed. Please try again.");
-            }
-        } catch (error) {
-            console.error(error);
-            showToast("error", "Error", error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const renderInput = (name, placeholder, icon, keyboardType = "default") => (
-        <View style={styles.inputContainer}>
-            <Icon name={icon} size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-                style={styles.input}
-                placeholder={placeholder}
-                placeholderTextColor="#9CA3AF"
-                value={formData[name]}
-                onChangeText={(text) => handleInputChange(name, text)}
-                keyboardType={keyboardType}
-            />
+  return (
+    <Screen scroll bg={colors.bg} keyboardAvoid keyboardShouldPersistTaps="handled">
+      <View style={styles.page}>
+        <SectionLabel>Personal Details</SectionLabel>
+        {field('fname', 'First Name', 'First name', 'account')}
+        {field('lname', 'Last Name', 'Last name', 'user')}
+        <View style={{ marginBottom: spacing.md }}>
+          <GenderPicker value={formData.gender} onChange={(v) => handleInputChange('gender', v)} />
         </View>
-    );
 
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.container}
-        >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <View style={styles.header}>
-                    <Icon name="account-plus" size={40} color="#4F46E5" />
-                    <Text style={styles.headerText}>Customer Registration</Text>
-                </View>
+        <SectionLabel>Contact</SectionLabel>
+        {field('email', 'Email', 'name@example.com', 'email', { keyboardType: 'email-address' })}
+        {field('userName', 'Username', 'Username', 'user-circle')}
+        {field('phoneNumber', 'Phone Number', '10-digit mobile number', 'phone', { keyboardType: 'phone-pad' })}
 
-                {renderInput("fname", "First Name", "account")}
-                {renderInput("lname", "Last Name", "account")}
+        <SectionLabel>Address</SectionLabel>
+        {field('address', 'Address', 'Street / locality', 'home')}
+        {field('city', 'City', 'City', 'city')}
+        {field('state', 'State', 'State', 'map-marker')}
+        {field('country', 'Country', 'Country', 'earth')}
+        {field('pincode', 'Pincode', 'Pincode', 'pin', { keyboardType: 'numeric' })}
 
-                <View style={styles.inputContainer}>
-                    <Icon name="gender-male-female" size={20} color="#6B7280" style={styles.inputIcon} />
-                    <Picker
-                        selectedValue={formData.gender}
-                        style={styles.picker}
-                        onValueChange={(itemValue) => handleInputChange("gender", itemValue)}
-                    >
-                        <Picker.Item label="Select Gender" value="" />
-                        <Picker.Item label="Male" value="Male" />
-                        <Picker.Item label="Female" value="Female" />
-                        <Picker.Item label="Other" value="Other" />
-                    </Picker>
-                </View>
-
-                {renderInput("email", "Email", "email", "email-address")}
-                {renderInput("userName", "Username", "account-circle")}
-                {renderInput("phoneNumber", "Phone Number", "phone", "phone-pad")}
-                {renderInput("address", "Address", "home")}
-                {renderInput("city", "City", "city")}
-                {renderInput("state", "State", "map-marker")}
-                {renderInput("country", "Country", "flag")}
-                {renderInput("pincode", "Pincode", "postage-stamp", "numeric")}
-
-                <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleSubmit}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                        <>
-                            <Icon name="check-circle" size={20} color="#FFFFFF" style={styles.submitIcon} />
-                            <Text style={styles.submitButtonText}>Register Customer</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
-            </ScrollView>
-            <CustomToast />
-        </KeyboardAvoidingView>
-    );
+        <View style={{ marginTop: spacing.xl }}>
+          <Button
+            label="Register Customer"
+            icon="check-circle"
+            variant="accent"
+            size="lg"
+            full
+            loading={loading}
+            onPress={handleSubmit}
+          />
+        </View>
+      </View>
+      <CustomToast />
+    </Screen>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F3F4F6",
-    },
-    scrollContainer: {
-        padding: 20,
-    },
-    header: {
-        alignItems: "center",
-        marginBottom: 30,
-    },
-    headerText: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#1F2937",
-        marginTop: 10,
-    },
-    inputContainer: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        marginBottom: 16,
-        flexDirection: "row",
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    inputIcon: {
-        padding: 10,
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 12,
-        paddingRight: 10,
-        fontSize: 16,
-        color: "#1F2937",
-    },
-    picker: {
-        flex: 1,
-        height: 50,
-        color: "#1F2937",
-    },
-    submitButton: {
-        backgroundColor: "#4F46E5",
-        borderRadius: 12,
-        paddingVertical: 14,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        marginTop: 20,
-        shadowColor: "#4F46E5",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    submitIcon: {
-        marginRight: 8,
-    },
-    submitButtonText: {
-        color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "bold",
-    },
+  page: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxxl,
+  },
+  pickerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingLeft: spacing.sm,
+  },
+  picker: {
+    flex: 1,
+    height: 54,
+    color: colors.ink,
+  },
 });
 
 export default CustomerRegistration;

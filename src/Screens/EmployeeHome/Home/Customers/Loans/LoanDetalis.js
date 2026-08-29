@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,239 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Modal,
-  SafeAreaView,
   FlatList,
   Image,
 } from 'react-native';
 import { apiCall } from '../../../../../components/api/apiUtils';
 import { format } from 'date-fns';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import { debounce } from 'lodash';
+import Card from '../../../../../design/components/Card';
+import Button from '../../../../../design/components/Button';
+import StatusPill from '../../../../../design/components/StatusPill';
+import EmptyState from '../../../../../design/components/EmptyState';
+import Skeleton from '../../../../../design/components/Skeleton';
+import Icon from '../../../../../design/Icon';
+import { colors, spacing, radius, type, shadow } from '../../../../../design/tokens';
+
+/**
+ * LoanDetailsScreen (employee loan detail) — rebuilt on the "Ink & Amber"
+ * design system.
+ *  - behaviour preserved 1:1: the same paginated
+ *    /api/employee/loan/details?loanId=…&includeCustomerProfile&includeTotalPenalty
+ *    &includeRepayments&limited (page/limit=200) fetch, the consecutive-status
+ *    grouping + expand/collapse of installments, the load-more with the
+ *    original 300ms debounce, the penalty-details modal, the three tabs
+ *    (Details / Repayments / Customer), and the inline error + Retry
+ *  - icon names not in the design set are mapped: assessment→clipboard,
+ *    person→account-circle, schedule→calendar-clock, error→alert-circle,
+ *    hourglass-empty→clock, help→info-outline, expand-less/more→
+ *    chevron-up/down, location-on→map-marker, flag→earth,
+ *    account-balance→bank
+ *  - design: status colours keep the original semantics (paid=green,
+ *    advance=blue, overdue=red, pending/partial=amber) via a shared
+ *    status config; the gradient summary becomes a flat 4-up stat strip,
+ *    info groups become labelled cards, skeletons replace the bare
+ *    spinner, and the modals use the design Button/Sheet treatment
+ */
+
+// Status semantics preserved from the original (material palette → tokens)
+const STATUS_CONFIG = {
+  Paid: { bg: colors.successSoft, fg: colors.successInk, icon: 'check-circle' },
+  PartiallyPaidFullyPaid: { bg: colors.successSoft, fg: colors.successInk, icon: 'check-circle' },
+  OverduePaid: { bg: colors.successSoft, fg: colors.successInk, icon: 'check-circle' },
+  Waived: { bg: colors.successSoft, fg: colors.successInk, icon: 'check-circle' },
+  AdvancePaid: { bg: colors.infoSoft, fg: colors.infoInk, icon: 'calendar-clock' },
+  Overdue: { bg: colors.dangerSoft, fg: colors.dangerInk, icon: 'alert-circle' },
+  Pending: { bg: colors.warningSoft, fg: colors.warningInk, icon: 'clock' },
+  PartiallyPaid: { bg: colors.warningSoft, fg: colors.warningInk, icon: 'clock' },
+};
+
+const getStatusConfig = (status) => STATUS_CONFIG[status] || { bg: colors.neutralSoft, fg: colors.neutralInk, icon: 'info-outline' };
+
+const StatusBadge = ({ status, style }) => {
+  const config = getStatusConfig(status);
+  return (
+    <View
+      style={[
+        {
+          backgroundColor: config.bg,
+          borderRadius: radius.sm,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: 5,
+          maxWidth: '100%',
+        },
+        style,
+      ]}
+    >
+      <Text style={[type.caption, { color: config.fg, fontWeight: '700' }]} numberOfLines={1}>
+        {status}
+      </Text>
+    </View>
+  );
+};
+
+const IconStatusChip = ({ status, size = 40 }) => {
+  const config = getStatusConfig(status);
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius.md,
+        backgroundColor: config.bg,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Icon name={config.icon} size={Math.round(size * 0.5)} color={config.fg} />
+    </View>
+  );
+};
+
+const InfoRow = ({ label, value, children }) => (
+  <View style={styles.infoRow}>
+    <Text style={styles.infoLabel} numberOfLines={1}>
+      {label}
+    </Text>
+    <View style={styles.infoValueWrap}>{children || <Text style={styles.infoValue}>{value}</Text>}</View>
+  </View>
+);
+
+const SectionCard = ({ title, children, style }) => (
+  <Card style={style}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={{ gap: spacing.sm }}>{children}</View>
+  </Card>
+);
+
+const LoadingDetails = () => (
+  <View style={styles.page}>
+    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+      <Skeleton width="32%" height={30} radius={radius.sm} />
+      <Skeleton width="32%" height={30} radius={radius.sm} />
+      <Skeleton width="32%" height={30} radius={radius.sm} />
+    </View>
+    <View style={{ height: spacing.lg }} />
+    <Skeleton width="100%" height={130} radius={radius.lg} />
+    <View style={{ height: spacing.md }} />
+    <Skeleton width="100%" height={220} radius={radius.lg} />
+  </View>
+);
+
+const PenaltyItem = ({ item, formatDate, formatCurrency }) => {
+  const config = getStatusConfig(item.status);
+  return (
+    <View style={styles.penaltyItem}>
+      <InfoRow label="Date" value={formatDate(item.appliedDate)} />
+      <InfoRow label="Amount" value={formatCurrency(item.amount)} />
+      <InfoRow label="Reason" value={item.reason || 'N/A'} />
+      <InfoRow
+        label="Status"
+        children={
+          <Text style={[type.sub, { color: config.fg, fontWeight: '600' }]} numberOfLines={1}>
+            {item.status}
+          </Text>
+        }
+      />
+    </View>
+  );
+};
+
+const RepaymentItem = ({ item, formatDate, formatCurrency }) => (
+  <Card elevation="subtle" style={{ marginBottom: spacing.sm }}>
+    <View style={styles.repaymentHeader}>
+      <IconStatusChip status={item.status} />
+      <View style={{ flex: 1, marginLeft: spacing.sm, marginRight: spacing.sm }}>
+        <Text style={styles.repaymentInstallment} numberOfLines={1}>
+          Installment #{item.loanInstallmentNumber}
+        </Text>
+        <Text style={styles.repaymentDate}>Due: {formatDate(item.dueDate)}</Text>
+      </View>
+      <View style={styles.repaymentAmount}>
+        <Text style={styles.repaymentAmountText}>{formatCurrency(item.amount)}</Text>
+        <StatusBadge status={item.status} style={{ marginTop: 4 }} />
+      </View>
+    </View>
+
+    {item.repayments?.length > 0 ? (
+      <View style={styles.paymentDetails}>
+        <Text style={styles.paymentDetailsTitle}>Payment Details</Text>
+        {item.repayments.map((payment, index) => (
+          <View key={`${payment._id}-${index}`} style={index > 0 ? styles.paymentItemDivider : null}>
+            <InfoRow label="Date" value={formatDate(payment.paymentDate)} />
+            <InfoRow label="Amount" value={formatCurrency(payment.amount)} />
+            <InfoRow label="Method" value={payment.paymentMethod || 'N/A'} />
+            {payment.transactionId ? (
+              <InfoRow label="Transaction ID" value={payment.transactionId} />
+            ) : null}
+          </View>
+        ))}
+      </View>
+    ) : null}
+
+    {item.penaltyApplied ? (
+      <View style={styles.penaltyWarning}>
+        <Icon name="warning" size={16} color={colors.warningInk} />
+        <Text style={styles.penaltyWarningText}>Penalty Applied</Text>
+      </View>
+    ) : null}
+  </Card>
+);
+
+const GroupedRepaymentItem = ({
+  group,
+  index,
+  schedules,
+  expandedGroups,
+  toggleGroupExpansion,
+  formatDate,
+  formatCurrency,
+}) => {
+  const isExpanded = expandedGroups[index];
+  const showRange = group.count > 1;
+
+  if (showRange) {
+    return (
+      <View style={styles.groupContainer}>
+        <Card elevation="subtle" onPress={() => toggleGroupExpansion(index)}>
+          <View style={styles.groupHeader}>
+            <IconStatusChip status={group.status} />
+            <View style={{ flex: 1, marginLeft: spacing.sm, marginRight: spacing.sm }}>
+              <Text style={styles.groupTitle} numberOfLines={1}>
+                {group.status} ({group.count} installments)
+              </Text>
+              <Text style={styles.groupDate}>
+                From {formatDate(group.startItem.dueDate)} to {formatDate(group.endItem.dueDate)}
+              </Text>
+            </View>
+            <Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color={colors.inkMuted} />
+          </View>
+        </Card>
+        {isExpanded ? (
+          <View style={styles.groupItems}>
+            {group.indices.map((itemIndex) => (
+              <RepaymentItem
+                key={`${schedules[itemIndex]._id}-${itemIndex}`}
+                item={schedules[itemIndex]}
+                formatDate={formatDate}
+                formatCurrency={formatCurrency}
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
+    );
+  }
+
+  return (
+    <RepaymentItem
+      key={`${group.startItem._id}-${index}`}
+      item={group.startItem}
+      formatDate={formatDate}
+      formatCurrency={formatCurrency}
+    />
+  );
+};
 
 const LoanDetailsScreen = ({ route, navigation }) => {
   const { loanId } = route.params || {};
@@ -30,10 +254,6 @@ const LoanDetailsScreen = ({ route, navigation }) => {
   const [hasMoreRepayments, setHasMoreRepayments] = useState(true);
   const [penaltyModalVisible, setPenaltyModalVisible] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchLoanDetails();
-  }, [currentPage]);
 
   const groupRepayments = useCallback((schedules) => {
     const groups = [];
@@ -98,6 +318,11 @@ const LoanDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  useEffect(() => {
+    fetchLoanDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
   const loadMoreRepayments = useCallback(
     debounce(() => {
       if (hasMoreRepayments && !loading) {
@@ -126,67 +351,175 @@ const LoanDetailsScreen = ({ route, navigation }) => {
     return `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
   }, []);
 
-  const getStatusColor = useCallback((status) => {
-    switch (status) {
-      case 'Active':
-      case 'Paid':
-      case 'PartiallyPaidFullyPaid':
-      case 'OverduePaid':
-      case 'Waived':
-        return '#4CAF50';
-      case 'AdvancePaid':
-        return '#2196F3';
-      case 'Overdue':
-        return '#F44336';
-      case 'Pending':
-      case 'PartiallyPaid':
-        return '#FF9800';
-      default:
-        return '#757575';
-    }
-  }, []);
-
-  const getRepaymentStatusIcon = useCallback((status) => {
-    switch (status) {
-      case 'Paid':
-      case 'PartiallyPaidFullyPaid':
-      case 'OverduePaid':
-      case 'Waived':
-        return 'check-circle';
-      case 'AdvancePaid':
-        return 'schedule';
-      case 'Overdue':
-        return 'error';
-      case 'Pending':
-      case 'PartiallyPaid':
-        return 'hourglass-empty';
-      default:
-        return 'help';
-    }
-  }, []);
-
-  const PenaltyItem = memo(({ item, formatDate, formatCurrency, getStatusColor }) => (
-    <View style={styles.penaltyItem}>
-      <View style={styles.penaltyRow}>
-        <Text style={styles.penaltyLabel}>Date:</Text>
-        <Text style={styles.penaltyValue}>{formatDate(item.appliedDate)}</Text>
-      </View>
-      <View style={styles.penaltyRow}>
-        <Text style={styles.penaltyLabel}>Amount:</Text>
-        <Text style={styles.penaltyValue}>{formatCurrency(item.amount)}</Text>
-      </View>
-      <View style={styles.penaltyRow}>
-        <Text style={styles.penaltyLabel}>Reason:</Text>
-        <Text style={styles.penaltyValue}>{item.reason || 'N/A'}</Text>
-      </View>
-      <View style={styles.penaltyRow}>
-        <Text style={styles.penaltyLabel}>Status:</Text>
-        <Text style={[styles.penaltyStatus, { color: getStatusColor(item.status) }]}>
-          {item.status}
+  const StatItem = ({ label, value, onPress }) => (
+    <View style={styles.summaryItem}>
+      <Text style={styles.summaryLabel} numberOfLines={1}>
+        {label}
+      </Text>
+      {onPress ? (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7} accessibilityRole="button">
+          <View style={styles.penaltyLink}>
+            <Text style={styles.summaryValueLink} numberOfLines={1}>
+              {value}
+            </Text>
+            <Icon name="info-outline" size={15} color={colors.accentDeep} />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <Text style={styles.summaryValue} numberOfLines={1}>
+          {value}
         </Text>
-      </View>
+      )}
     </View>
-  ));
+  );
+
+  const renderDetails = () => {
+    if (!loanDetails) return null;
+
+    return (
+      <View style={styles.page}>
+        <Card elevation="subtle">
+          <View style={styles.summaryGrid}>
+            <StatItem label="Total Loan" value={formatCurrency(loanDetails.loanAmount)} />
+            <StatItem label="Outstanding" value={formatCurrency(loanDetails.outstandingAmount)} />
+            <StatItem label="Paid" value={formatCurrency(loanDetails.totalPaid)} />
+            <StatItem
+              label="Penalty"
+              value={formatCurrency(loanDetails.totalPenaltyAmount)}
+              onPress={() => setPenaltyModalVisible(true)}
+            />
+          </View>
+        </Card>
+
+        <SectionCard title="Loan Information" style={{ marginTop: spacing.md }}>
+          <InfoRow label="Loan Number" value={loanDetails.loanNumber} />
+          <InfoRow label="Loan Type" value={loanDetails.loanType} />
+          <InfoRow
+            label="Status"
+            children={<StatusPill status={loanDetails.status} />}
+          />
+          <InfoRow label="Principal Amount" value={formatCurrency(loanDetails.principalAmount)} />
+          <InfoRow label="Interest Rate" value={`${loanDetails.interestRate}%`} />
+        </SectionCard>
+
+        <SectionCard title="Repayment Terms" style={{ marginTop: spacing.md }}>
+          <InfoRow label="Duration" value={loanDetails.loanDuration} />
+          <InfoRow label="Start Date" value={formatDate(loanDetails.loanStartDate)} />
+          <InfoRow label="End Date" value={formatDate(loanDetails.loanEndDate)} />
+          <InfoRow label="Installments" value={loanDetails.numberOfInstallments} />
+          <InfoRow label="Frequency" value={loanDetails.installmentFrequency} />
+          <InfoRow
+            label="Per Installment"
+            value={formatCurrency(loanDetails.repaymentAmountPerInstallment)}
+          />
+        </SectionCard>
+
+        <SectionCard title="Business Information" style={{ marginTop: spacing.md }}>
+          <InfoRow label="Business Name" value={loanDetails.businessFirmName || 'N/A'} />
+          <InfoRow label="Address" value={loanDetails.businessAddress || 'N/A'} />
+          <InfoRow label="Phone" value={loanDetails.businessPhone || 'N/A'} />
+          <InfoRow label="Email" value={loanDetails.businessEmail || 'N/A'} />
+        </SectionCard>
+      </View>
+    );
+  };
+
+  const renderRepayments = () => (
+    <FlatList
+      data={groupedRepayments}
+      keyExtractor={(group, index) => `group-${index}`}
+      renderItem={({ item, index }) => (
+        <GroupedRepaymentItem
+          group={item}
+          index={index}
+          schedules={repaymentSchedules}
+          expandedGroups={expandedGroups}
+          toggleGroupExpansion={toggleGroupExpansion}
+          formatDate={formatDate}
+          formatCurrency={formatCurrency}
+        />
+      )}
+      onEndReached={loadMoreRepayments}
+      onEndReachedThreshold={0.5}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+      contentContainerStyle={styles.page}
+      showsVerticalScrollIndicator={false}
+      ListFooterComponent={
+        loading && hasMoreRepayments ? (
+          <View style={styles.loaderFooter}>
+            <ActivityIndicator size="small" color={colors.accentDeep} />
+            <Text style={styles.loaderText}>Loading more...</Text>
+          </View>
+        ) : null
+      }
+      ListEmptyComponent={
+        <EmptyState
+          icon="receipt-long"
+          title="No repayment schedules found"
+          style={{ marginTop: spacing.xxxl }}
+        />
+      }
+    />
+  );
+
+  const renderCustomer = () => {
+    if (!customerProfile) {
+      return (
+        <View style={styles.page}>
+          <EmptyState
+            icon="person-off"
+            title="Customer information not available"
+            style={{ marginTop: spacing.xxxl }}
+          />
+        </View>
+      );
+    }
+
+    const fullAddress = `${customerProfile.address}, ${customerProfile.city}, ${customerProfile.state} - ${customerProfile.pincode}`;
+    const initials = `${customerProfile.fname?.charAt(0) || ''}${customerProfile.lname?.charAt(0) || ''}`;
+
+    return (
+      <View style={styles.page}>
+        <Card elevation="subtle">
+          <View style={styles.customerHeader}>
+            {customerProfile.profilePic ? (
+              <Image source={{ uri: customerProfile.profilePic }} style={styles.customerImage} resizeMode="cover" />
+            ) : (
+              <View style={[styles.customerImage, { backgroundColor: colors.accentSoft }]}>
+                <Text style={styles.customerInitials}>{initials || '—'}</Text>
+              </View>
+            )}
+            <View style={styles.customerNameContainer}>
+              <Text style={styles.customerName} numberOfLines={1}>
+                {`${customerProfile.fname} ${customerProfile.lname}`.trim() || 'Customer'}
+              </Text>
+              <Text style={styles.customerUsername} numberOfLines={1}>
+                @{customerProfile.userName}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.customerRows}>
+            <InfoRow
+              label="Phone Number"
+              value={customerProfile.phoneNumber || 'N/A'}
+            />
+            <InfoRow label="Email" value={customerProfile.email || 'N/A'} />
+            <InfoRow label="Address" value={fullAddress} />
+            <InfoRow label="Country" value={customerProfile.country || 'N/A'} />
+            <InfoRow label="Total Loans" value={customerProfile.loans?.length || 0} />
+          </View>
+
+          <View style={styles.customerStatusItem}>
+            <Text style={styles.customerStatusLabel}>Account Status</Text>
+            <StatusPill status={customerProfile.accountStatus ? 'Active' : 'Inactive'} />
+          </View>
+        </Card>
+      </View>
+    );
+  };
 
   const renderPenaltyModal = () => (
     <Modal
@@ -199,24 +532,26 @@ const LoanDetailsScreen = ({ route, navigation }) => {
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Penalty Details</Text>
-            <TouchableOpacity onPress={() => setPenaltyModalVisible(false)}>
-              <Icon name="close" size={24} color="#333" />
+            <TouchableOpacity
+              onPress={() => setPenaltyModalVisible(false)}
+              style={styles.closeButton}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+            >
+              <Icon name="close" size={22} color={colors.ink} />
             </TouchableOpacity>
           </View>
           <FlatList
             data={loanDetails?.totalPenalty || []}
             keyExtractor={(item, index) => `${item._id}-${index}`}
             renderItem={({ item }) => (
-              <PenaltyItem
-                item={item}
-                formatDate={formatDate}
-                formatCurrency={formatCurrency}
-                getStatusColor={getStatusColor}
-              />
+              <PenaltyItem item={item} formatDate={formatDate} formatCurrency={formatCurrency} />
             )}
             initialNumToRender={5}
             maxToRenderPerBatch={5}
             windowSize={5}
+            contentContainerStyle={{ paddingBottom: spacing.md }}
+            showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <Text style={styles.emptyMessage}>No penalty information available</Text>
             }
@@ -226,817 +561,340 @@ const LoanDetailsScreen = ({ route, navigation }) => {
     </Modal>
   );
 
-  const RepaymentItem = memo(
-    ({ item, formatDate, formatCurrency, getStatusColor, getRepaymentStatusIcon }) => (
-      <View style={styles.repaymentItem}>
-        <View style={styles.repaymentHeader}>
-          <View style={styles.repaymentHeaderLeft}>
-            <Icon
-              name={getRepaymentStatusIcon(item.status)}
-              size={24}
-              color={getStatusColor(item.status)}
-              style={styles.repaymentIcon}
-            />
-            <View>
-              <Text style={styles.repaymentInstallment}>
-                Installment #{item.loanInstallmentNumber}
-              </Text>
-              <Text style={styles.repaymentDate}>Due: {formatDate(item.dueDate)}</Text>
-            </View>
-          </View>
-          <View style={styles.repaymentAmount}>
-            <Text style={styles.repaymentAmountText}>{formatCurrency(item.amount)}</Text>
-            <View style={[styles.repaymentStatus, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.repaymentStatusText}>{item.status}</Text>
-            </View>
-          </View>
-        </View>
-
-        {item.repayments?.length > 0 && (
-          <View style={styles.paymentDetails}>
-            <Text style={styles.paymentDetailsTitle}>Payment Details</Text>
-            {item.repayments.map((payment, index) => (
-              <View key={`${payment._id}-${index}`} style={styles.paymentItem}>
-                <View style={styles.paymentRow}>
-                  <Text style={styles.paymentLabel}>Date:</Text>
-                  <Text style={styles.paymentValue}>{formatDate(payment.paymentDate)}</Text>
-                </View>
-                <View style={styles.paymentRow}>
-                  <Text style={styles.paymentLabel}>Amount:</Text>
-                  <Text style={styles.paymentValue}>{formatCurrency(payment.amount)}</Text>
-                </View>
-                <View style={styles.paymentRow}>
-                  <Text style={styles.paymentLabel}>Method:</Text>
-                  <Text style={styles.paymentValue}>{payment.paymentMethod || 'N/A'}</Text>
-                </View>
-                {payment.transactionId && (
-                  <View style={styles.paymentRow}>
-                    <Text style={styles.paymentLabel}>Transaction ID:</Text>
-                    <Text style={styles.paymentValue}>{payment.transactionId}</Text>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        {item.penaltyApplied && (
-          <View style={styles.penaltyWarning}>
-            <Icon name="warning" size={16} color="#FFC107" />
-            <Text style={styles.penaltyWarningText}>Penalty Applied</Text>
-          </View>
-        )}
-      </View>
-    )
-  );
-
-  const GroupedRepaymentItem = memo(
-    ({ group, index, formatDate, formatCurrency, getStatusColor, getRepaymentStatusIcon }) => {
-      const isExpanded = expandedGroups[index];
-      const showRange = group.count > 1;
-
-      return (
-        <View style={styles.groupContainer}>
-          {showRange && (
-            <TouchableOpacity
-              style={styles.groupHeader}
-              onPress={() => toggleGroupExpansion(index)}
-            >
-              <View style={styles.groupHeaderLeft}>
-                <Icon
-                  name={getRepaymentStatusIcon(group.status)}
-                  size={24}
-                  color={getStatusColor(group.status)}
-                />
-                <View>
-                  <Text style={styles.groupTitle}>
-                    {group.status} ({group.count} installments)
-                  </Text>
-                  <Text style={styles.groupDate}>
-                    From {formatDate(group.startItem.dueDate)} to{' '}
-                    {formatDate(group.endItem.dueDate)}
-                  </Text>
-                </View>
-              </View>
-              <Icon
-                name={isExpanded ? 'expand-less' : 'expand-more'}
-                size={24}
-                color="#666"
-              />
-            </TouchableOpacity>
-          )}
-
-          {(isExpanded || !showRange) && (
-            <View style={styles.groupItems}>
-              {group.indices.map((itemIndex) => (
-                <RepaymentItem
-                  key={`${repaymentSchedules[itemIndex]._id}-${itemIndex}`}
-                  item={repaymentSchedules[itemIndex]}
-                  formatDate={formatDate}
-                  formatCurrency={formatCurrency}
-                  getStatusColor={getStatusColor}
-                  getRepaymentStatusIcon={getRepaymentStatusIcon}
-                />
-              ))}
-            </View>
-          )}
-        </View>
-      );
-    }
-  );
-
-  const renderLoanDetails = () => {
-    if (!loanDetails) return null;
-
-    return (
-      <View style={styles.tabContent}>
-        <LinearGradient colors={['#f5f7fa', '#e4e7eb']} style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Total Loan</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(loanDetails.loanAmount)}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Outstanding</Text>
-              <Text style={styles.summaryValue}>
-                {formatCurrency(loanDetails.outstandingAmount)}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Paid</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(loanDetails.totalPaid)}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Penalty</Text>
-              <TouchableOpacity onPress={() => setPenaltyModalVisible(true)}>
-                <Text style={[styles.summaryValue, styles.linkText]}>
-                  {formatCurrency(loanDetails.totalPenaltyAmount)}{' '}
-                  <Icon name="info-outline" size={16} />
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.detailsContainer}>
-          <Text style={styles.sectionTitle}>Loan Information</Text>
-          {[
-            { label: 'Loan Number', value: loanDetails.loanNumber },
-            { label: 'Loan Type', value: loanDetails.loanType },
-            {
-              label: 'Status',
-              value: (
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(loanDetails.status) }]}>
-                  <Text style={styles.statusText}>{loanDetails.status}</Text>
-                </View>
-              ),
-            },
-            { label: 'Principal Amount', value: formatCurrency(loanDetails.principalAmount) },
-            { label: 'Interest Rate', value: `${loanDetails.interestRate}%` },
-          ].map((item, index) => (
-            <View key={index} style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{item.label}</Text>
-              {typeof item.value === 'string' ? (
-                <Text style={styles.detailValue}>{item.value}</Text>
-              ) : (
-                item.value
-              )}
-            </View>
-          ))}
-
-          <Text style={styles.sectionTitle}>Repayment Terms</Text>
-          {[
-            { label: 'Duration', value: loanDetails.loanDuration },
-            { label: 'Start Date', value: formatDate(loanDetails.loanStartDate) },
-            { label: 'End Date', value: formatDate(loanDetails.loanEndDate) },
-            { label: 'Installments', value: loanDetails.numberOfInstallments },
-            { label: 'Frequency', value: loanDetails.installmentFrequency },
-            {
-              label: 'Per Installment',
-              value: formatCurrency(loanDetails.repaymentAmountPerInstallment),
-            },
-          ].map((item, index) => (
-            <View key={index} style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{item.label}</Text>
-              <Text style={styles.detailValue}>{item.value}</Text>
-            </View>
-          ))}
-
-          <Text style={styles.sectionTitle}>Business Information</Text>
-          {[
-            { label: 'Business Name', value: loanDetails.businessFirmName },
-            { label: 'Address', value: loanDetails.businessAddress },
-            { label: 'Phone', value: loanDetails.businessPhone },
-            { label: 'Email', value: loanDetails.businessEmail },
-          ].map((item, index) => (
-            <View key={index} style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{item.label}</Text>
-              <Text style={styles.detailValue}>{item.value || 'N/A'}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
-  const renderRepaymentHistory = () => (
-    <View style={styles.tabContent}>
-      <FlatList
-        data={groupedRepayments}
-        keyExtractor={(group, index) => `group-${index}`}
-        renderItem={({ item, index }) => (
-          <GroupedRepaymentItem
-            group={item}
-            index={index}
-            formatDate={formatDate}
-            formatCurrency={formatCurrency}
-            getStatusColor={getStatusColor}
-            getRepaymentStatusIcon={getRepaymentStatusIcon}
-          />
-        )}
-        onEndReached={loadMoreRepayments}
-        onEndReachedThreshold={0.5}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        ListFooterComponent={
-          loading && hasMoreRepayments ? (
-            <View style={styles.loaderFooter}>
-              <ActivityIndicator size="small" color="#0066cc" />
-              <Text style={styles.loaderText}>Loading more...</Text>
-            </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="receipt-long" size={64} color="#ccc" />
-            <Text style={styles.emptyMessage}>No repayment schedules found</Text>
-          </View>
-        }
-      />
-    </View>
-  );
-
-  const renderCustomerInfo = () => {
-    if (!customerProfile) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Icon name="person-off" size={64} color="#ccc" />
-          <Text style={styles.emptyMessage}>Customer information not available</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.tabContent}>
-        <LinearGradient colors={['#f5f7fa', '#e4e7eb']} style={styles.customerCard}>
-          <View style={styles.customerHeader}>
-            {customerProfile.profilePic ? (
-              <Image source={{ uri: customerProfile.profilePic }} style={styles.customerImage} />
-            ) : (
-              <View style={[styles.customerImage, styles.customerImagePlaceholder]}>
-                <Text style={styles.customerInitials}>
-                  {customerProfile.fname?.charAt(0)}
-                  {customerProfile.lname?.charAt(0)}
-                </Text>
-              </View>
-            )}
-            <View style={styles.customerNameContainer}>
-              <Text style={styles.customerName}>
-                {customerProfile.fname} {customerProfile.lname}
-              </Text>
-              <Text style={styles.customerUsername}>@{customerProfile.userName}</Text>
-            </View>
-          </View>
-
-          <View style={styles.customerDetails}>
-            {[
-              {
-                icon: 'phone',
-                label: 'Phone Number',
-                value: customerProfile.phoneNumber,
-              },
-              { icon: 'email', label: 'Email', value: customerProfile.email },
-              {
-                icon: 'location-on',
-                label: 'Address',
-                value: `${customerProfile.address}, ${customerProfile.city}, ${customerProfile.state} - ${customerProfile.pincode}`,
-              },
-              { icon: 'flag', label: 'Country', value: customerProfile.country },
-              {
-                icon: 'account-balance',
-                label: 'Total Loans',
-                value: customerProfile.loans?.length || 0,
-              },
-            ].map((item, index) => (
-              <View key={index} style={styles.customerDetailItem}>
-                <Icon name={item.icon} size={20} color="#555" style={styles.customerDetailIcon} />
-                <View>
-                  <Text style={styles.customerDetailLabel}>{item.label}</Text>
-                  <Text style={styles.customerDetailValue}>{item.value || 'N/A'}</Text>
-                </View>
-              </View>
-            ))}
-
-            <View style={styles.customerStatusItem}>
-              <Text style={styles.customerStatusLabel}>Account Status</Text>
-              <View
-                style={[
-                  styles.customerStatus,
-                  { backgroundColor: customerProfile.accountStatus ? '#4CAF50' : '#F44336' },
-                ]}
-              >
-                <Text style={styles.customerStatusText}>
-                  {customerProfile.accountStatus ? 'Active' : 'Inactive'}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </LinearGradient>
-      </View>
-    );
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'details':
-        return renderLoanDetails();
-      case 'customer':
-        return renderCustomerInfo();
-      default:
-        return null;
-    }
-  };
-
   if (loading && !loanDetails) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={styles.loadingText}>Loading loan details...</Text>
+      <View style={styles.screen}>
+        <LoadingDetails />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.screen}>
       <View style={styles.tabBar}>
         {[
-          { id: 'details', icon: 'assessment', label: 'Details' },
+          { id: 'details', icon: 'clipboard', label: 'Details' },
           { id: 'repayments', icon: 'receipt-long', label: 'Repayments' },
-          { id: 'customer', icon: 'person', label: 'Customer' },
+          { id: 'customer', icon: 'account-circle', label: 'Customer' },
         ].map((tab) => (
           <TouchableOpacity
             key={tab.id}
             style={[styles.tab, activeTab === tab.id && styles.activeTab]}
             onPress={() => setActiveTab(tab.id)}
+            activeOpacity={0.7}
+            accessibilityRole="tab"
           >
-            <Icon
-              name={tab.icon}
-              size={22}
-              color={activeTab === tab.id ? '#0066cc' : '#666'}
-            />
-            <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
-              {tab.label}
-            </Text>
+            <Icon name={tab.icon} size={20} color={activeTab === tab.id ? colors.accentDeep : colors.inkMuted} />
+            <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>{tab.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {error && (
+      {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchLoanDetails}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+          <Button label="Retry" icon="refresh" variant="accent" size="sm" onPress={fetchLoanDetails} />
         </View>
-      )}
+      ) : null}
 
       {activeTab === 'repayments' ? (
-        renderRepaymentHistory()
+        renderRepayments()
       ) : (
-        <ScrollView style={styles.content}>
-          {renderTabContent()}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {activeTab === 'details' ? renderDetails() : renderCustomer()}
         </ScrollView>
       )}
 
       {renderPenaltyModal()}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.bg,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: colors.surface,
+    ...shadow.subtle,
+    zIndex: 2,
   },
   tab: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: spacing.sm + 4,
+    gap: 6,
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: '#0066cc',
+    borderBottomColor: colors.accent,
   },
   tabText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 6,
+    ...type.sub,
+    color: colors.inkSecondary,
   },
   activeTabText: {
-    color: '#0066cc',
-    fontWeight: '600',
+    color: colors.accentDeep,
+    fontWeight: '700',
   },
   content: {
     flex: 1,
   },
-  tabContent: {
-    padding: 16,
+  page: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl,
   },
-  summaryCard: {
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 3,
-  },
-  summaryRow: {
+
+  summaryGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    flexWrap: 'wrap',
   },
   summaryItem: {
-    alignItems: 'center',
-    flex: 1,
+    width: '50%',
+    paddingVertical: spacing.xs,
   },
   summaryLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 6,
+    ...type.micro,
+    color: colors.inkMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   summaryValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    ...type.title,
+    color: colors.ink,
   },
-  linkText: {
-    color: '#0066cc',
-    fontSize: 16,
+  penaltyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  detailsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 3,
+  summaryValueLink: {
+    ...type.title,
+    color: colors.accentDeep,
   },
+
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+    ...type.title,
+    color: colors.ink,
+    paddingBottom: spacing.sm,
+    marginBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 8,
+    borderBottomColor: colors.border,
   },
-  detailRow: {
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: spacing.md,
   },
-  detailLabel: {
-    fontSize: 15,
-    color: '#666',
-    flex: 1,
+  infoLabel: {
+    ...type.sub,
+    color: colors.inkSecondary,
+    flexShrink: 1,
   },
-  detailValue: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
-    flex: 1,
+  infoValueWrap: {
+    flexShrink: 1,
+    alignItems: 'flex-end',
+  },
+  infoValue: {
+    ...type.sub,
+    color: colors.ink,
+    fontWeight: '600',
     textAlign: 'right',
+    flexShrink: 1,
   },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  loadingContainer: {
-    flex: 1,
+
+  loaderFooter: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: spacing.lg,
+    gap: spacing.sm,
   },
-  loadingText: {
-    marginTop: 12,
-    color: '#666',
-    fontSize: 16,
+  loaderText: {
+    ...type.sub,
+    color: colors.inkMuted,
   },
+
   groupContainer: {
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   groupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 16,
-    elevation: 2,
-  },
-  groupHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   groupTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    ...type.bodyBold,
+    color: colors.ink,
   },
   groupDate: {
-    fontSize: 14,
-    color: '#666',
+    ...type.caption,
+    color: colors.inkMuted,
+    marginTop: 2,
   },
   groupItems: {
-    marginTop: 8,
-  },
-  repaymentItem: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 8,
-    elevation: 2,
+    marginTop: spacing.sm,
+    marginLeft: spacing.sm,
   },
   repaymentHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  repaymentHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  repaymentIcon: {
-    marginRight: 12,
   },
   repaymentInstallment: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    ...type.bodyBold,
+    color: colors.ink,
   },
   repaymentDate: {
-    fontSize: 14,
-    color: '#666',
+    ...type.caption,
+    color: colors.inkMuted,
+    marginTop: 2,
   },
   repaymentAmount: {
     alignItems: 'flex-end',
   },
   repaymentAmountText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  repaymentStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  repaymentStatusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    ...type.bodyBold,
+    color: colors.ink,
   },
   paymentDetails: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    gap: spacing.xs,
   },
   paymentDetailsTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 10,
+    ...type.caption,
+    color: colors.inkMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 2,
   },
-  paymentItem: {
-    marginBottom: 10,
-  },
-  paymentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  paymentLabel: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-  },
-  paymentValue: {
-    fontSize: 14,
-    color: '#333',
-    flex: 2,
+  paymentItemDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.xs,
+    marginTop: spacing.xs,
   },
   penaltyWarning: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF8E1',
-    padding: 10,
-    borderRadius: 6,
-    marginTop: 8,
+    backgroundColor: colors.warningSoft,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    marginTop: spacing.sm,
+    gap: spacing.xs,
   },
   penaltyWarningText: {
-    color: '#F57C00',
-    fontSize: 14,
-    marginLeft: 6,
+    ...type.sub,
+    fontWeight: '600',
+    color: colors.warningInk,
   },
-  loaderFooter: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  loaderText: {
-    marginLeft: 8,
-    color: '#666',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-  },
-  emptyMessage: {
-    marginTop: 12,
-    color: '#666',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    width: '90%',
-    maxHeight: '80%',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
+
   penaltyItem: {
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+    gap: spacing.xs,
   },
-  penaltyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  penaltyLabel: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-  },
-  penaltyValue: {
-    fontSize: 14,
-    color: '#333',
-    flex: 2,
-  },
-  penaltyStatus: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  customerCard: {
-    borderRadius: 12,
-    padding: 20,
-    elevation: 3,
-  },
+
   customerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   customerImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
-  },
-  customerImagePlaceholder: {
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: radius.full,
+    marginRight: spacing.md,
+    backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   customerInitials: {
-    fontSize: 32,
-    color: '#666',
-    fontWeight: 'bold',
+    ...type.h1,
+    color: colors.accentDeep,
   },
   customerNameContainer: {
     flex: 1,
   },
   customerName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    ...type.h1,
+    color: colors.ink,
   },
   customerUsername: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
+    ...type.sub,
+    color: colors.inkMuted,
+    marginTop: 2,
   },
-  customerDetails: {
-    marginTop: 8,
-  },
-  customerDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  customerDetailIcon: {
-    marginRight: 12,
-  },
-  customerDetailLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  customerDetailValue: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
+  customerRows: {
+    gap: spacing.sm,
   },
   customerStatusItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   customerStatusLabel: {
-    fontSize: 15,
-    color: '#666',
+    ...type.sub,
+    color: colors.inkSecondary,
   },
-  customerStatus: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  customerStatusText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
+
   errorContainer: {
-    padding: 16,
-    backgroundColor: '#FFEBEE',
+    padding: spacing.lg,
+    backgroundColor: colors.dangerSoft,
     alignItems: 'center',
+    gap: spacing.md,
   },
   errorText: {
-    color: '#D32F2F',
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  retryButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 14,
+    ...type.body,
     fontWeight: '600',
+    color: colors.dangerInk,
+    textAlign: 'center',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    width: '90%',
+    maxHeight: '80%',
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    ...type.h2,
+    color: colors.ink,
+  },
+  closeButton: {
+    padding: spacing.xs,
+  },
+  emptyMessage: {
+    ...type.body,
+    color: colors.inkMuted,
+    textAlign: 'center',
+    paddingVertical: spacing.xl,
   },
 });
 

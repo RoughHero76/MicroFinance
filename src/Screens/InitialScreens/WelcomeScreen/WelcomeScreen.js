@@ -1,76 +1,150 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+import Screen from '../../../design/components/Screen';
+import Button from '../../../design/components/Button';
+import Icon from '../../../design/Icon';
+import { PopIn, FadeInUp } from '../../../design/motion';
+import { colors, spacing, radius, type } from '../../../design/tokens';
+
+/**
+ * WelcomeScreen — brand hero on the dark "Ink" surface (matching the splash),
+ * amber "Amber" accent for the name and CTA. Staggered reanimated entrance
+ * (PopIn + FadeInUp) gives a small, tasteful bit of motion without a library.
+ * Navigation behavior is unchanged: Get Started → Login.
+ */
+
+const FEATURES = [
+  { icon: 'cash-multiple', label: 'Fast lending' },
+  { icon: 'chart-line', label: 'Live insights' },
+  { icon: 'shield-check', label: 'Bank-grade secure' },
+];
 
 const WelcomeScreen = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
 
-    const handleGetStarted = () => {
-        navigation.navigate('Login');
-    }
+  const handleGetStarted = () => {
+    navigation.navigate('Login');
+  };
 
-    return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1e3c72" />
-            <View style={styles.content}>
-                <Text style={styles.welcomeText}>Welcome to</Text>
-                <Text style={styles.appName}>Evi Finance</Text>
-                <Text style={styles.tagline}>
-                    Your journey begins here
+  return (
+    <Screen bg={colors.dark}>
+      <LinearGradient
+        colors={[colors.dark, colors.darkAlt]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      <View style={styles.body}>
+        <PopIn style={{ marginBottom: spacing.xl }}>
+          <Image source={require('../../../assets/EviLogo.png')} style={styles.logo} />
+        </PopIn>
+
+        <FadeInUp delay={80}>
+          <Text style={styles.eyebrow}>WELCOME TO</Text>
+          <Text style={styles.appName}>Evi Finance</Text>
+          <Text style={styles.tagline}>Your journey begins here</Text>
+        </FadeInUp>
+
+        <FadeInUp delay={160} style={{ marginTop: spacing.xxl }}>
+          <View style={styles.featureRow}>
+            {FEATURES.map((f) => (
+              <View key={f.label} style={styles.featureChip}>
+                <Icon name={f.icon} size={16} color={colors.accent} />
+                <Text style={styles.featureText} numberOfLines={1}>
+                  {f.label}
                 </Text>
-                <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
-                    <Text style={styles.getStartedButtonText}>Get Started</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+              </View>
+            ))}
+          </View>
+        </FadeInUp>
+
+        <FadeInUp delay={240} style={{ marginTop: spacing.xxxl }}>
+          <Button
+            label="Get Started"
+            variant="accent"
+            size="lg"
+            full
+            onPress={handleGetStarted}
+            testID="welcome-get-started"
+            style={styles.cta}
+          />
+        </FadeInUp>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>© 2024–25 76Groups · Powered by 76Groups</Text>
+      </View>
+    </Screen>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#1F2937'
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    welcomeText: {
-        fontSize: 28,
-        fontWeight: '300',
-        color: '#ffffff',
-        marginBottom: 10,
-    },
-    appName: {
-        color: '#FFC107',
-        fontSize: 48,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: {width: -1, height: 1},
-        textShadowRadius: 10
-    },
-    tagline: {
-        fontSize: 18,
-        color: '#ffffff',
-        textAlign: 'center',
-        marginBottom: 40,
-        fontStyle: 'italic',
-    },
-    getStartedButton: {
-        backgroundColor: '#FFC107',
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 30,
-        elevation: 5,
-    },
-    getStartedButtonText: {
-        color: '#1e3c72',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  logo: {
+    width: 190,
+    height: 64,
+    resizeMode: 'contain',
+  },
+  eyebrow: {
+    ...type.caption,
+    color: colors.onDarkMuted,
+    letterSpacing: 2.4,
+    textAlign: 'center',
+  },
+  appName: {
+    ...type.display,
+    color: colors.accent,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  tagline: {
+    ...type.body,
+    color: colors.onDark,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+
+  featureRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  featureChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.darkAlt,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+  },
+  featureText: {
+    ...type.caption,
+    color: colors.onDark,
+  },
+
+  cta: {
+    maxWidth: 280,
+  },
+
+  footer: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  footerText: {
+    ...type.micro,
+    color: colors.onDarkMuted,
+    textAlign: 'center',
+  },
 });
 
 export default WelcomeScreen;

@@ -1,0 +1,279 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, RefreshControl } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useHomeContext } from '../../../components/context/HomeContext';
+import { apiCall } from '../../../components/api/apiUtils';
+import { CustomToast } from '../../../components/toast/CustomToast';
+import Screen from '../../../design/components/Screen';
+import Card from '../../../design/components/Card';
+import StatCard from '../../../design/components/StatCard';
+import EmptyState from '../../../design/components/EmptyState';
+import Skeleton, { SkeletonCircle } from '../../../design/components/Skeleton';
+import Icon from '../../../design/Icon';
+import { FadeInUp } from '../../../design/motion';
+import { colors, spacing, radius, type } from '../../../design/tokens';
+
+/**
+ * HomeScreen (employee dashboard) — rebuilt on the "Ink & Amber"
+ * design system to match the admin dashboard's visual language.
+ *  - same behaviour: same three endpoints (today's collection count,
+ *    total customer count, assigned loan-status statistics), same
+ *    pull-to-refresh, same navigation targets (TodaysCollectionScreen,
+ *    AllCustomerView, LeadListScreen, LoanStatusDetails npa/sma levels)
+ *  - fixes: the Customers card previously rendered a hard-coded 'N/A'
+ *    even though the total customer count was already fetched — it now
+ *    shows the real number; a failed load now shows an EmptyState with
+ *    Retry instead of a silent zero-filled dashboard
+ *  - presentation: StatCard grid with semantic tones, shimmer skeleton
+ *    while loading, staggered reanimated entrance
+ */
+
+const SectionLabel = ({ children, style }) => (
+  <Text
+    style={[
+      type.caption,
+      { color: colors.inkMuted, textTransform: 'uppercase', letterSpacing: 0.8 },
+      style,
+    ]}
+  >
+    {children}
+  </Text>
+);
+
+const LoadingDashboard = ({ name }) => (
+  <View style={styles.page}>
+    <View style={{ marginBottom: spacing.xl }}>
+      <Text style={[type.h1, { color: colors.ink }]}>Welcome, {name}!</Text>
+      <View style={{ height: spacing.sm }} />
+      <Skeleton width="55%" height={14} />
+    </View>
+    <SectionLabel>Overview</SectionLabel>
+    <View style={{ height: spacing.sm }} />
+    <View style={styles.grid}>
+      <Skeleton width="48%" height={92} radius={radius.lg} />
+      <Skeleton width="48%" height={92} radius={radius.lg} style={{ marginLeft: spacing.md }} />
+      <Skeleton width="48%" height={92} radius={radius.lg} style={{ marginTop: spacing.md }} />
+      <Skeleton width="48%" height={92} radius={radius.lg} style={{ marginLeft: spacing.md, marginTop: spacing.md }} />
+    </View>
+    <View style={{ height: spacing.xl }} />
+    <SectionLabel>Loan Health</SectionLabel>
+    <View style={{ height: spacing.sm }} />
+    <Skeleton width="100%" height={92} radius={radius.lg} />
+    <View style={{ height: spacing.md }} />
+    <View style={styles.grid}>
+      <Skeleton width="48%" height={92} radius={radius.lg} />
+      <Skeleton width="48%" height={92} radius={radius.lg} style={{ marginLeft: spacing.md }} />
+      <Skeleton width="48%" height={92} radius={radius.lg} style={{ marginTop: spacing.md }} />
+      <Skeleton width="48%" height={92} radius={radius.lg} style={{ marginLeft: spacing.md, marginTop: spacing.md }} />
+    </View>
+  </View>
+);
+
+const HomeScreen = () => {
+  const { user } = useHomeContext();
+  const navigation = useNavigation();
+
+  const [loanCount, setLoanCount] = useState(0);
+  const [customerCount, setCustomerCount] = useState(null);
+  const [statisticsData, setStatisticData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setError(false);
+      const [loanCountRes, customerCountRes] = await Promise.all([
+        apiCall('/api/employee/loan/collection/today/count', 'GET'),
+        apiCall('/api/admin/customer/count/total', 'GET'),
+      ]);
+      setLoanCount(loanCountRes.count ?? 0);
+      setCustomerCount(customerCountRes.data ?? 0);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  const fetchStatistics = useCallback(async () => {
+    try {
+      const response = await apiCall('/api/shared/loan/status/statistics?assignedTo=me');
+      if (!response.error) {
+        setStatisticData(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching statistics:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchStatistics();
+  }, [fetchDashboardData, fetchStatistics]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchDashboardData();
+    fetchStatistics();
+  }, [fetchDashboardData, fetchStatistics]);
+
+  // Helper function to safely get SMA level data
+  const getSMALevelData = (level) => {
+    if (!statisticsData?.statistics?.smaLevels) return { count: 0, percentage: '0' };
+    const smaData = statisticsData.statistics.smaLevels.find((sma) => sma.level === level);
+    return smaData || { count: 0, percentage: '0' };
+  };
+
+  const goTo = useCallback(
+    (route, params) => () => navigation.navigate(route, params),
+    [navigation]
+  );
+
+  const name = user?.fname || 'Admin';
+  const failed = !loading && error && !statisticsData;
+
+  if (failed) {
+    return (
+      <Screen scroll bg={colors.bg}>
+        <EmptyState
+          icon="alert-circle"
+          title="Couldn't load your dashboard"
+          subtitle="Check your connection, then try again."
+          action={{
+            label: 'Retry',
+            icon: 'refresh',
+            variant: 'accent',
+            onPress: onRefresh,
+          }}
+          style={{ flex: 1, justifyContent: 'center' }}
+        />
+        <CustomToast />
+      </Screen>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Screen scroll bg={colors.bg}>
+        <LoadingDashboard name={name} />
+        <CustomToast />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen
+      scroll
+      bg={colors.bg}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.inkMuted} />
+      }
+      scrollProps={{ contentContainerStyle: styles.page, showsVerticalScrollIndicator: false }}
+    >
+      <FadeInUp>
+        <View>
+          <Text style={[type.h1, { color: colors.ink }]}>Welcome, {name}!</Text>
+          <Text style={[type.body, { color: colors.inkSecondary, marginTop: 4 }]}>
+            Here's your book of business at a glance.
+          </Text>
+        </View>
+      </FadeInUp>
+
+      <View style={styles.section}>
+        <SectionLabel>Overview</SectionLabel>
+      </View>
+      <FadeInUp delay={60}>
+        <View style={styles.grid}>
+          <StatCard
+            icon="cash-check"
+            label="Today's Collections"
+            value={loanCount}
+            tone="accent"
+            onPress={goTo('TodaysCollectionScreen')}
+            style={{ width: '48%' }}
+          />
+          <StatCard
+            icon="account-group"
+            label="Customers"
+            value={customerCount}
+            tone="info"
+            onPress={goTo('AllCustomerView')}
+            style={{ width: '48%', marginLeft: spacing.md }}
+          />
+          <StatCard
+            icon="lead-pencil"
+            label="Leads"
+            value="N/A"
+            tone="success"
+            onPress={goTo('LeadListScreen')}
+            style={{ width: '48%', marginTop: spacing.md }}
+          />
+        </View>
+      </FadeInUp>
+
+      <View style={styles.section}>
+        <SectionLabel>Loan Health</SectionLabel>
+      </View>
+      <FadeInUp delay={120}>
+        <StatCard
+          icon="alert-decagon"
+          label="NPA Loans"
+          value={statisticsData?.statistics?.overall?.totalNPA}
+          tone="danger"
+          onPress={goTo('LoanStatusDetails', { type: 'npa', assignedTo: 'me' })}
+        />
+      </FadeInUp>
+
+      <FadeInUp delay={180}>
+        <View style={[styles.grid, { marginTop: spacing.md }]}>
+          <StatCard
+            icon="alert-circle-outline"
+            label="SMA 0"
+            value={getSMALevelData(0).count}
+            tone="warning"
+            onPress={goTo('LoanStatusDetails', { type: 'sma', smaLevel: 0, assignedTo: 'me' })}
+            style={{ width: '48%' }}
+          />
+          <StatCard
+            icon="alert-triangle"
+            label="SMA 1"
+            value={getSMALevelData(1).count}
+            tone="warning"
+            onPress={goTo('LoanStatusDetails', { type: 'sma', smaLevel: 1, assignedTo: 'me' })}
+            style={{ width: '48%', marginLeft: spacing.md }}
+          />
+          <StatCard
+            icon="alert-circle"
+            label="SMA 2"
+            value={getSMALevelData(2).count}
+            tone="danger"
+            onPress={goTo('LoanStatusDetails', { type: 'sma', smaLevel: 2, assignedTo: 'me' })}
+            style={{ width: '48%', marginTop: spacing.md }}
+          />
+        </View>
+      </FadeInUp>
+
+      <CustomToast />
+    </Screen>
+  );
+};
+
+const styles = StyleSheet.create({
+  page: {
+    padding: spacing.xl,
+    paddingBottom: spacing.xxl,
+  },
+  section: {
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+});
+
+export default HomeScreen;

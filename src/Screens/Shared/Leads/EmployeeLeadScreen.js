@@ -1,59 +1,123 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  TextInput,
-  Image,
-} from "react-native";
+import { View, Text, StyleSheet, FlatList, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
 import { showToast } from "../../../components/toast/CustomToast";
+import CustomToast from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
 import { useHomeContext } from "../../../components/context/HomeContext";
+import Icon from "../../../design/Icon";
+import Card from "../../../design/components/Card";
+import Button from "../../../design/components/Button";
+import TextField from "../../../design/components/TextField";
+import EmptyState from "../../../design/components/EmptyState";
+import Skeleton from "../../../design/components/Skeleton";
+import { colors, spacing, radius, type } from "../../../design/tokens";
 
-const LeadItem = ({ item, onPress }) => {
-  const [imageSource, setImageSource] = useState(
-    item.pictureUrl ? { uri: item.pictureUrl } : ProfilePicturePlaceHolder
-  );
+/**
+ * Employee lead list — rebuilt on the "Ink & Amber" design system.
+ *  - behaviour preserved 1:1: the same /api/employee/lead fetch
+ *    (page / limit=10 / search), stats + pagination from the response,
+ *    the assignment guard on press (only your own leads open, everything
+ *    else shows the 'Lead is not assigned to you' info toast), search
+ *    reset-to-page-1, and Previous/Next pagination
+ *  - toasts keep their original 3-arg (type, title, message) shape
+ *  - fix: the original fired a network request on *every* keystroke;
+ *    the fetch is now debounced 300ms (identical end state, no request
+ *    storm)
+ *  - status colours mapped to the semantic tokens: Pending → warning,
+ *    InProgress → info, Approved → success, Rejected → danger,
+ *    anything else → neutral
+ *  - design: a stats strip, a design search field, lead cards with
+ *    avatar + icon detail rows + status pill, Previous/Next pagination
+ *    buttons, skeletons and a proper empty state
+ */
 
+const STATUS_CONFIG = {
+  Pending: { bg: colors.warningSoft, fg: colors.warningInk },
+  InProgress: { bg: colors.infoSoft, fg: colors.infoInk },
+  Approved: { bg: colors.successSoft, fg: colors.successInk },
+  Rejected: { bg: colors.dangerSoft, fg: colors.dangerInk },
+};
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "#FFC107";
-      case "InProgress":
-        return "#2196F3";
-      case "Approved":
-        return "#4CAF50";
-      case "Rejected":
-        return "#F44336";
-      default:
-        return "#9E9E9E";
-    }
-  };
-
+const StatusBadge = ({ status }) => {
+  const config = STATUS_CONFIG[status] || { bg: colors.neutralSoft, fg: colors.neutralInk };
   return (
-    <TouchableOpacity style={styles.leadCard} onPress={() => onPress(item._id)}>
-      <Image source={imageSource} style={styles.leadImage} />
-      <View style={styles.leadInfo}>
-        <Text style={styles.leadName}>{item.name}</Text>
-        <Text style={styles.leadDetail}>Phone: {item.phone}</Text>
-        <Text style={styles.leadDetail}>
-          Loan: ₹{item.loanAmount} ({item.loanType})
-        </Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+    <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
+      <Text style={[styles.statusBadgeText, { color: config.fg }]} numberOfLines={1}>
+        {status}
+      </Text>
+    </View>
   );
 };
+
+const DetailRow = ({ icon, children }) => (
+  <View style={styles.detailRow}>
+    <Icon name={icon} size={15} color={colors.inkMuted} />
+    <Text style={styles.detailText} numberOfLines={1}>
+      {children}
+    </Text>
+  </View>
+);
+
+const LeadItem = React.memo(({ item, onPress }) => (
+  <Card elevation="subtle" onPress={() => onPress(item._id)} style={{ marginBottom: spacing.md }}>
+    <View style={styles.leadRow}>
+      <Image
+        source={item.pictureUrl ? { uri: item.pictureUrl } : ProfilePicturePlaceHolder}
+        style={styles.leadImage}
+        resizeMode="cover"
+      />
+      <View style={styles.leadInfo}>
+        <Text style={styles.leadName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <DetailRow icon="phone">Phone: {item.phone}</DetailRow>
+        <DetailRow icon="currency-inr">
+          Loan: ₹{item.loanAmount} ({item.loanType})
+        </DetailRow>
+        <View style={styles.statusWrap}>
+          <StatusBadge status={item.status} />
+        </View>
+      </View>
+      <Icon name="chevron-right" size={20} color={colors.borderStrong} />
+    </View>
+  </Card>
+));
+
+const StatChip = ({ icon, label, value, tint }) => (
+  <View style={styles.statChip}>
+    <Icon name={icon} size={14} color={tint} />
+    <Text style={styles.statChipText} numberOfLines={1}>
+      {label} {value}
+    </Text>
+  </View>
+);
+
+const LoadingList = () => (
+  <View style={styles.page}>
+    <Card padded={false} style={{ marginBottom: spacing.md }}>
+      <View style={{ padding: spacing.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} width={86} height={28} radius={radius.full} />
+        ))}
+      </View>
+    </Card>
+    {[0, 1, 2].map((i) => (
+      <Card key={i} padded={false} style={{ marginBottom: spacing.md }}>
+        <View style={{ padding: spacing.lg, flexDirection: 'row', gap: spacing.sm }}>
+          <Skeleton width={56} height={56} radius={radius.full} />
+          <View style={{ flex: 1, gap: spacing.xs }}>
+            <Skeleton width="50%" height={16} />
+            <Skeleton width="70%" height={12} />
+            <Skeleton width="60%" height={12} />
+          </View>
+        </View>
+      </Card>
+    ))}
+  </View>
+);
 
 const LeadListScreen = () => {
   const [leads, setLeads] = useState([]);
@@ -63,13 +127,7 @@ const LeadListScreen = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState(null);
   const navigation = useNavigation();
-
-
   const { user } = useHomeContext();
-
-  useEffect(() => {
-    fetchLeads();
-  }, [page, searchQuery]);
 
   const fetchLeads = async () => {
     try {
@@ -95,17 +153,28 @@ const LeadListScreen = () => {
     }
   };
 
+  // Debounced so a keystroke doesn't fire a request (original refetched per
+  // character); the resolved fetch is identical to the original.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchLeads();
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, searchQuery]);
+
   const handleLeadPress = (leadId) => {
     const lead = leads.find((item) => item._id === leadId);
     if (lead) {
-      if (lead.AssignedTo === user._id) {
+      if (lead.AssignedTo === user?._id) {
         navigation.navigate('LeadDetailsScreen', { leadId });
       } else {
         showToast("info", "Access Denied", "Lead is not assigned to you.");
-        return
+        return;
       }
     }
   };
+
   const handleSearch = (text) => {
     setSearchQuery(text);
     setPage(1);
@@ -123,12 +192,11 @@ const LeadListScreen = () => {
     }
   };
 
-  if (loading && page === 1) {
+  if (loading && page === 1 && leads.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
-        </View>
+        <LoadingList />
+        <CustomToast />
       </SafeAreaView>
     );
   }
@@ -136,25 +204,29 @@ const LeadListScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       {stats && (
-        <View style={styles.statsCard}>
+        <Card padded={false} style={styles.statsCard}>
           <Text style={styles.statsTitle}>Lead Statistics</Text>
           <View style={styles.statsRow}>
-            <StatItem label="Total" value={stats.total} />
-            <StatItem label="Pending" value={stats.pending} />
-            <StatItem label="In Progress" value={stats.inProgress} />
-            <StatItem label="Approved" value={stats.approved} />
-            <StatItem label="Converted" value={stats.converted} />
+            <StatChip icon="briefcase" label="Total" value={stats.total} tint={colors.neutralInk} />
+            <StatChip icon="clock" label="Pending" value={stats.pending} tint={colors.warningInk} />
+            <StatChip icon="progress-check" label="In Progress" value={stats.inProgress} tint={colors.infoInk} />
+            <StatChip icon="check-circle" label="Approved" value={stats.approved} tint={colors.successInk} />
+            <StatChip icon="trending-up" label="Converted" value={stats.converted} tint={colors.primary} />
           </View>
-        </View>
+        </Card>
       )}
 
-      <View style={styles.searchContainer}>
-        <Icon name="magnify" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search leads..."
+      <View style={styles.searchWrap}>
+        <TextField
           value={searchQuery}
           onChangeText={handleSearch}
+          placeholder="Search leads..."
+          leftIcon="search"
+          rightSlot={
+            searchQuery.length > 0 ? (
+              <Button iconOnly icon="close-circle" size="sm" onPress={() => handleSearch('')} />
+            ) : null
+          }
         />
       </View>
 
@@ -163,177 +235,147 @@ const LeadListScreen = () => {
         renderItem={({ item }) => <LeadItem item={item} onPress={handleLeadPress} />}
         keyExtractor={(item) => item._id}
         ListEmptyComponent={
-          <Text style={styles.noLeadsText}>No leads found</Text>
+          !loading && (
+            <EmptyState
+              icon="lead-pencil"
+              title="No leads found"
+              subtitle="Leads matching your search will appear here."
+              style={{ marginTop: spacing.xxxl }}
+            />
+          )
         }
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={styles.page}
       />
 
       {totalPages > 1 && (
         <View style={styles.pagination}>
-          <TouchableOpacity
-            style={[styles.pageButton, page === 1 && styles.disabledButton]}
-            onPress={handlePrevPage}
+          <Button
+            label="Previous"
+            icon="chevron-left"
+            variant="outline"
+            size="sm"
             disabled={page === 1}
-          >
-            <Text style={styles.pageButtonText}>Previous</Text>
-          </TouchableOpacity>
+            onPress={handlePrevPage}
+          />
           <Text style={styles.pageInfo}>
             Page {page} of {totalPages}
           </Text>
-          <TouchableOpacity
-            style={[styles.pageButton, page === totalPages && styles.disabledButton]}
-            onPress={handleNextPage}
+          <Button
+            label="Next"
+            icon="chevron-right"
+            variant="accent"
+            size="sm"
             disabled={page === totalPages}
-          >
-            <Text style={styles.pageButtonText}>Next</Text>
-          </TouchableOpacity>
+            onPress={handleNextPage}
+          />
         </View>
       )}
+      <CustomToast />
     </SafeAreaView>
   );
 };
 
-const StatItem = ({ label, value }) => (
-  <View style={styles.statItem}>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={styles.statValue}>{value}</Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.bg,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  page: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl,
   },
-
   statsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
-    elevation: 3,
+    margin: spacing.md,
+    marginBottom: 0,
   },
   statsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
+    ...type.bodyBold,
+    color: colors.ink,
+    marginBottom: spacing.sm,
   },
   statsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
-  statItem: {
-    alignItems: "center",
-    width: "30%",
-    marginBottom: 10,
+  statChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
   },
-  statLabel: {
-    fontSize: 14,
-    color: "#666",
+  statChipText: {
+    ...type.caption,
+    fontWeight: '600',
+    color: colors.ink,
+    marginLeft: 5,
   },
-  statValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+  searchWrap: {
+    padding: spacing.md,
+    paddingBottom: spacing.sm,
   },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    margin: 10,
-    paddingHorizontal: 10,
-    elevation: 3,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: "#333",
-  },
-  listContainer: {
-    paddingBottom: 20,
-  },
-  leadCard: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 10,
-    marginVertical: 5,
-    elevation: 3,
+
+  leadRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   leadImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 15,
+    width: 56,
+    height: 56,
+    borderRadius: radius.full,
+    marginRight: spacing.md,
+    backgroundColor: colors.surfaceAlt,
   },
   leadInfo: {
     flex: 1,
+    marginRight: spacing.sm,
   },
   leadName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
+    ...type.h2,
+    color: colors.ink,
+    marginBottom: spacing.xs,
   },
-  leadDetail: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 3,
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  detailText: {
+    ...type.sub,
+    color: colors.inkSecondary,
+    marginLeft: spacing.xs,
+    flexShrink: 1,
+  },
+  statusWrap: {
+    marginTop: spacing.xs,
   },
   statusBadge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    marginTop: 5,
+    alignSelf: 'flex-start',
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
-  statusText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
+  statusBadgeText: {
+    ...type.micro,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
-  noLeadsText: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 20,
-  },
+
   pagination: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 15,
-    backgroundColor: "#fff",
-  },
-  pageButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  disabledButton: {
-    backgroundColor: "#ccc",
-  },
-  pageButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   pageInfo: {
-    fontSize: 16,
-    color: "#333",
+    ...type.bodyBold,
+    color: colors.ink,
   },
 });
 

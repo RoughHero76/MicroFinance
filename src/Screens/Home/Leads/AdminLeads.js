@@ -1,40 +1,189 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  FlatList,
-  Image,
-  RefreshControl,
-  ActivityIndicator,
-  Modal,
   TextInput,
+  Pressable,
+  FlatList,
+  RefreshControl,
+  Modal,
   SafeAreaView,
-  Alert
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from '../../../design/Icon';
 import { apiCall } from '../../../components/api/apiUtils';
-import CustomToast, { showToast } from '../../../components/toast/CustomToast';
+import { showToast, CustomToast } from '../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../components/context/HomeContext';
+import Screen from '../../../design/components/Screen';
+import Card from '../../../design/components/Card';
+import Button from '../../../design/components/Button';
+import TextField from '../../../design/components/TextField';
+import Avatar from '../../../design/components/Avatar';
+import EmptyState from '../../../design/components/EmptyState';
+import Skeleton, { SkeletonCircle } from '../../../design/components/Skeleton';
+import { colors, spacing, radius, type } from '../../../design/tokens';
+
+/**
+ * AdminLeads — lead pipeline rebuilt on the "Ink & Amber" design system.
+ *  - same data flow: GET /api/admin/lead (page/limit/sortBy/sortOrder +
+ *    optional status/followupStatus/search/assignedTo), pull-to-refresh,
+ *    refetch on focus, pagination (page 1..totalPages) and the exact
+ *    mutation calls: POST /:id/assign { employeeId },
+ *    PATCH /:id/status { status, remarksByAdmin? } (remarks required for
+ *    Approved/Rejected), DELETE /:id — all with their original Alert
+ *    confirmations and toasts (the lead endpoints use `!response.error`,
+ *    kept verbatim)
+ *  - presentation: search + filter top bar, a stats chip strip, memoized
+ *    lead cards with tinted status/follow-up pills and a 2-column detail
+ *    grid, and three bottom-sheet modals (assign / status / filters)
+ *  - fix: the original filter modal's Close button reset the *status*
+ *    modal state and never closed the filter modal itself — it could only
+ *    be dismissed via the Android back button
+ */
+
+const LEAD_STATUS_META = {
+  Pending: { dot: colors.warning, ink: colors.warningInk, bg: colors.warningSoft },
+  InProgress: { dot: colors.info, ink: colors.infoInk, bg: colors.infoSoft },
+  Approved: { dot: colors.success, ink: colors.successInk, bg: colors.successSoft },
+  Rejected: { dot: colors.danger, ink: colors.dangerInk, bg: colors.dangerSoft },
+  Converted: { dot: colors.accentDeep, ink: colors.accentDeep, bg: colors.accentSoft },
+  Completed: { dot: colors.success, ink: colors.successInk, bg: colors.successSoft },
+  _default: { dot: colors.neutral, ink: colors.neutralInk, bg: colors.neutralSoft },
+};
+
+const statMeta = (status) => (status ? LEAD_STATUS_META[status] || LEAD_STATUS_META._default : LEAD_STATUS_META._default);
+
+const LeadPill = ({ label, status }) => {
+  const meta = statMeta(status);
+  return (
+    <View style={[styles.pill, { backgroundColor: meta.bg }]}>
+      <View style={[styles.pillDot, { backgroundColor: meta.dot }]} />
+      <Text style={[styles.pillText, { color: meta.ink }]}>{label}</Text>
+    </View>
+  );
+};
+
+const STAT_DEFS = [
+  { key: 'total', label: 'Total' },
+  { key: 'pending', label: 'Pending' },
+  { key: 'inProgress', label: 'In Progress' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'rejected', label: 'Rejected' },
+  { key: 'converted', label: 'Converted' },
+];
+
+const DetailCell = ({ label, value }) => (
+  <View style={styles.detailCell}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue}>{value || 'N/A'}</Text>
+  </View>
+);
+
+const LeadCard = React.memo(({ lead, onAssign, onStatus, onDelete }) => {
+  const name = lead.name || 'Unknown';
+  return (
+    <Card style={{ marginTop: spacing.md }}>
+      <View style={styles.leadHeader}>
+        <Avatar name={name} size={48} image={lead.pictureUrl || null} />
+        <View style={styles.leadIdentity}>
+          <Text style={[type.bodyBold, { color: colors.ink, fontSize: 16 }]} numberOfLines={1}>
+            {name}
+          </Text>
+          <Text style={[type.sub, { color: colors.inkSecondary }]} numberOfLines={1}>
+            {lead.phone || 'No phone'}
+          </Text>
+          <Text style={[type.sub, { color: colors.inkSecondary }]} numberOfLines={1}>
+            {lead.email || 'No email'}
+          </Text>
+        </View>
+        <View style={styles.leadPills}>
+          <LeadPill label={lead.status || 'Unknown'} status={lead.status} />
+          <LeadPill label={lead.followupStatus || 'N/A'} status={lead.followupStatus} />
+        </View>
+      </View>
+
+      <View style={styles.detailGrid}>
+        <DetailCell label="Loan Type" value={lead.loanType} />
+        <DetailCell label="Amount" value={lead.loanAmount?.toLocaleString()} />
+        <DetailCell label="Duration" value={lead.loanDuration} />
+        <DetailCell label="City" value={lead.city} />
+        <DetailCell
+          label="Assigned To"
+          value={lead.AssignedTo ? `${lead.AssignedTo.fname} ${lead.AssignedTo.lname}` : 'Unassigned'}
+        />
+        <DetailCell label="Added By" value={lead.addedBy ? `${lead.addedBy.fname} ${lead.addedBy.lname}` : 'N/A'} />
+      </View>
+
+      <View style={styles.remarksBox}>
+        <Text style={styles.remarksLabel}>Remarks</Text>
+        <Text style={styles.remarksText} numberOfLines={3}>
+          {lead.remarksEmployee || 'N/A'}
+        </Text>
+      </View>
+
+      <View style={styles.actionRow}>
+        <Pressable hitSlop={6} style={({ pressed }) => pressed && { opacity: 0.7 }} onPress={onAssign}>
+          <Icon name="account-arrow-right" size={18} color={colors.successInk} />
+          <Text style={[styles.actionText, { color: colors.successInk }]}>Assign</Text>
+        </Pressable>
+        <Pressable hitSlop={6} style={({ pressed }) => pressed && { opacity: 0.7 }} onPress={onStatus}>
+          <Icon name="clipboard-check" size={18} color={colors.warningInk} />
+          <Text style={[styles.actionText, { color: colors.warningInk }]}>Status</Text>
+        </Pressable>
+        <Pressable hitSlop={6} style={({ pressed }) => pressed && { opacity: 0.7 }} onPress={onDelete}>
+          <Icon name="delete" size={18} color={colors.dangerInk} />
+          <Text style={[styles.actionText, { color: colors.dangerInk }]}>Delete</Text>
+        </Pressable>
+      </View>
+    </Card>
+  );
+});
+
+const Sheet = ({ visible, onClose, title, children }) => (
+  <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <View style={styles.sheetOverlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flexGrow: 1, justifyContent: 'flex-end' }}
+      >
+        <SafeAreaView style={styles.sheet}>
+          <View style={styles.sheetGrabber} />
+          <View style={styles.sheetHeader}>
+            <Text style={[type.h2, { color: colors.ink }]}>{title}</Text>
+            <Pressable onPress={onClose} hitSlop={8} style={styles.sheetClose}>
+              <Icon name="close" size={18} color={colors.inkSecondary} />
+            </Pressable>
+          </View>
+          {children}
+          <CustomToast />
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </View>
+  </Modal>
+);
+
+const FilterChip = ({ label, active, onPress }) => (
+  <Pressable
+    onPress={onPress}
+    style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && { opacity: 0.85 }]}
+  >
+    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+  </Pressable>
+);
 
 const AdminLeadsScreen = ({ navigation }) => {
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    inProgress: 0,
-    approved: 0,
-    rejected: 0,
-    converted: 0
-  });
+  const [stats, setStats] = useState(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
-    limit: 10
+    limit: 10,
   });
   const [filters, setFilters] = useState({
     status: '',
@@ -42,7 +191,7 @@ const AdminLeadsScreen = ({ navigation }) => {
     search: '',
     assignedTo: '',
     sortBy: 'date',
-    sortOrder: -1
+    sortOrder: -1,
   });
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,7 +213,7 @@ const AdminLeadsScreen = ({ navigation }) => {
         page: pagination.currentPage,
         limit: pagination.limit,
         sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
+        sortOrder: filters.sortOrder,
       });
 
       if (filters.status) queryParams.append('status', filters.status);
@@ -98,7 +247,7 @@ const AdminLeadsScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       fetchLeads();
-      return () => { };
+      return () => {};
     }, [fetchLeads])
   );
 
@@ -117,11 +266,9 @@ const AdminLeadsScreen = ({ navigation }) => {
     if (!selectedLead) return;
 
     try {
-      const response = await apiCall(
-        `/api/admin/lead/${selectedLead._id}/assign`,
-        'POST',
-        { employeeId }
-      );
+      const response = await apiCall(`/api/admin/lead/${selectedLead._id}/assign`, 'POST', {
+        employeeId,
+      });
 
       if (!response.error) {
         showToast('success', 'Success', 'Lead assigned successfully');
@@ -137,15 +284,11 @@ const AdminLeadsScreen = ({ navigation }) => {
   };
 
   const updateLeadCheck = async (status) => {
-    setSelectedStatus(status); // Track the selected status
-    Alert.alert(
-      'Confirm Lead Update',
-      `Are you sure you want to update this lead to ${status}?`,
-      [
-        { text: 'Cancel', style: 'cancel', onPress: () => setSelectedStatus(null) }, // Reset on cancel
-        { text: 'OK', onPress: () => updateLeadStatus(status) },
-      ]
-    );
+    setSelectedStatus(status);
+    Alert.alert('Confirm Lead Update', `Are you sure you want to update this lead to ${status}?`, [
+      { text: 'Cancel', style: 'cancel', onPress: () => setSelectedStatus(null) },
+      { text: 'OK', onPress: () => updateLeadStatus(status) },
+    ]);
   };
 
   const updateLeadStatus = async (status) => {
@@ -162,17 +305,13 @@ const AdminLeadsScreen = ({ navigation }) => {
         payload.remarksByAdmin = adminRemarks;
       }
 
-      const response = await apiCall(
-        `/api/admin/lead/${selectedLead._id}/status`,
-        'PATCH',
-        payload
-      );
+      const response = await apiCall(`/api/admin/lead/${selectedLead._id}/status`, 'PATCH', payload);
 
       if (!response.error) {
         showToast('success', 'Success', `Lead status updated to ${status}`);
         setStatusModalVisible(false);
         setAdminRemarks('');
-        setSelectedStatus(null); // Reset selected status
+        setSelectedStatus(null);
         fetchLeads();
       } else {
         showToast('error', 'Error', response.message);
@@ -182,10 +321,11 @@ const AdminLeadsScreen = ({ navigation }) => {
       console.error('Update status error:', error);
     }
   };
+
   const handleDeleteLead = (leadId) => {
     Alert.alert('Confirm Delete', 'Are you sure you want to delete this lead?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'OK', onPress: () => deleteLead(leadId) }
+      { text: 'OK', onPress: () => deleteLead(leadId) },
     ]);
   };
 
@@ -205,687 +345,542 @@ const AdminLeadsScreen = ({ navigation }) => {
     }
   };
 
-  const renderLeadCard = ({ item }) => (
-    <View style={styles.leadCard}>
-      <View style={styles.leadHeader}>
-        <View style={styles.leadNameContainer}>
-          {item.pictureUrl ? (
-            <Image
-              source={{ uri: item.pictureUrl }}
-              style={styles.leadAvatar}
-              defaultSource={require('../../../assets/placeholders/profile.jpg')}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitial}>{item.name ? item.name[0].toUpperCase() : '?'}</Text>
-            </View>
-          )}
-          <View style={styles.leadInfo}>
-            <Text style={styles.leadName}>{item.name || 'Unknown'}</Text>
-            <Text style={styles.leadContact}>{item.phone || 'No phone'}</Text>
-            <Text style={styles.leadContact}>{item.email || 'No email'}</Text>
-          </View>
-        </View>
-        <View style={styles.leadStatusContainer}>
-          <View style={{ alignItems: 'flex-end', marginBottom: 4 }}>
-            <Text style={styles.leadDetailLabel}>Status</Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end', marginBottom: 4, marginTop: 12 }}>
-            <Text style={styles.leadDetailLabel}>Follow Up</Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.followupStatus) }]}>
-            <Text style={styles.statusText}>{item.followupStatus || 'N/A'}</Text>
-          </View>
-        </View>
+  const topBar = (
+    <View style={styles.topBar}>
+      <View style={styles.searchBox}>
+        <Icon name="search" size={18} color={colors.inkMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search leads..."
+          placeholderTextColor={colors.inkMuted}
+          value={filters.search}
+          onChangeText={(text) => handleFilterChange('search', text)}
+          returnKeyType="search"
+          onSubmitEditing={fetchLeads}
+        />
       </View>
-
-      <View style={styles.leadDetails}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.leadDetailLabel}>Loan Type</Text>
-            <Text style={styles.leadDetail}>{item.loanType || 'N/A'}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.leadDetailLabel}>Amount</Text>
-            <Text style={styles.leadDetail}>{item.loanAmount?.toLocaleString() || 'N/A'}</Text>
-          </View>
-        </View>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.leadDetailLabel}>Duration</Text>
-            <Text style={styles.leadDetail}>{item.loanDuration || 'N/A'}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.leadDetailLabel}>City</Text>
-            <Text style={styles.leadDetail}>{item.city || 'N/A'}</Text>
-          </View>
-        </View>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.leadDetailLabel}>Assigned To</Text>
-            <Text style={styles.leadDetail}>
-              {item.AssignedTo ? `${item.AssignedTo.fname} ${item.AssignedTo.lname}` : 'Unassigned'}
-            </Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.leadDetailLabel}>Added By</Text>
-            <Text style={styles.leadDetail}>
-              {item.addedBy ? `${item.addedBy.fname} ${item.addedBy.lname}` : 'N/A'}
-            </Text>
-          </View>
-
-
-
-        </View>
-        <View>
-          <Text style={styles.leadDetailLabel}>Remarks</Text>
-          <Text style={styles.leadDetail}>{item.remarksEmployee || 'N/A'}</Text>
-        </View>
-      </View>
-
-      <View style={styles.leadActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => {
-            setSelectedLead(item);
-            setModalVisible(true);
-          }}
-        >
-          <Icon name="account-arrow-right" size={18} color="#43A047" />
-          <Text style={styles.actionText}>Assign</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => {
-            setSelectedLead(item);
-            setStatusModalVisible(true);
-          }}
-        >
-          <Icon name="clipboard-check" size={18} color="#FF9800" />
-          <Text style={styles.actionText}>Status</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleDeleteLead(item._id)}
-        >
-          <Icon name="delete" size={18} color="#F44336" />
-          <Text style={styles.actionText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
+      <Button
+        label="Filter"
+        icon="filter"
+        variant="accent"
+        size="sm"
+        style={{ marginLeft: spacing.sm }}
+        onPress={() => setFilterModalVisible(true)}
+      />
     </View>
   );
 
-  const getStatusColor = (status) => {
-    const colors = {
-      Pending: '#FFB300',
-      InProgress: '#8E24AA',
-      Approved: '#4CAF50',
-      Rejected: '#F44336',
-      Converted: '#00BCD4'
-    };
-    return colors[status] || '#E3F2FD';
-  };
+  const statsStrip = stats ? (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.statsStrip}
+      contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}
+    >
+      {STAT_DEFS.map((def) => {
+        const value = stats[def.key];
+        if (value === undefined || value === null) return null;
+        return (
+          <View key={def.key} style={styles.statChip}>
+            <Text style={styles.statValue}>{value}</Text>
+            <Text style={styles.statLabel}>{def.label}</Text>
+          </View>
+        );
+      })}
+    </ScrollView>
+  ) : null;
+
+  const renderSkeletonRow = () => (
+    <Card style={styles.cardGap}>
+      <View style={styles.skeletonHeaderRow}>
+        <SkeletonCircle size={48} />
+        <View style={{ flex: 1, marginLeft: spacing.md }}>
+          <Skeleton width="45%" height={14} />
+          <View style={{ height: 8 }} />
+          <Skeleton width="70%" height={12} />
+          <View style={{ height: 8 }} />
+          <Skeleton width="55%" height={12} />
+        </View>
+      </View>
+      <View style={{ height: spacing.md }} />
+      <Skeleton width="100%" height={14} />
+      <View style={{ height: 8 }} />
+      <Skeleton width="85%" height={14} />
+    </Card>
+  );
 
   const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Icon name="file-search-outline" size={64} color="#90A4AE" />
-      <Text style={styles.emptyText}>No Leads Available</Text>
-      <Text style={styles.emptySubtext}>Try adjusting filters or create a new lead</Text>
-    </View>
-  );
-
-  const renderFilterModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={filterModalVisible}
-      onRequestClose={() => setFilterModalVisible(false)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter Options</Text>
-
-          <Text style={styles.filterLabel}>Status</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            <TouchableOpacity
-              style={[styles.filterButton, !filters.status && styles.filterButtonActive]}
-              onPress={() => handleFilterChange('status', '')}
-            >
-              <Text style={styles.filterButtonText}>All</Text>
-            </TouchableOpacity>
-            {statusOptions.map((status) => (
-              <TouchableOpacity
-                key={status}
-                style={[styles.filterButton, filters.status === status && styles.filterButtonActive]}
-                onPress={() => handleFilterChange('status', status)}
-              >
-                <Text style={styles.filterButtonText}>{status}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <Text style={styles.filterLabel}>Follow-up Status</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            <TouchableOpacity
-              style={[styles.filterButton, !filters.followupStatus && styles.filterButtonActive]}
-              onPress={() => handleFilterChange('followupStatus', '')}
-            >
-              <Text style={styles.filterButtonText}>All</Text>
-            </TouchableOpacity>
-            {followupOptions.map((status) => (
-              <TouchableOpacity
-                key={status}
-                style={[styles.filterButton, filters.followupStatus === status && styles.filterButtonActive]}
-                onPress={() => handleFilterChange('followupStatus', status)}
-              >
-                <Text style={styles.filterButtonText}>{status}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <Text style={styles.filterLabel}>Assigned To</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            <TouchableOpacity
-              style={[styles.filterButton, !filters.assignedTo && styles.filterButtonActive]}
-              onPress={() => handleFilterChange('assignedTo', '')}
-            >
-              <Text style={styles.filterButtonText}>All</Text>
-            </TouchableOpacity>
-            {employees?.map((employee) => (
-              <TouchableOpacity
-                key={employee._id}
-                style={[styles.filterButton, filters.assignedTo === employee._id && styles.filterButtonActive]}
-                onPress={() => handleFilterChange('assignedTo', employee._id)}
-              >
-                <Text style={styles.filterButtonText}>{employee.fname} {employee.lname}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => {
-              setStatusModalVisible(false);
-              setAdminRemarks('');
-              setSelectedStatus(null); // Reset selected status
-            }}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-        <CustomToast />
-      </View>
-    </Modal>
+    <EmptyState
+      icon="file-search-outline"
+      title="No leads available"
+      subtitle="Try adjusting filters or create a new lead"
+      style={{ paddingVertical: spacing.xxxl }}
+    />
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search leads..."
-            value={filters.search}
-            onChangeText={(text) => handleFilterChange('search', text)}
-            returnKeyType="search"
-            onSubmitEditing={fetchLeads}
+    <Screen bg={colors.bg} header={topBar}>
+      <View style={{ flex: 1 }}>
+        {statsStrip}
+        {loading && filteredLeads.length === 0 ? (
+          <View style={{ padding: spacing.md }}>
+            {[0, 1, 2].map((i) => (
+              <React.Fragment key={i}>{renderSkeletonRow()}</React.Fragment>
+            ))}
+          </View>
+        ) : (
+          <FlatList
+            data={filteredLeads}
+            renderItem={({ item }) => (
+              <LeadCard
+                lead={item}
+                onAssign={() => {
+                  setSelectedLead(item);
+                  setModalVisible(true);
+                }}
+                onStatus={() => {
+                  setSelectedLead(item);
+                  setStatusModalVisible(true);
+                }}
+                onDelete={() => handleDeleteLead(item._id)}
+              />
+            )}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={renderEmpty}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.accent]} />
+            }
           />
-          <TouchableOpacity style={styles.searchButton} onPress={fetchLeads}>
-            <Icon name="magnify" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterModalVisible(true)}
-        >
-          <Icon name="filter" size={20} color="#FFFFFF" />
-          <Text style={styles.filterButtonText}>Filter</Text>
-        </TouchableOpacity>
+        )}
+        {pagination.totalPages > 1 && (
+          <View style={styles.pagination}>
+            <Pressable
+              hitSlop={8}
+              disabled={pagination.currentPage === 1}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+              onPress={() => handlePageChange(pagination.currentPage - 1)}
+            >
+              <Icon
+                name="chevron-left"
+                size={22}
+                color={pagination.currentPage === 1 ? colors.inkFaint : colors.primary}
+              />
+            </Pressable>
+            <Text style={styles.paginationText}>
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </Text>
+            <Pressable
+              hitSlop={8}
+              disabled={pagination.currentPage === pagination.totalPages}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+              onPress={() => handlePageChange(pagination.currentPage + 1)}
+            >
+              <Icon
+                name="chevron-right"
+                size={22}
+                color={pagination.currentPage === pagination.totalPages ? colors.inkFaint : colors.primary}
+              />
+            </Pressable>
+          </View>
+        )}
       </View>
 
-      {loading && leads.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1E88E5" />
-          <Text style={styles.loadingText}>Loading leads...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredLeads}
-          renderItem={renderLeadCard}
-          keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.leadsList}
-          ListEmptyComponent={renderEmpty}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#1E88E5"]}
-            />
-          }
-        />
-      )}
+      <Sheet visible={modalVisible} onClose={() => setModalVisible(false)} title="Assign Employee">
+        {employees && employees.length > 0 ? (
+          <ScrollView style={{ maxHeight: '60%' }}>
+            {employees.map((employee) => (
+              <Pressable
+                key={employee._id}
+                style={({ pressed }) => [styles.employeeRow, pressed && { opacity: 0.85 }]}
+                onPress={() => assignEmployee(employee._id)}
+              >
+                <Avatar name={`${employee.fname || ''} ${employee.lname || ''}`} size={40} />
+                <Text style={styles.employeeName}>
+                  {employee.fname} {employee.lname}
+                </Text>
+                <Icon name="chevron-right" size={18} color={colors.inkMuted} />
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <EmptyState
+            icon="users"
+            title="No employees yet"
+            subtitle="Register an employee first, then assign leads."
+          />
+        )}
+      </Sheet>
 
-      {pagination.totalPages > 1 && (
-        <View style={styles.paginationContainer}>
-          <TouchableOpacity
-            style={[
-              styles.paginationButton,
-              pagination.currentPage === 1 && styles.paginationButtonDisabled
-            ]}
-            onPress={() => handlePageChange(pagination.currentPage - 1)}
-            disabled={pagination.currentPage === 1}
-          >
-            <Icon name="chevron-left" size={24} color={pagination.currentPage === 1 ? "#BDBDBD" : "#1E88E5"} />
-          </TouchableOpacity>
-          <Text style={styles.paginationText}>
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.paginationButton,
-              pagination.currentPage === pagination.totalPages && styles.paginationButtonDisabled
-            ]}
-            onPress={() => handlePageChange(pagination.currentPage + 1)}
-            disabled={pagination.currentPage === pagination.totalPages}
-          >
-            <Icon name="chevron-right" size={24} color={pagination.currentPage === pagination.totalPages ? "#BDBDBD" : "#1E88E5"} />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Assign Employee</Text>
-            <ScrollView style={styles.employeeList}>
-              {employees?.map((employee) => (
-                <TouchableOpacity
-                  key={employee._id}
-                  style={styles.employeeItem}
-                  onPress={() => assignEmployee(employee._id)}
-                >
-                  <Text style={styles.employeeName}>
-                    {employee.fname} {employee.lname}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          <CustomToast />
-        </View>
-      </Modal>
-      <Modal
-        animationType="slide"
-        transparent={true}
+      <Sheet
         visible={statusModalVisible}
-        onRequestClose={() => setStatusModalVisible(false)}
+        onClose={() => {
+          setStatusModalVisible(false);
+          setAdminRemarks('');
+          setSelectedStatus(null);
+        }}
+        title="Update Lead Status"
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Update Lead Status</Text>
-            <View style={styles.statusButtonsContainer}>
-              {statusOptions.map((status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.statusButton,
-                    { backgroundColor: getStatusColor(status) },
-                    selectedStatus === status && styles.statusButtonSelected, // Apply selected style
-                  ]}
-                  onPress={() => updateLeadCheck(status)}
-                >
-                  <Text style={styles.statusButtonText}>{status}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TextInput
-              style={styles.remarksInput}
-              placeholder="Admin remarks (required for Approve/Reject)"
-              value={adminRemarks}
-              onChangeText={setAdminRemarks}
-              multiline
-              numberOfLines={3}
-            />
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => {
-                setStatusModalVisible(false);
-                setAdminRemarks('');
-              }}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          <CustomToast />
+        <View style={styles.statusGrid}>
+          {statusOptions.map((status) => {
+            const meta = LEAD_STATUS_META[status];
+            const selected = selectedStatus === status;
+            return (
+              <Pressable
+                key={status}
+                style={[
+                  styles.statusOption,
+                  { backgroundColor: meta.bg, borderColor: selected ? meta.ink : 'transparent' },
+                ]}
+              onPress={() => updateLeadCheck(status)}
+              >
+                <View style={[styles.statusOptionDot, { backgroundColor: meta.dot }]} />
+                <Text style={[styles.statusOptionText, { color: meta.ink }]}>{status}</Text>
+              </Pressable>
+            );
+          })}
         </View>
-      </Modal>
+        <TextField
+          label="Admin remarks"
+          placeholder="e.g. verified income documents"
+          value={adminRemarks}
+          onChangeText={setAdminRemarks}
+          hint="Required for Approve/Reject"
+          multiline
+        />
+      </Sheet>
 
-      {renderFilterModal()}
+      <Sheet visible={filterModalVisible} onClose={() => setFilterModalVisible(false)} title="Filter Leads">
+        <Text style={styles.filterSectionLabel}>Status</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          <FilterChip label="All" active={!filters.status} onPress={() => handleFilterChange('status', '')} />
+          {statusOptions.map((status) => (
+            <FilterChip
+              key={status}
+              label={status}
+              active={filters.status === status}
+              onPress={() => handleFilterChange('status', status)}
+            />
+          ))}
+        </ScrollView>
+
+        <Text style={styles.filterSectionLabel}>Follow-up Status</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          <FilterChip
+            label="All"
+            active={!filters.followupStatus}
+            onPress={() => handleFilterChange('followupStatus', '')}
+          />
+          {followupOptions.map((status) => (
+            <FilterChip
+              key={status}
+              label={status}
+              active={filters.followupStatus === status}
+              onPress={() => handleFilterChange('followupStatus', status)}
+            />
+          ))}
+        </ScrollView>
+
+        <Text style={styles.filterSectionLabel}>Assigned To</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          <FilterChip
+            label="All"
+            active={!filters.assignedTo}
+            onPress={() => handleFilterChange('assignedTo', '')}
+          />
+          {employees?.map((employee) => (
+            <FilterChip
+              key={employee._id}
+              label={`${employee.fname} ${employee.lname}`}
+              active={filters.assignedTo === employee._id}
+              onPress={() => handleFilterChange('assignedTo', employee._id)}
+            />
+          ))}
+        </ScrollView>
+      </Sheet>
+
       <CustomToast />
-    </SafeAreaView>
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
   topBar: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    elevation: 3,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
   },
-  searchContainer: {
+  searchBox: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
-    height: 44,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 22,
-    paddingHorizontal: 16,
+    height: 38,
+    marginLeft: spacing.xs,
+    color: colors.ink,
     fontSize: 14,
-    marginRight: 12,
   },
-  searchButton: {
-    backgroundColor: '#1E88E5',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
+  statsStrip: {
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  filterButton: {
-    backgroundColor: '#1E88E5',
+  statChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 22,
-    marginLeft: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginRight: spacing.sm,
   },
-  filterButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+  statValue: {
+    ...type.bodyBold,
+    color: colors.ink,
   },
-
-  leadsList: {
-    padding: 16,
-    paddingBottom: 100,
+  statLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+    marginLeft: spacing.xs,
   },
-  leadCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+  listContent: {
+    padding: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxxl,
   },
   leadHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
   },
-  leadNameContainer: {
+  leadIdentity: {
+    flex: 1,
+    marginLeft: spacing.md,
+    marginRight: spacing.sm,
+    justifyContent: 'center',
+  },
+  leadPills: {
+    alignItems: 'flex-end',
+    gap: spacing.xs,
+  },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
-  leadAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 12,
+  pillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
-  avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E2E8F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarInitial: {
-    color: '#64748B',
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  leadInfo: {
-    flex: 1,
-  },
-  leadName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 4,
-  },
-  leadContact: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  pillText: {
+    ...type.micro,
     fontWeight: '600',
   },
-  leadDetails: {
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  detailItem: {
-    flex: 1,
-    marginRight: 12,
-  },
-  leadDetailLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 4,
-  },
-  leadDetail: {
-    fontSize: 14,
-    color: '#1E293B',
-  },
-  leadActions: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 16,
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-  },
-  actionText: {
-    marginLeft: 6,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1E293B',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  paginationButton: {
-    padding: 8,
-  },
-  paginationButtonDisabled: {
-    opacity: 0.5,
-  },
-  paginationText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#1E293B',
-    fontWeight: '500',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#64748B',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  modalContent: {
-    width: '85%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  employeeList: {
-    maxHeight: 320,
-  },
-  employeeItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  employeeName: {
-    fontSize: 16,
-    color: '#1E293B',
-    fontWeight: '500',
-  },
-  closeButton: {
-    backgroundColor: '#1E88E5',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  closeButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  statusButtonsContainer: {
+  detailGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: spacing.sm,
   },
-  statusButton: {
+  detailCell: {
     width: '48%',
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
-  statusButtonSelected: {
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    elevation: 5, // Add shadow for Android
-    shadowColor: '#000', // Add shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+  detailLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+    marginBottom: 2,
   },
-  statusButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
+  detailValue: {
+    ...type.body,
+    color: colors.ink,
   },
-  remarksInput: {
+  remarksBox: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 12,
-    textAlignVertical: 'top',
-    marginBottom: 12,
-    fontSize: 14,
+    borderColor: colors.border,
+    padding: spacing.sm,
   },
-  filterScroll: {
-    marginBottom: 20,
+  remarksLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+    marginBottom: 4,
   },
-  filterButtonActive: {
-    backgroundColor: 'green',
+  remarksText: {
+    ...type.sub,
+    color: colors.inkSecondary,
   },
-
-  filterLabel: {
-    fontSize: 16,
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+  },
+  actionText: {
+    marginLeft: 6,
+    ...type.sub,
     fontWeight: '600',
-    marginBottom: 12,
-    color: '#1E293B',
+  },
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingVertical: spacing.sm,
+    gap: spacing.md,
+  },
+  paginationText: {
+    ...type.sub,
+    color: colors.ink,
+  },
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+  },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.lg,
+  },
+  sheetGrabber: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.borderStrong,
+    marginBottom: spacing.sm,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+  },
+  sheetClose: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: colors.inkFaint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  employeeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  employeeName: {
+    flex: 1,
+    marginLeft: spacing.md,
+    ...type.body,
+    color: colors.ink,
+  },
+  statusGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  statusOption: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm + 4,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    marginBottom: spacing.sm,
+  },
+  statusOptionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  statusOptionText: {
+    ...type.bodyBold,
+  },
+  filterSectionLabel: {
+    ...type.caption,
+    color: colors.inkSecondary,
+    fontWeight: '700',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  chipRow: {
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+    gap: spacing.xs,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  chipActive: {
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accentDeep,
+  },
+  chipText: {
+    ...type.sub,
+    color: colors.inkSecondary,
+  },
+  chipTextActive: {
+    color: colors.accentDeep,
+    fontWeight: '600',
+  },
+  skeletonHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

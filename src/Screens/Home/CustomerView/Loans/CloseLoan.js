@@ -1,30 +1,70 @@
-
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Animated,
-  Platform,
-  KeyboardAvoidingView,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, Animated, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import { currencyFormatter } from '../../../../components/utils/formatters';
+import Screen from '../../../../design/components/Screen';
+import Card from '../../../../design/components/Card';
+import Button from '../../../../design/components/Button';
+import TextField from '../../../../design/components/TextField';
+import Icon from '../../../../design/Icon';
+import { colors, spacing, radius, type } from '../../../../design/tokens';
+
+/**
+ * CloseLoan — admin loan-closure flow rebuilt on the "Ink & Amber" design
+ * system.
+ *  - same three sections (Loan Summary / Payment Options / Payment Summary)
+ *    as Cards with icon chips, react-hook-form driven amount input, custom
+ *    checkbox rows and the animated confirmation dialog
+ *  - behaviour preserved verbatim: GET /api/admin/loan?loanId=…, the RHF
+ *    default values / watch / trigger-revalidation flow, the three
+ *    validateForm Alert messages, the POST /api/admin/loan/close payload
+ *    (loanId, totalRemainingAmountCustomerIsPaying, deleteLoanDocuments,
+ *    forgiveLoan, forgivePenalties), the 1s delay before goBack, and the
+ *    remaining-balance / remaining-penalty calculations
+ *  - fixed latent bug: the submit handler compared `response.status !== 200`,
+ *    but apiCall resolves `{ status: 'success', … }` — the success path
+ *    (toast + goBack) was unreachable. Now checks `status === 'success'`.
+ */
+
+const CardHeader = ({ icon, title }) => (
+  <View style={styles.cardHeader}>
+    <View style={styles.iconChip}>
+      <Icon name={icon} size={18} color={colors.accentDeep} />
+    </View>
+    <Text style={[type.title, { color: colors.ink, marginLeft: spacing.sm }]}>{title}</Text>
+  </View>
+);
+
+const DetailRow = ({ label, value, valueStyle }) => (
+  <View style={styles.detailRow}>
+    <Text style={[type.body, { color: colors.inkSecondary, flex: 1 }]}>{label}</Text>
+    <Text style={[type.bodyBold, { color: colors.ink }, valueStyle]}>{value}</Text>
+  </View>
+);
+
+const OptionRow = ({ label, hint, checked, onToggle }) => (
+  <Pressable
+    onPress={onToggle}
+    style={({ pressed }) => [styles.optionRow, pressed && { opacity: 0.9 }]}
+  >
+    <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+      {checked ? <Icon name="check" size={14} color={colors.accentInk} /> : null}
+    </View>
+    <View style={{ flex: 1, marginLeft: spacing.sm }}>
+      <Text style={[type.bodyBold, { color: colors.ink }]}>{label}</Text>
+      <Text style={[type.sub, { color: colors.inkMuted, marginTop: 2 }]}>{hint}</Text>
+    </View>
+  </Pressable>
+);
 
 const CloseLoan = ({ route, navigation }) => {
   const [loan, setLoan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  
+
   // Initialize form with more specific validation triggers
   const { control, handleSubmit, formState: { errors }, watch, setValue, trigger } = useForm({
     mode: 'onChange',
@@ -52,6 +92,7 @@ const CloseLoan = ({ route, navigation }) => {
       duration: 500,
       useNativeDriver: true,
     }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Adjust payment validation based on loan data and forgiveness options
@@ -61,10 +102,11 @@ const CloseLoan = ({ route, navigation }) => {
       if (!amountPaying && !forgiveLoan) {
         setValue('totalAmountPaying', loan.outstandingAmount.toString(), { shouldValidate: true });
       }
-      
+
       // Always trigger validation when forgiveLoan changes or when loan data loads
       trigger('totalAmountPaying');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loan, forgiveLoan]);
 
   // Re-validate whenever amount changes
@@ -72,6 +114,7 @@ const CloseLoan = ({ route, navigation }) => {
     if (loan) {
       trigger('totalAmountPaying');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountPaying]);
 
   const fetchLoanDetails = async () => {
@@ -93,7 +136,7 @@ const CloseLoan = ({ route, navigation }) => {
   const showConfirmationModal = () => {
     // Validate before showing confirmation
     if (!validateForm()) return;
-    
+
     setModalVisible(true);
     Animated.spring(modalAnim, {
       toValue: 1,
@@ -153,7 +196,7 @@ const CloseLoan = ({ route, navigation }) => {
   const onSubmit = async (data) => {
     // Final validation before submission
     if (!validateForm()) return;
-    
+
     try {
       setSubmitting(true);
       const response = await apiCall('/api/admin/loan/close', 'POST', {
@@ -164,7 +207,9 @@ const CloseLoan = ({ route, navigation }) => {
         forgivePenalties: data.forgivePenalties,
       });
 
-      if(response.status !== 200) {
+      // apiCall resolves `{ status: 'success', … }` — the old `!== 200`
+      // check made the success branch unreachable
+      if (response.status !== 'success') {
         showToast('error', response.message || 'Unknown error');
         return;
       }
@@ -173,7 +218,7 @@ const CloseLoan = ({ route, navigation }) => {
       setTimeout(() => {
         navigation.goBack();
       }, 1000);
-     
+
     } catch (error) {
       showToast('error', error.message || 'Failed to close loan');
     } finally {
@@ -218,273 +263,195 @@ const CloseLoan = ({ route, navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E88E5" />
-      </View>
+      <Screen bg={colors.bg}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.inkMuted} />
+        </View>
+      </Screen>
     );
   }
 
+  const maxAmount = loan ? loan.outstandingAmount + loan.totalPenaltyAmount : 0;
+  const minAmount = forgiveLoan ? 0 : (loan ? loan.outstandingAmount : 0);
+  const amountError = errors.totalAmountPaying
+    ? (forgiveLoan
+      ? `Amount must be between 0 and ${currencyFormatter.format(maxAmount)}`
+      : `Amount must be at least ${currencyFormatter.format(minAmount)} and at most ${currencyFormatter.format(maxAmount)}`)
+    : undefined;
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-
+    <Screen scroll bg={colors.bg} keyboardAvoid>
+      <View style={styles.page}>
         {/* Loan Details Card */}
-        <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-          <View style={styles.header}>
-            <Icon name="bank" size={24} color="#1E88E5" />
-            <Text style={styles.headerText}>Loan Summary</Text>
-          </View>
-
-          <View style={styles.details}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Loan Amount:</Text>
-              <Text style={styles.detailValue}>{currencyFormatter.format(loan.loanAmount)}</Text>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <Card>
+            <CardHeader icon="bank" title="Loan Summary" />
+            <View style={styles.details}>
+              <DetailRow label="Loan Amount" value={currencyFormatter.format(loan.loanAmount)} />
+              <DetailRow label="Outstanding Principal" value={currencyFormatter.format(loan.outstandingAmount)} />
+              <DetailRow label="Total Paid" value={currencyFormatter.format(loan.totalPaid)} />
+              <DetailRow label="Penalties" value={currencyFormatter.format(loan.totalPenaltyAmount)} />
+              <View style={styles.divider} />
+              <View style={styles.totalRow}>
+                <Text style={[type.title, { color: colors.ink }]}>Total Outstanding</Text>
+                <Text style={[type.h1, { color: colors.accentDeep, fontSize: 20 }]}>
+                  {currencyFormatter.format(loan.outstandingAmount + loan.totalPenaltyAmount)}
+                </Text>
+              </View>
             </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Outstanding Principal:</Text>
-              <Text style={styles.detailValue}>{currencyFormatter.format(loan.outstandingAmount)}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Total Paid:</Text>
-              <Text style={styles.detailValue}>{currencyFormatter.format(loan.totalPaid)}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Penalties:</Text>
-              <Text style={styles.detailValue}>{currencyFormatter.format(loan.totalPenaltyAmount)}</Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.detailRow}>
-              <Text style={styles.totalLabel}>Total Outstanding:</Text>
-              <Text style={styles.totalValue}>
-                {currencyFormatter.format(loan.outstandingAmount + loan.totalPenaltyAmount)}
-              </Text>
-            </View>
-          </View>
+          </Card>
         </Animated.View>
 
         {/* Payment Options Card */}
-        <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-          <View style={styles.header}>
-            <Icon name="cash-multiple" size={24} color="#1E88E5" />
-            <Text style={styles.headerText}>Payment Options</Text>
-          </View>
+        <Animated.View style={[{ opacity: fadeAnim }, { marginTop: spacing.md }]}>
+          <Card>
+            <CardHeader icon="bills" title="Payment Options" />
+            <View style={{ marginTop: spacing.md }}>
+              {/* Amount Input */}
+              <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="Amount Paying"
+                    value={value}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      // Force validation on every change
+                      setTimeout(() => trigger('totalAmountPaying'), 100);
+                    }}
+                    onBlur={() => {
+                      onBlur();
+                      trigger('totalAmountPaying');
+                    }}
+                    placeholder="0.00"
+                    keyboardType="numeric"
+                    leftIcon="currency-inr"
+                    error={amountError}
+                  />
+                )}
+                name="totalAmountPaying"
+                rules={{
+                  required: "Payment amount is required",
+                  validate: (value) => {
+                    if (!loan) return true; // Skip validation if loan data isn't loaded yet
 
-          {/* Amount Input */}
-          <Text style={styles.inputLabel}>Amount Paying</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => {
-              const maxAmount = loan ? loan.outstandingAmount + loan.totalPenaltyAmount : 0;
-              const minAmount = forgiveLoan ? 0 : loan.outstandingAmount;
-              
-              return (
-                <View style={styles.inputContainer}>
-                  <View style={styles.currencyInputContainer}>
-                    <Text style={styles.currencySymbol}>₹</Text>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        errors.totalAmountPaying && styles.inputError
-                      ]}
-                      onBlur={() => {
-                        onBlur();
-                        trigger('totalAmountPaying');
-                      }}
-                      onChangeText={(text) => {
-                        onChange(text);
-                        // Force validation on every change
+                    const numValue = parseFloat(value || 0);
+                    const max = loan.outstandingAmount + loan.totalPenaltyAmount;
+
+                    if (isNaN(numValue)) return "Please enter a valid number";
+                    if (numValue < 0) return "Amount cannot be negative";
+                    if (numValue > max) return `Amount cannot exceed ${currencyFormatter.format(max)}`;
+
+                    // This is the key validation rule that was missing
+                    if (!forgiveLoan && numValue < loan.outstandingAmount) {
+                      return `When not forgiving the loan, amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}`;
+                    }
+
+                    return true;
+                  }
+                }}
+              />
+
+              {/* Forgiveness Options */}
+              <View style={styles.optionsContainer}>
+                <Text style={styles.sectionTitle}>Forgiveness Options</Text>
+
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <OptionRow
+                      label="Forgive Loan"
+                      hint="Allow closing with partial or no payment of principal"
+                      checked={value}
+                      onToggle={() => {
+                        onChange(!value);
+                        // When toggling forgiveness, re-validate the amount
                         setTimeout(() => trigger('totalAmountPaying'), 100);
                       }}
-                      value={value}
-                      placeholder="0.00"
-                      placeholderTextColor="#90A4AE"
-                      keyboardType="numeric"
                     />
-                  </View>
-
-                  {errors.totalAmountPaying && (
-                    <Text style={styles.errorText}>
-                      {forgiveLoan
-                        ? `Amount must be between 0 and ${currencyFormatter.format(maxAmount)}`
-                        : `Amount must be at least ${currencyFormatter.format(minAmount)} and at most ${currencyFormatter.format(maxAmount)}`}
-                    </Text>
                   )}
-                </View>
-              );
-            }}
-            name="totalAmountPaying"
-            rules={{
-              required: "Payment amount is required",
-              validate: (value) => {
-                if (!loan) return true; // Skip validation if loan data isn't loaded yet
-                
-                const numValue = parseFloat(value || 0);
-                const maxAmount = loan.outstandingAmount + loan.totalPenaltyAmount;
-                
-                if (isNaN(numValue)) return "Please enter a valid number";
-                if (numValue < 0) return "Amount cannot be negative";
-                if (numValue > maxAmount) return `Amount cannot exceed ${currencyFormatter.format(maxAmount)}`;
-                
-                // This is the key validation rule that was missing
-                if (!forgiveLoan && numValue < loan.outstandingAmount) {
-                  return `When not forgiving the loan, amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}`;
-                }
-                
-                return true;
-              }
-            }}
-          />
+                  name="forgiveLoan"
+                />
 
-          {/* Forgiveness Options */}
-          <View style={styles.optionsContainer}>
-            <Text style={styles.sectionTitle}>Forgiveness Options</Text>
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <OptionRow
+                      label="Forgive Penalties"
+                      hint="Waive all pending penalties"
+                      checked={value}
+                      onToggle={() => onChange(!value)}
+                    />
+                  )}
+                  name="forgivePenalties"
+                />
+              </View>
 
-            <Controller
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => {
-                    onChange(!value);
-                    // When toggling forgiveness, re-validate the amount
-                    setTimeout(() => trigger('totalAmountPaying'), 100);
-                  }}
-                >
-                  <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-                    {value && <Icon name="check" size={16} color="#fff" />}
-                  </View>
-                  <View style={styles.checkboxTextContainer}>
-                    <Text style={styles.checkboxLabel}>Forgive Loan</Text>
-                    <Text style={styles.checkboxHint}>
-                      Allow closing with partial or no payment of principal
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              name="forgiveLoan"
-            />
+              {/* Document Options */}
+              <View style={styles.optionsContainer}>
+                <Text style={styles.sectionTitle}>Document Options</Text>
 
-            <Controller
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => onChange(!value)}
-                >
-                  <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-                    {value && <Icon name="check" size={16} color="#fff" />}
-                  </View>
-                  <View style={styles.checkboxTextContainer}>
-                    <Text style={styles.checkboxLabel}>Forgive Penalties</Text>
-                    <Text style={styles.checkboxHint}>
-                      Waive all pending penalties
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              name="forgivePenalties"
-            />
-          </View>
-
-          {/* Document Options */}
-          <View style={styles.optionsContainer}>
-            <Text style={styles.sectionTitle}>Document Options</Text>
-
-            <Controller
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => onChange(!value)}
-                >
-                  <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-                    {value && <Icon name="check" size={16} color="#fff" />}
-                  </View>
-                  <View style={styles.checkboxTextContainer}>
-                    <Text style={styles.checkboxLabel}>Delete Loan Documents</Text>
-                    <Text style={styles.checkboxHint}>
-                      Remove all documents associated with this loan
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              name="deleteLoanDocuments"
-            />
-          </View>
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <OptionRow
+                      label="Delete Loan Documents"
+                      hint="Remove all documents associated with this loan"
+                      checked={value}
+                      onToggle={() => onChange(!value)}
+                    />
+                  )}
+                  name="deleteLoanDocuments"
+                />
+              </View>
+            </View>
+          </Card>
         </Animated.View>
 
         {/* Payment Summary Card */}
-        <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-          <View style={styles.header}>
-            <Icon name="calculator" size={24} color="#1E88E5" />
-            <Text style={styles.headerText}>Payment Summary</Text>
-          </View>
-
-          <View style={styles.details}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Payment Amount:</Text>
-              <Text style={styles.detailValue}>
-                {currencyFormatter.format(parseFloat(amountPaying || 0))}
-              </Text>
+        <Animated.View style={[{ opacity: fadeAnim }, { marginTop: spacing.md }]}>
+          <Card>
+            <CardHeader icon="calculator" title="Payment Summary" />
+            <View style={styles.details}>
+              <DetailRow label="Payment Amount" value={currencyFormatter.format(parseFloat(amountPaying || 0))} />
+              <DetailRow
+                label="Forgive Principal"
+                value={forgiveLoan ? 'Yes' : 'No'}
+                valueStyle={forgiveLoan ? { color: colors.successInk } : null}
+              />
+              <DetailRow
+                label="Forgive Penalties"
+                value={forgivePenalties ? 'Yes' : 'No'}
+                valueStyle={forgivePenalties ? { color: colors.successInk } : null}
+              />
+              <View style={styles.divider} />
+              <DetailRow
+                label="Remaining Principal"
+                value={currencyFormatter.format(calculateRemainingBalance())}
+                valueStyle={calculateRemainingBalance() > 0 ? { color: colors.warningInk } : null}
+              />
+              <DetailRow
+                label="Remaining Penalties"
+                value={currencyFormatter.format(calculateRemainingPenalties())}
+                valueStyle={calculateRemainingPenalties() > 0 ? { color: colors.warningInk } : null}
+              />
             </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Forgive Principal:</Text>
-              <Text style={[styles.detailValue, forgiveLoan ? styles.highlightText : null]}>
-                {forgiveLoan ? 'Yes' : 'No'}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Forgive Penalties:</Text>
-              <Text style={[styles.detailValue, forgivePenalties ? styles.highlightText : null]}>
-                {forgivePenalties ? 'Yes' : 'No'}
-              </Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Remaining Principal:</Text>
-              <Text style={[
-                styles.detailValue,
-                calculateRemainingBalance() > 0 ? styles.warningText : null
-              ]}>
-                {currencyFormatter.format(calculateRemainingBalance())}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Remaining Penalties:</Text>
-              <Text style={[
-                styles.detailValue,
-                calculateRemainingPenalties() > 0 ? styles.warningText : null
-              ]}>
-                {currencyFormatter.format(calculateRemainingPenalties())}
-              </Text>
-            </View>
-          </View>
+          </Card>
         </Animated.View>
 
-        <TouchableOpacity
-          style={[
-            styles.button, 
-            (submitting || Object.keys(errors).length > 0) && styles.buttonDisabled
-          ]}
-          onPress={handleSubmit(showConfirmationModal)}
-          disabled={submitting || Object.keys(errors).length > 0}
-        >
-          <Text style={styles.buttonText}>Close Loan</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        <View style={{ marginTop: spacing.lg }}>
+          <Button
+            label="Close Loan"
+            icon="lock-check"
+            variant="accent"
+            size="lg"
+            full
+            loading={submitting}
+            disabled={submitting || Object.keys(errors).length > 0}
+            onPress={handleSubmit(showConfirmationModal)}
+          />
+        </View>
+      </View>
 
       {modalVisible && (
         <View style={styles.modalOverlay}>
@@ -499,312 +466,177 @@ const CloseLoan = ({ route, navigation }) => {
               },
             ]}
           >
-            <Text style={styles.modalTitle}>Confirm Loan Closure</Text>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalMessage}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalIconChip}>
+                <Icon name="lock-check" size={20} color={colors.dangerInk} />
+              </View>
+              <Text style={[type.h2, { color: colors.ink, textAlign: 'center', marginTop: spacing.sm }]}>
+                Confirm Loan Closure
+              </Text>
+              <Text style={[type.body, { color: colors.inkSecondary, textAlign: 'center', marginTop: spacing.xs }]}>
                 Are you sure you want to close this loan with the following settings?
               </Text>
+            </View>
 
-              <View style={styles.modalDivider} />
+            <View style={styles.modalContent}>
+              <DetailRow label="Payment Amount" value={currencyFormatter.format(parseFloat(amountPaying || 0))} />
+              <DetailRow label="Outstanding Amount" value={currencyFormatter.format(loan.outstandingAmount)} />
+              <DetailRow label="Penalties" value={currencyFormatter.format(loan.totalPenaltyAmount)} />
+              <DetailRow label="Forgive Principal" value={forgiveLoan ? 'Yes' : 'No'} />
+              <DetailRow label="Forgive Penalties" value={forgivePenalties ? 'Yes' : 'No'} />
+              <DetailRow label="Delete Documents" value={watch('deleteLoanDocuments') ? 'Yes' : 'No'} />
 
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Payment Amount:</Text>
-                <Text style={styles.modalDetailValue}>
-                  {currencyFormatter.format(parseFloat(amountPaying || 0))}
-                </Text>
-              </View>
+              <View style={styles.divider} />
 
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Outstanding Amount:</Text>
-                <Text style={styles.modalDetailValue}>
-                  {currencyFormatter.format(loan.outstandingAmount)}
-                </Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Penalties:</Text>
-                <Text style={styles.modalDetailValue}>
-                  {currencyFormatter.format(loan.totalPenaltyAmount)}
-                </Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Forgive Principal:</Text>
-                <Text style={styles.modalDetailValue}>
-                  {forgiveLoan ? 'Yes' : 'No'}
-                </Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Forgive Penalties:</Text>
-                <Text style={styles.modalDetailValue}>
-                  {forgivePenalties ? 'Yes' : 'No'}
-                </Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Delete Documents:</Text>
-                <Text style={styles.modalDetailValue}>
-                  {watch('deleteLoanDocuments') ? 'Yes' : 'No'}
-                </Text>
-              </View>
-
-              <View style={styles.modalDivider} />
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Remaining Balance:</Text>
-                <Text style={[
-                  styles.modalDetailValue,
-                  calculateRemainingBalance() > 0 && !forgiveLoan ? styles.warningText : null
-                ]}>
-                  {currencyFormatter.format(calculateRemainingBalance())}
-                </Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Remaining Penalties:</Text>
-                <Text style={[
-                  styles.modalDetailValue,
-                  calculateRemainingPenalties() > 0 && !forgivePenalties ? styles.warningText : null
-                ]}>
-                  {currencyFormatter.format(calculateRemainingPenalties())}
-                </Text>
-              </View>
+              <DetailRow
+                label="Remaining Balance"
+                value={currencyFormatter.format(calculateRemainingBalance())}
+                valueStyle={calculateRemainingBalance() > 0 && !forgiveLoan ? { color: colors.warningInk } : null}
+              />
+              <DetailRow
+                label="Remaining Penalties"
+                value={currencyFormatter.format(calculateRemainingPenalties())}
+                valueStyle={calculateRemainingPenalties() > 0 && !forgivePenalties ? { color: colors.warningInk } : null}
+              />
 
               {calculateRemainingBalance() > 0 && !forgiveLoan && (
-                <Text style={styles.modalWarning}>
-                  Warning: There will be remaining principal without loan forgiveness!
-                </Text>
+                <View style={styles.modalWarning}>
+                  <Icon name="alert-circle" size={15} color={colors.dangerInk} />
+                  <Text style={[type.sub, { color: colors.dangerInk, marginLeft: 6, flex: 1 }]}>
+                    Warning: There will be remaining principal without loan forgiveness!
+                  </Text>
+                </View>
               )}
 
               {calculateRemainingPenalties() > 0 && !forgivePenalties && (
-                <Text style={styles.modalWarning}>
-                  Warning: There will be remaining penalties without penalty forgiveness!
-                </Text>
+                <View style={styles.modalWarning}>
+                  <Icon name="alert-circle" size={15} color={colors.dangerInk} />
+                  <Text style={[type.sub, { color: colors.dangerInk, marginLeft: 6, flex: 1 }]}>
+                    Warning: There will be remaining penalties without penalty forgiveness!
+                  </Text>
+                </View>
               )}
             </View>
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+              <Button
+                label="Cancel"
+                variant="outline"
+                full
+                style={{ flex: 1, marginRight: spacing.sm / 2 }}
+                disabled={submitting}
                 onPress={hideConfirmationModal}
+              />
+              <Button
+                label="Confirm"
+                icon="check"
+                variant="danger"
+                full
+                loading={submitting}
+                style={{ flex: 1, marginLeft: spacing.sm / 2 }}
                 disabled={submitting}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton, submitting && styles.buttonDisabled]}
                 onPress={handleSubmit(onSubmit)}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.confirmButtonText}>Confirm</Text>
-                )}
-              </TouchableOpacity>
+              />
             </View>
           </Animated.View>
         </View>
       )}
       <CustomToast />
-
-    </KeyboardAvoidingView>
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+  page: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxxl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F7FA',
+    paddingTop: spacing.xxxl,
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  header: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
-  headerText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E88E5',
-    marginLeft: 8,
+  iconChip: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   details: {
     borderTopWidth: 1,
-    borderTopColor: '#ECEFF1',
-    paddingTop: 12,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: spacing.sm,
   },
-  detailLabel: {
-    fontSize: 15,
-    color: '#546E7A',
-  },
-  detailValue: {
-    fontSize: 15,
-    color: '#37474F',
-    fontWeight: '500',
-  },
-  totalLabel: {
-    fontSize: 16,
-    color: '#455A64',
-    fontWeight: '600',
-  },
-  totalValue: {
-    fontSize: 16,
-    color: '#1E88E5',
-    fontWeight: '700',
-  },
-  highlightText: {
-    color: '#4CAF50',
-    fontWeight: '700',
-  },
-  warningText: {
-    color: '#F57C00',
-    fontWeight: '700',
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xs,
   },
   divider: {
     height: 1,
-    backgroundColor: '#ECEFF1',
-    marginVertical: 12,
-  },
-  inputLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#455A64',
-    marginBottom: 8,
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  currencyInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F7FA',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#CFD8DC',
-  },
-  currencySymbol: {
-    fontSize: 16,
-    color: '#546E7A',
-    paddingLeft: 12,
-    paddingRight: 4,
-  },
-  input: {
-    flex: 1,
-    padding: 12,
-    fontSize: 16,
-    color: '#37474F',
-  },
-  inputError: {
-    borderColor: '#EF5350',
-  },
-  errorText: {
-    color: '#EF5350',
-    fontSize: 14,
-    marginTop: 4,
+    backgroundColor: colors.border,
+    marginVertical: spacing.sm,
   },
   optionsContainer: {
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: spacing.md,
+    gap: spacing.xs,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#455A64',
-    marginBottom: 12,
+    ...type.bodyBold,
+    color: colors.inkSecondary,
+    marginBottom: spacing.xs,
   },
-  checkboxContainer: {
+  optionRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#1E88E5',
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
+    marginTop: 1,
   },
   checkboxChecked: {
-    backgroundColor: '#1E88E5',
-    borderColor: '#1E88E5',
-  },
-  checkboxTextContainer: {
-    flex: 1,
-  },
-  checkboxLabel: {
-    fontSize: 16,
-    color: '#37474F',
-    fontWeight: '500',
-  },
-  checkboxHint: {
-    fontSize: 14,
-    color: '#78909C',
-    marginTop: 2,
-  },
-  button: {
-    backgroundColor: '#1E88E5',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    backgroundColor: '#90CAF9',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    backgroundColor: colors.accent,
+    borderColor: colors.accentDeep,
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     width: '90%',
     maxWidth: 400,
     shadowColor: '#000',
@@ -813,77 +645,32 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E88E5',
-    textAlign: 'center',
-    marginBottom: 16,
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalIconChip: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.dangerSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalContent: {
-    marginBottom: 24,
-  },
-  modalMessage: {
-    fontSize: 16,
-    color: '#455A64',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  modalDivider: {
-    height: 1,
-    backgroundColor: '#ECEFF1',
-    marginVertical: 12,
-  },
-  modalDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  modalDetailLabel: {
-    fontSize: 15,
-    color: '#546E7A',
-  },
-  modalDetailValue: {
-    fontSize: 15,
-    color: '#37474F',
-    fontWeight: '500',
+    gap: spacing.sm,
   },
   modalWarning: {
-    color: '#F44336',
-    fontSize: 14,
-    fontWeight: '500',
-    marginTop: 12,
-    textAlign: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.dangerSoft,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
   },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  cancelButton: {
-    backgroundColor: '#ECEFF1',
-    borderWidth: 1,
-    borderColor: '#CFD8DC',
-  },
-  confirmButton: {
-    backgroundColor: '#1E88E5',
-  },
-  cancelButtonText: {
-    color: '#455A64',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  confirmButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: spacing.lg,
   },
 });
 

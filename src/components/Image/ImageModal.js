@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet, Dimensions, Image } from 'react-native';
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Icon from '../../design/Icon';;
 import ImageZoomPan from './ImageZoomPan';
 import { gestureHandlerRootHOC } from "react-native-gesture-handler";
 import { CustomToast } from "../toast/CustomToast";

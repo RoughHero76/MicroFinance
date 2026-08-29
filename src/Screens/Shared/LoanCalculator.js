@@ -1,19 +1,39 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { showToast, CustomToast } from '../../components/toast/CustomToast';
 import { apiCall } from '../../components/api/apiUtils';
+import Screen from '../../design/components/Screen';
+import Card from '../../design/components/Card';
+import Button from '../../design/components/Button';
+import TextField from '../../design/components/TextField';
+import Icon from '../../design/Icon';
+import { colors, spacing, radius, type } from '../../design/tokens';
+
+/**
+ * LoanCalculator — shared loan EMI estimator, rebuilt on the
+ * "Ink & Amber" design system.
+ *  - same behaviour: identical field set (grace period and interest
+ *    rate stay the original fixed "0" values), the same required-field
+ *    validation copy, the same POST /api/shared/loan/calculate payload,
+ *    the same success/error toasts and the same result rows (INR
+ *    formatting, start/end date, installments, per-installment and
+ *    total repayment)
+ *  - presentation: design TextField rows with icon affordances, the
+ *    frequency Picker in a themed wrapper, and a result card with
+ *    label/value rows instead of the old flat white box
+ */
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR' }).format(value);
+
+const ResultRow = ({ label, value }) => (
+  <View style={styles.resultRow}>
+    <Text style={styles.resultLabel}>{label}</Text>
+    <Text style={styles.resultValue} numberOfLines={1}>{value}</Text>
+  </View>
+);
 
 const LoanCalculator = () => {
   const [loading, setLoading] = useState(false);
@@ -25,16 +45,12 @@ const LoanCalculator = () => {
   const [loanStartDate, setLoanStartDate] = useState(new Date());
   const [loanDuration, setLoanDuration] = useState('');
   const [installmentFrequency, setInstallmentFrequency] = useState('');
-  const [gracePeriod, setGracePeriod] = useState('0');
-  const [interestRate, setInterestRate] = useState('0');
+  const gracePeriod = '0';
+  const interestRate = '0';
 
   const onSubmit = async () => {
     if (!principalAmount || !loanAmount || !loanDuration || !installmentFrequency) {
-      showToast(
-        'error',
-        'Validation Error',
-        'Please fill in all required fields.',
-      );
+      showToast('error', 'Validation Error', 'Please fill in all required fields.');
       return;
     }
 
@@ -49,276 +65,274 @@ const LoanCalculator = () => {
         interestRate,
       });
       setResult(response.data);
-      showToast(
-        'success',
-        'Calculation Successful',
-        'Your loan details have been calculated.',
-      );
+      showToast('success', 'Calculation Successful', 'Your loan details have been calculated.');
     } catch (error) {
       showToast(
         'error',
         'Calculation Failed',
-        error.message || 'An error occurred while calculating loan details.',
+        error.message || 'An error occurred while calculating loan details.'
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR' }).format(value);
-  };
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Loan Calculator</Text>
+    <Screen scroll keyboardAvoid bg={colors.bg}>
+      <View style={styles.page}>
+        <Card>
+          <Text style={styles.cardTitle}>Loan Calculator</Text>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Loan Amount"
-              placeholderTextColor={styles.placeholderText.color}
-              style={styles.input}
-              value={loanAmount}
-              onChangeText={setLoanAmount}
-              keyboardType="numeric"
-            />
-            <TextInput
-              placeholder="Principal Amount"
-              placeholderTextColor={styles.placeholderText.color}
-              style={styles.input}
-              value={principalAmount}
-              onChangeText={setPrincipalAmount}
-              keyboardType="numeric"
-            />
-          </View>
+          <TextField
+            label="Loan Amount"
+            placeholder="₹ Loan amount"
+            value={loanAmount}
+            onChangeText={setLoanAmount}
+            leftIcon="cash"
+            keyboardType="numeric"
+          />
+          <TextField
+            label="Principal Amount"
+            placeholder="₹ Principal amount"
+            value={principalAmount}
+            onChangeText={setPrincipalAmount}
+            leftIcon="currency-inr"
+            keyboardType="numeric"
+          />
 
-
-
-          <View style={styles.inputContainer}>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
-              <Text style={styles.dateButtonText}>{loanStartDate.toDateString()}</Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={loanStartDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setLoanStartDate(selectedDate);
-                  }
-                }}
-              />
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Loan Duration (in days)"
-              placeholderTextColor={styles.placeholderText.color}
-              style={styles.input}
-              value={loanDuration}
-              onChangeText={setLoanDuration}
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={installmentFrequency}
-              onValueChange={setInstallmentFrequency}
-              style={styles.picker}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Loan Start Date</Text>
+            <Pressable
+              style={({ pressed }) => [styles.dateBtn, pressed && { opacity: 0.85 }]}
+              onPress={() => setShowDatePicker(true)}
             >
-              <Picker.Item label="Select Frequency" value="" />
-              <Picker.Item label="Daily" value="Daily" />
-              <Picker.Item label="Weekly" value="Weekly" />
-              <Picker.Item label="Monthly" value="Monthly" />
-            </Picker>
+              <Icon name="calendar" size={18} color={colors.inkSecondary} />
+              <Text style={styles.dateBtnText}>{loanStartDate.toDateString()}</Text>
+              <Icon name="chevron-right" size={16} color={colors.inkMuted} />
+            </Pressable>
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Grace Period (in days)"
-              placeholderTextColor={styles.placeholderText.color}
-              style={[styles.input, styles.disabledInput]}
-              value={gracePeriod}
-              editable={false}
-            />
+          <TextField
+            label="Loan Duration (in days)"
+            placeholder="e.g. 90"
+            value={loanDuration}
+            onChangeText={setLoanDuration}
+            leftIcon="calendar-range"
+            keyboardType="numeric"
+          />
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Installment Frequency</Text>
+            <View style={styles.pickerWrap}>
+              <Picker
+                selectedValue={installmentFrequency}
+                onValueChange={setInstallmentFrequency}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select Frequency" value="" />
+                <Picker.Item label="Daily" value="Daily" />
+                <Picker.Item label="Weekly" value="Weekly" />
+                <Picker.Item label="Monthly" value="Monthly" />
+              </Picker>
+              <Icon name="chevron-down" size={16} color={colors.inkMuted} />
+            </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Interest Rate (%)"
-              placeholderTextColor={styles.placeholderText.color}
-              style={[styles.input, styles.disabledInput]}
-              value={interestRate}
-              editable={false}
-            />
+          <View style={styles.fixedRow}>
+            <View style={styles.fixedCell}>
+              <Icon name="clock" size={15} color={colors.inkMuted} />
+              <Text style={styles.fixedLabel}>Grace Period</Text>
+              <Text style={styles.fixedValue}>0 days</Text>
+            </View>
+            <View style={styles.fixedDivider} />
+            <View style={styles.fixedCell}>
+              <Icon name="percent" size={15} color={colors.inkMuted} />
+              <Text style={styles.fixedLabel}>Interest Rate</Text>
+              <Text style={styles.fixedValue}>0%</Text>
+            </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={onSubmit}
+          <Button
+            label="Calculate"
+            icon="calculator"
+            variant="accent"
+            size="lg"
+            full
+            loading={loading}
             disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.buttonText}>Calculate</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            onPress={onSubmit}
+            style={{ marginTop: spacing.md }}
+          />
+        </Card>
 
         {result && (
-          <View style={styles.resultCard}>
-            <Text style={styles.resultTitle}>Loan Details</Text>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Loan Amount:</Text>
-              <Text style={styles.resultValue}>{formatCurrency(result.loanAmount)}</Text>
+          <Card>
+            <View style={styles.resultTitleRow}>
+              <View style={styles.resultTitleChip}>
+                <Icon name="calculator" size={16} color={colors.accentDeep} />
+              </View>
+              <Text style={styles.resultTitle}>Loan Details</Text>
             </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Principal Amount:</Text>
-              <Text style={styles.resultValue}>{formatCurrency(principalAmount)}</Text>
-            </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Loan Start Date:</Text>
-              <Text style={styles.resultValue}>{new Date(result.loanStartDate).toLocaleDateString()}</Text>
-            </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Loan End Date:</Text>
-              <Text style={styles.resultValue}>{new Date(result.loanEndDate).toLocaleDateString()}</Text>
-            </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Number of Installments:</Text>
-              <Text style={styles.resultValue}>{result.numberOfInstallments}</Text>
-            </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Repayment per Installment:</Text>
-              <Text style={styles.resultValue}>{formatCurrency(result.repaymentAmountPerInstallment)}</Text>
-            </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Total Repayment:</Text>
-              <Text style={styles.resultValue}>{formatCurrency(result.totalRepaymentAmount)}</Text>
-            </View>
-          </View>
+            <ResultRow label="Loan Amount" value={formatCurrency(result.loanAmount)} />
+            <ResultRow label="Principal Amount" value={formatCurrency(principalAmount)} />
+            <ResultRow
+              label="Loan Start Date"
+              value={new Date(result.loanStartDate).toLocaleDateString()}
+            />
+            <ResultRow
+              label="Loan End Date"
+              value={new Date(result.loanEndDate).toLocaleDateString()}
+            />
+            <ResultRow label="Number of Installments" value={String(result.numberOfInstallments ?? 'N/A')} />
+            <ResultRow
+              label="Repayment per Installment"
+              value={formatCurrency(result.repaymentAmountPerInstallment)}
+            />
+            <ResultRow
+              label="Total Repayment"
+              value={formatCurrency(result.totalRepaymentAmount)}
+              strong
+            />
+          </Card>
         )}
-      </ScrollView>
+      </View>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={loanStartDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) {
+              setLoanStartDate(selectedDate);
+            }
+          }}
+        />
+      )}
+
       <CustomToast />
-    </KeyboardAvoidingView >
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
+  page: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxxl,
   },
-  scrollContent: {
-    padding: 16,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
+  cardTitle: {
+    ...type.h1,
+    color: colors.ink,
     textAlign: 'center',
-    color: '#333333',
+    marginBottom: spacing.lg,
   },
-  inputContainer: {
-    marginBottom: 16,
+  field: {
+    marginBottom: spacing.md,
   },
-  input: {
-    marginBottom: 8,
+  fieldLabel: {
+    ...type.caption,
+    color: colors.inkSecondary,
+    marginBottom: 6,
+  },
+  dateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#cccccc',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 16,
-    color: '#333333',
+    borderColor: colors.border,
   },
-  placeholderText: {
-    color: '#999999',
+  dateBtnText: {
+    flex: 1,
+    ...type.body,
+    color: colors.ink,
+    fontWeight: '600',
   },
-  disabledInput: {
-    backgroundColor: '#f0f0f0',
-    color: '#888888',
-  },
-  pickerContainer: {
+  pickerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#cccccc',
-    borderRadius: 4,
-    marginBottom: 16,
+    borderColor: colors.border,
+    paddingRight: spacing.sm,
   },
   picker: {
-    height: 50,
-    width: '100%',
-    color: '#333333',
+    flex: 1,
+    height: 52,
+    color: colors.ink,
   },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: '#cccccc',
-    borderRadius: 4,
-    padding: 12,
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: '#333333',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    borderRadius: 4,
-    padding: 16,
+  fixedRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  fixedCell: {
+    flex: 1,
+    gap: 3,
   },
-  resultCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  fixedDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.md,
+  },
+  fixedLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+  },
+  fixedValue: {
+    ...type.bodyBold,
+    color: colors.inkSecondary,
+  },
+  resultTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  resultTitleChip: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   resultTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333333',
+    ...type.h2,
+    color: colors.ink,
   },
   resultRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'baseline',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   resultLabel: {
-    fontWeight: 'bold',
-    color: '#555555',
+    ...type.sub,
+    color: colors.inkSecondary,
+    flexShrink: 1,
   },
   resultValue: {
-    color: '#333333',
+    ...type.bodyBold,
+    color: colors.ink,
+    flexShrink: 1,
+    textAlign: 'right',
   },
 });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // import the icon package
+import Icon from '../../design/Icon';; // import the icon package
 import MenuScreen from '../../Screens/Home/MenuScreen.js';
 import EditCustomerScreen from '../../Screens/Home/CustomerView/EditCustomerView.js';
 import CustomerView from '../../Screens/Home/CustomerView/CustomerView.js';

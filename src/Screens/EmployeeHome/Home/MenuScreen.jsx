@@ -1,214 +1,302 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import HomeScreen from './HomeScreen.jsx';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import HomeScreen from './HomeScreen.jsx';
 import { useHomeContext } from '../../../components/context/HomeContext.js';
+import Icon from '../../../design/Icon';
+import { colors, spacing, radius, type } from '../../../design/tokens';
 
 const Drawer = createDrawerNavigator();
 
+/**
+ * Employee shell. Mirrors the admin drawer on the "Ink & Amber" design
+ * system:
+ *  - same custom top bar (menu / title / search / avatar) with RN core
+ *    SafeAreaView insets
+ *  - same menu items and placeholder handlers as the original (Savings
+ *    Account, Transactions, Loan Calculator, Support, Settings, Security,
+ *    Notifications, About, Logout) — now grouped with a danger-styled
+ *    Logout
+ *  - navigation targets preserved: SearchScreen, ProfileScreen,
+ *    LoanCalculator, About
+ */
+
+const IconBtn = ({ icon, onPress, size = 22, tint = colors.ink, bg = colors.surfaceAlt, style }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.7}
+    accessibilityRole="button"
+    style={[styles.iconBtn, { backgroundColor: bg }, style]}
+  >
+    <Icon name={icon} size={size} color={tint} />
+  </TouchableOpacity>
+);
+
 const CustomHeader = ({ navigation }) => {
-    const { user } = useHomeContext();
+  const { user } = useHomeContext();
 
-    return (
-        <View style={styles.headerContainer}>
-            <TouchableOpacity
-                onPress={() => navigation.toggleDrawer()}
-                style={styles.menuButton}
-            >
-                <Icon name="menu" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Evi Micro Finance</Text>
-            <View style={styles.subHeader}>
-                <TouchableOpacity style={styles.searchButton}
-                    onPress={() => navigation.navigate('SearchScreen')}
-                >
-                    <Icon name="magnify" size={24} color="#000" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('ProfileScreen')}>
-                    {user.profilePic ? (
-                        <Image
-                            source={{ uri: user?.profilePic }}
-                            style={styles.profileImage}
-                            resizeMode="cover"
-                            onError={() => console.log("Failed to load image")}
-                        />
-                    ) : (
-                        <Icon name="account-circle" size={30} color="#000" />
-                    )}
-                </TouchableOpacity>
-
-            </View>
+  return (
+    <SafeAreaView edges={['top']} style={styles.header}>
+      <View style={styles.headerRow}>
+        <IconBtn icon="menu" onPress={() => navigation.toggleDrawer()} />
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          Evi Micro Finance
+        </Text>
+        <View style={styles.headerActions}>
+          <IconBtn icon="magnify" onPress={() => navigation.navigate('SearchScreen')} />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ProfileScreen')}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            style={styles.avatarBtn}
+          >
+            {user?.profilePic ? (
+              <Image source={{ uri: user.profilePic }} style={styles.avatar} resizeMode="cover" />
+            ) : (
+              <Icon name="account-circle" size={22} color={colors.inkSecondary} />
+            )}
+          </TouchableOpacity>
         </View>
-    );
+      </View>
+    </SafeAreaView>
+  );
 };
 
 const UserProfile = () => {
-    const { user } = useHomeContext();
+  const { user } = useHomeContext();
+  const name = `${user?.fname || ''} ${user?.lname || ''}`.trim();
 
-    return (
-        <View style={styles.userContainer}>
-            <View style={styles.profileContainer}>
-                <View style={styles.profileIconContainer}>
-                    {user.profilePic ? (
-                        <Image
-                            source={{ uri: user?.profilePic }}
-                            style={styles.profileImage}
-                            resizeMode="cover"
-                            onError={() => console.log("Failed to load image")}
-                        />
-                    ) : (
-                        <Icon name="account-circle" size={60} color="#000" />
-                    )}
-                </View>
-                <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>{`${user?.fname || 'Not'} ${user?.lname || 'Available'}  `}</Text>
-                    <Text style={styles.profileEmail}>{user?.email || 'Not Available'}</Text>
-                </View>
-            </View>
+  return (
+    <SafeAreaView edges={['top']} style={styles.profileHero}>
+      <View style={styles.profileRow}>
+        <View style={styles.avatarWrap}>
+          {user?.profilePic ? (
+            <Image source={{ uri: user.profilePic }} style={styles.avatarLg} resizeMode="cover" />
+          ) : (
+            <Icon name="account-circle" size={34} color={colors.accentDeep} />
+          )}
         </View>
-    );
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName} numberOfLines={1}>
+            {name || 'Team Member'}
+          </Text>
+          <Text style={styles.profileEmail} numberOfLines={1}>
+            {user?.email || 'Not available'}
+          </Text>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 };
 
-const MenuItem = ({ icon, title, onPress }) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-        <Icon name={icon} size={24} color="#4a4a4a" style={styles.menuIcon} />
-        <Text style={styles.menuTitle}>{title}</Text>
-        <Icon name="chevron-right" size={24} color="#4a4a4a" />
+const MenuItem = ({ icon, title, onPress, tone }) => {
+  const danger = tone === 'danger';
+  return (
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={onPress}
+      activeOpacity={0.6}
+      accessibilityRole="button"
+    >
+      <View style={[styles.menuIconWrap, { backgroundColor: danger ? colors.dangerSoft : colors.surfaceAlt }]}>
+        <Icon name={icon} size={20} color={danger ? colors.dangerInk : colors.inkSecondary} />
+      </View>
+      <Text style={[styles.menuTitle, { color: danger ? colors.dangerInk : colors.ink }]}>{title}</Text>
+      <Icon name="chevron-right" size={18} color={colors.borderStrong} />
     </TouchableOpacity>
-);
+  );
+};
+
+const SectionLabel = ({ children }) => <Text style={styles.sectionLabel}>{children}</Text>;
 
 const CustomDrawerContent = ({ navigation }) => {
-    const { setIsLoggedIn } = useHomeContext();
+  const { setIsLoggedIn } = useHomeContext();
 
-    const handleLogout = async () => {
-        try {
-            await AsyncStorage.clear();
-            setIsLoggedIn(false);
-            navigation.closeDrawer();
-        } catch (error) {
-            console.error('Error during logout:', error);
-        }
-    };
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.clear();
+      setIsLoggedIn(false);
+      navigation.closeDrawer();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
 
-    return (
-        <ScrollView style={styles.drawerContent}>
-            <UserProfile />
-            <MenuItem icon="bank" title="Savings Account" onPress={() => console.log('Savings Account pressed')} />
-            <MenuItem icon="cash-multiple" title="Transactions" onPress={() => console.log('Transactions pressed')} />
-            <MenuItem icon="calculator" title="Loan Calculator" onPress={() => navigation.navigate('LoanCalculator')} />
-            <MenuItem icon="handshake" title="Support" onPress={() => console.log('Support pressed')} />
-            <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />
-            <MenuItem icon="shield-check" title="Security" onPress={() => console.log('Security pressed')} />
-            <MenuItem icon="bell-outline" title="Notifications" onPress={() => console.log('Notifications pressed')} />
-            {/* Menu Iem for About Page */}
-            <MenuItem icon="information" title="About" onPress={() => navigation.navigate('About')} />
-            <MenuItem icon="logout" title="Logout" onPress={handleLogout} />
-        </ScrollView>
-    );
+  return (
+    <ScrollView
+      style={styles.drawer}
+      contentContainerStyle={styles.drawerInner}
+      showsVerticalScrollIndicator={false}
+    >
+      <UserProfile />
+
+      <SectionLabel>Menu</SectionLabel>
+      <MenuItem icon="bank" title="Savings Account" onPress={() => console.log('Savings Account pressed')} />
+      <MenuItem icon="cash-multiple" title="Transactions" onPress={() => console.log('Transactions pressed')} />
+      <MenuItem icon="calculator" title="Loan Calculator" onPress={() => navigation.navigate('LoanCalculator')} />
+
+      <SectionLabel>Workspace</SectionLabel>
+      <MenuItem icon="handshake" title="Support" onPress={() => console.log('Support pressed')} />
+      <MenuItem icon="cog" title="Settings" onPress={() => console.log('Settings pressed')} />
+      <MenuItem icon="shield-check" title="Security" onPress={() => console.log('Security pressed')} />
+      <MenuItem icon="bell-outline" title="Notifications" onPress={() => console.log('Notifications pressed')} />
+
+      <SectionLabel>Account</SectionLabel>
+      <MenuItem icon="information" title="About" onPress={() => navigation.navigate('About')} />
+      <MenuItem icon="logout" title="Logout" tone="danger" onPress={handleLogout} />
+
+      <View style={styles.drawerFooter}>
+        <Text style={styles.drawerFooterText}>Evi Micro Finance</Text>
+      </View>
+    </ScrollView>
+  );
 };
 
 const MenuScreenEmployee = () => {
-    return (
-        <Drawer.Navigator
-            drawerContent={(props) => <CustomDrawerContent {...props} />}
-            screenOptions={({ navigation }) => ({
-                header: () => <CustomHeader navigation={navigation} />,
-                drawerStyle: {
-                    width: '70%',
-                },
-                drawerActiveTintColor: '#007AFF',
-                drawerInactiveTintColor: '#000',
-
-            })}
-        >
-            <Drawer.Screen name="EmployeeHome" component={HomeScreen} />
-        </Drawer.Navigator>
-    );
-}
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={({ navigation }) => ({
+        header: () => <CustomHeader navigation={navigation} />,
+        drawerStyle: {
+          width: '72%',
+          backgroundColor: colors.surface,
+          borderEndWidth: 1,
+          borderEndColor: colors.border,
+        },
+      })}
+    >
+      <Drawer.Screen name="EmployeeHome" component={HomeScreen} />
+    </Drawer.Navigator>
+  );
+};
 
 const styles = StyleSheet.create({
-    headerContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingTop: 10,
-        paddingBottom: 5,
-        backgroundColor: '#fff',
-    },
-    subHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    searchButton: {
-        padding: 5,
-        marginRight: 10,
-    },
-    menuButton: {
-        padding: 5,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: 'black',
-    },
-    profileButton: {
-        padding: 5,
-    },
-    profileImage: {
-        width: 30,
-        height: 30,
-        borderRadius: 40,
-        marginRight: 15,
-    },
-    drawerContent: {
-        flex: 1,
-    },
-    userContainer: {
-        backgroundColor: '#f0f0f0',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
+  header: {
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+  },
+  headerTitle: {
+    ...type.title,
+    color: colors.ink,
+    flex: 1,
+    marginLeft: spacing.xs,
+    marginRight: spacing.xs,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.accentSoft,
+    marginLeft: spacing.xs,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+  },
 
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    profileIconContainer: {
-        marginRight: 16,
-    },
-    profileInfo: {
-        flex: 1,
-    },
-    profileName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#4a4a4a',
-    },
-    profileEmail: {
-        fontSize: 14,
-        color: '#666',
+  profileHero: {
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  avatarWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.full,
+    backgroundColor: colors.accentSoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  avatarLg: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.full,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    ...type.h2,
+    color: colors.ink,
+  },
+  profileEmail: {
+    ...type.sub,
+    color: colors.inkMuted,
+    marginTop: 2,
+  },
 
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
-    menuIcon: {
-        marginRight: 16,
-    },
-    menuTitle: {
-        flex: 1,
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#4a4a4a',
-    },
+  drawer: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  drawerInner: {
+    paddingBottom: spacing.xxxl,
+  },
+  sectionLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xs,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
+  },
+  menuIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  menuTitle: {
+    ...type.body,
+    fontWeight: '600',
+    flex: 1,
+  },
+  drawerFooter: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+  },
+  drawerFooterText: {
+    ...type.micro,
+    color: colors.inkMuted,
+  },
 });
 
 export default MenuScreenEmployee;

@@ -1,626 +1,555 @@
 import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    TouchableOpacity,
-    ScrollView,
-    KeyboardAvoidingView,
-    Platform,
-    ActivityIndicator,
-    Image,
-    Modal,
-    Alert
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, StyleSheet, Image, Modal, Alert, Pressable } from 'react-native';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import Screen from '../../../../design/components/Screen';
+import Card from '../../../../design/components/Card';
+import Button from '../../../../design/components/Button';
+import TextField from '../../../../design/components/TextField';
+import Icon from '../../../../design/Icon';
+import { colors, spacing, radius, type } from '../../../../design/tokens';
+
+/**
+ * CreateLoan — admin loan creation rebuilt on the "Ink & Amber" design
+ * system.
+ *  - the same three sections (Loan / Business / Documents) rendered as
+ *    Cards, with design TextFields, styled Pickers, the native date
+ *    picker and a photo-attachment flow with preview grid + viewer modal
+ *  - payload preserved exactly: every loanData key (Date → ISO string),
+ *    the `documents` JSON list, one file part per document keyed by
+ *    `fieldname`, plus `customerUid` → POST /api/admin/loan (multipart)
+ *  - backend quirks kept verbatim: interestRate pre-filled "3.38",
+ *    gracePeriod "0", disabled rate/grace inputs, "Goverment" option
+ *    label/value, duration options 100–2200 days
+ *  - icon names swapped to the verified custom SVG set
+ */
+
+const DURATION_OPTIONS = [
+  { label: 'Select Loan Duration', value: '' },
+  ...[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200]
+    .map((days) => ({ label: `${days} days`, value: `${days} days` })),
+];
+
+const FREQUENCY_OPTIONS = [
+  { label: 'Select Frequency', value: '' },
+  { label: 'Daily', value: 'Daily' },
+  { label: 'Weekly', value: 'Weekly' },
+  { label: 'Monthly', value: 'Monthly' },
+];
+
+const DOCUMENT_TYPES = [
+  { label: 'Id Proof', value: 'Id Proof' },
+  { label: 'Bank', value: 'Bank' },
+  { label: 'Goverment', value: 'Goverment' },
+  { label: 'Photo', value: 'Photo' },
+  { label: 'Signature', value: 'Signature' },
+  { label: 'Other', value: 'Other' },
+];
+
+const SectionLabel = ({ children }) => (
+  <Text
+    style={[
+      type.caption,
+      {
+        color: colors.inkMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+        marginBottom: spacing.sm,
+      },
+    ]}
+  >
+    {children}
+  </Text>
+);
+
+const LabeledPicker = ({ label, icon, options, value, onValueChange, error }) => (
+  <View style={{ marginBottom: spacing.md }}>
+    <Text style={[type.caption, { color: colors.inkSecondary, marginBottom: 6 }]}>{label}</Text>
+    <View style={styles.pickerWrap}>
+      <Icon name={icon} size={20} color={colors.inkMuted} />
+      <Picker
+        selectedValue={value}
+        onValueChange={(itemValue) => onValueChange(itemValue)}
+        style={[styles.picker, value === '' && { color: colors.inkMuted }]}
+      >
+        {options.map((option) => (
+          <Picker.Item key={option.value} label={option.label} value={option.value} />
+        ))}
+      </Picker>
+      <Icon name="chevron-down" size={18} color={colors.inkMuted} />
+    </View>
+    {error ? <Text style={styles.errorText}>{error}</Text> : null}
+  </View>
+);
 
 const CreateLoan = () => {
-    const navigation = useNavigation();
-    const route = useRoute();
-    const { customerUid } = route.params || {};
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { customerUid } = route.params || {};
 
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
-    const [loanData, setLoanData] = useState({
-        loanAmount: '',
-        principalAmount: '',
-        loanDuration: '',
-        installmentFrequency: '',
-        interestRate: '3.38',
-        loanStartDate: new Date(),
-        gracePeriod: '0',
-        loanNumber: '',
-        businessFirmName: '',
-        businessAddress: '',
-        businessPhone: '',
-        businessEmail: ''
-    });
+  const [loanData, setLoanData] = useState({
+    loanAmount: '',
+    principalAmount: '',
+    loanDuration: '',
+    installmentFrequency: '',
+    interestRate: '3.38',
+    loanStartDate: new Date(),
+    gracePeriod: '0',
+    loanNumber: '',
+    businessFirmName: '',
+    businessAddress: '',
+    businessPhone: '',
+    businessEmail: ''
+  });
 
-    const [documents, setDocuments] = useState([]);
-    const [newDocumentName, setNewDocumentName] = useState('');
-    const [newDocumentType, setNewDocumentType] = useState('Other');
+  const [documents, setDocuments] = useState([]);
+  const [newDocumentName, setNewDocumentName] = useState('');
+  const [newDocumentType, setNewDocumentType] = useState('Other');
 
-    const [loading, setLoading] = useState(false);
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [errors, setErrors] = useState({});
 
-    const formatAmount = (amount) => {
-        if (!amount) return '';
-        return parseFloat(amount).toLocaleString('en-IN');
-    };
+  const formatAmount = (amount) => {
+    if (!amount) return '';
+    return parseFloat(amount).toLocaleString('en-IN');
+  };
 
-    const handleInputChange = (name, value) => {
-        setLoanData({ ...loanData, [name]: value });
-        if (errors[name]) {
-            setErrors({ ...errors, [name]: null });
-        }
-    };
+  const handleInputChange = (name, value) => {
+    setLoanData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prevErrors) => ({ ...prevErrors, [name]: null }));
+    }
+  };
 
-    const handleDateChange = (event, selectedDate) => {
-        setShowDatePicker(false);
-        if (selectedDate) {
-            setLoanData({ ...loanData, loanStartDate: selectedDate });
-        }
-    };
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setLoanData((prev) => ({ ...prev, loanStartDate: selectedDate }));
+    }
+  };
 
-    const handleDocumentUpload = async () => {
-        if (!newDocumentName.trim()) {
-            showToast('error', 'Error', 'Please enter a document name');
-            return;
-        }
-
-        const options = {
-            mediaType: 'photo',
-            quality: 0.3,
-        };
-
-        try {
-            const result = await launchImageLibrary(options);
-            if (result.assets) {
-                const newDocument = {
-                    fieldname: newDocumentName.trim(),
-                    documentName: newDocumentName.trim(),
-                    documentType: newDocumentType,
-                    uri: result.assets[0].uri,
-                    type: result.assets[0].type,
-                    name: result.assets[0].fileName,
-                };
-                setDocuments([...documents, newDocument]);
-                setNewDocumentName('');
-                setNewDocumentType('Other');
-            }
-        } catch (error) {
-            console.error('Error uploading document:', error);
-            showToast('error', 'Error', 'Failed to upload document');
-        }
-    };
-
-    const handleRemoveDocument = (index) => {
-        const updatedDocuments = documents.filter((_, i) => i !== index);
-        setDocuments(updatedDocuments);
-    };
-
-    const handleViewImage = (imageUri) => {
-        setSelectedImage(imageUri);
-        setShowImageModal(true);
-    };
-
-    const validateForm = () => {
-        let isValid = true;
-        let newErrors = {};
-
-        // Add validation for all fields
-        const requiredFields = [
-            'loanAmount', 'principalAmount', 'loanDuration', 'installmentFrequency',
-            'interestRate', 'loanNumber', 'businessFirmName', 'businessAddress',
-            'businessPhone', 'businessEmail'
-        ];
-
-        requiredFields.forEach(field => {
-            if (!loanData[field]) {
-                newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-                isValid = false;
-            }
-        });
-
-        if (parseFloat(loanData.loanAmount) <= 0) {
-            newErrors.loanAmount = 'Loan amount must be greater than 0';
-            isValid = false;
-        }
-
-        if (parseFloat(loanData.principalAmount) <= 0) {
-            newErrors.principalAmount = 'Principal amount must be greater than 0';
-            isValid = false;
-        }
-
-        if (parseFloat(loanData.interestRate) < 0) {
-            newErrors.interestRate = 'Interest rate must be non-negative';
-            isValid = false;
-        }
-
-        if (documents.length === 0) {
-            newErrors.documents = 'At least one document is required';
-            isValid = false;
-        }
-
-        setErrors(newErrors);
-        return isValid;
-    };
-
-    const createLoan = async () => {
-        if (!validateForm()) {
-            showToast('error', 'Validation Error', 'Please correct the errors before submitting');
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            const formData = new FormData();
-
-            Object.keys(loanData).forEach(key => {
-                if (loanData[key] instanceof Date) {
-                    formData.append(key, loanData[key].toISOString());
-                } else {
-                    formData.append(key, loanData[key]);
-                }
-            });
-
-            formData.append('documents', JSON.stringify(documents.map(doc => ({
-                fieldname: doc.fieldname,
-                documentName: doc.documentName,
-                documentType: doc.documentType
-            }))));
-
-            documents.forEach((doc, index) => {
-                formData.append(doc.fieldname, {
-                    uri: doc.uri,
-                    type: doc.type,
-                    name: doc.name,
-                });
-            });
-
-            formData.append('customerUid', customerUid);
-
-            const response = await apiCall('/api/admin/loan', 'POST', formData, true);
-
-            if (response.status === 'success') {
-                showToast('success', 'Success', 'Loan created successfully');
-                navigation.goBack();
-            } else {
-                showToast('error', 'Error', response.message || 'Failed to create loan');
-            }
-
-        } catch (error) {
-            console.error('Error creating loan:', error);
-            showToast('error', 'Error', 'An unexpected error occurred');
-        } finally {
-            setLoading(false);
-        }
+  const handleDocumentUpload = async () => {
+    if (!newDocumentName.trim()) {
+      showToast('error', 'Error', 'Please enter a document name');
+      return;
     }
 
-    const handleCreateLoan = async () => {
-        Alert.alert('Confirm Loan Creation', 'Are you sure you want to create this loan?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'OK', onPress: () => createLoan() }
-        ])
+    const options = {
+      mediaType: 'photo',
+      quality: 0.3,
     };
 
-    const renderInput = (icon, title, placeholder, name, keyboardType = 'default', value, onChangeText, disabled = false) => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.inputTitle}>{title}</Text>
-            <View style={styles.inputContainer}>
-                <Icon name={icon} size={24} color="#6366F1" style={styles.inputIcon} />
-                <TextInput
-                    style={[styles.input, disabled && styles.disabledInput]}
-                    placeholder={placeholder}
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType={keyboardType}
-                    value={value}
-                    onChangeText={onChangeText}
-                    editable={!disabled}
+    try {
+      const result = await launchImageLibrary(options);
+      if (result.assets) {
+        const newDocument = {
+          fieldname: newDocumentName.trim(),
+          documentName: newDocumentName.trim(),
+          documentType: newDocumentType,
+          uri: result.assets[0].uri,
+          type: result.assets[0].type,
+          name: result.assets[0].fileName,
+        };
+        setDocuments((prev) => [...prev, newDocument]);
+        setNewDocumentName('');
+        setNewDocumentType('Other');
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      showToast('error', 'Error', 'Failed to upload document');
+    }
+  };
+
+  const handleRemoveDocument = (index) => {
+    const updatedDocuments = documents.filter((_, i) => i !== index);
+    setDocuments(updatedDocuments);
+  };
+
+  const handleViewImage = (imageUri) => {
+    setSelectedImage(imageUri);
+    setShowImageModal(true);
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    let newErrors = {};
+
+    // Add validation for all fields
+    const requiredFields = [
+      'loanAmount', 'principalAmount', 'loanDuration', 'installmentFrequency',
+      'interestRate', 'loanNumber', 'businessFirmName', 'businessAddress',
+      'businessPhone', 'businessEmail'
+    ];
+
+    requiredFields.forEach(field => {
+      if (!loanData[field]) {
+        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+        isValid = false;
+      }
+    });
+
+    if (parseFloat(loanData.loanAmount) <= 0) {
+      newErrors.loanAmount = 'Loan amount must be greater than 0';
+      isValid = false;
+    }
+
+    if (parseFloat(loanData.principalAmount) <= 0) {
+      newErrors.principalAmount = 'Principal amount must be greater than 0';
+      isValid = false;
+    }
+
+    if (parseFloat(loanData.interestRate) < 0) {
+      newErrors.interestRate = 'Interest rate must be non-negative';
+      isValid = false;
+    }
+
+    if (documents.length === 0) {
+      newErrors.documents = 'At least one document is required';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const createLoan = async () => {
+    if (!validateForm()) {
+      showToast('error', 'Validation Error', 'Please correct the errors before submitting');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const formData = new FormData();
+
+      Object.keys(loanData).forEach(key => {
+        if (loanData[key] instanceof Date) {
+          formData.append(key, loanData[key].toISOString());
+        } else {
+          formData.append(key, loanData[key]);
+        }
+      });
+
+      formData.append('documents', JSON.stringify(documents.map(doc => ({
+        fieldname: doc.fieldname,
+        documentName: doc.documentName,
+        documentType: doc.documentType
+      }))));
+
+      documents.forEach((doc, index) => {
+        formData.append(doc.fieldname, {
+          uri: doc.uri,
+          type: doc.type,
+          name: doc.name,
+        });
+      });
+
+      formData.append('customerUid', customerUid);
+
+      const response = await apiCall('/api/admin/loan', 'POST', formData, true);
+
+      if (response.status === 'success') {
+        showToast('success', 'Success', 'Loan created successfully');
+        navigation.goBack();
+      } else {
+        showToast('error', 'Error', response.message || 'Failed to create loan');
+      }
+
+    } catch (error) {
+      console.error('Error creating loan:', error);
+      showToast('error', 'Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateLoan = () => {
+    Alert.alert('Confirm Loan Creation', 'Are you sure you want to create this loan?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'OK', onPress: () => createLoan() }
+    ]);
+  };
+
+  const field = (name, label, placeholder, icon, props = {}) => (
+    <TextField
+      label={label}
+      value={loanData[name]}
+      onChangeText={(text) => handleInputChange(name, text)}
+      placeholder={placeholder}
+      leftIcon={icon}
+      error={errors[name]}
+      style={{ marginBottom: spacing.md }}
+      {...props}
+    />
+  );
+
+  return (
+    <Screen scroll bg={colors.bg} keyboardAvoid keyboardShouldPersistTaps="handled">
+      <View style={styles.page}>
+        <SectionLabel>Loan Details</SectionLabel>
+        <Card>
+          <View style={styles.cardBody}>
+            {field('loanNumber', 'Loan Number', 'Enter loan number', 'receipt', { keyboardType: 'numeric' })}
+
+            <View style={styles.row}>
+              <View style={styles.half}>
+                {field('loanAmount', 'Loan Amount', 'Enter loan amount', 'currency-inr', {
+                  keyboardType: 'numeric',
+                  value: formatAmount(loanData.loanAmount),
+                  onChangeText: (text) => handleInputChange('loanAmount', text.replace(/,/g, '')),
+                  style: { marginBottom: 0 },
+                })}
+              </View>
+              <View style={[styles.half, { marginLeft: spacing.sm }]}>
+                {field('principalAmount', 'Principal Amount', 'Enter principal', 'cash', {
+                  keyboardType: 'numeric',
+                  value: formatAmount(loanData.principalAmount),
+                  onChangeText: (text) => handleInputChange('principalAmount', text.replace(/,/g, '')),
+                  style: { marginBottom: 0 },
+                })}
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <LabeledPicker
+                  label="Loan Duration"
+                  icon="calendar-range"
+                  options={DURATION_OPTIONS}
+                  value={loanData.loanDuration}
+                  onValueChange={(v) => handleInputChange('loanDuration', v)}
+                  error={errors.loanDuration}
                 />
+              </View>
+              <View style={[styles.half, { marginLeft: spacing.sm }]}>
+                <LabeledPicker
+                  label="Installment Frequency"
+                  icon="calendar-clock"
+                  options={FREQUENCY_OPTIONS}
+                  value={loanData.installmentFrequency}
+                  onValueChange={(v) => handleInputChange('installmentFrequency', v)}
+                  error={errors.installmentFrequency}
+                />
+              </View>
             </View>
-            {errors[name] && <Text style={styles.errorText}>{errors[name]}</Text>}
-        </View>
-    );
 
-    const renderPicker = (icon, title, name, options, value, onValueChange) => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.inputTitle}>{title}</Text>
-            <View style={styles.inputContainer}>
-                <Icon name={icon} size={24} color="#6366F1" style={styles.inputIcon} />
-                <Picker
-                    selectedValue={value}
-                    style={styles.picker}
-                    onValueChange={onValueChange}
-                >
-                    {options.map((option) => (
-                        <Picker.Item key={option.value} label={option.label} value={option.value} />
-                    ))}
-                </Picker>
+            <View style={styles.row}>
+              <View style={styles.half}>
+                {field('interestRate', 'Interest Rate (%)', 'Interest rate', 'percent', { disabled: true })}
+              </View>
+              <View style={[styles.half, { marginLeft: spacing.sm }]}>
+                {field('gracePeriod', 'Grace Period (days)', 'Grace period', 'clock', { disabled: true })}
+              </View>
             </View>
-            {errors[name] && <Text style={styles.errorText}>{errors[name]}</Text>}
-        </View>
-    );
 
-    const renderDatePicker = () => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.inputTitle}>Loan Start Date</Text>
-            <TouchableOpacity
-                style={styles.datePickerButton}
+            <View>
+              <Text style={[type.caption, { color: colors.inkSecondary, marginBottom: 6 }]}>Loan Start Date</Text>
+              <Pressable
                 onPress={() => setShowDatePicker(true)}
-            >
-                <Icon name="calendar" size={24} color="#6366F1" style={styles.inputIcon} />
-                <Text style={styles.datePickerButtonText}>
-                    {loanData.loanStartDate.toDateString()}
+                style={({ pressed }) => [styles.dateButton, pressed && { opacity: 0.85 }]}
+              >
+                <Icon name="calendar" size={20} color={colors.inkMuted} />
+                <Text style={[type.body, { color: colors.ink, marginLeft: 8 }]}>
+                  {loanData.loanStartDate.toDateString()}
                 </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
+                <Icon name="chevron-down" size={16} color={colors.inkMuted} style={{ marginLeft: 'auto' }} />
+              </Pressable>
+              {showDatePicker && (
                 <DateTimePicker
-                    value={loanData.loanStartDate}
-                    mode="date"
-                    display="default"
-                    onChange={handleDateChange}
+                  value={loanData.loanStartDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
                 />
-            )}
-        </View>
-    );
-
-    const renderDocumentUpload = () => (
-        <View style={styles.uploadWrapper}>
-            <Text style={styles.inputTitle}>Upload Document</Text>
-            <View style={styles.documentInputContainer}>
-                <TextInput
-                    style={styles.documentInput}
-                    placeholder="Enter document name"
-                    value={newDocumentName}
-                    onChangeText={setNewDocumentName}
-                    placeholderTextColor={'#9CA3AF'}
-                />
-                <Picker
-                    selectedValue={newDocumentType}
-                    style={styles.documentTypePicker}
-                    onValueChange={(itemValue) => setNewDocumentType(itemValue)}
-                >
-                    <Picker.Item label="Id Proof" value="Id Proof" />
-                    <Picker.Item label="Bank" value="Bank" />
-                    <Picker.Item label="Goverment" value="Goverment" />
-                    <Picker.Item label="Photo" value="Photo" />
-                    <Picker.Item label="Signature" value="Signature" />
-                    <Picker.Item label="Other" value="Other" />
-
-                </Picker>
+              )}
             </View>
-            <TouchableOpacity
-                style={styles.uploadButton}
-                onPress={handleDocumentUpload}
-            >
-                <Icon name="file-upload" size={24} color="#fff" />
-                <Text style={styles.uploadButtonText}>Upload Document</Text>
-            </TouchableOpacity>
-            <View style={styles.imagePreviewContainer}>
+          </View>
+        </Card>
+
+        <SectionLabel>Business Details</SectionLabel>
+        <Card>
+          <View style={styles.cardBody}>
+            {field('businessFirmName', 'Business Firm Name', 'Enter business firm name', 'briefcase')}
+            {field('businessAddress', 'Business Address', 'Enter business address', 'map-marker', { multiline: true })}
+            {field('businessPhone', 'Business Phone', 'Enter business phone', 'phone', { keyboardType: 'phone-pad' })}
+            {field('businessEmail', 'Business Email', 'Enter business email', 'email', { keyboardType: 'email-address' })}
+          </View>
+        </Card>
+
+        <SectionLabel>Document Upload</SectionLabel>
+        <Card>
+          <View style={styles.cardBody}>
+            <TextField
+              label="Document Name"
+              value={newDocumentName}
+              onChangeText={setNewDocumentName}
+              placeholder="Enter document name"
+              leftIcon="file"
+            />
+            <LabeledPicker
+              label="Document Type"
+              icon="clipboard"
+              options={DOCUMENT_TYPES}
+              value={newDocumentType}
+              onValueChange={setNewDocumentType}
+            />
+            <Button
+              label="Add Document"
+              icon="upload"
+              variant="accent"
+              full
+              onPress={handleDocumentUpload}
+            />
+
+            {documents.length > 0 && (
+              <View style={styles.previewGrid}>
                 {documents.map((doc, index) => (
-                    <View key={index} style={styles.uploadedImageContainer}>
-                        <TouchableOpacity onPress={() => handleViewImage(doc.uri)}>
-                            <Image source={{ uri: doc.uri }} style={styles.uploadedImage} />
-                        </TouchableOpacity>
-                        <Text style={styles.documentNameText}>{doc.documentName}</Text>
-                        <TouchableOpacity
-                            style={styles.removeImageButton}
-                            onPress={() => handleRemoveDocument(index)}
-                        >
-                            <Icon name="close" size={20} color="#fff" />
-                        </TouchableOpacity>
-                    </View>
+                  <View key={index} style={styles.previewTile}>
+                    <Pressable onPress={() => handleViewImage(doc.uri)}>
+                      <Image source={{ uri: doc.uri }} style={styles.previewImage} />
+                    </Pressable>
+                    <Text numberOfLines={1} style={[type.micro, { color: colors.inkSecondary, marginTop: 4, textAlign: 'center' }]}>
+                      {doc.documentName}
+                    </Text>
+                    <Pressable
+                      style={styles.removeBadge}
+                      onPress={() => handleRemoveDocument(index)}
+                    >
+                      <Icon name="close" size={12} color={colors.white} />
+                    </Pressable>
+                  </View>
                 ))}
-            </View>
-            {errors.documents && <Text style={styles.errorText}>{errors.documents}</Text>}
+              </View>
+            )}
+            {errors.documents ? <Text style={styles.errorText}>{errors.documents}</Text> : null}
+          </View>
+        </Card>
+
+        <View style={{ marginTop: spacing.lg }}>
+          <Button
+            label="Create Loan"
+            icon="check-circle"
+            variant="accent"
+            size="lg"
+            full
+            loading={loading}
+            onPress={handleCreateLoan}
+          />
         </View>
-    );
+      </View>
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardAvoidingView}
-            >
-                <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Loan Details</Text>
-                        {renderInput('pound-box', 'Loan Number', 'Enter loan number', 'loanNumber', 'numeric', loanData.loanNumber, (text) => handleInputChange('loanNumber', text))}
+      <Modal visible={showImageModal} transparent onRequestClose={() => setShowImageModal(false)}>
+        <View style={styles.modalContainer}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => setShowImageModal(false)}
+          >
+            <Icon name="close" size={24} color={colors.white} />
+          </Pressable>
+          <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
+        </View>
+      </Modal>
 
-                        <View style={styles.row}>
-                            {renderInput('currency-inr', 'Loan Amount', 'Enter loan amount', 'loanAmount', 'numeric', formatAmount(loanData.loanAmount), (text) => handleInputChange('loanAmount', text.replace(/,/g, '')))}
-                            {renderInput('cash', 'Principal Amount', 'Enter principal amount', 'principalAmount', 'numeric', formatAmount(loanData.principalAmount), (text) => handleInputChange('principalAmount', text.replace(/,/g, '')))}
-
-                        </View>
-                        <View style={styles.row}>
-                            {renderPicker('calendar-range', 'Loan Duration', 'loanDuration', [
-                                { label: 'Select Loan Duration', value: '' },
-                                { label: '100 days', value: '100 days' },
-                                { label: '200 days', value: '200 days' },
-                                { label: '300 days', value: '300 days' },
-                                { label: '400 days', value: '400 days' },
-                                { label: '500 days', value: '500 days' },
-                                { label: '600 days', value: '600 days' },
-                                { label: '700 days', value: '700 days' },
-                                { label: '800 days', value: '800 days' },
-                                { label: '900 days', value: '900 days' },
-                                { label: '1000 days', value: '1000 days' },
-                                { label: '1100 days', value: '1100 days' },
-                                { label: '1200 days', value: '1200 days' },
-                                { label: '1300 days', value: '1300 days' },
-                                { label: '1400 days', value: '1400 days' },
-                                { label: '1500 days', value: '1500 days' },
-                                { label: '1600 days', value: '1600 days' },
-                                { label: '1700 days', value: '1700 days' },
-                                { label: '1800 days', value: '1800 days' },
-                                { label: '1900 days', value: '1900 days' },
-                                { label: '2000 days', value: '2000 days' },
-                                { label: '2100 days', value: '2100 days' },
-                                { label: '2200 days', value: '2200 days' },
-                            ], loanData.loanDuration, (itemValue) => handleInputChange('loanDuration', itemValue))}
-                            {renderPicker('calendar-clock', 'Installment Frequency', 'installmentFrequency', [
-                                { label: 'Select Frequency', value: '' },
-                                { label: 'Daily', value: 'Daily' },
-                                { label: 'Weekly', value: 'Weekly' },
-                                { label: 'Monthly', value: 'Monthly' },
-                            ], loanData.installmentFrequency, (itemValue) => handleInputChange('installmentFrequency', itemValue))}
-                        </View>
-                        <View style={styles.row}>
-                            {renderInput('percent', 'Interest Rate', 'Enter interest rate', 'interestRate', 'numeric', loanData.interestRate, disabled = true, (text) => handleInputChange('interestRate', text))}
-                            {renderInput('timer-sand', 'Grace Period', 'Enter grace period (days)', 'gracePeriod', 'numeric', loanData.gracePeriod, disabled = true, (text) => handleInputChange('gracePeriod', text))}
-                        </View>
-                        {renderDatePicker()}
-                    </View>
-
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Business Details</Text>
-                        {renderInput('domain', 'Business Firm Name', 'Enter business firm name', 'businessFirmName', 'default', loanData.businessFirmName, (text) => handleInputChange('businessFirmName', text))}
-                        {renderInput('map-marker', 'Business Address', 'Enter business address', 'businessAddress', 'default', loanData.businessAddress, (text) => handleInputChange('businessAddress', text))}
-                        {renderInput('phone', 'Business Phone', 'Enter business phone', 'businessPhone', 'phone-pad', loanData.businessPhone, (text) => handleInputChange('businessPhone', text))}
-                        {renderInput('email', 'Business Email', 'Enter business email', 'businessEmail', 'email-address', loanData.businessEmail, (text) => handleInputChange('businessEmail', text))}
-                    </View>
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Document Upload</Text>
-                        {renderDocumentUpload()}
-                    </View>
-
-                    <View style={styles.createLoanButtonContainer}>
-                        <TouchableOpacity
-                            style={styles.createButton}
-                            onPress={handleCreateLoan}
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <ActivityIndicator size="small" color="#ffffff" />
-                            ) : (
-                                <Text style={styles.createButtonText}>Create Loan</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-            <Modal visible={showImageModal} transparent={true} onRequestClose={() => setShowImageModal(false)}>
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setShowImageModal(false)}>
-                        <Icon name="close" size={30} color="#fff" />
-                    </TouchableOpacity>
-                    <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
-                </View>
-                <CustomToast />
-            </Modal>
-        </SafeAreaView>
-    );
+      <CustomToast />
+    </Screen>
+  );
 };
 
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F3F4F6',
-    },
-    keyboardAvoidingView: {
-        flex: 1,
-    },
-    scrollViewContent: {
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 12,
-        marginTop: 4,
-    },
-    section: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#374151',
-        marginBottom: 16,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 16,
-    },
-    inputWrapper: {
-        flex: 1,
-        marginRight: 8,
-        marginBottom: 16,
-    },
-    inputTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#4B5563',
-        marginBottom: 4,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        borderWidth: 1,
-        borderColor: '#D1D5DB',
-    },
-    inputIcon: {
-        marginRight: 8,
-    },
-    input: {
-        flex: 1,
-        fontSize: 16,
-        paddingVertical: 12,
-        color: '#111827',
-    },
-    documentInputContainer: {
-        flexDirection: 'row',
-        marginBottom: 8,
-    },
-    documentInput: {
-        flex: 1.2,
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        marginRight: 8,
-        borderWidth: 1,
-        borderColor: '#D1D5DB',
-        color: '#111827',
-    },
-    documentTypePicker: {
-        flex: 1,
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#D1D5DB',
-        color: '#111827',
-    },
-    documentNameText: {
-        fontSize: 12,
-        color: '#4B5563',
-        textAlign: 'center',
-        marginTop: 4,
-    },
-    disabledInput: {
-        //backgroundColor: '#F0F0F0',
-        color: '#A0A0A0',
-    },
-    picker: {
-        flex: 1,
-        height: 50,
-        color: '#111827',
-    },
-    datePickerButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#D1D5DB',
-    },
-    datePickerButtonText: {
-        marginLeft: 8,
-        fontSize: 16,
-        color: '#111827',
-    },
-    uploadWrapper: {
-        marginBottom: 16,
-    },
-    uploadButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#6366F1',
-        paddingVertical: 12,
-        borderRadius: 8,
-        marginBottom: 8,
-    },
-    uploadButtonText: {
-        marginLeft: 8,
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    imagePreviewContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 8,
-    },
-    uploadedImageContainer: {
-        position: 'relative',
-        marginRight: 8,
-        marginBottom: 8,
-    },
-    uploadedImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
-    },
-    removeImageButton: {
-        position: 'absolute',
-        top: 4,
-        right: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 12,
-        padding: 4,
-    },
-    modalContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalImage: {
-        width: '90%',
-        height: '90%',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 40,
-        right: 20,
-        zIndex: 1,
-    },
-    createLoanButtonContainer: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    createButton: {
-        backgroundColor: '#6366F1',
-        paddingVertical: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    createButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  page: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxxl,
+  },
+  cardBody: {
+    gap: 0,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  half: {
+    flex: 1,
+  },
+  pickerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingLeft: spacing.sm,
+  },
+  picker: {
+    flex: 1,
+    height: 54,
+    color: colors.ink,
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.md - 2,
+  },
+  errorText: {
+    ...type.caption,
+    color: colors.danger,
+    marginTop: 4,
+  },
+  previewGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  previewTile: {
+    width: 84,
+  },
+  previewImage: {
+    width: 84,
+    height: 84,
+    borderRadius: radius.md,
+    backgroundColor: colors.inkFaint,
+  },
+  removeBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: colors.danger,
+    borderRadius: radius.full,
+    padding: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '90%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 48,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: radius.full,
+    padding: spacing.sm,
+    zIndex: 1,
+  },
 });
+
 export default CreateLoan;

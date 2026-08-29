@@ -5,6 +5,7 @@ import AdminNavigator from './AdminNavigator';
 import EmployeeNavigator from './EmployeeNavigator';
 import { useHomeContext } from '../context/HomeContext';
 import SplashScreen from '../SplashScreen';
+import InkAmberTheme from '../../design/navigation';
 
 const RootNavigator = () => {
   const { isLoggedIn, isLoading, userRole } = useHomeContext();
@@ -24,7 +25,7 @@ const RootNavigator = () => {
 
   console.log('isLoggedIn:', isLoggedIn, 'userRole:', userRole);
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={InkAmberTheme}>
       {isLoggedIn ? (
         userRole === 'admin' ? (
           <AdminNavigator />

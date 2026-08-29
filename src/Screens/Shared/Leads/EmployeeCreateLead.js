@@ -1,636 +1,608 @@
-import React, { useState } from 'react';
-import {
-    View,
-    ScrollView,
-    Text,
-    TextInput,
-    StyleSheet,
-    TouchableOpacity,
-    Image,
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Alert,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useForm, Controller } from 'react-hook-form';
-import { Picker } from '@react-native-picker/picker';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'react-native-linear-gradient';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Image, Platform, Alert } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useForm, Controller } from "react-hook-form";
+import { Picker } from "@react-native-picker/picker";
+import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { apiCall } from "../../../components/api/apiUtils";
-import { showToast } from "../../../components/toast/CustomToast";
+import { showToast, CustomToast } from "../../../components/toast/CustomToast";
+import Screen from "../../../design/components/Screen";
+import Card from "../../../design/components/Card";
+import Button from "../../../design/components/Button";
+import TextField from "../../../design/components/TextField";
+import Icon from "../../../design/Icon";
+import { FadeInUp } from "../../../design/motion";
+import { colors, spacing, radius, type } from "../../../design/tokens";
+
+/**
+ * Create-lead form — rebuilt on the "Ink & Amber" design system.
+ *  - behaviour preserved 1:1: react-hook-form with the same fields,
+ *    default values (loanTypes[0] / loanDurations[0]) and validation rules,
+ *    the camera/gallery image picker (same options + picture shape),
+ *    the picture-required and loan-amount guards, the exact FormData
+ *    payload to POST /api/employee/lead/create (isFormData), the success
+ *    toast + reset + goBack, and the catch Alert
+ *  - every toast keeps its original 3-arg (type, title, message) shape
+ *  - fix: the original double semicolon (`Icon from ... ;;`) and the
+ *    unused LinearGradient wrapper are gone; the page now uses the design
+ *    Screen container with keyboard avoidance instead of a raw
+ *    KeyboardAvoidingView
+ *  - design: section cards with icon chips, design text fields with
+ *    leading icons and inline validation, Picker rows with chevrons,
+ *    a circular photo target with Camera/Gallery buttons, staggered
+ *    FadeInUp entrances and a full-width accent submit button
+ */
 
 const loanTypes = [
-    'Personal Loan',
-    'Home Loan',
-    'Business Loan',
-    'Education Loan',
-    'Vehicle Loan',
-    'Gold Loan',
-    'Other',
+  "Personal Loan",
+  "Home Loan",
+  "Business Loan",
+  "Education Loan",
+  "Vehicle Loan",
+  "Gold Loan",
+  "Other",
 ];
 
 const loanDurations = [
-    '100 days',
-    '200 days',
-    '300 days',
-    '400 days',
-    '500 days',
-    '600 days',
-    '700 days',
-    '800 days',
-    '900 days',
-    '1000 days',
-    '1100 days',
-    '1200 days',
-    '1300 days',
-    '1400 days',
-    '1500 days',
-    '1600 days',
-    '1700 days',
-    '1800 days',
-    '1900 days',
-    '2000 days',
-    '2100 days',
-    '2200 days'
+  "100 days",
+  "200 days",
+  "300 days",
+  "400 days",
+  "500 days",
+  "600 days",
+  "700 days",
+  "800 days",
+  "900 days",
+  "1000 days",
+  "1100 days",
+  "1200 days",
+  "1300 days",
+  "1400 days",
+  "1500 days",
+  "1600 days",
+  "1700 days",
+  "1800 days",
+  "1900 days",
+  "2000 days",
+  "2100 days",
+  "2200 days",
 ];
 
+const SectionCard = ({ icon, title, children }) => (
+  <Card elevation="subtle" style={{ marginBottom: spacing.md }}>
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionIconChip}>
+        <Icon name={icon} size={18} color={colors.accentDeep} />
+      </View>
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+    <View style={styles.sectionBody}>{children}</View>
+  </Card>
+);
+
+const PickerField = ({ label, value, onValueChange, options }) => (
+  <View style={styles.pickerWrap}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+    <View style={styles.pickerContainer}>
+      <Picker selectedValue={value} onValueChange={onValueChange} style={styles.picker}>
+        {options.map((option, index) => (
+          <Picker.Item key={index} label={option} value={option} />
+        ))}
+      </Picker>
+      <Icon name="chevron-down" size={18} color={colors.inkMuted} />
+    </View>
+  </View>
+);
+
 const CreateLeadScreen = () => {
-    const navigation = useNavigation();
-    const { control, handleSubmit, formState: { errors }, reset } = useForm({
-        defaultValues: {
-            name: '',
-            phone: '',
-            email: '',
-            address: '',
-            city: '',
-            state: '',
-            loanType: loanTypes[0],
-            loanAmount: '',
-            loanDuration: loanDurations[0],
-            loanPurpose: '',
-        }
-    });
+  const navigation = useNavigation();
+  const { control, handleSubmit, formState: { errors }, reset } = useForm({
+    defaultValues: {
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      city: "",
+      state: "",
+      loanType: loanTypes[0],
+      loanAmount: "",
+      loanDuration: loanDurations[0],
+      loanPurpose: "",
+    },
+  });
 
-    const [loading, setLoading] = useState(false);
-    const [picture, setPicture] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [picture, setPicture] = useState(null);
 
-    const pickImage = async (sourceType) => {
-        const options = {
-            mediaType: 'photo',
-            quality: 0.7,
-            maxWidth: 800,
-            maxHeight: 800,
-            includeBase64: false,
-        };
-
-        try {
-            const result = sourceType === 'camera'
-                ? await launchCamera(options)
-                : await launchImageLibrary(options);
-
-            if (result.didCancel) {
-                return;
-            }
-
-            if (result.errorCode) {
-                showToast('error', 'Error', result.errorMessage);
-                return;
-            }
-
-            if (result.assets && result.assets.length > 0) {
-                const asset = result.assets[0];
-                setPicture({
-                    uri: Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', ''),
-                    type: asset.type || 'image/jpeg',
-                    name: asset.fileName || `image-${Date.now()}.jpg`,
-                });
-            }
-        } catch (error) {
-            console.error('Image picker error:', error);
-            showToast('error', 'Error', 'Failed to pick image');
-        }
+  const pickImage = async (sourceType) => {
+    const options = {
+      mediaType: "photo",
+      quality: 0.7,
+      maxWidth: 800,
+      maxHeight: 800,
+      includeBase64: false,
     };
 
-    const onSubmit = async (data) => {
-        if (!picture) {
-            showToast('error', 'Missing Field', 'Please upload applicant picture');
-            return;
-        }
+    try {
+      const result =
+        sourceType === "camera" ? await launchCamera(options) : await launchImageLibrary(options);
 
-        // Convert loan amount to number and validate
-        const loanAmount = parseFloat(data.loanAmount);
-        if (isNaN(loanAmount) || loanAmount <= 0) {
-            showToast('error', 'Invalid Input', 'Please enter a valid loan amount');
-            return;
-        }
+      if (result.didCancel) {
+        return;
+      }
 
-        setLoading(true);
+      if (result.errorCode) {
+        showToast("error", "Error", result.errorMessage);
+        return;
+      }
 
-        try {
-            // Create form data properly
-            const formData = new FormData();
-            
-            // Append all form fields with proper data types
-            formData.append('name', data.name.trim());
-            formData.append('phone', data.phone.trim());
-            formData.append('email', data.email ? data.email.trim() : '');
-            formData.append('address', data.address.trim());
-            formData.append('city', data.city.trim());
-            formData.append('state', data.state.trim());
-            formData.append('loanType', data.loanType);
-            formData.append('loanAmount', loanAmount.toString());
-            formData.append('loanDuration', data.loanDuration);
-            formData.append('loanPurpose', data.loanPurpose.trim());
+      if (result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setPicture({
+          uri: Platform.OS === "android" ? asset.uri : asset.uri.replace("file://", ""),
+          type: asset.type || "image/jpeg",
+          name: asset.fileName || `image-${Date.now()}.jpg`,
+        });
+      }
+    } catch (error) {
+      console.error("Image picker error:", error);
+      showToast("error", "Error", "Failed to pick image");
+    }
+  };
 
-            // Append the image with exact required format for multer
-            formData.append('picture', {
-                uri: picture.uri,
-                type: picture.type,
-                name: picture.name
-            });
-            const response = await apiCall('/api/employee/lead/create', 'POST', formData, true);
+  const onSubmit = async (data) => {
+    if (!picture) {
+      showToast("error", "Missing Field", "Please upload applicant picture");
+      return;
+    }
 
-            if (response.error) {
-                showToast('error', 'Error', response.message || 'Failed to create lead');
-            } else {
-                showToast('success', 'Success', 'Lead created successfully');
-                // Reset form
-                setPicture(null);
-                reset();
-                // Navigate back or to leads list
-                navigation.goBack();
-            }
-        } catch (error) {
-            console.error('Form submission error:', error);
-            Alert.alert(
-                'Error',
-                'Failed to create lead. Please check your input and try again.',
-                [{ text: 'OK' }]
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Convert loan amount to number and validate
+    const loanAmount = parseFloat(data.loanAmount);
+    if (isNaN(loanAmount) || loanAmount <= 0) {
+      showToast("error", "Invalid Input", "Please enter a valid loan amount");
+      return;
+    }
 
-    return (
-        <LinearGradient
-            colors={['#f8f9fa', '#e9ecef']}
-            style={styles.container}
-        >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={{ flex: 1 }}
-            >
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={styles.header}>
-                        <Text style={styles.headerSubtitle}>Add a potential loan applicant</Text>
-                    </View>
+    setLoading(true);
 
-                    <View style={styles.formContainer}>
-                        {/* Profile Picture */}
-                        <View style={styles.imageSection}>
-                            <View style={styles.imagePicker}>
-                                {picture ? (
-                                    <Image source={{ uri: picture.uri }} style={styles.selectedImage} />
-                                ) : (
-                                    <Icon name="account-circle" size={80} color="#ccc" />
-                                )}
-                            </View>
-                            <View style={styles.imageButtonsContainer}>
-                                <TouchableOpacity
-                                    style={styles.imageButton}
-                                    onPress={() => pickImage('camera')}
-                                >
-                                    <Icon name="camera" size={20} color="#fff" />
-                                    <Text style={styles.imageButtonText}>Camera</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.imageButton}
-                                    onPress={() => pickImage('gallery')}
-                                >
-                                    <Icon name="image" size={20} color="#fff" />
-                                    <Text style={styles.imageButtonText}>Gallery</Text>
-                                </TouchableOpacity>
-                            </View>
-                            {!picture && (
-                                <Text style={styles.requiredFieldText}>*Profile picture is required</Text>
-                            )}
-                        </View>
+    try {
+      // Create form data properly
+      const formData = new FormData();
 
-                        {/* Personal Information */}
-                        <View style={styles.sectionContainer}>
-                            <Text style={styles.sectionTitle}>Personal Information</Text>
+      // Append all form fields with proper data types
+      formData.append("name", data.name.trim());
+      formData.append("phone", data.phone.trim());
+      formData.append("email", data.email ? data.email.trim() : "");
+      formData.append("address", data.address.trim());
+      formData.append("city", data.city.trim());
+      formData.append("state", data.state.trim());
+      formData.append("loanType", data.loanType);
+      formData.append("loanAmount", loanAmount.toString());
+      formData.append("loanDuration", data.loanDuration);
+      formData.append("loanPurpose", data.loanPurpose.trim());
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Full Name *</Text>
-                                <Controller
-                                    control={control}
-                                    rules={{ 
-                                        required: "Name is required",
-                                        minLength: { value: 3, message: "Name must be at least 3 characters" }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, errors.name && styles.errorInput]}
-                                            placeholder="Enter full name"
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            value={value}
-                                        />
-                                    )}
-                                    name="name"
-                                />
-                                {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
-                            </View>
+      // Append the image with exact required format for multer
+      formData.append("picture", {
+        uri: picture.uri,
+        type: picture.type,
+        name: picture.name,
+      });
+      const response = await apiCall("/api/employee/lead/create", "POST", formData, true);
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Phone Number *</Text>
-                                <Controller
-                                    control={control}
-                                    rules={{ 
-                                        required: "Phone number is required",
-                                        pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit phone number" }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, errors.phone && styles.errorInput]}
-                                            placeholder="Enter 10-digit phone number"
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            value={value}
-                                            keyboardType="phone-pad"
-                                            maxLength={10}
-                                        />
-                                    )}
-                                    name="phone"
-                                />
-                                {errors.phone && <Text style={styles.errorText}>{errors.phone.message}</Text>}
-                            </View>
+      if (response.error) {
+        showToast("error", "Error", response.message || "Failed to create lead");
+      } else {
+        showToast("success", "Success", "Lead created successfully");
+        // Reset form
+        setPicture(null);
+        reset();
+        // Navigate back or to leads list
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      Alert.alert("Error", "Failed to create lead. Please check your input and try again.", [
+        { text: "OK" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Email Address</Text>
-                                <Controller
-                                    control={control}
-                                    rules={{ 
-                                        pattern: { 
-                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 
-                                            message: "Enter a valid email address or leave empty" 
-                                        }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, errors.email && styles.errorInput]}
-                                            placeholder="Enter email address (optional)"
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            value={value}
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                        />
-                                    )}
-                                    name="email"
-                                />
-                                {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
-                            </View>
-                        </View>
+  const fieldError = (name) => (errors[name] ? errors[name].message : undefined);
 
-                        {/* Address Information */}
-                        <View style={styles.sectionContainer}>
-                            <Text style={styles.sectionTitle}>Address Information</Text>
+  return (
+    <Screen scroll keyboardAvoid>
+      <View style={styles.page}>
+        <FadeInUp>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Create Lead</Text>
+            <Text style={styles.headerSubtitle}>Add a potential loan applicant</Text>
+          </View>
+        </FadeInUp>
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Address *</Text>
-                                <Controller
-                                    control={control}
-                                    rules={{ 
-                                        required: "Address is required",
-                                        minLength: { value: 5, message: "Address must be at least 5 characters" }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, errors.address && styles.errorInput]}
-                                            placeholder="Enter street address"
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            value={value}
-                                        />
-                                    )}
-                                    name="address"
-                                />
-                                {errors.address && <Text style={styles.errorText}>{errors.address.message}</Text>}
-                            </View>
+        {/* Profile picture */}
+        <FadeInUp delay={60}>
+          <Card elevation="subtle" style={{ marginBottom: spacing.md }}>
+            <View style={styles.imageSection}>
+              {picture ? (
+                <Image source={{ uri: picture.uri }} style={styles.photo} resizeMode="cover" />
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <Icon name="account-circle" size={64} color={colors.borderStrong} />
+                </View>
+              )}
+              <View style={styles.imageButtons}>
+                <Button
+                  label="Camera"
+                  icon="camera"
+                  variant="outline"
+                  size="sm"
+                  flex
+                  onPress={() => pickImage("camera")}
+                />
+                <Button
+                  label="Gallery"
+                  icon="image"
+                  variant="outline"
+                  size="sm"
+                  flex
+                  onPress={() => pickImage("gallery")}
+                />
+              </View>
+              {!picture ? (
+                <Text style={styles.requiredNote}>*Profile picture is required</Text>
+              ) : (
+                <View style={styles.photoChosenRow}>
+                  <Icon name="check-circle" size={15} color={colors.successInk} />
+                  <Text style={styles.photoChosen}>Applicant picture attached</Text>
+                </View>
+              )}
+            </View>
+          </Card>
+        </FadeInUp>
 
-                            <View style={styles.rowContainer}>
-                                <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-                                    <Text style={styles.label}>City *</Text>
-                                    <Controller
-                                        control={control}
-                                        rules={{ 
-                                            required: "City is required"
-                                        }}
-                                        render={({ field: { onChange, onBlur, value } }) => (
-                                            <TextInput
-                                                style={[styles.input, errors.city && styles.errorInput]}
-                                                placeholder="Enter city"
-                                                onBlur={onBlur}
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                        name="city"
-                                    />
-                                    {errors.city && <Text style={styles.errorText}>{errors.city.message}</Text>}
-                                </View>
+        {/* Personal Information */}
+        <FadeInUp delay={120}>
+          <SectionCard icon="account" title="Personal Information">
+            <Controller
+              control={control}
+              name="name"
+              rules={{
+                required: "Name is required",
+                minLength: { value: 3, message: "Name must be at least 3 characters" },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Full Name"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Enter full name"
+                  leftIcon="account"
+                  error={fieldError("name")}
+                />
+              )}
+            />
 
-                                <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
-                                    <Text style={styles.label}>State *</Text>
-                                    <Controller
-                                        control={control}
-                                        rules={{ 
-                                            required: "State is required"
-                                        }}
-                                        render={({ field: { onChange, onBlur, value } }) => (
-                                            <TextInput
-                                                style={[styles.input, errors.state && styles.errorInput]}
-                                                placeholder="Enter state"
-                                                onBlur={onBlur}
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                        name="state"
-                                    />
-                                    {errors.state && <Text style={styles.errorText}>{errors.state.message}</Text>}
-                                </View>
-                            </View>
-                        </View>
+            <Controller
+              control={control}
+              name="phone"
+              rules={{
+                required: "Phone number is required",
+                pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit phone number" },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Phone Number"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Enter 10-digit phone number"
+                  leftIcon="phone"
+                  keyboardType="phone-pad"
+                  error={fieldError("phone")}
+                />
+              )}
+            />
 
-                        {/* Loan Information */}
-                        <View style={styles.sectionContainer}>
-                            <Text style={styles.sectionTitle}>Loan Details</Text>
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address or leave empty",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Email Address"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Enter email address (optional)"
+                  leftIcon="email-outline"
+                  keyboardType="email-address"
+                  error={fieldError("email")}
+                />
+              )}
+            />
+          </SectionCard>
+        </FadeInUp>
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Loan Type *</Text>
-                                <View style={styles.pickerContainer}>
-                                    <Controller
-                                        control={control}
-                                        rules={{ required: true }}
-                                        render={({ field: { onChange, value } }) => (
-                                            <Picker
-                                                selectedValue={value}
-                                                onValueChange={onChange}
-                                                style={styles.picker}
-                                            >
-                                                {loanTypes.map((type, index) => (
-                                                    <Picker.Item key={index} label={type} value={type} />
-                                                ))}
-                                            </Picker>
-                                        )}
-                                        name="loanType"
-                                    />
-                                </View>
-                            </View>
+        {/* Address Information */}
+        <FadeInUp delay={180}>
+          <SectionCard icon="map-marker" title="Address Information">
+            <Controller
+              control={control}
+              name="address"
+              rules={{
+                required: "Address is required",
+                minLength: { value: 5, message: "Address must be at least 5 characters" },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Address"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Enter street address"
+                  leftIcon="map-marker"
+                  error={fieldError("address")}
+                />
+              )}
+            />
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Loan Amount (₹) *</Text>
-                                <Controller
-                                    control={control}
-                                    rules={{ 
-                                        required: "Loan amount is required",
-                                        pattern: { 
-                                            value: /^[0-9]+(\.[0-9]{1,2})?$/,
-                                            message: "Enter a valid amount (numbers only)"
-                                        },
-                                        validate: value => parseFloat(value) > 0 || "Amount must be greater than zero"
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, errors.loanAmount && styles.errorInput]}
-                                            placeholder="Enter loan amount"
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            value={value}
-                                            keyboardType="numeric"
-                                        />
-                                    )}
-                                    name="loanAmount"
-                                />
-                                {errors.loanAmount && <Text style={styles.errorText}>{errors.loanAmount.message}</Text>}
-                            </View>
+            <View style={styles.row}>
+              <Controller
+                control={control}
+                name="city"
+                rules={{ required: "City is required" }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="City"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="Enter city"
+                    leftIcon="city"
+                    error={fieldError("city")}
+                    style={{ flex: 1, marginRight: spacing.xs }}
+                  />
+                )}
+              />
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Loan Duration *</Text>
-                                <View style={styles.pickerContainer}>
-                                    <Controller
-                                        control={control}
-                                        rules={{ required: true }}
-                                        render={({ field: { onChange, value } }) => (
-                                            <Picker
-                                                selectedValue={value}
-                                                onValueChange={onChange}
-                                                style={styles.picker}
-                                            >
-                                                {loanDurations.map((duration, index) => (
-                                                    <Picker.Item key={index} label={duration} value={duration} />
-                                                ))}
-                                            </Picker>
-                                        )}
-                                        name="loanDuration"
-                                    />
-                                </View>
-                            </View>
+              <Controller
+                control={control}
+                name="state"
+                rules={{ required: "State is required" }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="State"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="Enter state"
+                    leftIcon="globe"
+                    error={fieldError("state")}
+                    style={{ flex: 1 }}
+                  />
+                )}
+              />
+            </View>
+          </SectionCard>
+        </FadeInUp>
 
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Loan Purpose *</Text>
-                                <Controller
-                                    control={control}
-                                    rules={{ 
-                                        required: "Loan purpose is required",
-                                        minLength: { value: 10, message: "Please provide a detailed purpose (min 10 characters)" }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, errors.loanPurpose && styles.errorInput, styles.textArea]}
-                                            placeholder="Describe loan purpose"
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            value={value}
-                                            multiline={true}
-                                            numberOfLines={3}
-                                            textAlignVertical="top"
-                                        />
-                                    )}
-                                    name="loanPurpose"
-                                />
-                                {errors.loanPurpose && <Text style={styles.errorText}>{errors.loanPurpose.message}</Text>}
-                            </View>
-                        </View>
+        {/* Loan Details */}
+        <FadeInUp delay={240}>
+          <SectionCard icon="briefcase" title="Loan Details">
+            <Controller
+              control={control}
+              name="loanType"
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label="Loan Type"
+                  value={value}
+                  onValueChange={onChange}
+                  options={loanTypes}
+                />
+              )}
+            />
 
-                        {/* Submit Button */}
-                        <TouchableOpacity
-                            style={styles.submitButton}
-                            onPress={handleSubmit(onSubmit)}
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <ActivityIndicator size="small" color="#fff" />
-                            ) : (
-                                <>
-                                    <Icon name="check-circle" size={20} color="#fff" style={styles.buttonIcon} />
-                                    <Text style={styles.submitButtonText}>Create Lead</Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </LinearGradient>
-    );
+            <Controller
+              control={control}
+              name="loanAmount"
+              rules={{
+                required: "Loan amount is required",
+                pattern: {
+                  value: /^[0-9]+(\.[0-9]{1,2})?$/,
+                  message: "Enter a valid amount (numbers only)",
+                },
+                validate: (value) => parseFloat(value) > 0 || "Amount must be greater than zero",
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Loan Amount (₹)"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Enter loan amount"
+                  leftIcon="currency-inr"
+                  keyboardType="numeric"
+                  error={fieldError("loanAmount")}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="loanDuration"
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label="Loan Duration"
+                  value={value}
+                  onValueChange={onChange}
+                  options={loanDurations}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="loanPurpose"
+              rules={{
+                required: "Loan purpose is required",
+                minLength: {
+                  value: 10,
+                  message: "Please provide a detailed purpose (min 10 characters)",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Loan Purpose"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Describe loan purpose"
+                  leftIcon="target"
+                  multiline
+                  numberOfLines={3}
+                  error={fieldError("loanPurpose")}
+                />
+              )}
+            />
+          </SectionCard>
+        </FadeInUp>
+
+        <FadeInUp delay={300}>
+          <Button
+            label="Create Lead"
+            icon="check-circle"
+            variant="accent"
+            size="lg"
+            full
+            loading={loading}
+            onPress={handleSubmit(onSubmit)}
+          />
+        </FadeInUp>
+      </View>
+      <CustomToast />
+    </Screen>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 10,
-    },
-    headerSubtitle: {
-        fontSize: 16,
-        color: '#64748b',
-        marginTop: 4,
-    },
-    formContainer: {
-        padding: 16,
-    },
-    imageSection: {
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    imagePicker: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: '#f1f5f9',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-        borderWidth: 2,
-        borderColor: '#e2e8f0',
-    },
-    selectedImage: {
-        width: '100%',
-        height: '100%',
-    },
-    imageButtonsContainer: {
-        flexDirection: 'row',
-        marginTop: 12,
-    },
-    imageButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#3b82f6',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        marginHorizontal: 6,
-    },
-    imageButtonText: {
-        color: '#fff',
-        marginLeft: 4,
-        fontWeight: '500',
-    },
-    requiredFieldText: {
-        color: '#ef4444',
-        fontSize: 12,
-        marginTop: 8,
-    },
-    sectionContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1e293b',
-        marginBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
-        paddingBottom: 8,
-    },
-    inputContainer: {
-        marginBottom: 16,
-    },
-    rowContainer: {
-        flexDirection: 'row',
-    },
-    label: {
-        fontSize: 14,
-        color: '#475569',
-        marginBottom: 6,
-        fontWeight: '500',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#cbd5e1',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 16,
-        backgroundColor: '#f8fafc',
-        color: '#000000',
-    },
-    textArea: {
-        minHeight: 80,
-        paddingTop: 10,
-    },
-    errorInput: {
-        borderColor: '#ef4444',
-    },
-    errorText: {
-        color: '#ef4444',
-        fontSize: 12,
-        marginTop: 4,
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#cbd5e1',
-        borderRadius: 8,
-        overflow: 'hidden',
-        backgroundColor: '#f8fafc',
-    },
-    picker: {
-        height: 45,
-    },
-    submitButton: {
-        backgroundColor: '#1e3a8a',
-        borderRadius: 8,
-        paddingVertical: 14,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 8,
-        marginBottom: 30,
-    },
-    buttonIcon: {
-        marginRight: 8,
-    },
-    submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+  page: {
+    padding: spacing.lg,
+  },
+  header: {
+    marginBottom: spacing.md,
+  },
+  headerTitle: {
+    ...type.h1,
+    color: colors.ink,
+  },
+  headerSubtitle: {
+    ...type.sub,
+    color: colors.inkSecondary,
+    marginTop: 4,
+  },
+
+  imageSection: {
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  photo: {
+    width: 112,
+    height: 112,
+    borderRadius: radius.full,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  photoPlaceholder: {
+    width: 112,
+    height: 112,
+    borderRadius: radius.full,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: "dashed",
+    backgroundColor: colors.surfaceAlt,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageButtons: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    alignSelf: "stretch",
+  },
+  requiredNote: {
+    ...type.caption,
+    color: colors.danger,
+  },
+  photoChosenRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  photoChosen: {
+    ...type.caption,
+    fontWeight: "600",
+    color: colors.successInk,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingBottom: spacing.sm,
+    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sectionIconChip: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    ...type.h2,
+    color: colors.ink,
+  },
+  sectionBody: {
+    gap: spacing.md,
+  },
+  row: {
+    flexDirection: "row",
+  },
+
+  pickerWrap: {
+    gap: spacing.xs,
+  },
+  fieldLabel: {
+    ...type.caption,
+    color: colors.inkSecondary,
+  },
+  pickerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    paddingRight: spacing.sm,
+  },
+  picker: {
+    flex: 1,
+    height: 48,
+    color: colors.ink,
+  },
 });
 
 export default CreateLeadScreen;

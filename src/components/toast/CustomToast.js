@@ -1,8 +1,7 @@
 // src/components/toast/CustomToast.js
-
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Toast, { BaseToast } from 'react-native-toast-message';
+import Toast from 'react-native-toast-message';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,47 +9,54 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '../../design/Icon';
+import { colors, radius, shadow, spacing, type } from '../../design/tokens';
 
 export const showToast = (type, text1, text2) => {
   Toast.show({ type, text1, text2 });
 };
 
+const TYPE_COLOR = {
+  success: colors.success,
+  error: colors.danger,
+  info: colors.info,
+};
+
+const TYPE_ICON = {
+  success: 'check-circle-outline',
+  error: 'alert-circle-outline',
+  info: 'information-outline',
+};
+
 const ToastMessage = ({ type, text1, text2 }) => {
-  const offset = useSharedValue(-100);
+  const offset = useSharedValue(-120);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    offset.value = withSpring(0, { damping: 15, stiffness: 100 });
-    opacity.value = withTiming(1, { duration: 300, easing: Easing.ease });
+    offset.value = withSpring(0, { damping: 16, stiffness: 110 });
+    opacity.value = withTiming(1, { duration: 260, easing: Easing.ease });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: offset.value }],
-      opacity: opacity.value,
-    };
-  });
-
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <MaterialCommunityIcons name="check-circle-outline" size={24} color="white" />;
-      case 'error':
-        return <MaterialCommunityIcons name="alert-circle-outline" size={24} color="white" />;
-      case 'info':
-        return <MaterialCommunityIcons name="information-outline" size={24} color="white" />;
-      default:
-        return null;
-    }
-  };
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: offset.value }],
+    opacity: opacity.value,
+  }));
 
   return (
-    <Animated.View style={[styles.toastContainer, styles[`${type}Toast`], animatedStyle]}>
-      <View style={styles.iconContainer}>{getIcon()}</View>
+    <Animated.View
+      style={[
+        styles.toastContainer,
+        { backgroundColor: TYPE_COLOR[type] || TYPE_COLOR.info, shadowColor: '#0F172A' },
+        animatedStyle,
+      ]}
+    >
+      <View style={styles.iconContainer}>
+        <MaterialCommunityIcons name={TYPE_ICON[type] || 'information-outline'} size={22} color="#fff" />
+      </View>
       <View style={styles.textContainer}>
         <Text style={styles.toastText1}>{text1}</Text>
-        {text2 && <Text style={styles.toastText2}>{text2}</Text>}
+        {text2 ? <Text style={styles.toastText2}>{text2}</Text> : null}
       </View>
     </Animated.View>
   );
@@ -72,41 +78,27 @@ const styles = StyleSheet.create({
   toastContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 16,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginHorizontal: spacing.md,
     marginTop: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...shadow.raised,
     zIndex: 99999,
   },
-  successToast: {
-    backgroundColor: '#4CAF50',
-  },
-  errorToast: {
-    backgroundColor: '#F44336',
-  },
-  infoToast: {
-    backgroundColor: '#2196F3',
-  },
   iconContainer: {
-    marginRight: 12,
+    marginRight: spacing.sm + 2,
   },
   textContainer: {
     flex: 1,
   },
   toastText1: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+    ...type.bodyBold,
+    color: '#fff',
   },
   toastText2: {
-    color: 'white',
-    fontSize: 14,
-    marginTop: 4,
+    ...type.body,
+    color: 'rgba(255,255,255,0.92)',
+    marginTop: 2,
   },
 });
 

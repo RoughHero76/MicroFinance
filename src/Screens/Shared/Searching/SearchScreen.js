@@ -1,27 +1,74 @@
 import React, { useState, useRef } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  ActivityIndicator,
-  Modal,
-  ScrollView,
-  Dimensions,
+  View, Text, TextInput, FlatList, StyleSheet, Pressable,
+  ActivityIndicator, Modal, ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from '../../../design/Icon';
 import { apiCall } from '../../../components/api/apiUtils';
 import { useHomeContext } from '../../../components/context/HomeContext';
-import Toast from 'react-native-toast-message';
-import ProfilePicturePlaceholder from '../../../assets/placeholders/profile.jpg';
-import { PieChart } from 'react-native-chart-kit';
+import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import { DonutChart } from '../../../design/charts';
+import Screen from '../../../design/components/Screen';
+import Card from '../../../design/components/Card';
+import Button from '../../../design/components/Button';
+import Avatar from '../../../design/components/Avatar';
+import EmptyState from '../../../design/components/EmptyState';
+import { colors, spacing, radius, type } from '../../../design/tokens';
+
+/**
+ * SearchScreen — global customer search, rebuilt on the "Ink & Amber"
+ * design system.
+ *  - same behaviour: 300ms debounced POST /api/shared/search
+ *    ({ query, page, limit: 10 }), paged results from data.customers,
+ *    the same empty-state copy, and the role-aware hand-off to
+ *    CustomerView (admin → uid, employee → _id)
+ *  - the react-native-chart-kit PieChart is replaced with the in-house
+ *    DonutChart (src/design/charts.js) per the no-external-UI constraint;
+ *    Paid/Outstanding keep their green/amber meaning
+ *  - toasts now go through the app-wide CustomToast (was
+ *    react-native-toast-message directly), with the same copy
+ */
+
+const STATUS_META = {
+  active: { dot: colors.success, ink: colors.successInk, bg: colors.successSoft },
+  pending: { dot: colors.warning, ink: colors.warningInk, bg: colors.warningSoft },
+  completed: { dot: colors.info, ink: colors.infoInk, bg: colors.infoSoft },
+};
+
+const statusMeta = (status) =>
+  STATUS_META[String(status || '').toLowerCase()] ||
+  { dot: colors.neutral, ink: colors.neutralInk, bg: colors.neutralSoft };
+
+const money = (v) => `₹${v ?? 'N/A'}`;
+
+const StatusPill = ({ status }) => {
+  const meta = statusMeta(status);
+  return (
+    <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
+      <View style={[styles.statusDot, { backgroundColor: meta.dot }]} />
+      <Text style={[type.micro, { color: meta.ink }]}>{status || 'N/A'}</Text>
+    </View>
+  );
+};
+
+const DetailRow = ({ icon, iconBg, iconColor, label, value }) => (
+  <View style={styles.detailRow}>
+    <View style={[styles.detailChip, { backgroundColor: iconBg }]}>
+      <Icon name={icon} size={18} color={iconColor} />
+    </View>
+    <View style={styles.detailText}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value}</Text>
+    </View>
+  </View>
+);
 
 const SearchScreen = () => {
   const { user } = useHomeContext();
+  const navigation = useNavigation();
+  const searchTimeout = useRef(null);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,8 +76,6 @@ const SearchScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const navigation = useNavigation();
-  const searchTimeout = useRef(null);
 
   const fetchSearchResults = async (query, pageNumber) => {
     if (loading || (pageNumber > 1 && !hasMore) || !query.trim()) return;
@@ -46,24 +91,16 @@ const SearchScreen = () => {
         if (pageNumber === 1) {
           setSearchResults(newResults);
         } else {
-          setSearchResults(prev => [...prev, ...newResults]);
+          setSearchResults((prev) => [...prev, ...newResults]);
         }
         setHasMore(newResults.length === 10);
         setPage(pageNumber);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to fetch search results',
-        });
+        showToast('error', 'Error', 'Failed to fetch search results');
       }
     } catch (error) {
       console.error(error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'An unexpected error occurred',
-      });
+      showToast('error', 'Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -96,11 +133,9 @@ const SearchScreen = () => {
 
   const handleViewProfile = () => {
     setModalVisible(false);
-    if (user.role === 'admin') {
-      console.log(selectedCustomer.uid);
+    if (user?.role === 'admin') {
       navigation.navigate('CustomerView', { uid: selectedCustomer.uid });
-    } else if (user.role === 'employee') {
-      console.log(selectedCustomer._id);
+    } else if (user?.role === 'employee') {
       navigation.navigate('CustomerView', { id: selectedCustomer._id });
     }
   };
@@ -108,441 +143,485 @@ const SearchScreen = () => {
   const renderCustomerItem = ({ item }) => {
     const loan = item.loans && item.loans.length > 0 ? item.loans[0] : null;
     return (
-      <TouchableOpacity
-        style={styles.customerItem}
-        onPress={() => handleCustomerDetails(item)}
-      >
-        <Image
-          source={item.profilePic ? { uri: item.profilePic } : ProfilePicturePlaceholder}
-          style={styles.profilePicture}
-        />
-        <View style={styles.customerInfo}>
-          <Text style={styles.customerName}>{item.name || 'N/A'}</Text>
-          <Text style={styles.customerDetail}>
-            <Icon name="phone" size={14} color="#666" /> {item.phoneNumber || 'N/A'}
-          </Text>
-          <Text style={styles.customerDetail}>
-            <Icon name="email" size={14} color="#666" /> {item.email || 'N/A'}
-          </Text>
+      <Card style={styles.itemCard} onPress={() => handleCustomerDetails(item)} elevation={2}>
+        <Avatar name={item.name || '?'} size={52} image={item.profilePic} ring />
+        <View style={styles.itemInfo}>
+          <Text style={styles.itemName} numberOfLines={1}>{item.name || 'N/A'}</Text>
+          <View style={styles.itemMetaRow}>
+            <Icon name="phone" size={13} color={colors.inkMuted} />
+            <Text style={styles.itemMeta} numberOfLines={1}>{item.phoneNumber || 'N/A'}</Text>
+          </View>
+          <View style={styles.itemMetaRow}>
+            <Icon name="email" size={13} color={colors.inkMuted} />
+            <Text style={styles.itemMeta} numberOfLines={1}>{item.email || 'N/A'}</Text>
+          </View>
           {loan && (
-            <View style={styles.loanInfo}>
-              <Text style={styles.loanAmount}>
-                <Icon name="currency-inr" size={14} color="#4CAF50" /> {loan.loanAmount || 0}
-              </Text>
-              <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                <Text style={styles.loanStatusText}>{loan.status || 'N/A'}</Text>
+            <View style={styles.loanRow}>
+              <View style={styles.loanAmountRow}>
+                <Icon name="currency-inr" size={14} color={colors.successInk} />
+                <Text style={styles.loanAmount}>{money(loan.loanAmount)}</Text>
               </View>
+              <StatusPill status={loan.status} />
             </View>
           )}
         </View>
-        <Icon name="chevron-right" size={24} color="#999" style={styles.chevron} />
-      </TouchableOpacity>
+        <Icon name="chevron-right" size={20} color={colors.inkMuted} />
+      </Card>
     );
-  };
-
-  const getLoanStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'active': return '#4CAF50';
-      case 'pending': return '#FFC107';
-      case 'completed': return '#2196F3';
-      default: return '#9E9E9E';
-    }
   };
 
   const renderFooter = () => {
     if (!loading) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#0000ff" />
+        <ActivityIndicator size="small" color={colors.accent} />
       </View>
     );
   };
 
   const renderLoanDetailsModal = () => {
     if (!selectedCustomer) return null;
-    const loan = selectedCustomer.loans && selectedCustomer.loans.length > 0 ? selectedCustomer.loans[0] : null;
+    const loan =
+      selectedCustomer.loans && selectedCustomer.loans.length > 0
+        ? selectedCustomer.loans[0]
+        : null;
 
-    const chartConfig = {
-      backgroundGradientFrom: "#fff",
-      backgroundGradientTo: "#fff",
-      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    };
-
-    const screenWidth = Dimensions.get("window").width;
-
-    const pieData = loan ? [
-      {
-        name: "Paid",
-        population: loan.loanAmount - loan.outstandingAmount,
-        color: "#4CAF50",
-        legendFontColor: "#7F7F7F",
-        legendFontSize: 12
-      },
-      {
-        name: "Outstanding",
-        population: loan.outstandingAmount,
-        color: "#FFA000",
-        legendFontColor: "#7F7F7F",
-        legendFontSize: 12
-      }
-    ] : [];
+    const paid = loan
+      ? Math.max(0, Number(loan.loanAmount) - Number(loan.outstandingAmount))
+      : 0;
+    const outstanding = loan ? Number(loan.outstandingAmount) || 0 : 0;
+    const total = paid + outstanding;
+    const donutData = loan
+      ? [
+          { label: 'Paid', value: paid, color: colors.success },
+          { label: 'Outstanding', value: outstanding, color: colors.warning },
+        ]
+      : [];
 
     return (
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.modalHeader}>
-                <Image
-                  source={selectedCustomer.profilePic ? { uri: selectedCustomer.profilePic } : ProfilePicturePlaceholder}
-                  style={styles.modalProfilePic}
-                />
-                <View style={styles.modalHeaderText}>
-                  <Text style={styles.modalTitle}>{selectedCustomer.name}</Text>
-                  <Text style={styles.modalSubtitle}>{selectedCustomer.email}</Text>
-                </View>
+        <Pressable style={styles.overlay} onPress={() => setModalVisible(false)}>
+          <Pressable style={styles.modalContent} onPress={() => {}}>
+            <View style={styles.grabber} />
+            <View style={styles.modalHeader}>
+              <Avatar
+                name={selectedCustomer.name || '?'}
+                size={52}
+                image={selectedCustomer.profilePic}
+                ring
+              />
+              <View style={styles.modalHeaderText}>
+                <Text style={styles.modalTitle} numberOfLines={1}>
+                  {selectedCustomer.name || 'N/A'}
+                </Text>
+                <Text style={styles.modalSubtitle} numberOfLines={1}>
+                  {selectedCustomer.email || 'N/A'}
+                </Text>
               </View>
+              <Pressable
+                style={styles.closeBtn}
+                onPress={() => setModalVisible(false)}
+                hitSlop={8}
+              >
+                <Icon name="close" size={20} color={colors.inkSecondary} />
+              </Pressable>
+            </View>
 
+            <ScrollView showsVerticalScrollIndicator={false}>
               {loan ? (
                 <>
-                  <View style={styles.loanOverview}>
-                    <View style={styles.loanOverviewItem}>
-                      <Text style={styles.loanOverviewLabel}>Loan Amount</Text>
-                      <Text style={styles.loanOverviewValue}>₹{loan.loanAmount}</Text>
+                  <View style={styles.overviewRow}>
+                    <View style={styles.overviewCell}>
+                      <Text style={styles.overviewLabel}>Loan Amount</Text>
+                      <Text style={styles.overviewValue} numberOfLines={1} adjustsFontSizeToFit>
+                        {money(loan.loanAmount)}
+                      </Text>
                     </View>
-                    <View style={styles.loanOverviewItem}>
-                      <Text style={styles.loanOverviewLabel}>Outstanding</Text>
-                      <Text style={styles.loanOverviewValue}>₹{loan.outstandingAmount}</Text>
+                    <View style={styles.overviewCell}>
+                      <Text style={styles.overviewLabel}>Outstanding</Text>
+                      <Text style={styles.overviewValue} numberOfLines={1} adjustsFontSizeToFit>
+                        {money(loan.outstandingAmount)}
+                      </Text>
                     </View>
-                    <View style={styles.loanOverviewItem}>
-                      <Text style={styles.loanOverviewLabel}>Status</Text>
-                      <View style={[styles.loanStatus, { backgroundColor: getLoanStatusColor(loan.status) }]}>
-                        <Text style={styles.loanStatusText}>{loan.status}</Text>
-                      </View>
+                    <View style={styles.overviewCell}>
+                      <Text style={styles.overviewLabel}>Status</Text>
+                      <StatusPill status={loan.status} />
                     </View>
                   </View>
 
-                  <View style={styles.chartContainer}>
-                    <PieChart
-                      data={pieData}
-                      width={screenWidth - 60}
-                      height={200}
-                      chartConfig={chartConfig}
-                      accessor={"population"}
-                      backgroundColor={"transparent"}
-                      paddingLeft={"0"}
-                      center={[10, 0]}
-                      absolute
+                  <Card style={styles.chartCard}>
+                    <Text style={styles.chartTitle}>Repayment</Text>
+                    <View style={styles.donutRow}>
+                      <DonutChart
+                        data={donutData}
+                        size={140}
+                        thickness={22}
+                        centerValue={total ? `₹${total.toLocaleString()}` : '—'}
+                        centerLabel="total"
+                      />
+                      <View style={styles.legendCol}>
+                        {donutData.map((d, i) => (
+                          <View key={i} style={styles.legendRow}>
+                            <View style={[styles.legendDot, { backgroundColor: d.color }]} />
+                            <Text style={styles.legendLabel} numberOfLines={1}>{d.label}</Text>
+                            <Text style={styles.legendValue} numberOfLines={1}>
+                              {`₹${Number(d.value).toLocaleString()}`}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  </Card>
+
+                  <Card style={styles.detailsCard}>
+                    <DetailRow
+                      icon="calendar-start"
+                      iconBg={colors.successSoft}
+                      iconColor={colors.successInk}
+                      label="Start Date"
+                      value={new Date(loan.loanStartDate).toLocaleDateString()}
                     />
-                  </View>
-
-                  <View style={styles.loanDetails}>
-                    <View style={styles.loanDetailItem}>
-                      <Icon name="calendar-start" size={24} color="#4CAF50" />
-                      <View style={styles.loanDetailText}>
-                        <Text style={styles.loanDetailLabel}>Start Date</Text>
-                        <Text style={styles.loanDetailValue}>{new Date(loan.loanStartDate).toLocaleDateString()}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.loanDetailItem}>
-                      <Icon name="calendar-end" size={24} color="#F44336" />
-                      <View style={styles.loanDetailText}>
-                        <Text style={styles.loanDetailLabel}>End Date</Text>
-                        <Text style={styles.loanDetailValue}>{new Date(loan.loanEndDate).toLocaleDateString()}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.loanDetailItem}>
-                      <Icon name="file-document-outline" size={24} color="#2196F3" />
-                      <View style={styles.loanDetailText}>
-                        <Text style={styles.loanDetailLabel}>Documents</Text>
-                        <Text style={styles.loanDetailValue}>{loan.documentsSummary}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.loanDetailItem}>
-                      <Icon name="calendar-clock" size={24} color="#9C27B0" />
-                      <View style={styles.loanDetailText}>
-                        <Text style={styles.loanDetailLabel}>Repayment Schedule</Text>
-                        <Text style={styles.loanDetailValue}>{loan.repaymentSchedulesSummary}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.loanDetailItem}>
-                      <Icon name="cash-multiple" size={24} color="#009688" />
-                      <View style={styles.loanDetailText}>
-                        <Text style={styles.loanDetailLabel}>Repayments</Text>
-                        <Text style={styles.loanDetailValue}>{loan.repaymentsSummary}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.loanDetailItem}>
-                      <Icon name="alert-circle-outline" size={24} color="#FF5722" />
-                      <View style={styles.loanDetailText}>
-                        <Text style={styles.loanDetailLabel}>Penalties</Text>
-                        <Text style={styles.loanDetailValue}>{loan.penaltiesSummary}</Text>
-                      </View>
-                    </View>
-                  </View>
+                    <DetailRow
+                      icon="calendar-end"
+                      iconBg={colors.dangerSoft}
+                      iconColor={colors.dangerInk}
+                      label="End Date"
+                      value={new Date(loan.loanEndDate).toLocaleDateString()}
+                    />
+                    <DetailRow
+                      icon="file-document-outline"
+                      iconBg={colors.infoSoft}
+                      iconColor={colors.infoInk}
+                      label="Documents"
+                      value={loan.documentsSummary || 'N/A'}
+                    />
+                    <DetailRow
+                      icon="calendar-clock"
+                      iconBg={colors.neutralSoft}
+                      iconColor={colors.neutralInk}
+                      label="Repayment Schedule"
+                      value={loan.repaymentSchedulesSummary || 'N/A'}
+                    />
+                    <DetailRow
+                      icon="cash-multiple"
+                      iconBg={colors.accentSoft}
+                      iconColor={colors.accentDeep}
+                      label="Repayments"
+                      value={loan.repaymentsSummary || 'N/A'}
+                    />
+                    <DetailRow
+                      icon="alert-circle-outline"
+                      iconBg={colors.warningSoft}
+                      iconColor={colors.warningInk}
+                      label="Penalties"
+                      value={loan.penaltiesSummary || 'N/A'}
+                    />
+                  </Card>
                 </>
               ) : (
-                <Text style={styles.noLoanText}>No active loans</Text>
+                <EmptyState
+                  icon="search"
+                  title="No active loans"
+                  style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}
+                />
               )}
             </ScrollView>
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleViewProfile}>
-                <Text style={styles.modalButtonText}>View Full Profile</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, styles.modalCloseButton]} onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Close</Text>
-              </TouchableOpacity>
+
+            <View style={styles.modalButtonRow}>
+              <Button label="Close" variant="outline" flex={1} onPress={() => setModalVisible(false)} />
+              <Button
+                label="View Full Profile"
+                icon="account"
+                variant="accent"
+                flex={1.4}
+                onPress={handleViewProfile}
+              />
             </View>
-          </View>
-        </View>
+            <CustomToast />
+          </Pressable>
+        </Pressable>
       </Modal>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Icon name="magnify" size={24} color="#999" style={styles.searchIcon} />
+    <Screen bg={colors.bg}>
+      <View style={styles.searchCard}>
+        <Icon name="magnify" size={20} color={colors.accentDeep} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name, email, phone, or username"
+          placeholderTextColor={colors.inkMuted}
           value={searchQuery}
-          placeholderTextColor={'#999'}
           onChangeText={handleSearchChange}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => handleSearchChange('')} style={styles.clearButton}>
-            <Icon name="close-circle" size={20} color="#999" />
-          </TouchableOpacity>
+          <Pressable onPress={() => handleSearchChange('')} hitSlop={6}>
+            <Icon name="close-circle" size={20} color={colors.inkMuted} />
+          </Pressable>
         )}
       </View>
+
       <FlatList
         data={searchResults}
         renderItem={renderCustomerItem}
-        keyExtractor={item => item._id}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.listContent}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {searchQuery.trim() ? 'No results found' : 'Enter search criteria'}
-          </Text>
+          <EmptyState
+            icon="search"
+            title={searchQuery.trim() ? 'No results found' : 'Enter search criteria'}
+            subtitle={
+              searchQuery.trim()
+                ? 'Try a different name, email, phone, or username.'
+                : 'Search customers by name, email, phone, or username.'
+            }
+            style={{ marginTop: spacing.xxxl }}
+          />
         }
       />
+
       {renderLoanDetailsModal()}
-    </View>
+      <CustomToast />
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-  searchContainer: {
+  searchCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
-    margin: 16,
-    paddingHorizontal: 16,
-    elevation: 3,
-  },
-  searchIcon: {
-    marginRight: 10,
+    gap: spacing.sm,
+    margin: spacing.md,
+    padding: spacing.sm + 2,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   searchInput: {
     flex: 1,
-    height: 50,
-    fontSize: 16,
-    color: '#333',
+    height: 44,
+    ...type.body,
+    color: colors.ink,
+    paddingHorizontal: spacing.xs,
   },
-  clearButton: {
-    padding: 5,
+  listContent: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.xxxl,
   },
-  customerItem: {
+  itemCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    elevation: 2,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  profilePicture: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  customerInfo: {
+  itemInfo: {
     flex: 1,
+    gap: 4,
   },
-  customerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#333',
+  itemName: {
+    ...type.bodyBold,
+    color: colors.ink,
+    fontSize: 16,
   },
-  customerDetail: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-  },
-  loanInfo: {
+  itemMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    gap: 6,
+  },
+  itemMeta: {
+    flex: 1,
+    ...type.caption,
+    color: colors.inkSecondary,
+  },
+  loanRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+    gap: spacing.sm,
+  },
+  loanAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   loanAmount: {
+    ...type.bodyBold,
+    color: colors.successInk,
     fontSize: 14,
-    color: '#4CAF50',
-    marginRight: 12,
   },
-  loanStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+    gap: 6,
   },
-  loanStatusText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  chevron: {
-    marginLeft: 8,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.full,
   },
   footer: {
-    paddingVertical: 20,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    color: '#666',
-  },
-  modalOverlay: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxHeight: '90%',
+    width: '92%',
+    maxHeight: '88%',
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    paddingBottom: spacing.md,
+  },
+  grabber: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.borderStrong,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalProfilePic: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
   modalHeaderText: {
     flex: 1,
+    gap: 2,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+    ...type.h2,
+    color: colors.ink,
   },
   modalSubtitle: {
-    fontSize: 16,
-    color: '#666',
+    ...type.sub,
+    color: colors.inkMuted,
   },
-  loanOverview: {
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.full,
+    backgroundColor: colors.neutralSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overviewRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  loanOverviewItem: {
-    alignItems: 'center',
-  },
-  loanOverviewLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  loanOverviewValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  loanStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  loanStatusText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  chartContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  loanDetails: {
-    marginTop: 20,
-  },
-  loanDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  loanDetailText: {
-    marginLeft: 16,
+  overviewCell: {
     flex: 1,
+    alignItems: 'center',
+    gap: 6,
   },
-  loanDetailLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  loanDetailValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  noLoanText: {
-    fontSize: 18,
-    color: '#666',
+  overviewLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
     textAlign: 'center',
-    marginTop: 20,
   },
-  modalButtonContainer: {
+  overviewValue: {
+    ...type.bodyBold,
+    color: colors.ink,
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  chartCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  chartTitle: {
+    ...type.title,
+    color: colors.ink,
+    marginBottom: spacing.md,
+  },
+  donutRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  modalButton: {
-    flex: 1,
-    backgroundColor: '#4CAF50',
-    padding: 12,
-    borderRadius: 8,
     alignItems: 'center',
-    marginHorizontal: 5,
+    gap: spacing.md,
   },
-  modalCloseButton: {
-    backgroundColor: '#F44336',
+  legendCol: {
+    flex: 1,
+    gap: spacing.sm,
   },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: radius.full,
+  },
+  legendLabel: {
+    flex: 1,
+    ...type.sub,
+    color: colors.inkSecondary,
+  },
+  legendValue: {
+    ...type.bodyBold,
+    color: colors.ink,
+    fontSize: 13.5,
+  },
+  detailsCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  detailChip: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailText: {
+    flex: 1,
+    gap: 2,
+  },
+  detailLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+  },
+  detailValue: {
+    ...type.body,
+    color: colors.ink,
+    fontWeight: '600',
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
   },
 });
 

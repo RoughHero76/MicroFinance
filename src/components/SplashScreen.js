@@ -1,86 +1,82 @@
-import React, { useEffect } from 'react';
-import { View, Image, StyleSheet, Text } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  withRepeat,
-  Easing,
-  withSequence,
-} from 'react-native-reanimated';
+import React, { useEffect, useRef } from 'react';
+import { View, Image, StyleSheet, Text, Animated, Easing } from 'react-native';
+import { colors, type, spacing } from '../design/tokens';
 
-const SplashScreen = () => {
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.5);
-  const loadingProgress = useSharedValue(0);
+/**
+ * SplashScreen — brand mark, a pulsing loader, and footer branding.
+ * Kept dependency-light: RN's own Animated (safe in tests) instead of a
+ * per-dot hook loop, so each dot is an isolated, rules-of-hooks-clean component.
+ */
 
+const Dot = ({ delay }) => {
+  const v = useRef(new Animated.Value(0.3)).current;
   useEffect(() => {
-    opacity.value = withTiming(1, { duration: 1000 });
-    scale.value = withSpring(1, { damping: 6 });
-    loadingProgress.value = withRepeat(
-      withTiming(1, { duration: 1500, easing: Easing.linear }),
-      -1,
-      false
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(v, { toValue: 1, duration: 420, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0.3, duration: 420, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
     );
+    loop.start();
+    return () => loop.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const logoAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
+  return (
+    <Animated.View
+      style={[
+        styles.dot,
+        {
+          backgroundColor: colors.accent,
+          opacity: v,
+          transform: [{ scale: v.interpolate({ inputRange: [0.3, 1], outputRange: [0.7, 1.3] }) }],
+        },
+      ]}
+    />
+  );
+};
 
-  const createDotStyle = (delay) =>
-    useAnimatedStyle(() => {
-      const dotOpacity = withSequence(
-        withTiming(1, { duration: 500, easing: Easing.linear }),
-        withTiming(0.3, { duration: 500, easing: Easing.linear })
-      );
+const SplashScreen = () => {
+  const logo = useRef(new Animated.Value(0)).current;
 
-      return {
-        opacity: withTiming(
-          delay,
-          withRepeat(dotOpacity, -1, false)
-        ),
-        transform: [
-          {
-            scale: withRepeat(
-              withSequence(
-                withTiming(1.3, { duration: 450 }),
-                withTiming(0.5, { duration: 250 })
-              ),
-              -1,
-              false
-            ),
-          },
-        ],
-      };
-    });
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(logo, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 12,
+        stiffness: 90,
+        mass: 0.9,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const dot1Style = createDotStyle(0);
-  const dot2Style = createDotStyle(300);
-  const dot3Style = createDotStyle(600);
+  const logoStyle = {
+    opacity: logo,
+    transform: [{ scale: logo.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }],
+  };
 
   return (
     <View style={styles.splashContainer}>
-      <Animated.Image
-        source={require('../assets/EviLogo.png')}
-        style={[styles.splashImage, logoAnimatedStyle]}
-      />
-
-      <View style={styles.loadingContainer}>
-        <Animated.View style={[styles.loadingDot, dot1Style]} />
-        <Animated.View style={[styles.loadingDot, dot2Style]} />
-        <Animated.View style={[styles.loadingDot, dot3Style]} />
+      <View style={styles.hero}>
+        <Animated.Image source={require('../assets/EviLogo.png')} style={[styles.splashImage, logoStyle]} />
       </View>
 
-      <View style={styles.tradeMarkAndBranding}>
+      <View style={styles.loadingContainer}>
+        <Dot delay={0} />
+        <Dot delay={180} />
+        <Dot delay={360} />
+      </View>
+
+      <View style={styles.branding}>
         <View style={styles.section}>
-          <Animated.Image source={require('../assets/branding/76Groups.png')} style={[styles.logo, logoAnimatedStyle]} />
+          <Image source={require('../assets/branding/76Groups.png')} style={styles.brandLogo} />
         </View>
         <View style={styles.section}>
-          <Text style={styles.textStyle}>© 2024-25 76Groups</Text>
-          <Text style={styles.textStyle}>Powered by 76Groups</Text>
+          <Text style={styles.brandText}>© 2024-25 76Groups</Text>
+          <Text style={styles.brandText}>Powered by 76Groups</Text>
         </View>
       </View>
     </View>
@@ -92,52 +88,51 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
+    backgroundColor: colors.dark,
+  },
+  hero: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   splashImage: {
-    width: '90%',
-    height: '10%',
+    width: '82%',
+    height: 120,
     resizeMode: 'contain',
-    marginBottom: 20,
+    marginBottom: spacing.xxl,
   },
-
   loadingContainer: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 60,
+    bottom: 96,
   },
-  loadingDot: {
+  dot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#FFDD00',
-    marginHorizontal: 6,
+    marginHorizontal: 7,
   },
-
-  //Brandings
-  tradeMarkAndBranding: {
+  branding: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 10, // Adjusted for closer to the bottom
-    justifyContent: 'center', // Center the content better
+    bottom: spacing.lg,
+    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%', // Ensures it stretches the width for spacing control
-  },
-  logo: {
-    width: 30, // Reduced size for smaller branding
-    height: 30, // Reduced size for smaller branding
-    resizeMode: 'contain',
+    width: '100%',
   },
   section: {
     alignItems: 'center',
-    marginHorizontal: 8, // Added margin to give slight spacing between sections
+    marginHorizontal: spacing.xs,
   },
-  textStyle: {
-    fontSize: 10, // Smaller font for subtle branding
-    color: '#fff',
+  brandLogo: {
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
+  },
+  brandText: {
+    ...type.micro,
+    color: colors.onDarkMuted,
     textAlign: 'center',
   },
 });
-
 
 export default SplashScreen;

@@ -1,37 +1,71 @@
-//src/screens/Home/EmployeeView/EmployeeRegistration.js
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { apiCall } from "../../../components/api/apiUtils";
-import Toast from "react-native-toast-message";
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { CustomToast, showToast } from "../../../components/toast/CustomToast";
-import { useNavigation } from "@react-navigation/native";
+import { apiCall } from '../../../components/api/apiUtils';
+import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import { useNavigation } from '@react-navigation/native';
+import Screen from '../../../design/components/Screen';
+import Card from '../../../design/components/Card';
+import Button from '../../../design/components/Button';
+import TextField from '../../../design/components/TextField';
+import Icon from '../../../design/Icon';
+import { colors, spacing, radius, type } from '../../../design/tokens';
+
+/**
+ * EmployeeRegistration — employee onboarding form rebuilt on the
+ * "Ink & Amber" design system.
+ *  - same behaviour: identical default form values, per-field error
+ *    clearing while typing, the exact validation rules and messages
+ *    (required set, email format, 8-char password, match check, 10-digit
+ *    phone), the same POST /api/admin/employee payload, toasts and the
+ *    success navigation to 'Menu'
+ *  - presentation: grouped section cards (was one flat list of inputs),
+ *    design TextField / Button components, verified icon names and the
+ *    single-option role picker kept as-is
+ */
+
+const SectionHeader = ({ icon, title }) => (
+  <View style={styles.sectionHeader}>
+    <View style={styles.sectionChip}>
+      <Icon name={icon} size={15} color={colors.accentDeep} />
+    </View>
+    <Text style={[type.title, { color: colors.ink, fontSize: 15 }]}>
+      {title}
+    </Text>
+  </View>
+);
+
+const RolePicker = ({ value, onValueChange }) => (
+  <View style={styles.field}>
+    <Text style={styles.fieldLabel}>Role</Text>
+    <View style={styles.pickerWrap}>
+      <Icon name="account-tie" size={18} color={colors.inkMuted} />
+      <Picker
+        selectedValue={value}
+        onValueChange={onValueChange}
+        style={styles.picker}
+      >
+        <Picker.Item label="Employee" value="employee" />
+      </Picker>
+      <Icon name="chevron-down" size={16} color={colors.inkMuted} />
+    </View>
+  </View>
+);
 
 const EmployeeRegistration = () => {
   const navigation = useNavigation();
 
   const [formData, setFormData] = useState({
-    fname: "",
-    lname: "",
-    email: "",
-    userName: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
-    address: "",
-    emergencyContact: "",
-    role: "employee",
+    fname: '',
+    lname: '',
+    email: '',
+    userName: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
+    address: '',
+    emergencyContact: '',
+    role: 'employee',
   });
 
   const [errors, setErrors] = useState({});
@@ -52,30 +86,30 @@ const EmployeeRegistration = () => {
     let newErrors = {};
 
     // Validate required fields
-    ["fname", "lname", "userName", "phoneNumber", "password", "confirmPassword"].forEach((field) => {
+    ['fname', 'lname', 'userName', 'phoneNumber', 'password', 'confirmPassword'].forEach((field) => {
       if (!formData[field]) {
-        newErrors[field] = "This field is required";
+        newErrors[field] = 'This field is required';
       }
     });
 
     // Validate email format
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
+      newErrors.email = 'Invalid email format';
     }
 
     // Validate password
     if (formData.password && formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long";
+      newErrors.password = 'Password must be at least 8 characters long';
     }
 
     // Validate password confirmation
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     // Validate phone number (simple check for now)
     if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "Invalid phone number format";
+      newErrors.phoneNumber = 'Invalid phone number format';
     }
 
     setErrors(newErrors);
@@ -84,167 +118,199 @@ const EmployeeRegistration = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      showToast("error", "Error", "Please correct the errors in the form");
+      showToast('error', 'Error', 'Please correct the errors in the form');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await apiCall("/api/admin/employee", "POST", formData);
-      if (response.status === "success") {
-        showToast("success", "Success", response.message);
+      const response = await apiCall('/api/admin/employee', 'POST', formData);
+      if (response.status === 'success') {
+        showToast('success', 'Success', response.message);
         navigation.navigate('Menu');
       } else {
-        showToast("error", "Error", response.message || "Registration failed. Please try again.");
+        showToast('error', 'Error', response.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error(error);
-      showToast("error", "Error", error.message || "An unexpected error occurred");
+      showToast('error', 'Error', error.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderInput = (name, placeholder, icon, keyboardType = "default", secureTextEntry = false) => (
-    <View style={styles.inputContainer}>
-      <Icon name={icon} size={20} color="#6B7280" style={styles.inputIcon} />
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
-        value={formData[name]}
-        onChangeText={(text) => handleInputChange(name, text)}
-        keyboardType={keyboardType}
-        secureTextEntry={secureTextEntry}
-      />
-      {errors[name] && <Text style={styles.errorText}>{errors[name]}</Text>}
-    </View>
-  );
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Icon name="account-plus" size={40} color="#4F46E5" />
-          <Text style={styles.headerText}>Employee Registration</Text>
-        </View>
+    <Screen scroll keyboardAvoid bg={colors.bg}>
+      <View style={styles.page}>
+        <Card>
+          <SectionHeader icon="users" title="Personal Details" />
+          <View style={styles.field}>
+            <TextField
+              label="First Name"
+              placeholder="First name"
+              value={formData.fname}
+              onChangeText={(v) => handleInputChange('fname', v)}
+              leftIcon="account"
+              error={errors.fname}
+            />
+          </View>
+          <View style={styles.field}>
+            <TextField
+              label="Last Name"
+              placeholder="Last name"
+              value={formData.lname}
+              onChangeText={(v) => handleInputChange('lname', v)}
+              leftIcon="account"
+              error={errors.lname}
+            />
+          </View>
+          <View style={styles.field}>
+            <TextField
+              label="Email"
+              placeholder="name@example.com"
+              value={formData.email}
+              onChangeText={(v) => handleInputChange('email', v)}
+              leftIcon="email"
+              keyboardType="email-address"
+              error={errors.email}
+            />
+          </View>
+          <View style={styles.field}>
+            <TextField
+              label="Username"
+              placeholder="username"
+              value={formData.userName}
+              onChangeText={(v) => handleInputChange('userName', v)}
+              leftIcon="user-circle"
+              error={errors.userName}
+            />
+          </View>
+          <View style={styles.field}>
+            <TextField
+              label="Phone Number"
+              placeholder="10-digit phone number"
+              value={formData.phoneNumber}
+              onChangeText={(v) => handleInputChange('phoneNumber', v)}
+              leftIcon="phone"
+              keyboardType="phone-pad"
+              error={errors.phoneNumber}
+            />
+          </View>
+        </Card>
 
-        {renderInput("fname", "First Name", "account")}
-        {renderInput("lname", "Last Name", "account")}
-        {renderInput("email", "Email", "email", "email-address")}
-        {renderInput("userName", "Username", "account-circle")}
-        {renderInput("phoneNumber", "Phone Number", "phone", "phone-pad")}
-        {renderInput("password", "Password", "lock", "default", true)}
-        {renderInput("confirmPassword", "Confirm Password", "lock-check", "default", true)}
-        {renderInput("address", "Address", "home")}
-        {renderInput("emergencyContact", "Emergency Contact", "phone-alert")}
+        <Card style={styles.cardGap}>
+          <SectionHeader icon="lock" title="Credentials" />
+          <View style={styles.field}>
+            <TextField
+              label="Password"
+              placeholder="At least 8 characters"
+              value={formData.password}
+              onChangeText={(v) => handleInputChange('password', v)}
+              leftIcon="lock"
+              secureTextEntry
+              error={errors.password}
+            />
+          </View>
+          <View style={styles.field}>
+            <TextField
+              label="Confirm Password"
+              placeholder="Re-enter password"
+              value={formData.confirmPassword}
+              onChangeText={(v) => handleInputChange('confirmPassword', v)}
+              leftIcon="lock-check"
+              secureTextEntry
+              error={errors.confirmPassword}
+            />
+          </View>
+        </Card>
 
-        <View style={styles.inputContainer}>
-          <Icon name="account-tie" size={20} color="#6B7280" style={styles.inputIcon} />
-          <Picker
-            selectedValue={formData.role}
-            style={styles.picker}
-            onValueChange={(itemValue) => handleInputChange("role", itemValue)}
-          >
-            <Picker.Item label="Employee" value="employee" />
+        <Card style={styles.cardGap}>
+          <SectionHeader icon="account-tie" title="Address & Role" />
+          <View style={styles.field}>
+            <TextField
+              label="Address"
+              placeholder="Street, city, state"
+              value={formData.address}
+              onChangeText={(v) => handleInputChange('address', v)}
+              leftIcon="pin"
+              multiline
+            />
+          </View>
+          <View style={styles.field}>
+            <TextField
+              label="Emergency Contact"
+              placeholder="Emergency contact number"
+              value={formData.emergencyContact}
+              onChangeText={(v) => handleInputChange('emergencyContact', v)}
+              leftIcon="phone-alert"
+              keyboardType="phone-pad"
+            />
+          </View>
+          <RolePicker
+            value={formData.role}
+            onValueChange={(v) => handleInputChange('role', v)}
+          />
+        </Card>
 
-          </Picker>
-        </View>
-
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleSubmit}
+        <Button
+          label="Register Employee"
+          icon="user-plus"
+          variant="accent"
+          size="lg"
+          full
+          loading={loading}
           disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <>
-              <Icon name="check-circle" size={20} color="#FFFFFF" style={styles.submitIcon} />
-              <Text style={styles.submitButtonText}>Register Employee</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+          onPress={handleSubmit}
+        />
+      </View>
       <CustomToast />
-    </KeyboardAvoidingView>
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3F4F6",
+  page: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxxl,
   },
-  scrollContainer: {
-    padding: 20,
+  cardGap: {
+    marginTop: spacing.md,
   },
-  header: {
-    alignItems: "center",
-    marginBottom: 30,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginTop: 10,
+  sectionChip: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.sm,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
   },
-  inputContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  field: {
+    marginBottom: spacing.md,
   },
-  inputIcon: {
-    padding: 10,
+  fieldLabel: {
+    ...type.caption,
+    color: colors.inkSecondary,
+    marginBottom: 6,
   },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingRight: 10,
-    fontSize: 16,
-    color: "#1F2937",
+  pickerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingLeft: spacing.sm,
   },
   picker: {
     flex: 1,
-    height: 50,
-    color: "#1F2937",
-  },
-  submitButton: {
-    backgroundColor: "#4F46E5",
-    borderRadius: 12,
-    paddingVertical: 14,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-    shadowColor: "#4F46E5",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  submitIcon: {
-    marginRight: 8,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  errorText: {
-    color: "#EF4444",
-    fontSize: 12,
-    marginTop: 2,
+    height: 52,
+    color: colors.ink,
   },
 });
 
