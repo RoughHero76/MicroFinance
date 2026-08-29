@@ -19,6 +19,29 @@ import { apiCall } from '../../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import { currencyFormatter } from '../../../../components/utils/formatters';
 
+// Any cash already sitting in the loan's advance wallet counts toward closing
+// it out — the backend applies it automatically, so the min/max new-cash
+// bounds here have to account for it too, or this screen will reject amounts
+// the backend would actually accept (or default the input too high).
+const getPaymentBounds = (loan, { forgiveLoan, forgivePenalties }) => {
+  if (!loan) return { minAmount: 0, maxAmount: 0, advanceCredit: 0, totalDue: 0 };
+
+  const advanceCredit = loan.advanceBalance || 0;
+  const totalDue = loan.outstandingAmount + loan.totalPenaltyAmount;
+  const maxAmount = Math.max(0, totalDue - advanceCredit);
+
+  if (forgiveLoan) {
+    return { minAmount: 0, maxAmount, advanceCredit, totalDue };
+  }
+
+  const requiredBeforeCredit = (!forgivePenalties && loan.totalPenaltyAmount > 0)
+    ? totalDue
+    : loan.outstandingAmount;
+  const minAmount = Math.max(0, requiredBeforeCredit - advanceCredit);
+
+  return { minAmount, maxAmount, advanceCredit, totalDue };
+};
+
 const CloseLoan = ({ route, navigation }) => {
   const [loan, setLoan] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +82,8 @@ const CloseLoan = ({ route, navigation }) => {
     if (loan) {
       // When loan data is available, set initial amount if not already set
       if (!amountPaying && !forgiveLoan) {
-        setValue('totalAmountPaying', loan.outstandingAmount.toString(), { shouldValidate: true });
+        const { minAmount } = getPaymentBounds(loan, { forgiveLoan, forgivePenalties });
+        setValue('totalAmountPaying', minAmount.toString(), { shouldValidate: true });
       }
       
       // Always trigger validation when forgiveLoan changes or when loan data loads
@@ -118,7 +142,7 @@ const CloseLoan = ({ route, navigation }) => {
     }
 
     const paymentAmount = parseFloat(amountPaying || 0);
-    const maxAmount = loan.outstandingAmount + loan.totalPenaltyAmount;
+    const { minAmount, maxAmount } = getPaymentBounds(loan, { forgiveLoan, forgivePenalties });
 
     // Validate payment amount
     if (isNaN(paymentAmount) || paymentAmount < 0) {
@@ -129,11 +153,12 @@ const CloseLoan = ({ route, navigation }) => {
       return false;
     }
 
-    // If loan forgiveness is not enabled, ensure payment covers outstanding amount
-    if (!forgiveLoan && paymentAmount < loan.outstandingAmount) {
+    // If loan forgiveness is not enabled, ensure payment (plus any existing
+    // advance credit) covers what's actually still owed
+    if (!forgiveLoan && paymentAmount < minAmount) {
       Alert.alert(
         "Invalid Payment",
-        `When not forgiving the loan, payment amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}.`
+        `When not forgiving the loan, payment amount must be at least ${currencyFormatter.format(minAmount)}.`
       );
       return false;
     }
@@ -183,37 +208,40 @@ const CloseLoan = ({ route, navigation }) => {
   };
 
   const calculateRemainingBalance = () => {
-    if (!loan || !amountPaying) return loan?.outstandingAmount || 0;
-
-    const paymentAmount = parseFloat(amountPaying || 0);
-    const outstandingAmount = loan.outstandingAmount;
+    if (!loan) return 0;
 
     // If forgiveLoan is true, remaining balance can be 0 regardless of payment
     if (forgiveLoan) {
       return 0;
     }
 
-    return Math.max(0, outstandingAmount - paymentAmount);
+    const advanceCredit = loan.advanceBalance || 0;
+    if (!amountPaying) return Math.max(0, loan.outstandingAmount - advanceCredit);
+
+    const paymentAmount = parseFloat(amountPaying || 0);
+    // Existing advance credit counts toward this too — it's cash already
+    // collected, just not yet pinned to a specific schedule.
+    return Math.max(0, loan.outstandingAmount - advanceCredit - paymentAmount);
   };
 
   const calculateRemainingPenalties = () => {
-    if (!loan || !amountPaying) return loan?.totalPenaltyAmount || 0;
-
-    const paymentAmount = parseFloat(amountPaying || 0);
-    const outstandingAmount = loan.outstandingAmount;
-    const totalPenaltyAmount = loan.totalPenaltyAmount;
+    if (!loan) return 0;
 
     // If forgivePenalties is true, remaining penalties are 0
     if (forgivePenalties) {
       return 0;
     }
 
-    // Calculate how much of the payment goes to penalties
-    // First, cover the outstanding amount
-    const amountForPenalties = Math.max(0, paymentAmount - outstandingAmount);
+    const advanceCredit = loan.advanceBalance || 0;
+    const paymentAmount = parseFloat(amountPaying || 0);
+    const effectivePayment = paymentAmount + advanceCredit;
+
+    // Calculate how much of the payment (new cash + advance credit) goes to
+    // penalties after first covering the outstanding principal
+    const amountForPenalties = Math.max(0, effectivePayment - loan.outstandingAmount);
 
     // Then apply the rest to penalties
-    return Math.max(0, totalPenaltyAmount - amountForPenalties);
+    return Math.max(0, loan.totalPenaltyAmount - amountForPenalties);
   };
 
   if (loading) {
@@ -259,6 +287,15 @@ const CloseLoan = ({ route, navigation }) => {
               <Text style={styles.detailValue}>{currencyFormatter.format(loan.totalPenaltyAmount)}</Text>
             </View>
 
+            {loan.advanceBalance > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Advance Credit Available:</Text>
+                <Text style={[styles.detailValue, styles.highlightText]}>
+                  {currencyFormatter.format(loan.advanceBalance)}
+                </Text>
+              </View>
+            )}
+
             <View style={styles.divider} />
 
             <View style={styles.detailRow}>
@@ -267,6 +304,15 @@ const CloseLoan = ({ route, navigation }) => {
                 {currencyFormatter.format(loan.outstandingAmount + loan.totalPenaltyAmount)}
               </Text>
             </View>
+
+            {loan.advanceBalance > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>New Cash Still Needed:</Text>
+                <Text style={styles.totalValue}>
+                  {currencyFormatter.format(getPaymentBounds(loan, { forgiveLoan, forgivePenalties }).minAmount)}
+                </Text>
+              </View>
+            )}
           </View>
         </Animated.View>
 
@@ -282,9 +328,8 @@ const CloseLoan = ({ route, navigation }) => {
           <Controller
             control={control}
             render={({ field: { onChange, onBlur, value } }) => {
-              const maxAmount = loan ? loan.outstandingAmount + loan.totalPenaltyAmount : 0;
-              const minAmount = forgiveLoan ? 0 : loan.outstandingAmount;
-              
+              const { minAmount, maxAmount } = getPaymentBounds(loan, { forgiveLoan, forgivePenalties });
+
               return (
                 <View style={styles.inputContainer}>
                   <View style={styles.currencyInputContainer}>
@@ -325,19 +370,18 @@ const CloseLoan = ({ route, navigation }) => {
               required: "Payment amount is required",
               validate: (value) => {
                 if (!loan) return true; // Skip validation if loan data isn't loaded yet
-                
+
                 const numValue = parseFloat(value || 0);
-                const maxAmount = loan.outstandingAmount + loan.totalPenaltyAmount;
-                
+                const { minAmount, maxAmount } = getPaymentBounds(loan, { forgiveLoan, forgivePenalties });
+
                 if (isNaN(numValue)) return "Please enter a valid number";
                 if (numValue < 0) return "Amount cannot be negative";
                 if (numValue > maxAmount) return `Amount cannot exceed ${currencyFormatter.format(maxAmount)}`;
-                
-                // This is the key validation rule that was missing
-                if (!forgiveLoan && numValue < loan.outstandingAmount) {
-                  return `When not forgiving the loan, amount must be at least ${currencyFormatter.format(loan.outstandingAmount)}`;
+
+                if (!forgiveLoan && numValue < minAmount) {
+                  return `When not forgiving the loan, amount must be at least ${currencyFormatter.format(minAmount)}`;
                 }
-                
+
                 return true;
               }
             }}

@@ -5,6 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { getAmountPaidSoFar } from '../../../../../components/utils/repaymentScheduleHelpers';
 
 const RepaymentSchedule = () => {
     const [repaymentSchedules, setRepaymentSchedules] = useState([]);
@@ -93,7 +94,13 @@ const RepaymentSchedule = () => {
                 <View style={styles.scheduleRow}>
                     <Icon name="currency-inr" size={20} color="#018786" />
                     <Text style={styles.amount}>
-                        {item.amount || 'N/A'}
+                        Original EMI: {item.originalAmount || item.amount || 'N/A'}
+                    </Text>
+                </View>
+                <View style={styles.scheduleRow}>
+                    <Icon name="currency-inr" size={20} color="#018786" />
+                    <Text style={styles.amount}>
+                        Amount Paid: {getAmountPaidSoFar(item)}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
@@ -105,7 +112,7 @@ const RepaymentSchedule = () => {
                 <View style={styles.scheduleRow}>
                     <Icon name="clock-alert-outline" size={20} color={item.penaltyApplied ? '#B00020' : '#757575'} />
                     <Text style={styles.penaltyApplied}>
-                        Penalty: {item.penaltyApplied ? `Rs.${item.penalty.amount || '0'}` : 'N/A'}
+                        Penalty: {item.penaltyApplied ? `Rs.${item.penalty?.amount || '0'}` : 'N/A'}
                     </Text>
                 </View>
             </View>

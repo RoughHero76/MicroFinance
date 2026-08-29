@@ -5,6 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useHomeContext } from '../../../../components/context/HomeContext';
+import { getAmountPaidSoFar, getAllocationForSchedule } from '../../../../components/utils/repaymentScheduleHelpers';
 
 const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) => {
     const [newStatus, setNewStatus] = useState(scheduleItem?.status || '');
@@ -292,6 +293,43 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
         }
     };
 
+    // Read-only context before editing anything: the original EMI never
+    // changes, but scheduleItem.amount itself means different things
+    // depending on status (0 paid, cumulative paid, or fully settled) — so
+    // show the actual paid-so-far figure explicitly instead of that raw field.
+    const renderScheduleSummary = (item) => {
+        const originalAmount = item.originalAmount || item.amount;
+        const amountPaid = getAmountPaidSoFar(item);
+
+        return (
+            <View style={styles.summaryContainer}>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Original EMI</Text>
+                    <Text style={styles.summaryValue}>Rs.{originalAmount}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Paid So Far</Text>
+                    <Text style={styles.summaryValue}>Rs.{amountPaid}</Text>
+                </View>
+                {item.repayments && item.repayments.length > 0 && (
+                    <View style={styles.summaryRepayments}>
+                        <Text style={styles.summaryLabel}>Repayments</Text>
+                        {item.repayments.map((repayment, index) => {
+                            const allocation = getAllocationForSchedule(repayment, item._id);
+                            const isSplitPayment = repayment.scheduleAllocations && repayment.scheduleAllocations.length > 1;
+                            return (
+                                <Text key={index} style={styles.summaryRepaymentText}>
+                                    Rs.{allocation} on {new Date(repayment.paymentDate).toLocaleDateString()}
+                                    {isSplitPayment ? ` (part of Rs.${repayment.amount} total payment)` : ''}
+                                </Text>
+                            );
+                        })}
+                    </View>
+                )}
+            </View>
+        );
+    };
+
     const renderPenaltyFields = () => (
         <>
             {renderInput('Penalty Amount (Optional)', penaltyAmount, setPenaltyAmount, 'numeric')}
@@ -389,6 +427,8 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                             <Text style={styles.statusText}>New Status: {newStatus ? newStatus : 'N/A'}</Text>
                         </View>
 
+                        {scheduleItem && renderScheduleSummary(scheduleItem)}
+
                         {renderPicker('Status', newStatus, setNewStatus, [
                             { label: 'Pending', value: 'Pending' },
                             { label: 'Paid', value: 'Paid' },
@@ -464,6 +504,37 @@ const styles = StyleSheet.create({
     },
     statusValue: {
         color: '#6200EE',
+    },
+    summaryContainer: {
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 15,
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+    },
+    summaryLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+    },
+    summaryValue: {
+        fontSize: 14,
+        color: '#333',
+    },
+    summaryRepayments: {
+        marginTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#ddd',
+        paddingTop: 8,
+    },
+    summaryRepaymentText: {
+        fontSize: 13,
+        color: '#555',
+        marginTop: 2,
     },
     inputContainer: {
         marginBottom: 20,

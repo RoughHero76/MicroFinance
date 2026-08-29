@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
 import EditRepaymentScheduleModal from './EditRepaymentScheduleModal';
 import { useNavigation } from '@react-navigation/native';
+import { getAmountPaidSoFar, getAllocationForSchedule } from '../../../../components/utils/repaymentScheduleHelpers';
 
 const RepaymentSchedule = () => {
 
@@ -148,13 +149,13 @@ const RepaymentSchedule = () => {
                 <View style={styles.scheduleRow}>
                     <Icon name="currency-inr" size={20} color="#018786" />
                     <Text style={styles.amount}>
-                        Payment Amount: {item.amount || 'N/A'}
+                        Original EMI: {item.originalAmount || item.amount || 'N/A'}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
                     <Icon name="currency-inr" size={20} color="#018786" />
                     <Text style={styles.amount}>
-                        Original EMI: {item.originalAmount || 'N/A'}
+                        Amount Paid: {getAmountPaidSoFar(item)}
                     </Text>
                 </View>
                 <View style={styles.scheduleRow}>
@@ -180,24 +181,35 @@ const RepaymentSchedule = () => {
                 {item.repayments && item.repayments.length > 0 && (
                     <View style={styles.repaymentsSection}>
                         <Text style={styles.repaymentTitle}>Repayments:</Text>
-                        {item.repayments.map((repayment, index) => (
-                            <View key={index} style={styles.repaymentItem}>
-                                <Text style={styles.repaymentText}>Amount: Rs.{repayment.amount}</Text>
-                                <Text style={styles.repaymentText}>Date: {new Date(repayment.paymentDate).toLocaleString()}</Text>
-                                <Text style={styles.repaymentText}>Method: {repayment.paymentMethod}</Text>
-                                <Text style={[styles.repaymentText, { color: getStatusColor(repayment.status) }]}>Status: {repayment.status}</Text>
-                                {repayment.transactionId && (
-                                    <Text style={styles.repaymentText}>Transaction ID: {repayment.transactionId}</Text>
-                                )}
-                                {repayment.collectedBy ? (
+                        {item.repayments.map((repayment, index) => {
+                            // A repayment can span multiple schedules (e.g. an
+                            // overpayment that cascaded to older/future ones),
+                            // so repayment.amount is the TOTAL collected, not
+                            // what this specific EMI received from it.
+                            const allocation = getAllocationForSchedule(repayment, item._id);
+                            const isSplitPayment = repayment.scheduleAllocations && repayment.scheduleAllocations.length > 1;
+                            return (
+                                <View key={index} style={styles.repaymentItem}>
                                     <Text style={styles.repaymentText}>
-                                        Collected By:{repayment.collectedBy.fname} {repayment.collectedBy.lname}
+                                        Amount toward this EMI: Rs.{allocation}
+                                        {isSplitPayment ? ` (part of Rs.${repayment.amount} total payment)` : ''}
                                     </Text>
-                                ) : (
-                                    <Text style={styles.repaymentText}>Collected By: Admin</Text>
-                                )}
-                            </View>
-                        ))}
+                                    <Text style={styles.repaymentText}>Date: {new Date(repayment.paymentDate).toLocaleString()}</Text>
+                                    <Text style={styles.repaymentText}>Method: {repayment.paymentMethod}</Text>
+                                    <Text style={[styles.repaymentText, { color: getStatusColor(repayment.status) }]}>Status: {repayment.status}</Text>
+                                    {repayment.transactionId && (
+                                        <Text style={styles.repaymentText}>Transaction ID: {repayment.transactionId}</Text>
+                                    )}
+                                    {repayment.collectedBy ? (
+                                        <Text style={styles.repaymentText}>
+                                            Collected By:{repayment.collectedBy.fname} {repayment.collectedBy.lname}
+                                        </Text>
+                                    ) : (
+                                        <Text style={styles.repaymentText}>Collected By: Admin</Text>
+                                    )}
+                                </View>
+                            );
+                        })}
                     </View>
                 )}
             </View>

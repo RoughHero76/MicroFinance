@@ -218,7 +218,7 @@ const TodaysCollectionScreen = () => {
                 <View style={styles.statusContainer}>
                     <Text style={[styles.status, { backgroundColor: getStatusColor(item.status) }]}>{item.status}</Text>
                     {item.penaltyApplied && (
-                        <Text style={styles.penalty}>Penalty: ₹{item.amount - item.originalAmount}</Text>
+                        <Text style={styles.penalty}>Penalty: ₹{item.penalty?.amount || 0}</Text>
                     )}
                 </View>
             </View>
