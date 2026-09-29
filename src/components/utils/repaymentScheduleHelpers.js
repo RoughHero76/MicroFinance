@@ -11,6 +11,14 @@ export const getAmountPaidSoFar = (item) => {
     return 0; // Pending, Overdue, Waived — nothing paid on this EMI yet
 };
 
+// What's still owed on an EMI — for PartiallyPaid that's the remainder, not
+// `amount` (which is what's been paid so far).
+export const getAmountStillDue = (item) => {
+    if (item.status === 'Waived') return 0;
+    const total = item.originalAmount || item.amount;
+    return Math.max(0, Math.round((total - getAmountPaidSoFar(item)) * 100) / 100);
+};
+
 // A repayment's `amount` is its total, which can be spread across several
 // schedules. `scheduleAllocations` (when present) says exactly how much of
 // that total landed on a specific schedule; older repayments or ones that

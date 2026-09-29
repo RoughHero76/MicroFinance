@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiCall } from "../api/apiUtils";
+import { apiCall, setUnauthorizedHandler } from "../api/apiUtils";
 export const HomeContext = createContext();
 
 export const HomeProvider = ({ children }) => {
@@ -16,6 +16,13 @@ export const HomeProvider = ({ children }) => {
 
     useEffect(() => {
         loadLoginState();
+    }, []);
+
+    useEffect(() => {
+        setUnauthorizedHandler(() => {
+            logoutUser();
+        });
+        return () => setUnauthorizedHandler(null);
     }, []);
 
     useEffect(() => {
@@ -60,6 +67,7 @@ export const HomeProvider = ({ children }) => {
         setUser(null);
         setUserRole(null);
         setIsLoggedIn(false);
+        setEmployees(null);
         try {
             await AsyncStorage.multiRemove(['user', 'token', 'isLoggedIn', 'userRole']);
         } catch (error) {

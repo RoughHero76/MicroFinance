@@ -19,6 +19,7 @@ import { showToast, CustomToast } from '../../../../components/toast/CustomToast
 import { handleSendSMS } from '../../../../components/sms/sendSMS';
 import ProfilePicturePlaceHolder from '../../../../assets/placeholders/profile.jpg';
 import ImageModal from '../../../../components/Image/ImageModal';
+import { getAmountStillDue } from '../../../../components/utils/repaymentScheduleHelpers';
 
 const TodaysCollectionScreen = () => {
     const [collections, setCollections] = useState([]);
@@ -200,7 +201,7 @@ const TodaysCollectionScreen = () => {
                 </View>
                 <View style={styles.loanDetailRow}>
                     <Icon name="calendar-clock" size={18} color="#4A4A4A" />
-                    <Text style={styles.loanDetail}>Due: ₹{item.amount} on {new Date(item.dueDate).toLocaleDateString()}</Text>
+                    <Text style={styles.loanDetail}>Due: ₹{getAmountStillDue(item)} on {new Date(item.dueDate).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.loanDetailRow}>
                     <Icon name="numeric" size={18} color="#4A4A4A" />
@@ -208,7 +209,7 @@ const TodaysCollectionScreen = () => {
                 </View>
                 <View style={styles.loanDetailRow}>
                     <Icon name="numeric" size={18} color="#4A4A4A" />
-                    <Text style={styles.loanDetail}>Today: {item.amount}</Text>
+                    <Text style={styles.loanDetail}>Today: {getAmountStillDue(item)}</Text>
                 </View>
                 {/* Total Overdue Amount */}
                 <View style={styles.loanDetailRow}>
@@ -227,7 +228,9 @@ const TodaysCollectionScreen = () => {
                     style={[styles.actionButton, styles.payButton]}
                     onPress={() => {
                         setSelectedItem(item);
-                        setPaymentDetails({ ...paymentDetails, amount: item.amount.toString() });
+                        // Fresh details per customer, so a previous customer's
+                        // transaction ID / method never carries over.
+                        setPaymentDetails({ amount: getAmountStillDue(item).toString(), paymentMethod: 'Cash', transactionId: '' });
                         setShowPaymentModal(true);
                     }}
                 >
@@ -238,6 +241,7 @@ const TodaysCollectionScreen = () => {
                     style={[styles.actionButton, styles.penaltyButton]}
                     onPress={() => {
                         setSelectedItem(item);
+                        setPenaltyAmount('');
                         setShowPenaltyModal(true);
                     }}
                 >

@@ -5,6 +5,7 @@ import { getVersion } from 'react-native-device-info';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { apiCall } from '../api/apiUtils';
 import { API_URL } from '../api/secrets';
+import { useHomeContext } from './HomeContext';
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 
 export const UpdateContext = createContext();
@@ -16,9 +17,15 @@ export const UpdateProvider = ({ children }) => {
     const [downloading, setDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
 
+    const { isLoggedIn } = useHomeContext();
+
+    // The check endpoint needs a token, so run it once the user is logged in
+    // (at launch for a saved session, or right after logging in).
     useEffect(() => {
-        checkForUpdates();
-    }, []);
+        if (isLoggedIn) {
+            checkForUpdates();
+        }
+    }, [isLoggedIn]);
 
     const checkForUpdates = async (forceCheck = false) => {
         try {
@@ -29,7 +36,13 @@ export const UpdateProvider = ({ children }) => {
                 const currentVersion = getVersion();
                 const response = await apiCall(`/api/shared/app/update/check?currentVersion=${currentVersion}`, 'GET');
 
-                if (response.status === 'success' && response.updateAvailable) {
+                if (response.status !== 'success') {
+                    // Don't record a failed check, or the next attempt would
+                    // wait a full day.
+                    return;
+                }
+
+                if (response.updateAvailable) {
                     setUpdateAvailable(true);
                     setLatestVersion(response.latestVersion);
                     setDownloadUrl(response.downloadUrl);

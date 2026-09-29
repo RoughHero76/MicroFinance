@@ -20,6 +20,7 @@ import { Picker } from '@react-native-picker/picker';
 import { format } from 'date-fns';
 import { handleSendSMS } from '../../../components/sms/sendSMS';
 import { useHomeContext } from '../../../components/context/HomeContext';
+import { getAmountStillDue } from '../../../components/utils/repaymentScheduleHelpers';
 
 const LoanStatusDetailsScreen = ({ route, navigation }) => {
     const { type, smaLevel, assignedTo } = route.params || {};
@@ -95,7 +96,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
     const handlePayButtonPress = (schedule) => {
         setSelectedSchedule(schedule);
         setPaymentDetails({
-            amount: schedule.amount.toString(),
+            amount: getAmountStillDue(schedule).toString(),
             paymentMethod: 'Cash',
             transactionId: '',
         });
@@ -242,7 +243,7 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
                 <View style={styles.scheduleRow}>
                     <Text style={styles.scheduleLabel}>Amount</Text>
                     <Text style={styles.scheduleValue}>
-                        ₹{item.amount.toLocaleString()}
+                        ₹{getAmountStillDue(item).toLocaleString()}
                     </Text>
                 </View>
                 {item.penaltyApplied && (

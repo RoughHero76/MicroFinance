@@ -3,7 +3,6 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from './HomeScreen.jsx';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHomeContext } from '../../../components/context/HomeContext.js';
 
 const Drawer = createDrawerNavigator();
@@ -80,16 +79,13 @@ const MenuItem = ({ icon, title, onPress }) => (
 );
 
 const CustomDrawerContent = ({ navigation }) => {
-    const { setIsLoggedIn } = useHomeContext();
+    const { logoutUser } = useHomeContext();
 
     const handleLogout = async () => {
-        try {
-            await AsyncStorage.clear();
-            setIsLoggedIn(false);
-            navigation.closeDrawer();
-        } catch (error) {
-            console.error('Error during logout:', error);
-        }
+        navigation.closeDrawer();
+        // Clears the session keys only (not app-wide settings like the
+        // last update check) and resets the in-memory user as well.
+        await logoutUser();
     };
 
     return (

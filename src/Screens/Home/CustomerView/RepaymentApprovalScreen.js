@@ -10,6 +10,12 @@ import { apiCall } from '../../../components/api/apiUtils';
 import { showToast, CustomToast } from '../../../components/toast/CustomToast';
 import { useNavigation } from '@react-navigation/native';
 
+
+const formatLocalDate = (date) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
 const RepaymentApprovalScreen = () => {
     const navigation = useNavigation();
     const [state, setState] = useState({
@@ -61,7 +67,9 @@ const RepaymentApprovalScreen = () => {
                 page: state.page,
                 limit: 1000,
                 defaultDate: state.filters.defaultDate,
-                date: state.filters.date.toISOString().split('T')[0],
+                // Local calendar date — toISOString() is UTC, which is the
+                // previous day in India before 05:30.
+                date: formatLocalDate(state.filters.date),
                 status: state.filters.status,
                 ...(state.filters.loanNumber && { loanNumber: state.filters.loanNumber })
             });
