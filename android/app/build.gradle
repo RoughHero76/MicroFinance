@@ -79,11 +79,33 @@ android {
 
     namespace "com.microfinance"
     defaultConfig {
-        applicationId "com.microfinance"
+        // Each brand flavor below adds its own suffix (R-02). The Kotlin
+        // package and namespace stay com.microfinance, so no files move.
+        applicationId "com.softwares76.microfinance"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 4
         versionName "1.0.4"
+        // Needed by react-native-image-crop-picker.
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    // One flavor per brands/<id>/brand.json (white-label). `npm run brand <id>`
+    // points the JS at the same brand; build with assemble<Id>Release.
+    flavorDimensions "brand"
+    productFlavors {
+        def brandsDir = file("../../brands")
+        brandsDir.eachDir { dir ->
+            def config = new File(dir, "brand.json")
+            if (config.exists()) {
+                def brand = new groovy.json.JsonSlurper().parse(config)
+                create(brand.id) {
+                    dimension "brand"
+                    applicationId brand.android.applicationId
+                    resValue "string", "app_name", brand.android.appName
+                }
+            }
+        }
     }
     signingConfigs {
         debug {

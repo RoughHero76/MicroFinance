@@ -13,7 +13,9 @@ const root = path.resolve(__dirname, '..');
 const id = process.argv[2];
 
 if (!id) {
-  const ids = fs.readdirSync(path.join(root, 'brands')).filter(d => fs.existsSync(path.join(root, 'brands', d, 'brand.json')));
+  const ids = fs
+    .readdirSync(path.join(root, 'brands'))
+    .filter(d => fs.existsSync(path.join(root, 'brands', d, 'brand.json')));
   console.error(`Usage: npm run brand <id>\nBrands: ${ids.join(', ')}`);
   process.exit(1);
 }
@@ -51,8 +53,8 @@ fs.writeFileSync(path.join(root, 'src', 'brand', 'current.ts'), current);
 const resSrc = path.join(dir, 'android', 'res');
 if (fs.existsSync(resSrc)) {
   const resDest = path.join(root, 'android', 'app', 'src', id, 'res');
-  fs.mkdirSync(resDest, { recursive: true });
-  fs.cpSync(resSrc, resDest, { recursive: true });
+  fs.mkdirSync(resDest, {recursive: true});
+  fs.cpSync(resSrc, resDest, {recursive: true});
   console.log(`Copied launcher resources to android/app/src/${id}/res`);
 }
 
