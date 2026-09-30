@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
+import { LOAN_TYPES } from '../../../../components/utils/loanTypes';
 import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -39,6 +40,7 @@ const CreateLoan = () => {
         loanStartDate: new Date(),
         gracePeriod: '0',
         loanNumber: '',
+        loanType: LOAN_TYPES[0].value,
         businessFirmName: '',
         businessAddress: '',
         businessPhone: '',
@@ -338,6 +340,9 @@ const CreateLoan = () => {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Loan Details</Text>
                         {renderInput('pound-box', 'Loan Number', 'Enter loan number', 'loanNumber', 'numeric', loanData.loanNumber, (text) => handleInputChange('loanNumber', text))}
+                        {renderPicker('shape-outline', 'Loan Type', 'loanType',
+                            LOAN_TYPES.map(type => ({ label: type.label, value: type.value })),
+                            loanData.loanType, (itemValue) => handleInputChange('loanType', itemValue))}
 
                         <View style={styles.row}>
                             {renderInput('currency-inr', 'Loan Amount', 'Enter loan amount', 'loanAmount', 'numeric', formatAmount(loanData.loanAmount), (text) => handleInputChange('loanAmount', text.replace(/,/g, '')))}

@@ -15,6 +15,7 @@ import {
 import { CustomToast, showToast } from "../../../../components/toast/CustomToast";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../../components/api/apiUtils";
+import { loanTypeLabel } from "../../../../components/utils/loanTypes";
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -435,7 +436,7 @@ const LoanDetails = ({ route, navigation }) => {
         { label: "Principal Amount", value: `₹${loanData.principalAmount}` },
         { label: "Duration", value: loanData.loanDuration },
         { label: "Interest Rate", value: `${loanData.interestRate}%` },
-        { label: "Loan Type", value: loanData.loanType },
+        { label: "Loan Type", value: loanTypeLabel(loanData.loanType) },
         { label: "Start Date", value: new Date(loanData.loanStartDate).toLocaleDateString() },
         { label: "End Date", value: new Date(loanData.loanEndDate).toLocaleDateString() },
       ])}

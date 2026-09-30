@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
+import { loanTypeLabel } from "../../../components/utils/loanTypes";
 import { showToast } from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
@@ -45,7 +46,7 @@ const LeadItem = ({ item, onPress }) => {
         <Text style={styles.leadName}>{item.name}</Text>
         <Text style={styles.leadDetail}>Phone: {item.phone}</Text>
         <Text style={styles.leadDetail}>
-          Loan: ₹{item.loanAmount} ({item.loanType})
+          Loan: ₹{item.loanAmount} ({loanTypeLabel(item.loanType)})
         </Text>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
           <Text style={styles.statusText}>{item.status}</Text>

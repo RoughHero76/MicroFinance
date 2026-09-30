@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { apiCall } from '../../../../../components/api/apiUtils';
+import { loanTypeLabel } from '../../../../../components/utils/loanTypes';
 import { format } from 'date-fns';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -384,7 +385,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
           <Text style={styles.sectionTitle}>Loan Information</Text>
           {[
             { label: 'Loan Number', value: loanDetails.loanNumber },
-            { label: 'Loan Type', value: loanDetails.loanType },
+            { label: 'Loan Type', value: loanTypeLabel(loanDetails.loanType) },
             {
               label: 'Status',
               value: (

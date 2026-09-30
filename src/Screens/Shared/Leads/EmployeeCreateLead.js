@@ -19,17 +19,9 @@ import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { apiCall } from "../../../components/api/apiUtils";
+import { LOAN_TYPES } from "../../../components/utils/loanTypes";
 import { showToast } from "../../../components/toast/CustomToast";
 
-const loanTypes = [
-    'Personal Loan',
-    'Home Loan',
-    'Business Loan',
-    'Education Loan',
-    'Vehicle Loan',
-    'Gold Loan',
-    'Other',
-];
 
 const loanDurations = [
     '100 days',
@@ -66,7 +58,7 @@ const CreateLeadScreen = () => {
             address: '',
             city: '',
             state: '',
-            loanType: loanTypes[0],
+            loanType: LOAN_TYPES[0].value,
             loanAmount: '',
             loanDuration: loanDurations[0],
             loanPurpose: '',
@@ -383,8 +375,8 @@ const CreateLeadScreen = () => {
                                                 onValueChange={onChange}
                                                 style={styles.picker}
                                             >
-                                                {loanTypes.map((type, index) => (
-                                                    <Picker.Item key={index} label={type} value={type} />
+                                                {LOAN_TYPES.map((type) => (
+                                                    <Picker.Item key={type.value} label={type.label} value={type.value} />
                                                 ))}
                                             </Picker>
                                         )}

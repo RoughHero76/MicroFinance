@@ -17,6 +17,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
+import { loanTypeLabel } from '../../../components/utils/loanTypes';
 import CustomToast, { showToast } from '../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../components/context/HomeContext';
 
@@ -246,7 +247,7 @@ const AdminLeadsScreen = ({ navigation }) => {
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Text style={styles.leadDetailLabel}>Loan Type</Text>
-            <Text style={styles.leadDetail}>{item.loanType || 'N/A'}</Text>
+            <Text style={styles.leadDetail}>{loanTypeLabel(item.loanType)}</Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.leadDetailLabel}>Amount</Text>

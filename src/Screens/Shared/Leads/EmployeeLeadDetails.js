@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { apiCall } from "../../../components/api/apiUtils";
+import { loanTypeLabel } from "../../../components/utils/loanTypes";
 import { showToast } from "../../../components/toast/CustomToast";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
@@ -229,7 +230,7 @@ const LeadDetailsScreen = () => {
                     <Text style={styles.cardTitle}>Loan Details</Text>
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Loan Type</Text>
-                        <Text style={styles.detailValue}>{lead.loanType}</Text>
+                        <Text style={styles.detailValue}>{loanTypeLabel(lead.loanType)}</Text>
                     </View>
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Amount</Text>
