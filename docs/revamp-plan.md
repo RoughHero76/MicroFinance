@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix, W0, W1 and W2 done on `feat/revamp` in both repos (not released, not deployed). Next: W3. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix, W0–W3 done on `feat/revamp` in both repos (not released, not deployed). Next: W4. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -63,11 +63,11 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [ ] **BE-15**: Add the remove-penalty and backup routes to the typed API client (no server change). _Files:_ app API client _For:_ A7b, X3
 - [ ] **BE-16**: Notifications: model, notify() helper called from 9 places, 4 endpoints, 09:00 follow-up cron, 90-day cleanup (see Round 9) _Files:_ new NotificationModel.js, controllers/shared/notificationController.js, crone/registry.js _For:_ X5, bell badge
 - [ ] **BE-17**: Customer summary (borrowed, outstanding, on-time rate, since) on admin and employee profile responses _Files:_ customerController.getCustomers, LoanCollection.getCustomerProfile _For:_ A3
-- [ ] **BE-18**: Upload size limit on multer; Cloudinary thumbnails for the document grid _Files:_ config/storageConfig.js, storageService.js _For:_ A8, F-9
-- [ ] **BE-19**: Undo endpoints, all admin-only and time-limited: (a) un-approve a payment (Approved → Pending); (b) un-approve a loan (Active → Pending, only while there are no repayments); (c) restore a soft-deleted lead; (d) restore a soft-deleted employee. No amounts ever move. _Files:_ loanController.js, routes/admin/loans/loanRoutes.js _For:_ Undo on the approve toast
+- [x] **BE-18**: Upload size limit on multer; Cloudinary thumbnails for the document grid _Files:_ config/storageConfig.js, storageService.js _For:_ A8, F-9 _(backend f8e00d9)_
+- [x] **BE-19**: Undo endpoints, all admin-only and time-limited: (a) un-approve a payment (Approved → Pending); (b) un-approve a loan (Active → Pending, only while there are no repayments); (c) restore a soft-deleted lead; (d) restore a soft-deleted employee. No amounts ever move. _Files:_ loanController.js, routes/admin/loans/loanRoutes.js _For:_ Undo on the approve toast _(backend ace3332)_
 - [x] **BE-20**: Server-side message translation: locales/en.json and hi.json, and middleware that reads Accept-Language and fills title/message from code + params _Files:_ new src/i18n/, middleware/errorHandler.js, controllers as touched _For:_ Server-driven toasts in Hindi _(backend c4c4795)_
 - [ ] **BE-21**: (Optional, later) One route per resource that filters by the caller's role, like `/shared/search`. _Files:_ routes _For:_ fewer endpoint pairs
-- [ ] **BE-22**: Before a force delete of a loan (and before deleting a customer), save a JSON snapshot of the loan, schedules, repayments, penalties and document records to a DeletionArchive collection, with who and when. Kept for 90 days. It's for recovery by hand, not an app feature. Also return the counts shown in A6c (GET /admin/loan/:id/delete-preview). _Files:_ loanController.deleteLoan, customerController.deleteCustomer, new DeletionArchiveModel.js _For:_ A6c, safety
+- [x] **BE-22**: Before a force delete of a loan (and before deleting a customer), save a JSON snapshot of the loan, schedules, repayments, penalties and document records to a DeletionArchive collection, with who and when. Kept for 90 days. It's for recovery by hand, not an app feature. Also return the counts shown in A6c (GET /admin/loan/:id/delete-preview). _Files:_ loanController.deleteLoan, customerController.deleteCustomer, new DeletionArchiveModel.js _For:_ A6c, safety _(backend ace3332)_
 - [ ] **BE-23**: Optional: include lastSeen and the latest loginHistory date in the admin employee response _Files:_ employeeController.getEmployees _For:_ A16 "Last login"
 - [x] **BE-24** (backend 1563653): Set `balanceAfterPayment` in `applyWaterfallPayment`, and return it with `outstandingAmount` in the `/pay` reply (for receipts). Optionally fill old records with a one-off script. _Files:_ helpers/paymentAllocation.js, LoanCollection.js _For:_ B-10, receipts
 
@@ -137,10 +137,10 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W3 · Admin loans and payments (L)
 
-- [ ] A1 Home (badges), A5 Loans, A6 loan with 3 tabs, A7/A7b/A7c schedule, installment sheet and edit (with penalty apply and remove), A8 documents (crop, compress, thumbnails)
-- [ ] A9 create loan (3 steps, 7 loan types, calculator preview), A10 pending, A11 close loan with confirmation
-- [ ] A12 payments grouped by collector, approve with Undo, reject with reason
-- [ ] Backend: BE-3, BE-5, BE-10, BE-18, BE-19
+- [x] A1 Home (badges), A5 Loans, A6 loan with 3 tabs, A7/A7b/A7c schedule, installment sheet and edit (with penalty apply and remove), A8 documents (crop, compress, thumbnails) _(app a013e44)_
+- [x] A9 create loan (3 steps, 7 loan types, calculator preview), A10 pending, A11 close loan with confirmation _(app a013e44)_
+- [x] A12 payments grouped by collector, approve with Undo, reject with reason _(app a013e44)_
+- [x] Backend: BE-3, BE-5, BE-10, BE-18, BE-19 _(backend 9696b0f, 6158bc9, 6294b15, f8e00d9, ace3332)_
 
 **Done when:**an admin can create a loan with documents, approve it, see an employee's payment arrive, approve it and undo it, edit an installment, and close a loan with and without forgiveness. The totals match the backend's figures to the rupee.
 
@@ -190,7 +190,7 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 - [x] P-01 · Amount in words _(app ee1be66)_
 - [x] P-02 · ₹ grouping while typing _(app ee1be66)_
-- [ ] P-03 · Badges on tabs
+- [x] P-03 · Badges on tabs _(app a013e44)_
 - [ ] P-04 · Haptics
 - [ ] P-05 · Filters and tabs are remembered
 - [x] P-06 · Smart defaults _(payment method remembered; app ee1be66)_
@@ -201,8 +201,8 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [ ] P-11 · Subtle motion
 - [x] P-12 · Photo viewer everywhere _(app ee1be66)_
 - [x] P-13 · End-of-day summary for employees _(app ee1be66)_
-- [ ] P-14 · Approve a whole collector group
-- [ ] P-15 · Drafts survive
+- [x] P-14 · Approve a whole collector group _(backend ace3332, app a013e44)_
+- [x] P-15 · Drafts survive _(Create loan; lead and customer forms in W4 — app a013e44)_
 - [x] P-16 · Collect list order _(app ee1be66)_
 - [x] P-17 · Big-number check before money is sent _(app ee1be66)_
 - [ ] P-18 · Recent customers on Search
@@ -217,8 +217,8 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ## Optional suggestions: decided (round 21)
 
-- [ ] **M-1 · Audit log**: included. _W0 part done: model, audit() helper and calls in every money/status controller (backend 066ddb0, 85d6124)._ W0: an `AuditLog` model + `audit()` helper called from every money- or status-changing controller. W3: the loan "Activity" screen + the admin Activity log in More.
-- [ ] **M-2 · Business settings**: included. _W0 part done: Settings document, GET/PUT /shared/settings, penalty rate, minimum payment and SMA thresholds read from it (backend 066ddb0)._ W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
+- [x] **M-1 · Audit log**: included. _W3 screens done (loan Activity, admin Activity log; app a013e44). W0 part done: model, audit() helper and calls in every money/status controller (backend 066ddb0, 85d6124)._ W0: an `AuditLog` model + `audit()` helper called from every money- or status-changing controller. W3: the loan "Activity" screen + the admin Activity log in More.
+- [x] **M-2 · Business settings**: included. _W3 screen done (app a013e44). W0 part done: Settings document, GET/PUT /shared/settings, penalty rate, minimum payment and SMA thresholds read from it (backend 066ddb0)._ W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
 - [ ] **M-3 · Cash handover**: included as an **optional module, off by default**, switched on per client in Business settings. W5.
 - [ ] **M-5 · Loan statement PDF**: included. W5. Kept as **history** on the loan (date, language, who) for re-sharing; **deleted when the loan is deleted** (including force delete / BE-22).
 - [ ] **M-9 · Tests for money logic**: included. _Started:_ `npm test` in the backend covers payment allocation, advance draw-down and the penalty amount (backend fa1734a). Close-loan math still needs extracting from the controller before it can be tested. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave.
@@ -226,9 +226,9 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - Skipped: M-4 KYC, M-6 holidays and off-days, M-7 reminders, M-8 areas.
 - [ ] **M-14 · Renew / top-up loan** (a new loan pre-filled from the previous one, copying documents): proposed, undecided.
 - [ ] **M-15 · Re-send a receipt from payment history**: proposed, undecided (depends on BE-24).
-- [ ] **M-11 · Module switches (server-side)**: included. _W0 part done: modules on Settings, lead routes refused when off, can() honours them (backend 066ddb0, app 606efd1)._ W0: `modules` on the `Settings` document (Leads, Cash handover, Performance report), read by the app at login and on resume; `can()` hides disabled modules. W3: switches on the Business settings screen. Cash handover defaults to **off**.
+- [x] **M-11 · Module switches (server-side)**: included. _Switches on the Business settings screen (app a013e44). W0 part done: modules on Settings, lead routes refused when off, can() honours them (backend 066ddb0, app 606efd1)._ W0: `modules` on the `Settings` document (Leads, Cash handover, Performance report), read by the app at login and on resume; `can()` hides disabled modules. W3: switches on the Business settings screen. Cash handover defaults to **off**.
 - [x] **M-12 · Automatic daily DB backup**: included. W0 backend: a 02:00 IST cron using the existing `backupUtils`, writing dated zips on the server and keeping the last 14. No app screen. _(backend 4694db1)_
-- [ ] **M-13 · Settings changes in the audit log**: included. W3: every Business settings or module change goes through `audit()` (who, old → new); the settings screen shows "Last changed by … · date".
+- [x] **M-13 · Settings changes in the audit log** _(backend 066ddb0, app a013e44)_: included. W3: every Business settings or module change goes through `audit()` (who, old → new); the settings screen shows "Last changed by … · date".
 
 ## Shared screens (one implementation, role config)
 
