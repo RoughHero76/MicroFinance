@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { apiCall } from '../../../../../components/api/apiUtils';
 import { loanTypeLabel } from '../../../../../components/utils/loanTypes';
+
+const REPAYMENT_PAGE_SIZE = 20;
 import { format } from 'date-fns';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -66,7 +68,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
       setLoading(true);
       setError(null);
       const response = await apiCall(
-        `/api/employee/loan/details?loanId=${loanId}&includeCustomerProfile=true&includeTotalPenalty=true&includeRepayments=true&limited=true&page=${currentPage}&limit=200`,
+        `/api/employee/loan/details?loanId=${loanId}&includeCustomerProfile=true&includeTotalPenalty=true&includeRepayments=true&limited=true&page=${currentPage}&limit=${REPAYMENT_PAGE_SIZE}`,
         'GET'
       );
 
@@ -87,7 +89,9 @@ const LoanDetailsScreen = ({ route, navigation }) => {
             return updatedSchedules;
           });
         }
-        setHasMoreRepayments(response.data.repaymentSchedules?.length === 5);
+        // A full page means there may be more; this used to compare with 5
+        // while asking for 200, so long loans stopped at #200.
+        setHasMoreRepayments((response.data.repaymentSchedules?.length || 0) === REPAYMENT_PAGE_SIZE);
       } else {
         setError('Failed to fetch loan details.');
       }
