@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View, Text, TextInput, StyleSheet, TouchableOpacity, StatusBar, Image, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
@@ -17,7 +17,14 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const { loginUser } = useHomeContext();
+    const { loginUser, logoutReason, setLogoutReason } = useHomeContext();
+
+    useEffect(() => {
+        if (logoutReason) {
+            showToast('error', 'Signed out', logoutReason);
+            setLogoutReason(null);
+        }
+    }, [logoutReason]);
 
     const handleLogin = async () => {
         if (userName.trim() === '' || password.trim() === '') {

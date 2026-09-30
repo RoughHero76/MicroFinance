@@ -9,6 +9,9 @@ export const HomeProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [settings, setSettings] = useState(null);
+    // Why the last session ended on its own (e.g. account deactivated), shown
+    // once on the login screen.
+    const [logoutReason, setLogoutReason] = useState(null);
 
     //Employees Data
     const [employees, setEmployees] = useState(null);
@@ -19,7 +22,8 @@ export const HomeProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        setUnauthorizedHandler(() => {
+        setUnauthorizedHandler((message) => {
+            setLogoutReason(message === 'Your account was deactivated' ? message : null);
             logoutUser();
         });
         return () => setUnauthorizedHandler(null);
@@ -102,6 +106,8 @@ export const HomeProvider = ({ children }) => {
         loadLoginState,
         loginUser,
         logoutUser,
+        logoutReason,
+        setLogoutReason,
         employees
     };
 

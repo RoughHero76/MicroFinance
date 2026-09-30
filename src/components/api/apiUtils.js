@@ -10,6 +10,7 @@ const SESSION_ENDED_MESSAGES = [
     'Invalid token',
     'Token expired',
     'Account no longer active',
+    'Your account was deactivated',
 ];
 
 let unauthorizedHandler = null;
