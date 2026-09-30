@@ -68,3 +68,42 @@ export async function getCustomerProfile(role: Role, id: {_id?: string; uid?: st
   });
   return Array.isArray(res.data) ? res.data[0] : res.data;
 }
+
+// --- Admin actions (A3, A4)
+
+export interface CustomerInput {
+  fname: string;
+  lname: string;
+  gender: string;
+  phoneNumber: string;
+  email?: string;
+  userName?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  pincode?: string;
+}
+
+export async function registerCustomer(input: CustomerInput): Promise<{_id: string; uid: string}> {
+  const res = await api.post<{data: {_id: string; uid: string}}>('/admin/customer', input);
+  return res.data;
+}
+
+export function updateCustomer(uid: string, input: Partial<CustomerInput>) {
+  return api.put(`/admin/customer?uid=${encodeURIComponent(uid)}`, input);
+}
+
+export function deleteCustomer(uid: string) {
+  return api.delete('/admin/customer', {uid});
+}
+
+export function uploadCustomerPhoto(
+  uid: string,
+  image: import('@/lib/image').PickedImage,
+  onProgress?: (p: number) => void,
+) {
+  const form = new FormData();
+  form.append('profilePic', {uri: image.uri, type: image.type, name: image.name} as unknown as Blob);
+  return api.upload(`/admin/customer/profile/profilePicture?uid=${encodeURIComponent(uid)}`, form, onProgress);
+}

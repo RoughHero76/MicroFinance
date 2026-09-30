@@ -1,6 +1,5 @@
 // Admin: 5 tabs + More (U-01). Old screens still mounted here are replaced
-// by later waves (customers, staff and leads W4; reports, risk, search and
-// calculator W5).
+// in W5 (reports, risk and calculator).
 
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -12,7 +11,13 @@ import {brand} from '@/brand';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import KitGallery from '@/dev/KitGallery';
 import OverdueListScreen from '@/features/collect/screens/OverdueListScreen';
+import CustomerFormScreen from '@/features/customers/screens/CustomerFormScreen';
+import CustomerListScreen from '@/features/customers/screens/CustomerListScreen';
+import CustomerProfileScreen from '@/features/customers/screens/CustomerProfileScreen';
+import SearchScreen from '@/features/customers/screens/SearchScreen';
 import AdminHomeScreen from '@/features/dashboard/screens/AdminHomeScreen';
+import LeadDetailScreen from '@/features/leads/screens/LeadDetailScreen';
+import LeadListScreen from '@/features/leads/screens/LeadListScreen';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
 import AdminLoanScreen from '@/features/loans/screens/AdminLoanScreen';
 import CloseLoanScreen from '@/features/loans/screens/CloseLoanScreen';
@@ -27,25 +32,17 @@ import ProfileScreen from '@/features/settings/screens/ProfileScreen';
 import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import SettingsScreen from '@/features/settings/screens/SettingsScreen';
 import SupportScreen from '@/features/settings/screens/SupportScreen';
+import EmployeeFormScreen from '@/features/staff/screens/EmployeeFormScreen';
+import EmployeeProfileScreen from '@/features/staff/screens/EmployeeProfileScreen';
+import EmployeesScreen from '@/features/staff/screens/EmployeesScreen';
 import {useTheme} from '@/theme';
 import {oldScreen, stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
 import type {AdminTabParamList, AppStackParamList} from './types';
 
 // Old screens (replaced wave by wave).
-import AllCustomerView from '../Screens/Home/CustomerView/AllCustomerView.js';
-import CustomerView from '../Screens/Home/CustomerView/CustomerView.js';
-import EditCustomerScreen from '../Screens/Home/CustomerView/EditCustomerView.js';
-import CustomerRegistration from '../Screens/Home/CustomerView/CustomerRegistration.js';
-import PaymentHistory from '../Screens/Shared/Customer/Loan/PaymentHistory.js';
 import ReportsScreen from '../Screens/Home/Reports/ReportsScreen.js';
 import NpaReportScreen from '../Screens/Shared/Report/NpaReportScreen.js';
 import LoanStatusDetailsScreen from '../Screens/Shared/Report/LoanStatusDetailsScreen.js';
-import AllEmployeeView from '../Screens/Home/EmployeeView/AllEmployeeView.js';
-import EmployeeView from '../Screens/Home/EmployeeView/EmployeeView.js';
-import EditEmployeeView from '../Screens/Home/EmployeeView/EditEmployeeView.js';
-import EmployeeRegistration from '../Screens/Home/EmployeeView/EmployeeRegistration.js';
-import AdminLeadsScreen from '../Screens/Home/Leads/AdminLeads.js';
-import SearchScreen from '../Screens/Shared/Searching/SearchScreen.js';
 import LoanCalculator from '../Screens/Shared/LoanCalculator.js';
 
 const Tab = createBottomTabNavigator<AdminTabParamList>();
@@ -73,7 +70,7 @@ function AdminMore() {
       key: 'employees',
       icon: 'account-tie-outline',
       title: t('more.employees'),
-      route: 'AllEmployeeView',
+      route: 'Employees',
       visible: can('employee.manage'),
     },
     {key: 'reports', icon: 'chart-bar', title: t('more.reports'), route: 'ReportsScreen', visible: can('reports.view')},
@@ -95,7 +92,6 @@ function AdminTabs() {
   const {t} = useTranslation();
   const can = useCan();
   const badges = useAdminBadges();
-  const search = {icon: 'magnify', label: t('common.search'), route: 'SearchScreen'};
   const tabs: TabConfig<keyof AdminTabParamList>[] = [
     {
       name: 'Home',
@@ -111,11 +107,8 @@ function AdminTabs() {
       label: t('nav.customers'),
       icon: 'account-group-outline',
       iconFocused: 'account-group',
-      component: AllCustomerView,
-      header: {
-        title: t('nav.customers'),
-        right: [search, {icon: 'account-plus-outline', label: t('common.add'), route: 'CustomerRegistration'}],
-      },
+      component: CustomerListScreen,
+      header: false,
     },
     {
       name: 'Loans',
@@ -127,12 +120,12 @@ function AdminTabs() {
       badge: badges.loans,
     },
     {
-      name: 'AdminLeadsScreen',
+      name: 'Leads',
       label: t('nav.leads'),
       icon: 'account-search-outline',
       iconFocused: 'account-search',
-      component: AdminLeadsScreen,
-      header: {title: t('nav.leads')},
+      component: LeadListScreen,
+      header: false,
       visible: brand.features.leads && can('lead.manage'),
     },
     {
@@ -168,6 +161,13 @@ export default function AdminNavigator() {
   return (
     <Stack.Navigator screenOptions={stackScreenOptions(theme)}>
       <Stack.Screen name="Tabs" component={AdminTabs} />
+      <Stack.Screen name="Customer" component={CustomerProfileScreen} />
+      <Stack.Screen name="CustomerForm" component={CustomerFormScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="Lead" component={LeadDetailScreen} />
+      <Stack.Screen name="Employees" component={EmployeesScreen} />
+      <Stack.Screen name="Employee" component={EmployeeProfileScreen} />
+      <Stack.Screen name="EmployeeForm" component={EmployeeFormScreen} />
       <Stack.Screen name="Loan" component={AdminLoanScreen} />
       <Stack.Screen name="CreateLoan" component={CreateLoanScreen} />
       <Stack.Screen name="CloseLoan" component={CloseLoanScreen} />
@@ -186,15 +186,6 @@ export default function AdminNavigator() {
       <Stack.Screen name="RepaymentSchedule" component={LoanScheduleAlias} />
       <Stack.Screen name="RepaymentApprovalScreen" component={PaymentsScreen} />
       {/* Old screens */}
-      <Stack.Screen name="Customer" component={CustomerView} options={oldScreen('Customer View')} />
-      <Stack.Screen name="CustomerView" component={CustomerView} options={oldScreen('Customer View')} />
-      <Stack.Screen name="EditCustomer" component={EditCustomerScreen} options={oldScreen('Edit Customer')} />
-      <Stack.Screen
-        name="CustomerRegistration"
-        component={CustomerRegistration}
-        options={oldScreen('Customer Registration')}
-      />
-      <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={oldScreen('Payment History')} />
       <Stack.Screen name="ReportsScreen" component={ReportsScreen} options={oldScreen(t('more.reports'))} />
       <Stack.Screen name="NpaReportScreen" component={NpaReportScreen} options={oldScreen(t('more.risk'))} />
       <Stack.Screen
@@ -202,21 +193,6 @@ export default function AdminNavigator() {
         component={LoanStatusDetailsScreen}
         options={oldScreen('Loan Status Details')}
       />
-      <Stack.Screen
-        name="AllEmployeeView"
-        component={AllEmployeeView}
-        options={oldScreen(t('more.employees'), [
-          {icon: 'account-plus-outline', label: t('common.add'), route: 'EmployeeRegistration'},
-        ])}
-      />
-      <Stack.Screen name="EmployeeView" component={EmployeeView} options={oldScreen('Employee Profile')} />
-      <Stack.Screen name="EditEmployee" component={EditEmployeeView} options={oldScreen('Edit Employee')} />
-      <Stack.Screen
-        name="EmployeeRegistration"
-        component={EmployeeRegistration}
-        options={oldScreen('Employee Registration')}
-      />
-      <Stack.Screen name="SearchScreen" component={SearchScreen} options={oldScreen(t('common.search'))} />
       <Stack.Screen name="LoanCalculator" component={LoanCalculator} options={oldScreen(t('more.calculator'))} />
     </Stack.Navigator>
   );

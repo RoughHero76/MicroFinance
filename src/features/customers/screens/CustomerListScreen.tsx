@@ -52,7 +52,7 @@ export default function CustomerListScreen() {
           <Fab
             icon="account-plus"
             label={t('customers.add')}
-            onPress={() => navigation.navigate('CustomerRegistration' as never)}
+            onPress={() => navigation.navigate('CustomerForm' as never)}
           />
         ) : undefined
       }>
@@ -89,9 +89,7 @@ export default function CustomerListScreen() {
                 icon="account-group-outline"
                 title={mine ? t('customers.emptyMine') : t('customers.empty')}
                 actionLabel={can('customer.create') ? t('customers.add') : undefined}
-                onAction={
-                  can('customer.create') ? () => navigation.navigate('CustomerRegistration' as never) : undefined
-                }
+                onAction={can('customer.create') ? () => navigation.navigate('CustomerForm' as never) : undefined}
               />
             )
           }

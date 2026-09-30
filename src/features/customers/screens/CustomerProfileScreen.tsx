@@ -3,33 +3,43 @@
 // then Loans and Details tabs. Employees get Collect on a loan that's due;
 // admins get the photo badge, ⋯ (edit, delete) and "+ Loan" (W4).
 
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {RefreshControl, View} from 'react-native';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
+import {errorMessage} from '@/lib/api';
+import {pickImage, type ImageSource} from '@/lib/image';
 import {formatDate, formatMoneyShort} from '@/lib/format';
 import {callPhone, openEmail, openMaps} from '@/lib/messaging';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {useCollect} from '@/features/loans/components/CollectSheets';
-import {makeStyles} from '@/theme';
+import {makeStyles, useTheme} from '@/theme';
 import {
   Avatar,
+  BottomSheet,
   Button,
   Card,
+  ConfirmSheet,
   EmptyState,
   ErrorState,
   Fab,
   FactTiles,
+  IconButton,
   KeyValueRows,
+  OptionRow,
   Screen,
   SkeletonRows,
   Text,
   UnderlineTabs,
+  toast,
+  useConfirm,
+  type SheetHandle,
 } from '@/ui';
-import {customerKeys, getCustomerProfile} from '../api';
+import {customerKeys, deleteCustomer, getCustomerProfile, uploadCustomerPhoto} from '../api';
 import {ContactActions, LoanCard} from '../components/CustomerParts';
+import {rememberCustomer} from '../recent';
 
 type Params = {Customer: {id?: string; uid?: string; customerId?: string}};
 
@@ -42,6 +52,11 @@ export default function CustomerProfileScreen() {
   const {role} = useSession();
   const can = useCan();
   const collect = useCollect();
+  const theme = useTheme();
+  const queryClient = useQueryClient();
+  const confirm = useConfirm();
+  const menuRef = useRef<SheetHandle>(null);
+  const photoRef = useRef<SheetHandle>(null);
   const [tab, setTab] = useState<'loans' | 'details'>('loans');
   const id = route.params?.id ?? route.params?.customerId;
   const uid = route.params?.uid;
@@ -57,11 +72,76 @@ export default function CustomerProfileScreen() {
   const address = c ? [c.address, c.city, c.state, c.country, c.pincode].filter(Boolean).join(', ') : '';
   const loans = c?.loans ?? [];
 
+  // P-18: Search lists the last customers opened.
+  useEffect(() => {
+    if (c?._id) rememberCustomer({_id: c._id, uid: c.uid, name, phoneNumber: c.phoneNumber, profilePic: c.profilePic});
+  }, [c?._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const openLoan = (loanId: string) => navigation.navigate('Loan' as never, {loanId} as never);
+
+  const photo = useMutation({
+    mutationFn: async (source: ImageSource) => {
+      const image = await pickImage('profile', source);
+      if (!image) return false;
+      await uploadCustomerPhoto(c!.uid!, image, p => toast.progress('photo', t('ui.uploading'), p));
+      return true;
+    },
+    onSuccess: done => {
+      toast.hide('photo');
+      if (!done) return;
+      queryClient.invalidateQueries({queryKey: customerKeys.all});
+      toast.success(t('customerAdmin.photoUpdated'));
+    },
+    onError: error => {
+      toast.hide('photo');
+      toast.error(errorMessage(error, t));
+    },
+  });
+
+  const hasActive = loans.some(l => l.status === 'Active' || l.status === 'Pending');
+  const askDelete = () => {
+    menuRef.current?.close();
+    if (hasActive) {
+      toast.error(t('customerAdmin.hasActive'));
+      return;
+    }
+    confirm.ask({
+      title: t('customerAdmin.deleteConfirm', {name}),
+      message: t('customerAdmin.deleteHint'),
+      confirmLabel: t('customerAdmin.delete'),
+      destructive: true,
+      typeToConfirm: name,
+      onConfirm: async () => {
+        try {
+          await deleteCustomer(c!.uid!);
+          queryClient.invalidateQueries({queryKey: customerKeys.all});
+          queryClient.invalidateQueries({queryKey: ['dashboard']});
+          toast.success(t('customerAdmin.deleted'));
+          navigation.goBack();
+        } catch (error) {
+          toast.error(errorMessage(error, t));
+        }
+      },
+    });
+  };
+  const admin = can('customer.edit');
 
   return (
     <Screen
-      header={{title: name, band: true}}
+      header={{
+        title: name,
+        band: true,
+        right:
+          c && admin ? (
+            <IconButton
+              icon="dots-vertical"
+              label={t('customerAdmin.menu')}
+              variant="plain"
+              color={theme.colors.onPrimary}
+              onPress={() => menuRef.current?.open()}
+            />
+          ) : undefined,
+      }}
       scroll
       fab={
         c && can('loan.create') ? (
@@ -80,7 +160,12 @@ export default function CustomerProfileScreen() {
       ) : (
         <>
           <Card style={s.head}>
-            <Avatar name={name} uri={c.profilePic} size={80} />
+            <Avatar
+              name={name}
+              uri={c.profilePic}
+              size={80}
+              onEditPhoto={can('customer.photo') ? () => photoRef.current?.open() : undefined}
+            />
             <Text variant="h2" align="center" style={s.name}>
               {name}
             </Text>
@@ -180,6 +265,37 @@ export default function CustomerProfileScreen() {
         </>
       )}
       {collect.sheets}
+      {admin && c ? (
+        <>
+          <BottomSheet ref={menuRef} title={name}>
+            <OptionRow
+              icon="pencil-outline"
+              title={t('customerAdmin.edit')}
+              onPress={() => {
+                menuRef.current?.close();
+                navigation.navigate('CustomerForm' as never, {customer: c} as never);
+              }}
+            />
+            {can('customer.delete') ? (
+              <OptionRow icon="delete-outline" title={t('customerAdmin.delete')} destructive onPress={askDelete} />
+            ) : null}
+          </BottomSheet>
+          <BottomSheet ref={photoRef} title={t('leads.photo')}>
+            {(['camera', 'gallery'] as const).map(source => (
+              <OptionRow
+                key={source}
+                icon={source === 'camera' ? 'camera-outline' : 'image-outline'}
+                title={t(`leads.${source}`)}
+                onPress={() => {
+                  photoRef.current?.close();
+                  photo.mutate(source);
+                }}
+              />
+            ))}
+          </BottomSheet>
+          <ConfirmSheet ref={confirm.ref} />
+        </>
+      ) : null}
     </Screen>
   );
 }

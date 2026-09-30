@@ -1,6 +1,6 @@
 // Employee: 5 tabs + More (U-01). "Collect" is a tab because recording
 // payments is the job employees do most. Old screens still mounted here are
-// replaced by later waves (leads W4, search and calculator W5).
+// replaced by later waves (calculator W5).
 
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -14,6 +14,10 @@ import EmployeeHomeScreen from '@/features/collect/screens/EmployeeHomeScreen';
 import OverdueListScreen from '@/features/collect/screens/OverdueListScreen';
 import CustomerListScreen from '@/features/customers/screens/CustomerListScreen';
 import CustomerProfileScreen from '@/features/customers/screens/CustomerProfileScreen';
+import SearchScreen from '@/features/customers/screens/SearchScreen';
+import LeadDetailScreen from '@/features/leads/screens/LeadDetailScreen';
+import LeadListScreen from '@/features/leads/screens/LeadListScreen';
+import NewLeadScreen from '@/features/leads/screens/NewLeadScreen';
 import LoanScreen from '@/features/loans/screens/LoanScreen';
 import MyPaymentsScreen from '@/features/payments/screens/MyPaymentsScreen';
 import AboutScreen from '@/features/settings/screens/AboutScreen';
@@ -27,11 +31,7 @@ import {oldScreen, stackScreenOptions, tabOptions, tabScreenOptions, type TabCon
 import type {AppStackParamList, EmployeeTabParamList} from './types';
 
 // Old screens (replaced wave by wave).
-import SearchScreen from '../Screens/Shared/Searching/SearchScreen.js';
 import LoanCalculator from '../Screens/Shared/LoanCalculator.js';
-import LeadListScreen from '../Screens/Shared/Leads/EmployeeLeadScreen.js';
-import CreateLeadScreen from '../Screens/Shared/Leads/EmployeeCreateLead.js';
-import LeadDetailsScreen from '../Screens/Shared/Leads/EmployeeLeadDetails.js';
 
 const Tab = createBottomTabNavigator<EmployeeTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -82,12 +82,12 @@ function EmployeeTabs() {
       header: false,
     },
     {
-      name: 'LeadListScreen',
+      name: 'Leads',
       label: t('nav.leads'),
       icon: 'account-search-outline',
       iconFocused: 'account-search',
       component: LeadListScreen,
-      header: {title: t('nav.myLeads'), right: [{icon: 'plus', label: t('common.add'), route: 'CreateLeadScreen'}]},
+      header: false,
       visible: brand.features.leads && can('lead.create'),
     },
     {
@@ -126,12 +126,10 @@ export default function EmployeeNavigator() {
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       {__DEV__ ? <Stack.Screen name="KitGallery" component={KitGallery} /> : null}
-      {/* The old search opens customers as 'CustomerView' until W4 replaces it. */}
-      <Stack.Screen name="CustomerView" component={CustomerProfileScreen} />
-      <Stack.Screen name="SearchScreen" component={SearchScreen} options={oldScreen(t('common.search'))} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="Lead" component={LeadDetailScreen} />
+      <Stack.Screen name="NewLead" component={NewLeadScreen} />
       <Stack.Screen name="LoanCalculator" component={LoanCalculator} options={oldScreen(t('more.calculator'))} />
-      <Stack.Screen name="LeadDetailsScreen" component={LeadDetailsScreen} options={oldScreen('Lead Details')} />
-      <Stack.Screen name="CreateLeadScreen" component={CreateLeadScreen} options={oldScreen('Create Lead')} />
     </Stack.Navigator>
   );
 }

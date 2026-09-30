@@ -53,7 +53,7 @@ export default function AdminHomeScreen() {
             key: 'leads',
             icon: 'account-search-outline',
             label: t('adminHome.leads'),
-            route: 'AdminLeadsScreen',
+            route: 'Leads',
             badge: d?.newLeads,
           },
         ]
@@ -66,9 +66,7 @@ export default function AdminHomeScreen() {
       header={{
         title: brand.name,
         large: true,
-        right: (
-          <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('SearchScreen')} />
-        ),
+        right: <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />,
       }}
       scroll
       banner={<OfflineBanner savedAt={query.dataUpdatedAt} />}

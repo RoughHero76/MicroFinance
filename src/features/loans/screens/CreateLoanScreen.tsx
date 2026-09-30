@@ -51,6 +51,7 @@ type Params = {
   CreateLoan: {
     customerUid: string;
     customerName?: string;
+    leadId?: string;
     // Pre-fills from the calculator (X7) or a lead (A14b).
     prefill?: Partial<{
       loanAmount: number;
@@ -83,7 +84,7 @@ export default function CreateLoanScreen() {
   const {lang} = useI18n();
   const navigation = useNavigation();
   const route = useRoute<RouteProp<Params, 'CreateLoan'>>();
-  const {customerUid, customerName, prefill} = route.params;
+  const {customerUid, customerName, prefill, leadId} = route.params;
   const {settings} = useSession();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
@@ -196,6 +197,7 @@ export default function CreateLoanScreen() {
           businessPhone: form.businessPhone.trim(),
           businessEmail: form.businessEmail.trim(),
           documents: docs,
+          leadId,
         },
         p => toast.progress('create-loan', p < 1 ? t('ui.uploading') : t('ui.finishing'), p),
       ),

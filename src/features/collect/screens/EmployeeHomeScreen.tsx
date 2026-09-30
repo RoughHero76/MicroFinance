@@ -31,9 +31,7 @@ export default function EmployeeHomeScreen() {
       header={{
         title: t('home.welcome', {name: user?.fname ?? ''}),
         large: true,
-        right: (
-          <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('SearchScreen')} />
-        ),
+        right: <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />,
       }}
       scroll
       banner={<OfflineBanner savedAt={query.dataUpdatedAt} />}
@@ -78,11 +76,11 @@ export default function EmployeeHomeScreen() {
               </Text>
             </Card>
             {can('lead.create') ? (
-              <Card onPress={() => go('LeadListScreen')} style={s.tile}>
+              <Card onPress={() => go('Leads')} style={s.tile}>
                 <View style={s.tileHead}>
                   <Icon name="account-search-outline" size={22} color="primary" />
                   <Pressable
-                    onPress={() => go('CreateLeadScreen')}
+                    onPress={() => go('NewLead')}
                     hitSlop={12}
                     accessibilityRole="button"
                     accessibilityLabel={t('home.newLead')}

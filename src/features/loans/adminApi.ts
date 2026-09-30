@@ -129,6 +129,8 @@ export const deleteDocuments = (loanId: string, documentIds: string[]) =>
   api.delete(`/admin/loan/${loanId}/delete/documents`, undefined, {documentIds});
 
 export interface CreateLoanInput {
+  /** A14b: links the lead to the new loan. */
+  leadId?: string;
   customerUid: string;
   loanNumber: string;
   loanType: LoanType;
@@ -164,6 +166,7 @@ export function createLoan(input: CreateLoanInput, onProgress?: (p: number) => v
     businessPhone: input.businessPhone,
     businessEmail: input.businessEmail,
   };
+  if (input.leadId) fields.leadId = input.leadId;
   Object.entries(fields).forEach(([k, v]) => form.append(k, v));
   const meta = input.documents.map((doc, i) => ({
     fieldname: `document_${i}`,

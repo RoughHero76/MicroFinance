@@ -1,12 +1,11 @@
 // Route names for both roles. Tab routes keep the old screen names for now,
-// so the old screens' navigate('AllCustomerView') calls switch tabs; each
-// wave renames what it replaces.
+// and each wave renames what it replaces.
 
 export type AdminTabParamList = {
   Home: undefined;
   Customers: undefined;
   Loans: undefined;
-  AdminLeadsScreen: undefined;
+  Leads: undefined;
   More: undefined;
 };
 
@@ -14,7 +13,7 @@ export type EmployeeTabParamList = {
   Home: undefined;
   Collect: undefined;
   Customers: undefined;
-  LeadListScreen: undefined;
+  Leads: undefined;
   More: undefined;
 };
 
@@ -38,26 +37,22 @@ export type AppStackParamList = {
   Payments: undefined;
   Activity: {loanId?: string; loanNumber?: string} | undefined;
   BusinessSettings: undefined;
+  // New screens (W4)
+  CustomerForm: Record<string, unknown> | undefined;
+  Search: undefined;
+  Lead: {id: string};
+  NewLead: undefined;
+  Employees: undefined;
+  Employee: {uid: string};
+  EmployeeForm: Record<string, unknown> | undefined;
   // Old screens, until their wave replaces them
-  CustomerView: Record<string, unknown> | undefined;
-  EditCustomer: Record<string, unknown> | undefined;
   RepaymentSchedule: Record<string, unknown> | undefined;
-  CustomerRegistration: Record<string, unknown> | undefined;
   CreateLoan: Record<string, unknown> | undefined;
   LoanDetails: Record<string, unknown> | undefined;
-  PaymentHistory: Record<string, unknown> | undefined;
   CloseLoan: Record<string, unknown> | undefined;
   ReportsScreen: undefined;
   NpaReportScreen: undefined;
   LoanStatusDetails: Record<string, unknown> | undefined;
-  AllEmployeeView: undefined;
-  EmployeeView: Record<string, unknown> | undefined;
-  EditEmployee: Record<string, unknown> | undefined;
-  EmployeeRegistration: undefined;
   RepaymentApprovalScreen: undefined;
-  SearchScreen: undefined;
   LoanCalculator: undefined;
-  LoanDetailsScreen: Record<string, unknown> | undefined;
-  LeadDetailsScreen: Record<string, unknown> | undefined;
-  CreateLeadScreen: undefined;
 };

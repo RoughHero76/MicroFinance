@@ -8,7 +8,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {formatDateTime, formatMoney, toISODate} from '@/lib/format';
-import {useInfiniteList} from '@/lib/useInfiniteList';
+import {useInfiniteList, type Page} from '@/lib/useInfiniteList';
 import {collectKeys, getMyPaymentsPage, type MyPaymentsSummary} from '@/features/collect/api';
 import type {Repayment} from '@/features/loans/types';
 import {makeStyles} from '@/theme';
@@ -45,7 +45,7 @@ export default function MyPaymentsScreen() {
   const dates = useMemo(() => rangeDates(range), [range]);
   const [summary, setSummary] = useState<MyPaymentsSummary | null>(null);
 
-  const list = useInfiniteList<Repayment>({
+  const list = useInfiniteList<Page<Repayment>>({
     queryKey: collectKeys.mine(`${range}:${dates.from}`),
     fetchPage: async page => {
       const res = await getMyPaymentsPage(page, dates);
