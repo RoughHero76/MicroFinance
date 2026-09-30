@@ -2,14 +2,14 @@
 // name are shown, optional required text (a reason, or the loan number typed
 // to confirm), and the button is disabled while the request runs.
 
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { makeStyles } from '@/theme';
-import { Button } from './Button';
-import { BottomSheet, type SheetHandle } from './Sheet';
-import { Text } from './Text';
-import { TextField } from './TextField';
+import React, {forwardRef, useImperativeHandle, useRef, useState} from 'react';
+import {View} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {makeStyles} from '@/theme';
+import {Button} from './Button';
+import {BottomSheet, type SheetHandle} from './Sheet';
+import {Text} from './Text';
+import {TextField} from './TextField';
 
 export interface ConfirmOptions {
   title: string;
@@ -19,7 +19,7 @@ export interface ConfirmOptions {
   confirmLabel: string;
   destructive?: boolean;
   /** Ask for text before confirming (e.g. a rejection reason). */
-  input?: { label: string; placeholder?: string; required?: boolean; multiline?: boolean };
+  input?: {label: string; placeholder?: string; required?: boolean; multiline?: boolean};
   /** The user must type exactly this to enable the button (force delete). */
   typeToConfirm?: string;
   onConfirm: (input: string) => Promise<unknown> | void;
@@ -32,7 +32,7 @@ export interface ConfirmHandle {
 
 export const ConfirmSheet = forwardRef<ConfirmHandle>(function ConfirmSheet(_, ref) {
   const s = useStyles();
-  const { t } = useTranslation();
+  const {t} = useTranslation();
   const sheet = useRef<SheetHandle>(null);
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const [text, setText] = useState('');
@@ -52,7 +52,9 @@ export const ConfirmSheet = forwardRef<ConfirmHandle>(function ConfirmSheet(_, r
   const typedWrong = !!options?.typeToConfirm && text.trim() !== options.typeToConfirm;
 
   const confirm = async () => {
-    if (!options) return;
+    if (!options) {
+      return;
+    }
     setBusy(true);
     try {
       await options.onConfirm(text.trim());
@@ -97,7 +99,7 @@ export const ConfirmSheet = forwardRef<ConfirmHandle>(function ConfirmSheet(_, r
       ) : null}
       {options?.typeToConfirm ? (
         <TextField
-          label={t('ui.typeToConfirm', { value: options.typeToConfirm })}
+          label={t('ui.typeToConfirm', {value: options.typeToConfirm})}
           value={text}
           onChangeText={setText}
           autoCapitalize="none"
@@ -110,10 +112,10 @@ export const ConfirmSheet = forwardRef<ConfirmHandle>(function ConfirmSheet(_, r
 
 export function useConfirm() {
   const ref = useRef<ConfirmHandle>(null);
-  return { ref, ask: (options: ConfirmOptions) => ref.current?.ask(options) };
+  return {ref, ask: (options: ConfirmOptions) => ref.current?.ask(options)};
 }
 
 const useStyles = makeStyles(t => ({
-  message: { marginBottom: t.space.md },
-  body: { marginBottom: t.space.md },
+  message: {marginBottom: t.space.md},
+  body: {marginBottom: t.space.md},
 }));

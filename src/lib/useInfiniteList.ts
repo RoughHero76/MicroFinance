@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useInfiniteQuery, type QueryKey } from '@tanstack/react-query';
+import {useCallback, useMemo, useState} from 'react';
+import {useInfiniteQuery, type QueryKey} from '@tanstack/react-query';
 
 export interface Page<T> {
   items: T[];
@@ -21,15 +21,15 @@ interface Options<T> {
  * Paged list with load-more-on-scroll and pull to refresh (U-05, U-06).
  * Pages never cut the list: everything is reachable by scrolling.
  */
-export function useInfiniteList<T>({ queryKey, fetchPage, enabled = true, persist = false, staleTime }: Options<T>) {
+export function useInfiniteList<T>({queryKey, fetchPage, enabled = true, persist = false, staleTime}: Options<T>) {
   const query = useInfiniteQuery({
     queryKey,
-    queryFn: ({ pageParam }) => fetchPage(pageParam),
+    queryFn: ({pageParam}) => fetchPage(pageParam),
     initialPageParam: 1,
     getNextPageParam: last => (last.page < last.totalPages ? last.page + 1 : undefined),
     enabled,
     staleTime,
-    meta: persist ? { persist: true } : undefined,
+    meta: persist ? {persist: true} : undefined,
   });
 
   const items = useMemo(() => query.data?.pages.flatMap(p => p.items) ?? [], [query.data]);
@@ -47,7 +47,9 @@ export function useInfiniteList<T>({ queryKey, fetchPage, enabled = true, persis
   }, [query]);
 
   const loadMore = useCallback(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      query.fetchNextPage();
+    }
   }, [query]);
 
   return {

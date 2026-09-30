@@ -4,10 +4,10 @@
 // centres, so nothing drifts with label length ("these are crooked").
 
 import React from 'react';
-import { View } from 'react-native';
-import { makeStyles } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import {View} from 'react-native';
+import {makeStyles} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
 const CIRCLE = 24;
 
@@ -20,19 +20,19 @@ export interface StepTrackerProps {
   showLabels?: boolean;
 }
 
-export function StepTracker({ steps, current, failed, showLabels = true }: StepTrackerProps) {
+export function StepTracker({steps, current, failed, showLabels = true}: StepTrackerProps) {
   const s = useStyles();
   const n = steps.length;
   return (
     <View accessibilityRole="progressbar" accessibilityLabel={`${current + 1} / ${n}: ${steps[current] ?? ''}`}>
       <View style={s.track}>
         {/* The line spans from the first circle's centre to the last one's. */}
-        <View style={[s.line, { left: `${50 / n}%`, right: `${50 / n}%` }]} />
+        <View style={[s.line, {left: `${50 / n}%`, right: `${50 / n}%`}]} />
         <View
           style={[
             s.line,
             s.lineDone,
-            { left: `${50 / n}%`, width: `${(Math.max(0, Math.min(current, n - 1)) / n) * 100}%` },
+            {left: `${50 / n}%`, width: `${(Math.max(0, Math.min(current, n - 1)) / n) * 100}%`},
           ]}
         />
         {steps.map((label, i) => {
@@ -76,7 +76,7 @@ export function StepTracker({ steps, current, failed, showLabels = true }: StepT
 }
 
 /** Form steps: "1 Terms · 2 Business · 3 Documents". */
-export function Stepper({ steps, current }: { steps: string[]; current: number }) {
+export function Stepper({steps, current}: {steps: string[]; current: number}) {
   return <StepTracker steps={steps} current={current} />;
 }
 
@@ -91,7 +91,7 @@ export interface TimelineItem {
 }
 
 /** Remarks as a short conversation, or an activity list. */
-export function Timeline({ items, conversation }: { items: TimelineItem[]; conversation?: boolean }) {
+export function Timeline({items, conversation}: {items: TimelineItem[]; conversation?: boolean}) {
   const s = useStyles();
   if (conversation) {
     return (
@@ -139,10 +139,10 @@ export function Timeline({ items, conversation }: { items: TimelineItem[]; conve
 }
 
 const useStyles = makeStyles(t => ({
-  track: { flexDirection: 'row', alignItems: 'center', height: CIRCLE },
-  line: { position: 'absolute', top: CIRCLE / 2 - 1, height: 2, backgroundColor: t.colors.border },
-  lineDone: { backgroundColor: t.colors.primary },
-  column: { flex: 1, alignItems: 'center' },
+  track: {flexDirection: 'row', alignItems: 'center', height: CIRCLE},
+  line: {position: 'absolute', top: CIRCLE / 2 - 1, height: 2, backgroundColor: t.colors.border},
+  lineDone: {backgroundColor: t.colors.primary},
+  column: {flex: 1, alignItems: 'center'},
   circle: {
     width: CIRCLE,
     height: CIRCLE,
@@ -153,21 +153,21 @@ const useStyles = makeStyles(t => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleDone: { backgroundColor: t.colors.primary, borderColor: t.colors.primary },
-  circleCurrent: { backgroundColor: t.colors.primary, borderColor: t.colors.primary },
-  circleFailed: { backgroundColor: t.colors.danger, borderColor: t.colors.danger },
-  labels: { flexDirection: 'row', marginTop: t.space.xs },
-  label: { flex: 1, paddingHorizontal: 2 },
-  conversation: { gap: t.space.sm },
-  bubble: { maxWidth: '85%', padding: t.space.md, borderRadius: t.radius.lg, gap: 2 },
-  bubbleMine: { alignSelf: 'flex-end', backgroundColor: t.colors.primarySoft, borderBottomRightRadius: 4 },
-  bubbleOther: { alignSelf: 'flex-start', backgroundColor: t.colors.surface2, borderBottomLeftRadius: 4 },
-  bubbleMeta: { marginTop: 2 },
-  tlRow: { flexDirection: 'row', gap: t.space.md },
-  tlRail: { width: 12, alignItems: 'center' },
-  tlDot: { width: 10, height: 10, borderRadius: 5, marginTop: 5, backgroundColor: t.colors.primary },
-  tlDanger: { backgroundColor: t.colors.danger },
-  tlSuccess: { backgroundColor: t.colors.success },
-  tlLine: { flex: 1, width: 2, backgroundColor: t.colors.border, marginTop: 2 },
-  tlBody: { flex: 1, paddingBottom: t.space.md, gap: 2 },
+  circleDone: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
+  circleCurrent: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
+  circleFailed: {backgroundColor: t.colors.danger, borderColor: t.colors.danger},
+  labels: {flexDirection: 'row', marginTop: t.space.xs},
+  label: {flex: 1, paddingHorizontal: 2},
+  conversation: {gap: t.space.sm},
+  bubble: {maxWidth: '85%', padding: t.space.md, borderRadius: t.radius.lg, gap: 2},
+  bubbleMine: {alignSelf: 'flex-end', backgroundColor: t.colors.primarySoft, borderBottomRightRadius: 4},
+  bubbleOther: {alignSelf: 'flex-start', backgroundColor: t.colors.surface2, borderBottomLeftRadius: 4},
+  bubbleMeta: {marginTop: 2},
+  tlRow: {flexDirection: 'row', gap: t.space.md},
+  tlRail: {width: 12, alignItems: 'center'},
+  tlDot: {width: 10, height: 10, borderRadius: 5, marginTop: 5, backgroundColor: t.colors.primary},
+  tlDanger: {backgroundColor: t.colors.danger},
+  tlSuccess: {backgroundColor: t.colors.success},
+  tlLine: {flex: 1, width: 2, backgroundColor: t.colors.border, marginTop: 2},
+  tlBody: {flex: 1, paddingBottom: t.space.md, gap: 2},
 }));

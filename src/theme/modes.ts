@@ -1,4 +1,4 @@
-import type { ModeId } from './palettes';
+import type {ModeId} from './palettes';
 
 export interface ModeColors {
   bg: string;

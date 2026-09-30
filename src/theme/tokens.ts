@@ -1,8 +1,8 @@
 // Spacing, radius and type scale shared by every palette and mode.
 
-export const space = { xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
+export const space = {xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32} as const;
 
-export const radius = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 } as const;
+export const radius = {sm: 8, md: 12, lg: 16, xl: 20, pill: 999} as const;
 
 export const font = {
   caption: 12,
@@ -35,7 +35,9 @@ export const size = {
 /** Adds an alpha channel to a #RRGGBB colour (for soft tinted backgrounds). */
 export function withAlpha(hex: string, alpha: number): string {
   const h = hex.replace('#', '');
-  if (h.length !== 6) return hex;
+  if (h.length !== 6) {
+    return hex;
+  }
   const a = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
     .toString(16)
     .padStart(2, '0');

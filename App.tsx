@@ -1,17 +1,17 @@
-import React, { useEffect } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { HomeProvider } from './src/components/context/HomeContext';
-import { UpdateProvider } from './src/components/context/UpdateContext';
+import React, {useEffect} from 'react';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {HomeProvider} from './src/components/context/HomeContext';
+import {UpdateProvider} from './src/components/context/UpdateContext';
 import RootNavigator from './src/components/navigation/RootNavigator';
 import UpdateNotification from './src/components/UpdateNotification';
-import { CustomToast } from './src/components/toast/CustomToast';
+import {CustomToast} from './src/components/toast/CustomToast';
 import ErrorBoundary from './src/components/ErrorBoundary';
-import { loadSavedLanguage } from '@/i18n';
-import { QueryProvider } from '@/lib/query';
-import { ThemeProvider } from '@/theme';
-import { ToastHost } from '@/ui';
+import {loadSavedLanguage} from '@/i18n';
+import {QueryProvider} from '@/lib/query';
+import {ThemeProvider} from '@/theme';
+import {ToastHost} from '@/ui';
 
 const App = () => {
   useEffect(() => {
@@ -19,7 +19,7 @@ const App = () => {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryProvider>

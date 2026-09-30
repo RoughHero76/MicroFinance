@@ -16,7 +16,7 @@ export interface SessionUser {
   profilePic?: string | null;
 }
 
-const KEYS = { user: 'user', token: 'token', isLoggedIn: 'isLoggedIn', role: 'userRole' } as const;
+const KEYS = {user: 'user', token: 'token', isLoggedIn: 'isLoggedIn', role: 'userRole'} as const;
 
 // Read on every request (not cached), because old screens still write and
 // remove the token directly.
@@ -37,11 +37,13 @@ export async function saveSession(user: SessionUser, token: string): Promise<voi
   ]);
 }
 
-export async function loadSession(): Promise<{ user: SessionUser; token: string } | null> {
+export async function loadSession(): Promise<{user: SessionUser; token: string} | null> {
   try {
     const [[, user], [, token], [, loggedIn]] = await AsyncStorage.multiGet([KEYS.user, KEYS.token, KEYS.isLoggedIn]);
-    if (!user || !token || loggedIn !== 'true') return null;
-    return { user: JSON.parse(user) as SessionUser, token };
+    if (!user || !token || loggedIn !== 'true') {
+      return null;
+    }
+    return {user: JSON.parse(user) as SessionUser, token};
   } catch {
     return null;
   }

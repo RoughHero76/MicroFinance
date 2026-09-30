@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import {describe, expect, it} from '@jest/globals';
 import {
   amountInWords,
   formatDate,
@@ -57,7 +57,7 @@ describe('dates', () => {
   const d = new Date(2026, 8, 26, 10, 24);
   it('formats in English and Hindi', () => {
     expect(formatDate(d)).toBe('26 Sep 2026');
-    expect(formatDate(d, 'en', { short: true })).toBe('26 Sep');
+    expect(formatDate(d, 'en', {short: true})).toBe('26 Sep');
     expect(formatDate(d, 'hi')).toBe('26 सित॰ 2026');
     expect(formatDayMonth(d)).toBe('26/09');
     expect(formatDate('not a date')).toBe('');

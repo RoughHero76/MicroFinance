@@ -1,10 +1,10 @@
 // The one HTTP client (F-2). Feature api.ts files call these helpers; screens
 // never build URLs themselves.
 
-import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
-import { brand } from '@/brand';
-import { currentLang } from '@/i18n';
-import { getToken } from './session';
+import axios, {AxiosError, type AxiosRequestConfig} from 'axios';
+import {brand} from '@/brand';
+import {currentLang} from '@/i18n';
+import {getToken} from './session';
 
 export type ApiErrorKind = 'offline' | 'timeout' | 'http' | 'unknown';
 
@@ -18,7 +18,7 @@ export class ApiError extends Error {
   serverMessage?: string;
   data?: unknown;
 
-  constructor(kind: ApiErrorKind, opts: { status?: number; code?: string; serverMessage?: string; data?: unknown } = {}) {
+  constructor(kind: ApiErrorKind, opts: {status?: number; code?: string; serverMessage?: string; data?: unknown} = {}) {
     super(opts.serverMessage || kind);
     this.name = 'ApiError';
     this.kind = kind;
@@ -62,17 +62,25 @@ export const http = axios.create({
 
 http.interceptors.request.use(async config => {
   const token = await getToken();
-  if (token) config.headers.set('Authorization', `Bearer ${token}`);
+  if (token) {
+    config.headers.set('Authorization', `Bearer ${token}`);
+  }
   config.headers.set('Accept-Language', currentLang());
   return config;
 });
 
 function toApiError(error: unknown): ApiError {
-  if (isApiError(error)) return error;
-  const err = error as AxiosError<{ message?: string; code?: string; meesage?: string }>;
+  if (isApiError(error)) {
+    return error;
+  }
+  const err = error as AxiosError<{message?: string; code?: string; meesage?: string}>;
   if (err?.isAxiosError) {
-    if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') return new ApiError('timeout');
-    if (!err.response) return new ApiError('offline');
+    if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
+      return new ApiError('timeout');
+    }
+    if (!err.response) {
+      return new ApiError('offline');
+    }
     const body = err.response.data || {};
     return new ApiError('http', {
       status: err.response.status,
@@ -81,23 +89,27 @@ function toApiError(error: unknown): ApiError {
       data: body,
     });
   }
-  return new ApiError('unknown', { serverMessage: (error as Error)?.message });
+  return new ApiError('unknown', {serverMessage: (error as Error)?.message});
 }
 
 async function request<T>(config: AxiosRequestConfig): Promise<T> {
   try {
     const response = await http.request<T>(config);
-    const body = response.data as unknown as { status?: string; message?: string; code?: string } | undefined;
+    const body = response.data as unknown as {status?: string; message?: string; code?: string} | undefined;
     // A few old endpoints answer 200 with status: 'error'.
     if (body && typeof body === 'object' && body.status === 'error') {
-      throw new ApiError('http', { status: response.status, code: body.code, serverMessage: body.message, data: body });
+      throw new ApiError('http', {status: response.status, code: body.code, serverMessage: body.message, data: body});
     }
     return response.data;
   } catch (error) {
     const apiError = toApiError(error);
     if (apiError.status === 401) {
-      const reason = (apiError.code && SESSION_ENDED[apiError.code]) || (apiError.serverMessage && SESSION_ENDED[apiError.serverMessage]);
-      if (reason) sessionEndedHandler?.(reason);
+      const reason =
+        (apiError.code && SESSION_ENDED[apiError.code]) ||
+        (apiError.serverMessage && SESSION_ENDED[apiError.serverMessage]);
+      if (reason) {
+        sessionEndedHandler?.(reason);
+      }
     }
     throw apiError;
   }
@@ -106,22 +118,29 @@ async function request<T>(config: AxiosRequestConfig): Promise<T> {
 type Params = Record<string, string | number | boolean | undefined | null>;
 
 function cleanParams(params?: Params) {
-  if (!params) return undefined;
+  if (!params) {
+    return undefined;
+  }
   const out: Record<string, string | number | boolean> = {};
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== '') out[key] = value;
+    if (value !== undefined && value !== null && value !== '') {
+      out[key] = value;
+    }
   }
   return out;
 }
 
 export const api = {
   get: <T>(url: string, params?: Params, config?: AxiosRequestConfig) =>
-    request<T>({ ...config, method: 'GET', url, params: cleanParams(params) }),
-  post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'POST', url, data }),
-  put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'PUT', url, data }),
-  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'PATCH', url, data }),
+    request<T>({...config, method: 'GET', url, params: cleanParams(params)}),
+  post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+    request<T>({...config, method: 'POST', url, data}),
+  put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+    request<T>({...config, method: 'PUT', url, data}),
+  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+    request<T>({...config, method: 'PATCH', url, data}),
   delete: <T>(url: string, params?: Params, data?: unknown) =>
-    request<T>({ method: 'DELETE', url, params: cleanParams(params), data }),
+    request<T>({method: 'DELETE', url, params: cleanParams(params), data}),
   /**
    * Multipart upload with progress (0–1). At 1 the file is sent but the server
    * may still be storing it, so callers show "Finishing…" until this resolves.
@@ -131,11 +150,13 @@ export const api = {
       method,
       url,
       data: form,
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {'Content-Type': 'multipart/form-data'},
       timeout: 120000,
       transformRequest: value => value,
       onUploadProgress: event => {
-        if (onProgress && event.total) onProgress(Math.min(1, event.loaded / event.total));
+        if (onProgress && event.total) {
+          onProgress(Math.min(1, event.loaded / event.total));
+        }
       },
     }),
 };
@@ -149,7 +170,9 @@ export function errorMessage(error: unknown, t: (key: string, opts?: Record<stri
     case 'timeout':
       return t('errors.timeout');
     case 'http':
-      if (e.status && e.status >= 500) return t('errors.server');
+      if (e.status && e.status >= 500) {
+        return t('errors.server');
+      }
       return e.serverMessage || t('errors.unknown');
     default:
       return t('errors.unknown');

@@ -1,10 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useColorScheme } from 'react-native';
-import { brand } from '@/brand';
-import { readJson, StorageKeys, writeJson } from '@/lib/storage';
-import { modes, type ModeColors } from './modes';
-import { palettes, type Accent, type ModeId, type PaletteId } from './palettes';
-import { font, radius, size, space, weight, withAlpha } from './tokens';
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react';
+import {useColorScheme} from 'react-native';
+import {brand} from '@/brand';
+import {readJson, StorageKeys, writeJson} from '@/lib/storage';
+import {modes, type ModeColors} from './modes';
+import {palettes, type Accent, type ModeId, type PaletteId} from './palettes';
+import {font, radius, size, space, weight, withAlpha} from './tokens';
 
 export type ModeSetting = ModeId | 'system';
 
@@ -73,16 +73,22 @@ const defaultPalette: PaletteId = brand.palette in palettes ? brand.palette : 'i
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ children, initial }: { children: React.ReactNode; initial?: SavedTheme }) {
+export function ThemeProvider({children, initial}: {children: React.ReactNode; initial?: SavedTheme}) {
   const systemScheme = useColorScheme();
   const [modeSetting, setModeState] = useState<ModeSetting>(initial?.mode ?? brand.defaultMode);
   const [palette, setPaletteState] = useState<PaletteId>(initial?.palette ?? defaultPalette);
 
   useEffect(() => {
-    if (initial) return;
+    if (initial) {
+      return;
+    }
     readJson<SavedTheme>(StorageKeys.theme, {}).then(saved => {
-      if (saved.mode) setModeState(saved.mode);
-      if (saved.palette && allowedPalettes.includes(saved.palette)) setPaletteState(saved.palette);
+      if (saved.mode) {
+        setModeState(saved.mode);
+      }
+      if (saved.palette && allowedPalettes.includes(saved.palette)) {
+        setPaletteState(saved.palette);
+      }
     });
   }, [initial]);
 
@@ -92,7 +98,7 @@ export function ThemeProvider({ children, initial }: { children: React.ReactNode
   const setModeSetting = useCallback(
     (next: ModeSetting) => {
       setModeState(next);
-      writeJson(StorageKeys.theme, { mode: next, palette });
+      writeJson(StorageKeys.theme, {mode: next, palette});
     },
     [palette],
   );
@@ -100,13 +106,13 @@ export function ThemeProvider({ children, initial }: { children: React.ReactNode
   const setPalette = useCallback(
     (next: PaletteId) => {
       setPaletteState(next);
-      writeJson(StorageKeys.theme, { mode: modeSetting, palette: next });
+      writeJson(StorageKeys.theme, {mode: modeSetting, palette: next});
     },
     [modeSetting],
   );
 
   const value = useMemo(
-    () => ({ theme, modeSetting, setModeSetting, setPalette, allowedPalettes }),
+    () => ({theme, modeSetting, setModeSetting, setPalette, allowedPalettes}),
     [theme, modeSetting, setModeSetting, setPalette],
   );
 

@@ -1,13 +1,17 @@
 // Contact actions that hand off to the phone's own apps. Receipts go through
 // the SMS app or WhatsApp pre-filled, so the app needs no SMS permission.
 
-import { Linking, Platform } from 'react-native';
+import {Linking, Platform} from 'react-native';
 
 /** Digits only, without a leading +91/0 for 10-digit Indian numbers. */
 export function normalizePhone(phone: string | null | undefined): string {
   const digits = (phone || '').replace(/\D/g, '');
-  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
-  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+  if (digits.length === 12 && digits.startsWith('91')) {
+    return digits.slice(2);
+  }
+  if (digits.length === 11 && digits.startsWith('0')) {
+    return digits.slice(1);
+  }
   return digits;
 }
 
@@ -40,7 +44,9 @@ export async function openWhatsApp(phone: string, text?: string) {
   const number = whatsappNumber(phone);
   const query = text ? `&text=${encodeURIComponent(text)}` : '';
   // The app URL first; the web link works when WhatsApp isn't installed.
-  if (await open(`whatsapp://send?phone=${number}${query}`)) return true;
+  if (await open(`whatsapp://send?phone=${number}${query}`)) {
+    return true;
+  }
   return open(`https://wa.me/${number}${text ? `?text=${encodeURIComponent(text)}` : ''}`);
 }
 

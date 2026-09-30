@@ -1,7 +1,7 @@
 // P-04: a light tap on success, a short buzz on errors. Uses the built-in
 // Vibration API (no extra native library).
 
-import { Vibration } from 'react-native';
+import {Vibration} from 'react-native';
 
 export const haptics = {
   success: () => Vibration.vibrate(12),

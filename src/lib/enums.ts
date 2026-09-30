@@ -37,7 +37,7 @@ export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export const FREQUENCIES = ['Daily', 'Weekly', 'Monthly'] as const;
 export type Frequency = (typeof FREQUENCIES)[number];
 
-export const LOAN_DURATIONS = Array.from({ length: 22 }, (_, i) => `${(i + 1) * 100} days`);
+export const LOAN_DURATIONS = Array.from({length: 22}, (_, i) => `${(i + 1) * 100} days`);
 
 export const LOAN_TYPES = ['Personal', 'Home', 'Business', 'Education', 'Vehicle', 'Gold', 'Other'] as const;
 export type LoanType = (typeof LOAN_TYPES)[number];
@@ -49,13 +49,19 @@ export const DOCUMENT_TYPES = ['Id Proof', 'Bank', 'Goverment', 'Photo', 'Signat
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
 /** Settled schedule statuses: nothing more is owed on the installment. */
-export const SETTLED_SCHEDULE_STATUSES: ScheduleStatus[] = ['Paid', 'AdvancePaid', 'OverduePaid', 'PartiallyPaidFullyPaid', 'Waived'];
+export const SETTLED_SCHEDULE_STATUSES: ScheduleStatus[] = [
+  'Paid',
+  'AdvancePaid',
+  'OverduePaid',
+  'PartiallyPaidFullyPaid',
+  'Waived',
+];
 export const OPEN_SCHEDULE_STATUSES: ScheduleStatus[] = ['Pending', 'PartiallyPaid', 'Overdue'];
 
 export type StatusSet = 'loan' | 'schedule' | 'repayment' | 'lead' | 'followup' | 'document' | 'penalty' | 'account';
 
 const TONES: Record<StatusSet, Record<string, Tone>> = {
-  loan: { Pending: 'warning', Approved: 'info', Active: 'success', Rejected: 'danger', Closed: 'neutral' },
+  loan: {Pending: 'warning', Approved: 'info', Active: 'success', Rejected: 'danger', Closed: 'neutral'},
   schedule: {
     Pending: 'neutral',
     Paid: 'success',
@@ -66,12 +72,12 @@ const TONES: Record<StatusSet, Record<string, Tone>> = {
     Overdue: 'danger',
     Waived: 'info',
   },
-  repayment: { Pending: 'warning', Approved: 'success', Rejected: 'danger' },
-  lead: { Pending: 'warning', InProgress: 'info', Approved: 'success', Rejected: 'danger', Converted: 'primary' },
-  followup: { Pending: 'warning', Completed: 'success' },
-  document: { Pending: 'warning', Approved: 'success', Rejected: 'danger' },
-  penalty: { Pending: 'danger', Paid: 'success', Waived: 'info' },
-  account: { active: 'success', inactive: 'neutral' },
+  repayment: {Pending: 'warning', Approved: 'success', Rejected: 'danger'},
+  lead: {Pending: 'warning', InProgress: 'info', Approved: 'success', Rejected: 'danger', Converted: 'primary'},
+  followup: {Pending: 'warning', Completed: 'success'},
+  document: {Pending: 'warning', Approved: 'success', Rejected: 'danger'},
+  penalty: {Pending: 'danger', Paid: 'success', Waived: 'info'},
+  account: {active: 'success', inactive: 'neutral'},
 };
 
 export function statusTone(set: StatusSet, status: string | null | undefined): Tone {
@@ -84,12 +90,17 @@ export function statusKey(set: StatusSet, status: string): string {
 }
 
 export function normalizeLoanType(value: string | null | undefined): LoanType | null {
-  if (!value) return null;
-  const base = value.trim().replace(/\s+loan$/i, '').toLowerCase();
+  if (!value) {
+    return null;
+  }
+  const base = value
+    .trim()
+    .replace(/\s+loan$/i, '')
+    .toLowerCase();
   return LOAN_TYPES.find(t => t.toLowerCase() === base) ?? null;
 }
 
 /** A lead's display status: converted leads read "Converted". */
-export function leadDisplayStatus(lead: { status: string; isLeadConverted?: boolean }): LeadStatus {
+export function leadDisplayStatus(lead: {status: string; isLeadConverted?: boolean}): LeadStatus {
   return lead.isLeadConverted ? 'Converted' : (lead.status as LeadStatus);
 }

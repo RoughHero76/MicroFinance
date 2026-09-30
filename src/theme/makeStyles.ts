@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
-import { useTheme, type Theme } from './ThemeProvider';
+import {useMemo} from 'react';
+import {StyleSheet} from 'react-native';
+import {useTheme, type Theme} from './ThemeProvider';
 
 /**
  * Themed styles, built once per theme:

@@ -1,6 +1,6 @@
 import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useTheme, type ThemeColors } from '@/theme';
+import {useTheme, type ThemeColors} from '@/theme';
 
 export type IconName = string;
 
@@ -11,7 +11,7 @@ export interface IconProps {
   accessibilityLabel?: string;
 }
 
-export function Icon({ name, size = 20, color = 'text', accessibilityLabel }: IconProps) {
+export function Icon({name, size = 20, color = 'text', accessibilityLabel}: IconProps) {
   const t = useTheme();
   const resolved = (t.colors as unknown as Record<string, string>)[color] ?? color;
   return (

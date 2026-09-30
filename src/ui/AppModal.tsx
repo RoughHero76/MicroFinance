@@ -3,16 +3,16 @@
 // visible above it.
 
 import React from 'react';
-import { Modal, type ModalProps } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ToastHost } from './Toast';
+import {Modal, type ModalProps} from 'react-native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {ToastHost} from './Toast';
 
-export function AppModal({ children, ...props }: ModalProps & { children: React.ReactNode }) {
+export function AppModal({children, ...props}: ModalProps & {children: React.ReactNode}) {
   return (
     <Modal statusBarTranslucent animationType="fade" {...props}>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{flex: 1}}>
           {children}
           <ToastHost />
         </GestureHandlerRootView>

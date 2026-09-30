@@ -1,15 +1,15 @@
 // Data layer (F-3): TanStack Query with the list cache saved on the phone, so
 // lists still show (with their time) when the network drops (U-10, S7).
 
-import React, { useEffect } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import React, {useEffect} from 'react';
+import {AppState, type AppStateStatus} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { focusManager, onlineManager, QueryClient, type Query } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { isApiError } from './api';
-import { StorageKeys } from './storage';
+import {focusManager, onlineManager, QueryClient, type Query} from '@tanstack/react-query';
+import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
+import {createAsyncStoragePersister} from '@tanstack/query-async-storage-persister';
+import {isApiError} from './api';
+import {StorageKeys} from './storage';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -20,7 +20,9 @@ export const queryClient = new QueryClient({
       gcTime: DAY,
       // Retry once on network trouble, never on a 4xx answer.
       retry: (failureCount, error) => {
-        if (isApiError(error) && error.kind === 'http' && (error.status ?? 500) < 500) return false;
+        if (isApiError(error) && error.kind === 'http' && (error.status ?? 500) < 500) {
+          return false;
+        }
         return failureCount < 1;
       },
       refetchOnReconnect: true,
@@ -52,7 +54,7 @@ function onAppStateChange(status: AppStateStatus) {
   focusManager.setFocused(status === 'active');
 }
 
-export function QueryProvider({ children }: { children: React.ReactNode }) {
+export function QueryProvider({children}: {children: React.ReactNode}) {
   useEffect(() => {
     const sub = AppState.addEventListener('change', onAppStateChange);
     return () => sub.remove();
@@ -65,7 +67,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         persister,
         maxAge: DAY,
         buster: 'v1',
-        dehydrateOptions: { shouldDehydrateQuery: shouldPersist },
+        dehydrateOptions: {shouldDehydrateQuery: shouldPersist},
       }}>
       {children}
     </PersistQueryClientProvider>

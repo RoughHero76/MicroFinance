@@ -1,7 +1,7 @@
 import React from 'react';
-import { Pressable, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
-import { makeStyles } from '@/theme';
-import { Text } from './Text';
+import {Pressable, View, type StyleProp, type ViewProps, type ViewStyle} from 'react-native';
+import {makeStyles} from '@/theme';
+import {Text} from './Text';
 
 export interface CardProps extends ViewProps {
   onPress?: () => void;
@@ -11,7 +11,7 @@ export interface CardProps extends ViewProps {
   accessibilityLabel?: string;
 }
 
-export function Card({ onPress, onLongPress, padded = true, style, children, accessibilityLabel, ...rest }: CardProps) {
+export function Card({onPress, onLongPress, padded = true, style, children, accessibilityLabel, ...rest}: CardProps) {
   const s = useStyles();
   if (onPress || onLongPress) {
     return (
@@ -20,7 +20,7 @@ export function Card({ onPress, onLongPress, padded = true, style, children, acc
         onLongPress={onLongPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        style={({ pressed }) => [s.card, padded && s.padded, pressed && s.pressed, style]}
+        style={({pressed}) => [s.card, padded && s.padded, pressed && s.pressed, style]}
         {...rest}>
         {children}
       </Pressable>
@@ -65,9 +65,9 @@ export function Section({
   );
 }
 
-export function Divider({ inset = 0 }: { inset?: number }) {
+export function Divider({inset = 0}: {inset?: number}) {
   const s = useStyles();
-  return <View style={[s.divider, { marginLeft: inset }]} />;
+  return <View style={[s.divider, {marginLeft: inset}]} />;
 }
 
 const useStyles = makeStyles(t => ({
@@ -77,9 +77,9 @@ const useStyles = makeStyles(t => ({
     borderWidth: 1,
     borderColor: t.colors.border,
   },
-  padded: { padding: t.space.md },
-  pressed: { opacity: 0.9 },
-  section: { marginBottom: t.space.lg },
+  padded: {padding: t.space.md},
+  pressed: {opacity: 0.9},
+  section: {marginBottom: t.space.lg},
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -87,6 +87,6 @@ const useStyles = makeStyles(t => ({
     marginBottom: t.space.sm,
     minHeight: 24,
   },
-  sectionTitle: { flexShrink: 1 },
-  divider: { height: 1, backgroundColor: t.colors.border },
+  sectionTitle: {flexShrink: 1},
+  divider: {height: 1, backgroundColor: t.colors.border},
 }));

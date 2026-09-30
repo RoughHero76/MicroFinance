@@ -1,10 +1,10 @@
 // U-07: label above the field, the right keyboard, errors under the field.
 
-import React, { forwardRef, useState } from 'react';
-import { Pressable, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import React, {forwardRef, useState} from 'react';
+import {Pressable, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle} from 'react-native';
+import {makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
 export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -20,7 +20,22 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, hint, error, required, icon, prefix, secureToggle, right, containerStyle, editable = true, secureTextEntry, onFocus, onBlur, ...rest },
+  {
+    label,
+    hint,
+    error,
+    required,
+    icon,
+    prefix,
+    secureToggle,
+    right,
+    containerStyle,
+    editable = true,
+    secureTextEntry,
+    onFocus,
+    onBlur,
+    ...rest
+  },
   ref,
 ) {
   const t = useTheme();
@@ -61,7 +76,11 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           {...rest}
         />
         {secureToggle ? (
-          <Pressable onPress={() => setHidden(h => !h)} hitSlop={12} accessibilityRole="button" accessibilityLabel={hidden ? 'Show' : 'Hide'}>
+          <Pressable
+            onPress={() => setHidden(h => !h)}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel={hidden ? 'Show' : 'Hide'}>
             <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color="muted" />
           </Pressable>
         ) : null}
@@ -81,8 +100,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 });
 
 const useStyles = makeStyles(t => ({
-  container: { marginBottom: t.space.md },
-  label: { marginBottom: t.space.xs },
+  container: {marginBottom: t.space.md},
+  label: {marginBottom: t.space.xs},
   field: {
     minHeight: t.size.input,
     flexDirection: 'row',
@@ -94,9 +113,9 @@ const useStyles = makeStyles(t => ({
     borderColor: t.colors.border,
     backgroundColor: t.colors.surface,
   },
-  focused: { borderColor: t.colors.primary },
-  errored: { borderColor: t.colors.danger },
-  readonly: { backgroundColor: t.colors.surface2 },
-  input: { flex: 1, fontSize: t.font.bodyLg, color: t.colors.text, paddingVertical: t.space.sm },
-  below: { marginTop: t.space.xs },
+  focused: {borderColor: t.colors.primary},
+  errored: {borderColor: t.colors.danger},
+  readonly: {backgroundColor: t.colors.surface2},
+  input: {flex: 1, fontSize: t.font.bodyLg, color: t.colors.text, paddingVertical: t.space.sm},
+  below: {marginTop: t.space.xs},
 }));

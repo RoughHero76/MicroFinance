@@ -1,8 +1,8 @@
 // Receipt text for SMS and WhatsApp (E11), from the brand's templates.
 // SMS stays within one part: "Rs" instead of ₹ in English keeps it GSM-7.
 
-import type { Brand, Lang } from '@/brand/types';
-import { formatDateTime, formatDayMonth, formatNumber } from './format';
+import type {Brand, Lang} from '@/brand/types';
+import {formatDateTime, formatDayMonth, formatNumber} from './format';
 
 export interface ReceiptData {
   amount: number;
@@ -27,7 +27,9 @@ export function receiptRef(repaymentId: string): string {
 /** "11", or "10–11" when a payment spans installments. */
 export function installmentLabel(installments: number[] | undefined): string {
   const list = [...new Set(installments ?? [])].filter(n => Number.isFinite(n)).sort((a, b) => a - b);
-  if (!list.length) return '';
+  if (!list.length) {
+    return '';
+  }
   return list.length === 1 ? String(list[0]) : `${list[0]}–${list[list.length - 1]}`;
 }
 
@@ -62,7 +64,11 @@ export function buildReceipt(brand: Brand, channel: ReceiptChannel, lang: Lang, 
   return values.inst ? text : text.replace(/ · (Installment|किस्त)[ \t]*(?=\n|$)/gm, '');
 }
 
-export function buildPenaltyNotice(brand: Brand, lang: Lang, data: { amount: number; loanNo: string | number; date: Date | string }) {
+export function buildPenaltyNotice(
+  brand: Brand,
+  lang: Lang,
+  data: {amount: number; loanNo: string | number; date: Date | string},
+) {
   const template = brand.receipt.penalty[lang] || brand.receipt.penalty.en;
   return fillTemplate(template, {
     brand: brandLabel(brand, 'sms'),

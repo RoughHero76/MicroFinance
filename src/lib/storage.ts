@@ -60,7 +60,9 @@ export async function clearPerUserStorage(): Promise<void> {
   try {
     const keys = await AsyncStorage.getAllKeys();
     const toRemove = keys.filter(key => PER_USER_PREFIXES.some(prefix => key.startsWith(prefix)));
-    if (toRemove.length) await AsyncStorage.multiRemove(toRemove);
+    if (toRemove.length) {
+      await AsyncStorage.multiRemove(toRemove);
+    }
   } catch {
     // ignore
   }

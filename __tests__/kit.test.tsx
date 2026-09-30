@@ -2,13 +2,13 @@
 // when", minus the on-device screenshots, which need a phone).
 
 import React from 'react';
-import { describe, expect, it } from '@jest/globals';
-import { render } from '@testing-library/react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {describe, expect, it} from '@jest/globals';
+import {render} from '@testing-library/react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import KitGallery from '@/dev/KitGallery';
 import i18n from '@/i18n';
-import { ThemeProvider, paletteIds } from '@/theme';
+import {ThemeProvider, paletteIds} from '@/theme';
 
 describe('kit gallery', () => {
   for (const palette of paletteIds) {
@@ -18,7 +18,7 @@ describe('kit gallery', () => {
           await i18n.changeLanguage(lang);
           const screen = render(
             <SafeAreaProvider>
-              <ThemeProvider initial={{ palette, mode }}>
+              <ThemeProvider initial={{palette, mode}}>
                 <NavigationContainer>
                   <KitGallery />
                 </NavigationContainer>

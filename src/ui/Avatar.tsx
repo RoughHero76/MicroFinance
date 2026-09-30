@@ -1,12 +1,12 @@
 // U-15: a photo wherever a person appears; initials only without a photo.
 // Photos go through the shared cache so lists don't re-download them.
 
-import React, { useEffect, useState } from 'react';
-import { Image, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
-import { cachedImage, cachedPathSync } from '@/lib/imageCache';
-import { makeStyles, useTheme } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import React, {useEffect, useState} from 'react';
+import {Image, Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
+import {cachedImage, cachedPathSync} from '@/lib/imageCache';
+import {makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
 export interface AvatarProps {
   name?: string | null;
@@ -20,13 +20,15 @@ export interface AvatarProps {
 
 export function initialsOf(name?: string | null): string {
   const parts = (name || '').trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '?';
+  if (!parts.length) {
+    return '?';
+  }
   const first = parts[0][0] ?? '';
   const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
   return (first + last).toUpperCase();
 }
 
-export function Avatar({ name, uri, size = 40, style, onEditPhoto, onPress }: AvatarProps) {
+export function Avatar({name, uri, size = 40, style, onEditPhoto, onPress}: AvatarProps) {
   const t = useTheme();
   const s = useStyles();
   const [source, setSource] = useState<string | null>(uri ? cachedPathSync(uri) : null);
@@ -47,20 +49,27 @@ export function Avatar({ name, uri, size = 40, style, onEditPhoto, onPress }: Av
     // Show the remote image right away; swap to the cached file once saved.
     setSource(uri);
     cachedImage(uri).then(path => {
-      if (alive && path) setSource(path);
+      if (alive && path) {
+        setSource(path);
+      }
     });
     return () => {
       alive = false;
     };
   }, [uri]);
 
-  const circle = { width: size, height: size, borderRadius: size / 2 };
+  const circle = {width: size, height: size, borderRadius: size / 2};
   const body =
     source && !failed ? (
-      <Image source={{ uri: source }} style={[circle, s.image]} onError={() => setFailed(true)} accessibilityIgnoresInvertColors />
+      <Image
+        source={{uri: source}}
+        style={[circle, s.image]}
+        onError={() => setFailed(true)}
+        accessibilityIgnoresInvertColors
+      />
     ) : (
       <View style={[circle, s.initials]}>
-        <Text weight="semibold" style={{ color: t.colors.primary, fontSize: Math.max(11, size * 0.36) }}>
+        <Text weight="semibold" style={{color: t.colors.primary, fontSize: Math.max(11, size * 0.36)}}>
           {initialsOf(name)}
         </Text>
       </View>
@@ -71,7 +80,7 @@ export function Avatar({ name, uri, size = 40, style, onEditPhoto, onPress }: Av
     <Pressable
       disabled={!onPress}
       onPress={onPress}
-      style={[{ width: size, height: size }, style]}
+      style={[{width: size, height: size}, style]}
       accessibilityRole={onPress ? 'imagebutton' : 'image'}
       accessibilityLabel={name ?? undefined}>
       {body}
@@ -81,7 +90,7 @@ export function Avatar({ name, uri, size = 40, style, onEditPhoto, onPress }: Av
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Change photo"
-          style={[s.badge, { width: badgeSize, height: badgeSize, borderRadius: badgeSize / 2 }]}>
+          style={[s.badge, {width: badgeSize, height: badgeSize, borderRadius: badgeSize / 2}]}>
           <Icon name="camera" size={Math.round(badgeSize * 0.55)} color="onPrimary" />
         </Pressable>
       ) : null}
@@ -90,8 +99,8 @@ export function Avatar({ name, uri, size = 40, style, onEditPhoto, onPress }: Av
 }
 
 const useStyles = makeStyles(t => ({
-  image: { backgroundColor: t.colors.surface2 },
-  initials: { backgroundColor: t.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  image: {backgroundColor: t.colors.surface2},
+  initials: {backgroundColor: t.colors.primarySoft, alignItems: 'center', justifyContent: 'center'},
   // Anchored to the photo's bottom-right corner, with a ring in the card colour.
   badge: {
     position: 'absolute',

@@ -2,13 +2,13 @@
 // language switches (W0 "done when"). Reached from About (5 taps on the
 // version) in debug builds only.
 
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import type { Lang } from '@/brand';
-import { LANGUAGES, setLanguage, useI18n } from '@/i18n';
-import { formatMoney } from '@/lib/format';
-import { makeStyles, useThemeSettings, type ModeSetting, type PaletteId } from '@/theme';
+import React, {useState} from 'react';
+import {View} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import type {Lang} from '@/brand';
+import {LANGUAGES, setLanguage, useI18n} from '@/i18n';
+import {formatMoney} from '@/lib/format';
+import {makeStyles, useThemeSettings, type ModeSetting, type PaletteId} from '@/theme';
 import {
   ActionRow,
   Avatar,
@@ -44,13 +44,13 @@ import {
   useConfirm,
   useSheet,
 } from '@/ui';
-import { LOAN_DURATIONS, SCHEDULE_STATUSES } from '@/lib/enums';
-import { ApiError } from '@/lib/api';
+import {LOAN_DURATIONS, SCHEDULE_STATUSES} from '@/lib/enums';
+import {ApiError} from '@/lib/api';
 
 export default function KitGallery() {
   const s = useStyles();
-  const { t } = useTranslation();
-  const { lang } = useI18n();
+  const {t} = useTranslation();
+  const {lang} = useI18n();
   const settings = useThemeSettings();
   const sheet = useSheet();
   const confirm = useConfirm();
@@ -62,13 +62,13 @@ export default function KitGallery() {
   const [toggle, setToggle] = useState(true);
 
   return (
-    <Screen header={{ title: 'UI kit' }} scroll>
+    <Screen header={{title: 'UI kit'}} scroll>
       <Section title="Theme">
         <SegmentedControl<ModeSetting>
           options={[
-            { value: 'light', label: 'Light' },
-            { value: 'dark', label: 'Dark' },
-            { value: 'system', label: 'System' },
+            {value: 'light', label: 'Light'},
+            {value: 'dark', label: 'Dark'},
+            {value: 'system', label: 'System'},
           ]}
           value={settings.modeSetting}
           onChange={settings.setModeSetting}
@@ -76,11 +76,17 @@ export default function KitGallery() {
         <Chips<PaletteId>
           wrap
           style={s.gapTop}
-          options={settings.allowedPalettes.map(p => ({ value: p, label: p }))}
+          options={settings.allowedPalettes.map(p => ({value: p, label: p}))}
           value={settings.theme.palette}
           onChange={settings.setPalette}
         />
-        <Chips<Lang> wrap style={s.gapTop} options={LANGUAGES.map(l => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />
+        <Chips<Lang>
+          wrap
+          style={s.gapTop}
+          options={LANGUAGES.map(l => ({value: l.id, label: l.label}))}
+          value={lang}
+          onChange={setLanguage}
+        />
       </Section>
 
       <Section title="Brand">
@@ -109,22 +115,27 @@ export default function KitGallery() {
         <TextField label="Phone" error={t('errors.invalidPhone')} value="98765" />
         <MoneyField label="Amount" value={amount} onChangeValue={setAmount} hint="Min ₹100" />
         <DateField label="Start date" value={date} onChange={setDate} />
-        <SelectField label="Duration" value={duration} onChange={setDuration} options={LOAN_DURATIONS.map(d => ({ value: d, label: d }))} />
+        <SelectField
+          label="Duration"
+          value={duration}
+          onChange={setDuration}
+          options={LOAN_DURATIONS.map(d => ({value: d, label: d}))}
+        />
         <SearchField value="" onSearch={() => {}} placeholder="Search customers" />
       </Section>
 
       <Section title="Chips and tabs">
         <Chips
-          options={SCHEDULE_STATUSES.map(st => ({ value: st, label: t(`status.schedule.${st}`), count: 3 }))}
+          options={SCHEDULE_STATUSES.map(st => ({value: st, label: t(`status.schedule.${st}`), count: 3}))}
           value={chip}
           onChange={setChip}
         />
         <UnderlineTabs
           style={s.gapTop}
           options={[
-            { value: 'overview', label: 'Overview' },
-            { value: 'schedule', label: 'Schedule' },
-            { value: 'docs', label: 'Documents' },
+            {value: 'overview', label: 'Overview'},
+            {value: 'schedule', label: 'Schedule'},
+            {value: 'docs', label: 'Documents'},
           ]}
           value={tab}
           onChange={setTab}
@@ -156,19 +167,19 @@ export default function KitGallery() {
         <Card style={s.gapTop}>
           <FactTiles
             facts={[
-              { label: 'Borrowed', value: '₹40k' },
-              { label: 'Outstanding', value: '₹36.6k' },
-              { label: 'On time', value: '82%', color: 'success' },
+              {label: 'Borrowed', value: '₹40k'},
+              {label: 'Outstanding', value: '₹36.6k'},
+              {label: 'On time', value: '82%', color: 'success'},
             ]}
           />
           <ProgressBar value={0.2} style={s.gapTop} />
           <KeyValueRows
             style={s.gapTop}
             rows={[
-              { label: 'Method', value: 'Cash' },
-              { label: 'Remaining', value: formatMoney(32060) },
-              { label: 'Transaction', value: '' },
-              { label: 'Loan terms', value: '₹25,000 · 300 days', onPress: () => {} },
+              {label: 'Method', value: 'Cash'},
+              {label: 'Remaining', value: formatMoney(32060)},
+              {label: 'Transaction', value: ''},
+              {label: 'Loan terms', value: '₹25,000 · 300 days', onPress: () => {}},
             ]}
           />
         </Card>
@@ -183,8 +194,8 @@ export default function KitGallery() {
           <Timeline
             conversation
             items={[
-              { key: '1', title: 'Will bring documents Friday', meta: 'You · 27 Sep', mine: true },
-              { key: '2', title: 'Check shop licence too', meta: 'Admin · 28 Sep' },
+              {key: '1', title: 'Will bring documents Friday', meta: 'You · 27 Sep', mine: true},
+              {key: '2', title: 'Check shop licence too', meta: 'Admin · 28 Sep'},
             ]}
           />
         </View>
@@ -192,7 +203,11 @@ export default function KitGallery() {
 
       <Section title="Rows">
         <Card padded={false}>
-          <OptionRow title="Forgive penalties" hint="Waive all pending penalties" toggle={{ value: toggle, onChange: setToggle }} />
+          <OptionRow
+            title="Forgive penalties"
+            hint="Waive all pending penalties"
+            toggle={{value: toggle, onChange: setToggle}}
+          />
           <OptionRow title="Security" icon="shield-lock-outline" onPress={() => {}} />
           <OptionRow title="Payments" icon="cash-check" badge={9} onPress={() => {}} />
         </Card>
@@ -200,11 +215,17 @@ export default function KitGallery() {
 
       <Section title="Overlays">
         <ActionRow style={s.left}>
-          <Button title="Toast" variant="secondary" onPress={() => toast.success('Payment recorded', { message: formatMoney(1065) })} />
+          <Button
+            title="Toast"
+            variant="secondary"
+            onPress={() => toast.success('Payment recorded', {message: formatMoney(1065)})}
+          />
           <Button
             title="Undo toast"
             variant="secondary"
-            onPress={() => toast.success('Approved Kavita · ₹1,150', { action: { label: t('common.undo'), onPress: () => {} } })}
+            onPress={() =>
+              toast.success('Approved Kavita · ₹1,150', {action: {label: t('common.undo'), onPress: () => {}}})
+            }
           />
           <Button title="Error" variant="secondary" onPress={() => toast.error(t('errors.offline'))} />
           <Button title="Sheet" variant="secondary" onPress={sheet.open} />
@@ -247,7 +268,7 @@ export default function KitGallery() {
 }
 
 const useStyles = makeStyles(t => ({
-  gapTop: { marginTop: t.space.md },
-  left: { justifyContent: 'flex-start' },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
+  gapTop: {marginTop: t.space.md},
+  left: {justifyContent: 'flex-start'},
+  wrap: {flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm},
 }));

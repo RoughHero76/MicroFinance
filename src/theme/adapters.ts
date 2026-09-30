@@ -1,5 +1,5 @@
-import { DarkTheme, DefaultTheme, type Theme as NavTheme } from '@react-navigation/native';
-import type { Theme } from './ThemeProvider';
+import {DarkTheme, DefaultTheme, type Theme as NavTheme} from '@react-navigation/native';
+import type {Theme} from './ThemeProvider';
 
 /** React Navigation theme, so headers, cards and tab bars follow the app theme. */
 export function navigationTheme(t: Theme): NavTheme {
@@ -33,7 +33,7 @@ export function chartConfig(t: Theme) {
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(${rgb}, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(${textRgb}, ${opacity})`,
-    propsForBackgroundLines: { stroke: t.colors.border },
+    propsForBackgroundLines: {stroke: t.colors.border},
   };
 }
 

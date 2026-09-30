@@ -3,10 +3,10 @@
 // it. Text: less important actions. Danger: destructive confirmations.
 
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import {ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle} from 'react-native';
+import {makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger';
 
@@ -41,7 +41,13 @@ export function Button({
   const inactive = disabled || loading;
 
   const fg =
-    variant === 'primary' ? t.colors.onPrimary : variant === 'danger' ? t.colors.white : variant === 'secondary' ? t.colors.text : t.colors.primary;
+    variant === 'primary'
+      ? t.colors.onPrimary
+      : variant === 'danger'
+      ? t.colors.white
+      : variant === 'secondary'
+      ? t.colors.text
+      : t.colors.primary;
 
   return (
     <Pressable
@@ -50,9 +56,9 @@ export function Button({
       hitSlop={6}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
-      accessibilityState={{ disabled: !!inactive, busy: !!loading }}
+      accessibilityState={{disabled: !!inactive, busy: !!loading}}
       testID={testID}
-      style={({ pressed }) => [
+      style={({pressed}) => [
         s.base,
         s[variant],
         block && s.block,
@@ -66,7 +72,7 @@ export function Button({
         ) : icon ? (
           <Icon name={icon} size={18} color={fg} />
         ) : null}
-        <Text variant="label" weight="semibold" style={{ color: fg }} numberOfLines={1}>
+        <Text variant="label" weight="semibold" style={{color: fg}} numberOfLines={1}>
           {title}
         </Text>
       </View>
@@ -83,12 +89,16 @@ const useStyles = makeStyles(t => ({
     justifyContent: 'center',
     alignSelf: 'flex-start',
   },
-  content: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
-  primary: { backgroundColor: t.colors.primary },
-  danger: { backgroundColor: t.colors.danger },
-  secondary: { borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.colors.border, backgroundColor: t.colors.surface },
-  text: { paddingHorizontal: t.space.sm, backgroundColor: 'transparent' },
-  block: { alignSelf: 'stretch' },
-  pressed: { opacity: 0.85 },
-  disabled: { opacity: 0.45 },
+  content: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
+  primary: {backgroundColor: t.colors.primary},
+  danger: {backgroundColor: t.colors.danger},
+  secondary: {
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
+  },
+  text: {paddingHorizontal: t.space.sm, backgroundColor: 'transparent'},
+  block: {alignSelf: 'stretch'},
+  pressed: {opacity: 0.85},
+  disabled: {opacity: 0.45},
 }));

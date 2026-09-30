@@ -1,9 +1,9 @@
-import { describe, expect, it } from '@jest/globals';
-import { brand } from '@/brand';
-import { can } from '@/lib/can';
-import { leadDisplayStatus, normalizeLoanType, statusTone } from '@/lib/enums';
-import { normalizePhone } from '@/lib/messaging';
-import { buildPenaltyNotice, buildReceipt, installmentLabel, receiptRef } from '@/lib/receipt';
+import {describe, expect, it} from '@jest/globals';
+import {brand} from '@/brand';
+import {can} from '@/lib/can';
+import {leadDisplayStatus, normalizeLoanType, statusTone} from '@/lib/enums';
+import {normalizePhone} from '@/lib/messaging';
+import {buildPenaltyNotice, buildReceipt, installmentLabel, receiptRef} from '@/lib/receipt';
 import en from '@/i18n/en.json';
 import hi from '@/i18n/hi.json';
 
@@ -43,18 +43,18 @@ describe('receipts', () => {
   });
 
   it('builds the WhatsApp receipt with an installment range for split payments', () => {
-    const text = buildReceipt(brand, 'whatsapp', 'en', { ...data, installments: [11, 10] });
+    const text = buildReceipt(brand, 'whatsapp', 'en', {...data, installments: [11, 10]});
     expect(text).toContain('Loan #1039 · Installment 10–11');
     expect(text.split('\n')).toHaveLength(6);
   });
 
   it('drops the installment part when there is none', () => {
-    const text = buildReceipt(brand, 'whatsapp', 'en', { ...data, installments: [] });
+    const text = buildReceipt(brand, 'whatsapp', 'en', {...data, installments: []});
     expect(text).toContain('Loan #1039\n');
   });
 
   it('builds the penalty notice', () => {
-    const text = buildPenaltyNotice(brand, 'en', { amount: 300, loanNo: 1039, date: new Date(2026, 8, 30) });
+    const text = buildPenaltyNotice(brand, 'en', {amount: 300, loanNo: 1039, date: new Date(2026, 8, 30)});
     expect(text).toBe('EviFinance: Late fee Rs300 on loan #1039 (30/09). Pay with next installment.');
   });
 
@@ -66,8 +66,8 @@ describe('receipts', () => {
 });
 
 describe('permissions', () => {
-  const admin = { role: 'admin' as const };
-  const employee = { role: 'employee' as const };
+  const admin = {role: 'admin' as const};
+  const employee = {role: 'employee' as const};
 
   it('gives admins management and employees field work', () => {
     expect(can(admin, 'loan.close')).toBe(true);
@@ -82,7 +82,7 @@ describe('permissions', () => {
   });
 
   it('hides actions of a switched-off module (M-11)', () => {
-    expect(can(employee, 'lead.create', { leads: false })).toBe(false);
+    expect(can(employee, 'lead.create', {leads: false})).toBe(false);
     expect(can(null, 'payment.record')).toBe(false);
   });
 });
@@ -97,7 +97,7 @@ describe('enums', () => {
   it('normalises loan types and lead status', () => {
     expect(normalizeLoanType('Gold Loan')).toBe('Gold');
     expect(normalizeLoanType('x')).toBeNull();
-    expect(leadDisplayStatus({ status: 'Approved', isLeadConverted: true })).toBe('Converted');
+    expect(leadDisplayStatus({status: 'Approved', isLeadConverted: true})).toBe('Converted');
   });
 
   it('normalises phone numbers', () => {

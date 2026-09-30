@@ -2,12 +2,22 @@
 // tappable row that opens something (Security ›).
 
 import React from 'react';
-import { Pressable, Switch as RNSwitch, View } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import {Pressable, Switch as RNSwitch, View} from 'react-native';
+import {makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
-export function Switch({ value, onChange, disabled, label }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; label?: string }) {
+export function Switch({
+  value,
+  onChange,
+  disabled,
+  label,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  label?: string;
+}) {
   const t = useTheme();
   return (
     <RNSwitch
@@ -15,7 +25,7 @@ export function Switch({ value, onChange, disabled, label }: { value: boolean; o
       onValueChange={onChange}
       disabled={disabled}
       accessibilityLabel={label}
-      trackColor={{ false: t.colors.border, true: t.colors.primary }}
+      trackColor={{false: t.colors.border, true: t.colors.primary}}
       thumbColor={t.colors.white}
     />
   );
@@ -26,7 +36,7 @@ export interface OptionRowProps {
   hint?: string;
   icon?: string;
   /** A switch on the right. */
-  toggle?: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean };
+  toggle?: {value: boolean; onChange: (v: boolean) => void; disabled?: boolean};
   /** Text on the right (current value). */
   value?: string;
   badge?: number;
@@ -34,7 +44,7 @@ export interface OptionRowProps {
   destructive?: boolean;
 }
 
-export function OptionRow({ title, hint, icon, toggle, value, badge, onPress, destructive }: OptionRowProps) {
+export function OptionRow({title, hint, icon, toggle, value, badge, onPress, destructive}: OptionRowProps) {
   const s = useStyles();
   const press = toggle ? () => toggle.onChange(!toggle.value) : onPress;
   return (
@@ -42,8 +52,8 @@ export function OptionRow({ title, hint, icon, toggle, value, badge, onPress, de
       onPress={press}
       disabled={!press || toggle?.disabled}
       accessibilityRole={toggle ? 'switch' : onPress ? 'button' : undefined}
-      accessibilityState={toggle ? { checked: toggle.value } : undefined}
-      style={({ pressed }) => [s.row, pressed && s.pressed]}>
+      accessibilityState={toggle ? {checked: toggle.value} : undefined}
+      style={({pressed}) => [s.row, pressed && s.pressed]}>
       {icon ? (
         <View style={[s.icon, destructive && s.iconDanger]}>
           <Icon name={icon} size={20} color={destructive ? 'danger' : 'primary'} />
@@ -81,12 +91,26 @@ export function OptionRow({ title, hint, icon, toggle, value, badge, onPress, de
 }
 
 const useStyles = makeStyles(t => ({
-  row: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, minHeight: 56, paddingVertical: t.space.sm, paddingHorizontal: t.space.lg },
-  pressed: { backgroundColor: t.colors.surface2 },
-  icon: { width: 36, height: 36, borderRadius: 18, backgroundColor: t.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  iconDanger: { backgroundColor: t.colors.dangerSoft },
-  text: { flex: 1, gap: 2 },
-  value: { maxWidth: '40%' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.md,
+    minHeight: 56,
+    paddingVertical: t.space.sm,
+    paddingHorizontal: t.space.lg,
+  },
+  pressed: {backgroundColor: t.colors.surface2},
+  icon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: t.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconDanger: {backgroundColor: t.colors.dangerSoft},
+  text: {flex: 1, gap: 2},
+  value: {maxWidth: '40%'},
   badge: {
     minWidth: 22,
     height: 22,

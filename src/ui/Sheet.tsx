@@ -5,18 +5,18 @@
 //   <Button onPress={sheet.open} />
 //   <BottomSheet ref={sheet.ref} title="Record payment">…</BottomSheet>
 
-import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
-import { View } from 'react-native';
+import React, {forwardRef, useCallback, useImperativeHandle, useRef} from 'react';
+import {View} from 'react-native';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { makeStyles, useTheme } from '@/theme';
-import { IconButton } from './IconButton';
-import { Text } from './Text';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {makeStyles, useTheme} from '@/theme';
+import {IconButton} from './IconButton';
+import {Text} from './Text';
 
 export interface SheetHandle {
   open: () => void;
@@ -36,7 +36,7 @@ export interface BottomSheetProps {
 }
 
 export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function BottomSheet(
-  { title, subtitle, children, onClose, footer, snapPoints, dismissible = true },
+  {title, subtitle, children, onClose, footer, snapPoints, dismissible = true},
   ref,
 ) {
   const t = useTheme();
@@ -51,7 +51,12 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
 
   const backdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior={dismissible ? 'close' : 'none'} />
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior={dismissible ? 'close' : 'none'}
+      />
     ),
     [dismissible],
   );
@@ -67,9 +72,11 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
-      backgroundStyle={{ backgroundColor: t.colors.surface }}
-      handleIndicatorStyle={{ backgroundColor: t.colors.border, width: 40 }}>
-      <BottomSheetScrollView contentContainerStyle={[s.content, { paddingBottom: insets.bottom + 16 }]} keyboardShouldPersistTaps="handled">
+      backgroundStyle={{backgroundColor: t.colors.surface}}
+      handleIndicatorStyle={{backgroundColor: t.colors.border, width: 40}}>
+      <BottomSheetScrollView
+        contentContainerStyle={[s.content, {paddingBottom: insets.bottom + 16}]}
+        keyboardShouldPersistTaps="handled">
         {title ? (
           <View style={s.head}>
             <View style={s.titles}>
@@ -82,7 +89,9 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
                 </Text>
               ) : null}
             </View>
-            {dismissible ? <IconButton icon="close" label="Close" variant="plain" onPress={() => modal.current?.dismiss()} /> : null}
+            {dismissible ? (
+              <IconButton icon="close" label="Close" variant="plain" onPress={() => modal.current?.dismiss()} />
+            ) : null}
           </View>
         ) : null}
         {children}
@@ -96,12 +105,12 @@ export function useSheet() {
   const ref = useRef<SheetHandle>(null);
   const open = useCallback(() => ref.current?.open(), []);
   const close = useCallback(() => ref.current?.close(), []);
-  return { ref, open, close };
+  return {ref, open, close};
 }
 
 const useStyles = makeStyles(t => ({
-  content: { paddingHorizontal: t.space.lg, paddingTop: t.space.xs },
-  head: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: t.space.md },
-  titles: { flex: 1, gap: 2 },
-  footer: { flexDirection: 'row', justifyContent: 'flex-end', gap: t.space.sm, marginTop: t.space.lg, flexWrap: 'wrap' },
+  content: {paddingHorizontal: t.space.lg, paddingTop: t.space.xs},
+  head: {flexDirection: 'row', alignItems: 'flex-start', marginBottom: t.space.md},
+  titles: {flex: 1, gap: 2},
+  footer: {flexDirection: 'row', justifyContent: 'flex-end', gap: t.space.sm, marginTop: t.space.lg, flexWrap: 'wrap'},
 }));

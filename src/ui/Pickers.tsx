@@ -1,16 +1,16 @@
 // DateField (native date picker) and SelectField (U-07: chips for ≤7
 // options, a picker sheet for longer lists such as the 22 durations).
 
-import React, { useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import React, {useRef, useState} from 'react';
+import {Pressable, View} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useTranslation } from 'react-i18next';
-import { useI18n } from '@/i18n';
-import { formatDate } from '@/lib/format';
-import { makeStyles } from '@/theme';
-import { Icon } from './Icon';
-import { BottomSheet, type SheetHandle } from './Sheet';
-import { Text } from './Text';
+import {useTranslation} from 'react-i18next';
+import {useI18n} from '@/i18n';
+import {formatDate} from '@/lib/format';
+import {makeStyles} from '@/theme';
+import {Icon} from './Icon';
+import {BottomSheet, type SheetHandle} from './Sheet';
+import {Text} from './Text';
 
 interface FieldShellProps {
   label?: string;
@@ -25,7 +25,18 @@ interface FieldShellProps {
   disabled?: boolean;
 }
 
-function FieldShell({ label, required, error, hint, value, placeholder, icon, onPress, onClear, disabled }: FieldShellProps) {
+function FieldShell({
+  label,
+  required,
+  error,
+  hint,
+  value,
+  placeholder,
+  icon,
+  onPress,
+  onClear,
+  disabled,
+}: FieldShellProps) {
   const s = useStyles();
   return (
     <View style={s.container}>
@@ -77,8 +88,18 @@ export interface DateFieldProps {
   disabled?: boolean;
 }
 
-export function DateField({ label, value, onChange, required, error, minimumDate, maximumDate, clearable, disabled }: DateFieldProps) {
-  const { t, lang } = useI18n();
+export function DateField({
+  label,
+  value,
+  onChange,
+  required,
+  error,
+  minimumDate,
+  maximumDate,
+  clearable,
+  disabled,
+}: DateFieldProps) {
+  const {t, lang} = useI18n();
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -101,7 +122,9 @@ export function DateField({ label, value, onChange, required, error, minimumDate
           maximumDate={maximumDate}
           onChange={(event, date) => {
             setOpen(false);
-            if (event.type === 'set' && date) onChange(date);
+            if (event.type === 'set' && date) {
+              onChange(date);
+            }
           }}
         />
       ) : null}
@@ -127,8 +150,18 @@ export interface SelectFieldProps<T extends string> {
   disabled?: boolean;
 }
 
-export function SelectField<T extends string>({ label, value, options, onChange, required, error, hint, placeholder, disabled }: SelectFieldProps<T>) {
-  const { t } = useTranslation();
+export function SelectField<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  required,
+  error,
+  hint,
+  placeholder,
+  disabled,
+}: SelectFieldProps<T>) {
+  const {t} = useTranslation();
   const s = useStyles();
   const sheet = useRef<SheetHandle>(null);
   const selected = options.find(o => o.value === value);
@@ -156,10 +189,13 @@ export function SelectField<T extends string>({ label, value, options, onChange,
                 sheet.current?.close();
               }}
               accessibilityRole="radio"
-              accessibilityState={{ selected: isSelected }}
-              style={({ pressed }) => [s.option, pressed && s.optionPressed]}>
+              accessibilityState={{selected: isSelected}}
+              style={({pressed}) => [s.option, pressed && s.optionPressed]}>
               <View style={s.optionText}>
-                <Text variant="bodyLg" weight={isSelected ? 'semibold' : 'regular'} color={isSelected ? 'primary' : 'text'}>
+                <Text
+                  variant="bodyLg"
+                  weight={isSelected ? 'semibold' : 'regular'}
+                  color={isSelected ? 'primary' : 'text'}>
                   {option.label}
                 </Text>
                 {option.description ? (
@@ -178,8 +214,8 @@ export function SelectField<T extends string>({ label, value, options, onChange,
 }
 
 const useStyles = makeStyles(t => ({
-  container: { marginBottom: t.space.md },
-  label: { marginBottom: t.space.xs },
+  container: {marginBottom: t.space.md},
+  label: {marginBottom: t.space.xs},
   field: {
     minHeight: t.size.input,
     flexDirection: 'row',
@@ -191,11 +227,11 @@ const useStyles = makeStyles(t => ({
     borderColor: t.colors.border,
     backgroundColor: t.colors.surface,
   },
-  errored: { borderColor: t.colors.danger },
-  disabled: { backgroundColor: t.colors.surface2 },
-  value: { flex: 1 },
-  below: { marginTop: t.space.xs },
-  option: { flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingVertical: t.space.sm, gap: t.space.md },
-  optionPressed: { opacity: 0.6 },
-  optionText: { flex: 1 },
+  errored: {borderColor: t.colors.danger},
+  disabled: {backgroundColor: t.colors.surface2},
+  value: {flex: 1},
+  below: {marginTop: t.space.xs},
+  option: {flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingVertical: t.space.sm, gap: t.space.md},
+  optionPressed: {opacity: 0.6},
+  optionText: {flex: 1},
 }));

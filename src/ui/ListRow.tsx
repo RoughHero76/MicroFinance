@@ -2,10 +2,10 @@
 // identifying fact. Status in a pill.
 
 import React from 'react';
-import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
-import { makeStyles } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import {Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
+import {makeStyles} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
 export interface ListRowProps {
   title: string;
@@ -45,7 +45,7 @@ export function ListRow({
       disabled={!onPress && !onLongPress}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel ?? [title, value, subtitle].filter(Boolean).join(', ')}
-      style={({ pressed }) => [s.row, pressed && s.pressed, style]}>
+      style={({pressed}) => [s.row, pressed && s.pressed, style]}>
       {left}
       <View style={s.body}>
         <View style={s.line}>
@@ -92,8 +92,8 @@ const useStyles = makeStyles(t => ({
     minHeight: 64,
     backgroundColor: t.colors.surface,
   },
-  pressed: { backgroundColor: t.colors.surface2 },
-  body: { flex: 1, gap: 3, minWidth: 0 },
-  line: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
-  title: { flex: 1, minWidth: 0 },
+  pressed: {backgroundColor: t.colors.surface2},
+  body: {flex: 1, gap: 3, minWidth: 0},
+  line: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
+  title: {flex: 1, minWidth: 0},
 }));

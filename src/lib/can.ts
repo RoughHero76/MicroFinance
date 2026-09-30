@@ -2,7 +2,7 @@
 // and never compare roles themselves. The rules mirror what the server
 // allows, so nothing is shown that the server would reject.
 
-import type { Role } from './session';
+import type {Role} from './session';
 
 export type Permission =
   | 'loan.create'
@@ -90,12 +90,26 @@ const MODULE_OF: Partial<Record<Permission, keyof Modules>> = {
   'cash.confirm': 'cashHandover',
 };
 
-export function can(user: { role: Role } | null | undefined, permission: Permission, modules?: Partial<Modules>): boolean {
-  if (!user) return false;
+export function can(
+  user: {role: Role} | null | undefined,
+  permission: Permission,
+  modules?: Partial<Modules>,
+): boolean {
+  if (!user) {
+    return false;
+  }
   const module = MODULE_OF[permission];
-  if (module && modules && modules[module] === false) return false;
-  if (BOTH.includes(permission)) return true;
-  if (ADMIN_ONLY.includes(permission)) return user.role === 'admin';
-  if (EMPLOYEE_ONLY.includes(permission)) return user.role === 'employee';
+  if (module && modules && modules[module] === false) {
+    return false;
+  }
+  if (BOTH.includes(permission)) {
+    return true;
+  }
+  if (ADMIN_ONLY.includes(permission)) {
+    return user.role === 'admin';
+  }
+  if (EMPLOYEE_ONLY.includes(permission)) {
+    return user.role === 'employee';
+  }
   return false;
 }

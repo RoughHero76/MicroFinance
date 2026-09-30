@@ -2,10 +2,10 @@
 // screens never overflow. Counts live in the chip label ("Pending 12").
 
 import React from 'react';
-import { Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import {Pressable, ScrollView, View, type StyleProp, type ViewStyle} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { makeStyles, useTheme, withAlpha } from '@/theme';
-import { Text } from './Text';
+import {makeStyles, useTheme, withAlpha} from '@/theme';
+import {Text} from './Text';
 
 export interface ChipOption<T extends string> {
   value: T;
@@ -25,7 +25,7 @@ export interface ChipsProps<T extends string> {
   fadeColor?: string;
 }
 
-export function Chips<T extends string>({ options, value, onChange, wrap, style, trailing, fadeColor }: ChipsProps<T>) {
+export function Chips<T extends string>({options, value, onChange, wrap, style, trailing, fadeColor}: ChipsProps<T>) {
   const t = useTheme();
   const s = useStyles();
   const fade = fadeColor ?? t.colors.bg;
@@ -35,11 +35,15 @@ export function Chips<T extends string>({ options, value, onChange, wrap, style,
       <Pressable
         key={option.value}
         onPress={() => onChange(option.value)}
-        hitSlop={{ top: 6, bottom: 6 }}
+        hitSlop={{top: 6, bottom: 6}}
         accessibilityRole="button"
-        accessibilityState={{ selected }}
+        accessibilityState={{selected}}
         style={[s.chip, selected && s.selected]}>
-        <Text variant="small" weight={selected ? 'semibold' : 'medium'} color={selected ? 'onPrimary' : 'text'} numberOfLines={1}>
+        <Text
+          variant="small"
+          weight={selected ? 'semibold' : 'medium'}
+          color={selected ? 'onPrimary' : 'text'}
+          numberOfLines={1}>
           {option.label}
           {option.count != null ? (
             <Text variant="small" color={selected ? 'onPrimary' : 'muted'}>{`  ${option.count}`}</Text>
@@ -59,15 +63,19 @@ export function Chips<T extends string>({ options, value, onChange, wrap, style,
   }
   return (
     <View style={style}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row} accessibilityRole="radiogroup">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.row}
+        accessibilityRole="radiogroup">
         {chips}
         {trailing}
       </ScrollView>
       <LinearGradient
         pointerEvents="none"
         colors={[withAlpha(fade, 0), fade]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        start={{x: 0, y: 0}}
+        end={{x: 1, y: 0}}
         style={s.fade}
       />
     </View>
@@ -75,8 +83,8 @@ export function Chips<T extends string>({ options, value, onChange, wrap, style,
 }
 
 const useStyles = makeStyles(t => ({
-  row: { gap: t.space.sm, paddingHorizontal: t.space.lg, paddingVertical: t.space.xs },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
+  row: {gap: t.space.sm, paddingHorizontal: t.space.lg, paddingVertical: t.space.xs},
+  wrap: {flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm},
   chip: {
     height: 34,
     paddingHorizontal: t.space.md,
@@ -87,6 +95,6 @@ const useStyles = makeStyles(t => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selected: { backgroundColor: t.colors.primary, borderColor: t.colors.primary },
-  fade: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 24 },
+  selected: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
+  fade: {position: 'absolute', right: 0, top: 0, bottom: 0, width: 24},
 }));

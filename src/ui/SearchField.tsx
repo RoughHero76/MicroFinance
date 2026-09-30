@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { Icon } from './Icon';
+import React, {useEffect, useRef, useState} from 'react';
+import {Pressable, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
+import {makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
 
 export interface SearchFieldProps {
   value: string;
@@ -13,7 +13,7 @@ export interface SearchFieldProps {
   debounceMs?: number;
 }
 
-export function SearchField({ value, onSearch, placeholder, autoFocus, style, debounceMs = 300 }: SearchFieldProps) {
+export function SearchField({value, onSearch, placeholder, autoFocus, style, debounceMs = 300}: SearchFieldProps) {
   const t = useTheme();
   const s = useStyles();
   const [text, setText] = useState(value);
@@ -65,5 +65,5 @@ const useStyles = makeStyles(t => ({
     borderRadius: t.radius.pill,
     backgroundColor: t.colors.surface2,
   },
-  input: { flex: 1, fontSize: t.font.body, color: t.colors.text, paddingVertical: 0 },
+  input: {flex: 1, fontSize: t.font.body, color: t.colors.text, paddingVertical: 0},
 }));

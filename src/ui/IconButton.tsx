@@ -1,8 +1,8 @@
 import React from 'react';
-import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { Icon } from './Icon';
-import { Text } from './Text';
+import {Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
+import {makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
+import {Text} from './Text';
 
 export interface IconButtonProps {
   icon: string;
@@ -19,10 +19,22 @@ export interface IconButtonProps {
 }
 
 /** Round 36dp button (call, SMS, WhatsApp, header actions) with a 48dp tap area. */
-export function IconButton({ icon, label, onPress, variant = 'tonal', size = 36, color, badge, disabled, style, testID }: IconButtonProps) {
+export function IconButton({
+  icon,
+  label,
+  onPress,
+  variant = 'tonal',
+  size = 36,
+  color,
+  badge,
+  disabled,
+  style,
+  testID,
+}: IconButtonProps) {
   const t = useTheme();
   const s = useStyles();
-  const fg = color ?? (variant === 'filled' ? t.colors.onPrimary : variant === 'tonal' ? t.colors.primary : t.colors.text);
+  const fg =
+    color ?? (variant === 'filled' ? t.colors.onPrimary : variant === 'tonal' ? t.colors.primary : t.colors.text);
   return (
     <Pressable
       onPress={onPress}
@@ -31,9 +43,9 @@ export function IconButton({ icon, label, onPress, variant = 'tonal', size = 36,
       accessibilityRole="button"
       accessibilityLabel={label}
       testID={testID}
-      style={({ pressed }) => [
+      style={({pressed}) => [
         s.base,
-        { width: size, height: size, borderRadius: size / 2 },
+        {width: size, height: size, borderRadius: size / 2},
         variant === 'tonal' && s.tonal,
         variant === 'filled' && s.filled,
         pressed && s.pressed,
@@ -53,11 +65,11 @@ export function IconButton({ icon, label, onPress, variant = 'tonal', size = 36,
 }
 
 const useStyles = makeStyles(t => ({
-  base: { alignItems: 'center', justifyContent: 'center' },
-  tonal: { backgroundColor: t.colors.primarySoft },
-  filled: { backgroundColor: t.colors.primary },
-  pressed: { opacity: 0.7 },
-  disabled: { opacity: 0.4 },
+  base: {alignItems: 'center', justifyContent: 'center'},
+  tonal: {backgroundColor: t.colors.primarySoft},
+  filled: {backgroundColor: t.colors.primary},
+  pressed: {opacity: 0.7},
+  disabled: {opacity: 0.4},
   badge: {
     position: 'absolute',
     top: -4,
@@ -72,5 +84,5 @@ const useStyles = makeStyles(t => ({
     borderWidth: 2,
     borderColor: t.colors.surface,
   },
-  badgeText: { color: t.colors.white, fontSize: 10, lineHeight: 12 },
+  badgeText: {color: t.colors.white, fontSize: 10, lineHeight: 12},
 }));
