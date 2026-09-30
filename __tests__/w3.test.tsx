@@ -106,7 +106,9 @@ beforeEach(async () => {
   });
 });
 
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 const Stack = createNativeStackNavigator();
 function renderScreen(Component: React.ComponentType) {
