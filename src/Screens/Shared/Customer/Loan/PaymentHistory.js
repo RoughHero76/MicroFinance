@@ -136,7 +136,7 @@ const PaymentHistory = () => {
                 </View>
                 <View style={styles.paymentDetails}>
                     <Text style={styles.detailText}>Method: {item.paymentMethod || 'N/A'}</Text>
-                    <Text style={styles.detailText}>Remaining Amount After Payment: ₹{item.balanceAfterPayment || 'N/A'}</Text>
+                    <Text style={styles.detailText}>Remaining Amount After Payment: {item.balanceAfterPayment != null ? `₹${item.balanceAfterPayment}` : 'N/A'}</Text>
                     <Text style={styles.detailText}>
                         Collected by: {item.collectedBy?.fname || 'Admin'} {item.collectedBy?.lname || ''}
                     </Text>
