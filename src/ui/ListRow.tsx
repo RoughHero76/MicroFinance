@@ -1,0 +1,99 @@
+// U-14: photo + at most 2–3 lines. Line 1: who and how much. Line 2: one
+// identifying fact. Status in a pill.
+
+import React from 'react';
+import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+import { makeStyles } from '@/theme';
+import { Icon } from './Icon';
+import { Text } from './Text';
+
+export interface ListRowProps {
+  title: string;
+  subtitle?: string | null;
+  meta?: string | null;
+  left?: React.ReactNode;
+  /** Top-right text, usually an amount. */
+  value?: string | null;
+  right?: React.ReactNode;
+  badge?: React.ReactNode;
+  chevron?: boolean;
+  onPress?: () => void;
+  onLongPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
+}
+
+export function ListRow({
+  title,
+  subtitle,
+  meta,
+  left,
+  value,
+  right,
+  badge,
+  chevron,
+  onPress,
+  onLongPress,
+  style,
+  accessibilityLabel,
+}: ListRowProps) {
+  const s = useStyles();
+  return (
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      disabled={!onPress && !onLongPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={accessibilityLabel ?? [title, value, subtitle].filter(Boolean).join(', ')}
+      style={({ pressed }) => [s.row, pressed && s.pressed, style]}>
+      {left}
+      <View style={s.body}>
+        <View style={s.line}>
+          <Text variant="bodyLg" weight="semibold" numberOfLines={1} style={s.title}>
+            {title}
+          </Text>
+          {value ? (
+            <Text variant="bodyLg" weight="semibold" tabular numberOfLines={1}>
+              {value}
+            </Text>
+          ) : null}
+        </View>
+        {subtitle || badge ? (
+          <View style={s.line}>
+            {subtitle ? (
+              <Text variant="small" color="muted" numberOfLines={1} style={s.title}>
+                {subtitle}
+              </Text>
+            ) : (
+              <View style={s.title} />
+            )}
+            {badge}
+          </View>
+        ) : null}
+        {meta ? (
+          <Text variant="caption" color="muted" numberOfLines={1}>
+            {meta}
+          </Text>
+        ) : null}
+      </View>
+      {right}
+      {chevron ? <Icon name="chevron-right" size={20} color="muted" /> : null}
+    </Pressable>
+  );
+}
+
+const useStyles = makeStyles(t => ({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.md,
+    paddingVertical: t.space.md,
+    paddingHorizontal: t.space.lg,
+    minHeight: 64,
+    backgroundColor: t.colors.surface,
+  },
+  pressed: { backgroundColor: t.colors.surface2 },
+  body: { flex: 1, gap: 3, minWidth: 0 },
+  line: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  title: { flex: 1, minWidth: 0 },
+}));

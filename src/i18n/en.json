@@ -170,5 +170,10 @@
     "customer": "Customer",
     "outstanding": "Outstanding",
     "paid": "Paid"
+  },
+  "ui": {
+    "typeToConfirm": "Type {{value}} to confirm",
+    "finishing": "Finishing…",
+    "uploading": "Uploading"
   }
 }

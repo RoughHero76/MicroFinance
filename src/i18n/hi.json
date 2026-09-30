@@ -170,5 +170,10 @@
     "customer": "ग्राहक",
     "outstanding": "बकाया",
     "paid": "जमा"
+  },
+  "ui": {
+    "typeToConfirm": "पुष्टि के लिए {{value}} लिखें",
+    "finishing": "पूरा हो रहा है…",
+    "uploading": "अपलोड हो रहा है"
   }
 }

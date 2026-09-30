@@ -16,6 +16,8 @@ export interface ModeColors {
   toast: string;
   onToast: string;
   skeleton: string;
+  /** Text on danger/success fills and badges. */
+  white: string;
 }
 
 export const modes: Record<ModeId, ModeColors> = {
@@ -34,6 +36,7 @@ export const modes: Record<ModeId, ModeColors> = {
     toast: 'rgba(15,23,42,0.92)',
     onToast: '#F8FAFC',
     skeleton: '#E6E8EF',
+    white: '#FFFFFF',
   },
   dark: {
     bg: '#0B0F17',
@@ -50,5 +53,6 @@ export const modes: Record<ModeId, ModeColors> = {
     toast: 'rgba(30,38,53,0.96)',
     onToast: '#F8FAFC',
     skeleton: '#1E2635',
+    white: '#FFFFFF',
   },
 };
