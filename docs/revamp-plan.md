@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix, W0 and W1 done on `feat/revamp` in both repos (not released, not deployed). Next: W2. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix, W0, W1 and W2 done on `feat/revamp` in both repos (not released, not deployed). Next: W3. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -47,12 +47,12 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 ## Backend (`MicroFinance-backend`)
 
 - [x] **BE-1** (backend c8c719e): Employee schedule route: GET /employee/loan/repayment/schedule, reusing getRepaymentSchedule with the canAccessLoan check _Files:_ routes/employee/loans/loanRoutes.js, RepaymentScheduleController.js _For:_ B-3, E6b
-- [ ] **BE-2** (partly done: `GET /employee/dashboard` returns `customersCount`, backend db92166; the rest comes in W2): GET /employee/dashboard → due today (count, amount due, amount collected), my customers count, lead stats, my SMA/NPA buckets _Files:_ new controllers/employee/DashboardController.js _For:_ B-5, E1
-- [ ] **BE-3**: Admin dashboard adds pendingRepayments, pendingLoans, collectedToday _Files:_ controllers/admin/DashboardController.js _For:_ A1, A20 badges
+- [x] **BE-2** (partly done: `GET /employee/dashboard` returns `customersCount`, backend db92166; the rest comes in W2): GET /employee/dashboard → due today (count, amount due, amount collected), my customers count, lead stats, my SMA/NPA buckets _Files:_ new controllers/employee/DashboardController.js _For:_ B-5, E1 _(backend 543ccab)_
+- [x] **BE-3**: Admin dashboard adds pendingRepayments, pendingLoans, collectedToday _Files:_ controllers/admin/DashboardController.js _For:_ A1, A20 badges _(backend 9696b0f)_
 - [x] **BE-4** (backend be629e0): Route POST /admin/lead/:id/convert (existing convertLeadToCustomer). Add POST /admin/lead/:id/create-customer, which registers and converts in one step from the lead's data _Files:_ routes/admin/lead/leadRoutes.js, AdminLeadController.js _For:_ B-6, A14
 - [x] **BE-5** (backend 6158bc9): Decided: one list of 7 loan types (Personal, Home, Business, Education, Vehicle, Gold, Other) for leads and loans; old "Personal/Business/Other" values stay valid _Files:_ LoanModel.js, LeadCustomersModel.js _For:_ B-7
-- [ ] **BE-6**: Employee loan details: default page size 20, plus scheduleSummary (paid, overdue, pending, next due) and includeDocuments for assigned loans _Files:_ LoanCollection.getLoanDetails _For:_ E6, E6b
-- [ ] **BE-7**: Employee repayment history without loanId → my collections (filter by date and status) _Files:_ LoanCollection.getRepaymentHistory _For:_ E12 My payments (P-2)
+- [x] **BE-6**: Employee loan details: default page size 20, plus scheduleSummary (paid, overdue, pending, next due) and includeDocuments for assigned loans _Files:_ LoanCollection.getLoanDetails _For:_ E6, E6b _(backend 45d8942)_
+- [x] **BE-7**: Employee repayment history without loanId → my collections (filter by date and status) _Files:_ LoanCollection.getRepaymentHistory _For:_ E12 My payments (P-2) _(backend 45d8942)_
 - [ ] **BE-8**: Text search q on admin customers, employee customers and admin loans (name, phone, loan number) _Files:_ customerController.getCustomers, LoanCollection.getCustomers, loanController.getLoans _For:_ A2, A5, E4
 - [ ] **BE-9**: Status recalculation as POST (keep the GET alias). Return lastRunAt from the existing CronRun model _Files:_ routes/shared/sharedRoutes.js, systemController.js _For:_ A18
 - [x] **BE-10** (backend 6294b15): Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
@@ -128,10 +128,10 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W2 · Employee field flow (L)
 
-- [ ] E1 Home, E2 Collect, E3 PaymentSheet (MoneyField, amount in words), E3b PenaltySheet, E11 receipt (SMS and WhatsApp)
-- [ ] E4 My customers, E5 profile, E6/E6b loan (grouped repayments component, reused in A7), E7 overdue list
-- [ ] E12 More + My payments
-- [ ] Backend: BE-1, BE-2, BE-6, BE-7, BE-8 (employee customers)
+- [x] E1 Home, E2 Collect, E3 PaymentSheet (MoneyField, amount in words), E3b PenaltySheet, E11 receipt (SMS and WhatsApp) _(app ee1be66)_
+- [x] E4 My customers, E5 profile, E6/E6b loan (grouped repayments component, reused in A7), E7 overdue list _(app ee1be66)_
+- [x] E12 More + My payments _(app ee1be66)_
+- [x] Backend: BE-1, BE-2, BE-6, BE-7, BE-8 (employee customers) _(backend 543ccab, 45d8942, 00165df)_
 
 **Done when:**an employee can do a full day in the field: open the app, see what's due, record a cash, a UPI and a partial payment, apply a penalty, send an SMS and a WhatsApp receipt, check the overdue list, and see "My payments". On weak data, the offline banner and cached lists work.
 
@@ -188,23 +188,23 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ## Polish items
 
-- [ ] P-01 · Amount in words
-- [ ] P-02 · ₹ grouping while typing
+- [x] P-01 · Amount in words _(app ee1be66)_
+- [x] P-02 · ₹ grouping while typing _(app ee1be66)_
 - [ ] P-03 · Badges on tabs
 - [ ] P-04 · Haptics
 - [ ] P-05 · Filters and tabs are remembered
-- [ ] P-06 · Smart defaults
+- [x] P-06 · Smart defaults _(payment method remembered; app ee1be66)_
 - [ ] P-07 · Tap to copy
 - [ ] P-08 · Empty states that help
 - [ ] P-09 · Map from address
 - [ ] P-10 · Keyboard never hides the button
 - [ ] P-11 · Subtle motion
-- [ ] P-12 · Photo viewer everywhere
-- [ ] P-13 · End-of-day summary for employees
+- [x] P-12 · Photo viewer everywhere _(app ee1be66)_
+- [x] P-13 · End-of-day summary for employees _(app ee1be66)_
 - [ ] P-14 · Approve a whole collector group
 - [ ] P-15 · Drafts survive
-- [ ] P-16 · Collect list order
-- [ ] P-17 · Big-number check before money is sent
+- [x] P-16 · Collect list order _(app ee1be66)_
+- [x] P-17 · Big-number check before money is sent _(app ee1be66)_
 - [ ] P-18 · Recent customers on Search
 
 ## Feasibility adjustments (final audit, round 23)
