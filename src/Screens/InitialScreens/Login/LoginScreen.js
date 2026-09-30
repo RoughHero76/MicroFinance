@@ -36,7 +36,6 @@ const LoginScreen = () => {
         try {
             const endpoint = isAdmin ? '/api/admin/login' : '/api/employee/auth/login';
             const response = await apiCall(endpoint, 'POST', { userName, password });
-            console.log('Login response:', response);
             if (response?.status === 'success') {
                 const { user, token } = response;
                 await AsyncStorage.setItem('token', token);
