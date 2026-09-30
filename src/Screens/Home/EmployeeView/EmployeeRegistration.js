@@ -12,10 +12,10 @@ import {
   Platform,
 } from "react-native";
 import { apiCall } from "../../../components/api/apiUtils";
-import Toast from "react-native-toast-message";
+import { Toast } from '../../../components/toast/CustomToast';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
-import { CustomToast, showToast } from "../../../components/toast/CustomToast";
+import { showToast } from "../../../components/toast/CustomToast";
 import { useNavigation } from "@react-navigation/native";
 
 const EmployeeRegistration = () => {
@@ -169,7 +169,6 @@ const EmployeeRegistration = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
-      <CustomToast />
     </KeyboardAvoidingView>
   );
 };

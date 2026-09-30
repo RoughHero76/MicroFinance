@@ -5,7 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
+import { showToast, ModalToast } from '../../../../components/toast/CustomToast';
 import EditRepaymentScheduleModal from './EditRepaymentScheduleModal';
 import { useNavigation } from '@react-navigation/native';
 import { getAmountPaidSoFar, getAllocationForSchedule } from '../../../../components/utils/repaymentScheduleHelpers';
@@ -337,7 +337,7 @@ const RepaymentSchedule = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <CustomToast />
+                <ModalToast />
             </Modal>
             <EditRepaymentScheduleModal
                 visible={showEditModal}
@@ -345,7 +345,6 @@ const RepaymentSchedule = () => {
                 onSave={handleSaveSchedule}
                 scheduleItem={selectedSchedule}
             />
-            < CustomToast />
 
         </View>
     );

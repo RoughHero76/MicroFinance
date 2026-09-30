@@ -7,7 +7,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../components/api/apiUtils';
-import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import { showToast, ModalToast } from '../../../components/toast/CustomToast';
 import { useNavigation } from '@react-navigation/native';
 
 
@@ -361,7 +361,7 @@ const RepaymentApprovalScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <CustomToast />
+                <ModalToast />
             </Modal>
 
             {state.showDatePicker && (
@@ -382,7 +382,6 @@ const RepaymentApprovalScreen = () => {
                 />
             )}
 
-            <CustomToast />
         </View>
     );
 };

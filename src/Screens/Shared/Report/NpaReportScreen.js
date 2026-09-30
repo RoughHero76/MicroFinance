@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from "../../../components/api/apiUtils";
-import { CustomToast, showToast } from "../../../components/toast/CustomToast";
+import { showToast } from "../../../components/toast/CustomToast";
 import LinearGradient from 'react-native-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -395,7 +395,6 @@ const NpaReportScreen = ({ navigation }) => {
                     {renderOverviewSection()}
                 </>
             )}
-            <CustomToast />
         </ScrollView>
     );
 };

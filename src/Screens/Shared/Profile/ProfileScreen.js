@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo  } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, ImageBackground } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import { showToast } from '../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../components/context/HomeContext';
 import { apiCall } from '../../../components/api/apiUtils';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -190,7 +190,6 @@ const ProfileScreen = () => {
                     value={new Date(profile.lastLogin || profile.loginHistory?.date).toLocaleString()}
                 />
             </View>
-            <CustomToast />
         </ScrollView>
     );
 };

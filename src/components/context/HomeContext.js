@@ -1,118 +1,57 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiCall, setUnauthorizedHandler } from "../api/apiUtils";
+// Compatibility layer for the old screens. The session now lives in
+// src/features/auth/SessionProvider; this exposes it under the old names
+// until those screens are replaced (removed in W6).
+
+import React, { createContext, useContext, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { setUnauthorizedHandler } from "../api/apiUtils";
+import { useSession } from "@/features/auth/SessionProvider";
+import { listEmployees, staffKeys } from "@/features/staff/api";
+
 export const HomeContext = createContext();
 
+const noop = () => {};
+
 export const HomeProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userRole, setUserRole] = useState(null);
-    const [settings, setSettings] = useState(null);
-    // Why the last session ended on its own (e.g. account deactivated), shown
-    // once on the login screen.
-    const [logoutReason, setLogoutReason] = useState(null);
+    const session = useSession();
+    const isAdmin = session.status === 'signedIn' && session.role === 'admin';
 
-    //Employees Data
-    const [employees, setEmployees] = useState(null);
+    // One cached employee list shared by every picker (was fetched at login).
+    const employeesQuery = useQuery({
+        queryKey: staffKeys.list(),
+        queryFn: listEmployees,
+        enabled: isAdmin,
+        staleTime: 5 * 60 * 1000,
+    });
 
-
-    useEffect(() => {
-        loadLoginState();
-    }, []);
-
+    // Old screens still call apiCall(); its session-ended 401s end the
+    // shared session too.
     useEffect(() => {
         setUnauthorizedHandler((message) => {
-            setLogoutReason(message === 'Your account was deactivated' ? message : null);
-            logoutUser();
+            session.signOut(message === 'Your account was deactivated' ? 'deactivated' : 'expired');
         });
         return () => setUnauthorizedHandler(null);
-    }, []);
+    }, [session.signOut]);
 
-    useEffect(() => {
-        if (isLoggedIn && userRole === 'admin') {
-            fetchEmployees();
-        }
-    }, [isLoggedIn]);
-
-    const fetchEmployees = async () => {
-        try {
-            const response = await apiCall('/api/admin/employee', 'GET');
-            if (response.status === 'success') {
-                setEmployees(response.data);
-            }
-        } catch (error) {
-            console.error("Error fetching employees:", error);
-        }
-    };
-
-    const loginUser = async (userData) => {
-        if (userData && userData.user) {
-            setUser(userData.user);
-            setUserRole(userData.user.role);
-            setIsLoggedIn(true);
-            try {
-                await AsyncStorage.setItem('user', JSON.stringify(userData.user));
-                await AsyncStorage.setItem('userRole', userData.user.role);
-                if (userData.token) {
-                    await AsyncStorage.setItem('token', userData.token);
-                }
-                await AsyncStorage.setItem('isLoggedIn', 'true');
-            } catch (error) {
-                console.error('Error saving user data:', error);
-            }
-        } else {
-            console.error('Invalid user data provided to loginUser');
-        }
-    };
-
-
-    const logoutUser = async () => {
-        setUser(null);
-        setUserRole(null);
-        setIsLoggedIn(false);
-        setEmployees(null);
-        try {
-            await AsyncStorage.multiRemove(['user', 'token', 'isLoggedIn', 'userRole']);
-        } catch (error) {
-            console.error('Error during logout:', error);
-        }
-    };
-
-    const loadLoginState = async () => {
-        try {
-            const [userValue, tokenValue, loginValue, roleValue] = await AsyncStorage.multiGet(['user', 'token', 'isLoggedIn', 'userRole']);
-            if (userValue[1] !== null) {
-                setUser(JSON.parse(userValue[1]));
-                setUserRole(roleValue[1]);
-                setIsLoggedIn(loginValue[1] === 'true');
-            }
-            setIsLoading(false);
-        } catch (error) {
-            console.error('Error loading login state:', error);
-            setIsLoading(false);
-        }
-    };
-
-    const contextValue = {
-        user,
-        setUser,
-        isLoading,
-        setIsLoading,
-        isLoggedIn,
-        setIsLoggedIn,
-        userRole,
-        setUserRole,
-        loadLoginState,
-        loginUser,
-        logoutUser,
-        logoutReason,
-        setLogoutReason,
-        employees
-    };
+    const value = useMemo(() => ({
+        user: session.user,
+        setUser: (user) => session.updateUser(user),
+        isLoading: session.status === 'loading',
+        setIsLoading: noop,
+        isLoggedIn: session.status === 'signedIn',
+        setIsLoggedIn: noop,
+        userRole: session.role,
+        setUserRole: noop,
+        loadLoginState: noop,
+        loginUser: ({ user, token }) => session.signIn(user, token),
+        logoutUser: () => session.signOut(),
+        logoutReason: session.logoutReason,
+        setLogoutReason: () => session.clearLogoutReason(),
+        employees: isAdmin ? (employeesQuery.data ?? null) : null,
+    }), [session, isAdmin, employeesQuery.data]);
 
     return (
-        <HomeContext.Provider value={contextValue}>
+        <HomeContext.Provider value={value}>
             {children}
         </HomeContext.Provider>
     );

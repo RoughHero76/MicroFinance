@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
 import { loanTypeLabel } from '../../../components/utils/loanTypes';
-import CustomToast, { showToast } from '../../../components/toast/CustomToast';
+import { showToast, ModalToast } from '../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../components/context/HomeContext';
 
 const AdminLeadsScreen = ({ navigation }) => {
@@ -426,7 +426,7 @@ const AdminLeadsScreen = ({ navigation }) => {
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
-        <CustomToast />
+        <ModalToast />
       </View>
     </Modal>
   );
@@ -535,7 +535,7 @@ const AdminLeadsScreen = ({ navigation }) => {
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-          <CustomToast />
+          <ModalToast />
         </View>
       </Modal>
       <Modal
@@ -580,12 +580,11 @@ const AdminLeadsScreen = ({ navigation }) => {
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-          <CustomToast />
+          <ModalToast />
         </View>
       </Modal>
 
       {renderFilterModal()}
-      <CustomToast />
     </SafeAreaView>
   );
 };

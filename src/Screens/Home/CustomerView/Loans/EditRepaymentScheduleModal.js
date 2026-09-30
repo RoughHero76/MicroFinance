@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ScrollView, SafeAreaView } from 'react-native';
-import { CustomToast } from '../../../../components/toast/CustomToast';
+import { ModalToast } from '../../../../components/toast/CustomToast';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -460,7 +460,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
-            <CustomToast />
+            <ModalToast />
         </Modal>
     );
 };

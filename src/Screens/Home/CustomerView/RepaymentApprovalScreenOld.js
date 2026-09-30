@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../components/api/apiUtils';
-import { showToast, CustomToast } from '../../../components/toast/CustomToast';
+import { showToast, ModalToast } from '../../../components/toast/CustomToast';
 
 const RepaymentApprovalScreenOld = () => {
     const [repayments, setRepayments] = useState([]);
@@ -209,7 +209,7 @@ const RepaymentApprovalScreenOld = () => {
                         <Text style={styles.applyFiltersButtonText}>Apply Filters</Text>
                     </TouchableOpacity>
                 </View>
-                <CustomToast />
+                <ModalToast />
             </View>
         </Modal>
     );
@@ -245,7 +245,6 @@ const RepaymentApprovalScreenOld = () => {
                     }}
                 />
             )}
-            <CustomToast />
         </View>
     );
 };

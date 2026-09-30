@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { apiCall } from "../../../components/api/apiUtils";
-import Toast from "react-native-toast-message";
+import { Toast } from '../../../components/toast/CustomToast';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
-import { showToast, CustomToast } from "../../../components/toast/CustomToast";
+import { showToast } from "../../../components/toast/CustomToast";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 // Opened from an approved lead: pre-fill what the lead already has. The lead
@@ -139,7 +139,6 @@ const CustomerRegistration = () => {
                     )}
                 </TouchableOpacity>
             </ScrollView>
-            <CustomToast />
         </KeyboardAvoidingView>
     );
 };

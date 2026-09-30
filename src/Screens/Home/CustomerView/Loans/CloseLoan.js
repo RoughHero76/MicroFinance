@@ -16,7 +16,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
-import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
+import { showToast } from '../../../../components/toast/CustomToast';
 import { currencyFormatter } from '../../../../components/utils/formatters';
 
 // Any cash already sitting in the loan's advance wallet counts toward closing
@@ -654,7 +654,6 @@ const CloseLoan = ({ route, navigation }) => {
           </Animated.View>
         </View>
       )}
-      <CustomToast />
 
     </KeyboardAvoidingView>
   );

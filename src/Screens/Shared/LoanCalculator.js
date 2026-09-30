@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { showToast, CustomToast } from '../../components/toast/CustomToast';
+import { showToast } from '../../components/toast/CustomToast';
 import { apiCall } from '../../components/api/apiUtils';
 
 const LoanCalculator = () => {
@@ -209,7 +209,6 @@ const LoanCalculator = () => {
           </View>
         )}
       </ScrollView>
-      <CustomToast />
     </KeyboardAvoidingView >
   );
 };

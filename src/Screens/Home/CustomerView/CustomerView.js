@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../components/api/apiUtils";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../assets/placeholders/profile.jpg";
-import { CustomToast, showToast } from "../../../components/toast/CustomToast";
+import { showToast, ModalToast } from "../../../components/toast/CustomToast";
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import ImageModal from "../../../components/Image/ImageModal";
 import { useHomeContext } from "../../../components/context/HomeContext";
@@ -430,7 +430,6 @@ const CustomerView = () => {
           <Text style={styles.noLoansText}>No loans found</Text>
         )}
       </ScrollView>
-      <CustomToast />
       <Modal
         animationType="slide"
         transparent={true}
@@ -461,7 +460,7 @@ const CustomerView = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <CustomToast />
+        <ModalToast />
       </Modal>
 
       <Modal
@@ -485,7 +484,7 @@ const CustomerView = () => {
               <Text style={styles.optionText}>Delete Customer</Text>
             </TouchableOpacity>
           </View>
-          <CustomToast />
+          <ModalToast />
         </TouchableOpacity>
       </Modal>
 

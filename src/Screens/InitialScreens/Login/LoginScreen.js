@@ -3,7 +3,7 @@ import {
     View, Text, TextInput, StyleSheet, TouchableOpacity, StatusBar, Image, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { CustomToast, showToast } from '../../../components/toast/CustomToast';
+import { showToast } from '../../../components/toast/CustomToast';
 import { apiCall } from '../../../components/api/apiUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -113,7 +113,6 @@ const LoginScreen = () => {
 
                 {renderButton('Login', handleLogin)}
             </KeyboardAvoidingView>
-            <CustomToast />
         </View>
     );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, Modal, FlatList, PermissionsAndroid, Platform, Alert, ActivityIndicator } from "react-native";
 import { apiCall } from "../../../components/api/apiUtils";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { CustomToast, showToast } from "../../../components/toast/CustomToast";
+import { showToast, ModalToast } from "../../../components/toast/CustomToast";
 import { BarChart, PieChart } from "react-native-chart-kit";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -213,7 +213,7 @@ const ReportsScreen = () => {
                     </View>
                 </View>
             </View>
-            <CustomToast />
+            <ModalToast />
         </Modal>
     );
     const renderDeleteConfirmationModal = () => (
@@ -246,7 +246,7 @@ const ReportsScreen = () => {
                     </TouchableOpacity>
                 </View>
             </View>
-            <CustomToast />
+            <ModalToast />
         </Modal>
     );
 
@@ -423,11 +423,10 @@ const ReportsScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <CustomToast />
+                <ModalToast />
             </Modal>
             {renderDeleteConfirmationModal()}
             {renderClearAllConfirmationModal()}
-            <CustomToast />
         </ScrollView>
     );
 };

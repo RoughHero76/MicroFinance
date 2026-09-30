@@ -15,7 +15,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { apiCall } from '../../../../components/api/apiUtils';
-import { showToast, CustomToast } from '../../../../components/toast/CustomToast';
+import { showToast, ModalToast } from '../../../../components/toast/CustomToast';
 import { handleSendSMS } from '../../../../components/sms/sendSMS';
 import ProfilePicturePlaceHolder from '../../../../assets/placeholders/profile.jpg';
 import ImageModal from '../../../../components/Image/ImageModal';
@@ -305,7 +305,7 @@ const TodaysCollectionScreen = () => {
                         )
                     }
                 </View>
-                <CustomToast />
+                <ModalToast />
             </View >
         </Modal >
     );
@@ -335,7 +335,7 @@ const TodaysCollectionScreen = () => {
                         <Text style={styles.modalButtonText}>Cancel</Text>
                     </TouchableOpacity>
                 </View>
-                <CustomToast />
+                <ModalToast />
             </View>
         </Modal>
     );
@@ -365,7 +365,6 @@ const TodaysCollectionScreen = () => {
                     onDownload={handleDownloadProfilePicture}
                     onClose={() => setImageModalVisible(false)}
                 />
-                <CustomToast />
             </View>
         </SafeAreaView>
     );

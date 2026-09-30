@@ -3,13 +3,11 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {HomeProvider} from './src/components/context/HomeContext';
-import {UpdateProvider} from './src/components/context/UpdateContext';
-import RootNavigator from './src/components/navigation/RootNavigator';
-import UpdateNotification from './src/components/UpdateNotification';
-import {CustomToast} from './src/components/toast/CustomToast';
-import ErrorBoundary from './src/components/ErrorBoundary';
+import {UpdateProvider} from '@/features/app/updates';
+import {SessionProvider} from '@/features/auth/SessionProvider';
 import {loadSavedLanguage} from '@/i18n';
 import {QueryProvider} from '@/lib/query';
+import RootNavigator from '@/navigation/RootNavigator';
 import {ThemeProvider} from '@/theme';
 import {ToastHost} from '@/ui';
 
@@ -23,18 +21,18 @@ const App = () => {
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryProvider>
-            <BottomSheetModalProvider>
-              <HomeProvider>
-                <UpdateProvider>
-                  <ErrorBoundary>
+            <SessionProvider>
+              <UpdateProvider>
+                {/* HomeProvider: the old screens' view of the session (until W6). */}
+                <HomeProvider>
+                  <BottomSheetModalProvider>
                     <RootNavigator />
-                  </ErrorBoundary>
-                  <UpdateNotification />
-                  <CustomToast />
-                </UpdateProvider>
-              </HomeProvider>
-              <ToastHost />
-            </BottomSheetModalProvider>
+                    {/* The one toast host, above navigation and sheets. */}
+                    <ToastHost />
+                  </BottomSheetModalProvider>
+                </HomeProvider>
+              </UpdateProvider>
+            </SessionProvider>
           </QueryProvider>
         </ThemeProvider>
       </SafeAreaProvider>

@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, 
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
-import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
+import { showToast } from '../../../../components/toast/CustomToast';
 import { useHomeContext } from '../../../../components/context/HomeContext';
 
 const PaymentHistory = () => {
@@ -198,7 +198,6 @@ const PaymentHistory = () => {
                     )
                 }
             />
-            <CustomToast />
         </View>
     );
 };

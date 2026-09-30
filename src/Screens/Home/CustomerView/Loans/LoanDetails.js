@@ -12,7 +12,7 @@ import {
   Alert,
   TextInput,
 } from "react-native";
-import { CustomToast, showToast } from "../../../../components/toast/CustomToast";
+import { showToast, ModalToast } from "../../../../components/toast/CustomToast";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../../components/api/apiUtils";
 import { loanTypeLabel } from "../../../../components/utils/loanTypes";
@@ -328,7 +328,7 @@ const LoanDetails = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-      <CustomToast />
+      <ModalToast />
 
     </Modal>
   );
@@ -486,7 +486,6 @@ const LoanDetails = ({ route, navigation }) => {
 
       {renderImageModal()}
       {renderDocumentUploadModal()}
-      <CustomToast />
     </ScrollView>
   );
 };

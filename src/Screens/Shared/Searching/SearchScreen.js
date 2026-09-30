@@ -16,7 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
 import { useHomeContext } from '../../../components/context/HomeContext';
-import Toast from 'react-native-toast-message';
+import { Toast } from '../../../components/toast/CustomToast';
 import ProfilePicturePlaceholder from '../../../assets/placeholders/profile.jpg';
 import { PieChart } from 'react-native-chart-kit';
 

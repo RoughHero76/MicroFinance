@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../../components/api/apiUtils';
 import { LOAN_TYPES } from '../../../../components/utils/loanTypes';
-import { CustomToast, showToast } from '../../../../components/toast/CustomToast';
+import { showToast, ModalToast } from '../../../../components/toast/CustomToast';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -423,7 +423,7 @@ const CreateLoan = () => {
                     </TouchableOpacity>
                     <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
                 </View>
-                <CustomToast />
+                <ModalToast />
             </Modal>
         </SafeAreaView>
     );

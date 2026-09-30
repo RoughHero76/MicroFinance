@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export type Role = 'admin' | 'employee';
 
 export interface SessionUser {
-  _id: string;
+  /** Employees get _id at login; admins only get uid. */
+  _id?: string;
   uid?: string;
   fname?: string;
   lname?: string;

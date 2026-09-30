@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { apiCall } from '../../../components/api/apiUtils';
 import { useNavigation } from '@react-navigation/native';
 import ProfilePicturePlaceHolder from '../../../assets/placeholders/profile.jpg';
-import Toast from 'react-native-toast-message';
+import { Toast } from '../../../components/toast/CustomToast';
 
 const AllEmployeeView = () => {
     const [employees, setEmployees] = useState([]);

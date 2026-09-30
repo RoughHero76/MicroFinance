@@ -50,3 +50,9 @@ jest.mock('@react-native-community/datetimepicker', () => 'DateTimePicker');
 jest.mock('react-native-linear-gradient', () => 'LinearGradient');
 jest.mock('react-native-share', () => ({ open: jest.fn(() => Promise.resolve()) }));
 jest.mock('react-native-permissions', () => require('react-native-permissions/mock'));
+jest.mock('react-native-biometrics', () =>
+  jest.fn().mockImplementation(() => ({
+    isSensorAvailable: jest.fn(() => Promise.resolve({available: true, biometryType: 'Biometrics'})),
+    simplePrompt: jest.fn(() => Promise.resolve({success: true})),
+  })),
+);

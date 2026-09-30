@@ -4,7 +4,7 @@ import { useHomeContext } from '../../components/context/HomeContext';
 import { apiCall } from '../../components/api/apiUtils';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { showToast, CustomToast } from '../../components/toast/CustomToast';
+import { showToast } from '../../components/toast/CustomToast';
 import EVILogo from '../../assets/EviLogo.png';
 
 // Skeleton loader components
@@ -163,7 +163,6 @@ const HomeScreen = () => {
                     <Text style={styles.viewAllButtonText}>View All Customers</Text>
                 </TouchableOpacity>
 
-                <CustomToast />
             </ScrollView>
         </ImageBackground>
     );

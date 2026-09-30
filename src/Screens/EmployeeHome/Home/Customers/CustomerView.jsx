@@ -14,7 +14,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { apiCall } from "../../../../components/api/apiUtils";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import ProfilePicturePlaceHolder from "../../../../assets/placeholders/profile.jpg";
-import { showToast, CustomToast } from "../../../../components/toast/CustomToast";
+import { showToast } from "../../../../components/toast/CustomToast";
 import ImageModal from "../../../../components/Image/ImageModal";
 import { cacheImage } from "../../../../components/Image/ImageCache";
 const CustomerView = () => {
@@ -181,7 +181,6 @@ const CustomerView = () => {
                 onDownload={handleDownloadProfilePicture}
                 onClose={() => setImageModalVisible(false)}
             />
-            <CustomToast />
         </SafeAreaView>
     );
 };
