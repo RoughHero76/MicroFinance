@@ -43,6 +43,7 @@ const SESSION_ENDED: Record<string, SessionEndReason> = {
   'Account no longer active': 'expired',
   'Your account was deactivated': 'deactivated',
   SESSION_EXPIRED: 'expired',
+  ACCOUNT_REMOVED: 'expired',
   ACCOUNT_DEACTIVATED: 'deactivated',
 };
 
