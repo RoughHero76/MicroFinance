@@ -1,19 +1,20 @@
-// A1 admin Home. Keeps every card from today: active loans, customers,
-// market amount and repaid (returned by the API but commented out in the old
-// screen), Approve history → Payments, NPA → Risk, new leads and 5 recent
-// customers. Badges come from BE-3.
+// A1 admin Home. A branded gradient hero (market amount, repaid, active
+// loans and customers in one row), a personal greeting, a compact
+// quick-action row (Payments, Risk, Leads, Reports - badges from BE-3), and
+// 5 recent customers.
 
 import React from 'react';
-import {RefreshControl, View} from 'react-native';
+import {Pressable, RefreshControl, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
+import LinearGradient from 'react-native-linear-gradient';
 import {brand} from '@/brand';
 import {formatMoney, formatMoneyShort} from '@/lib/format';
-import {useCan} from '@/features/auth/SessionProvider';
+import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
 import {NotificationBell} from '@/features/notifications/Bell';
-import {makeStyles} from '@/theme';
+import {makeStyles, useTheme} from '@/theme';
 import {
   Avatar,
   Button,
@@ -32,9 +33,11 @@ import {
 
 export default function AdminHomeScreen() {
   const s = useStyles();
+  const theme = useTheme();
   const {t} = useTranslation();
   const navigation = useNavigation();
   const can = useCan();
+  const {user} = useSession();
   const query = useQuery({queryKey: adminLoanKeys.dashboard, queryFn: getAdminDashboard, meta: {persist: true}});
   const d = query.data;
   const go = (route: string, params?: object) => navigation.navigate(route as never, params as never);
@@ -81,48 +84,59 @@ export default function AdminHomeScreen() {
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : (
         <>
-          <Card style={s.hero}>
-            <Text variant="overline" color="muted">
+          {user?.fname ? (
+            <Text variant="h2" weight="bold" style={s.greeting}>
+              {t('adminHome.welcome', {name: user.fname})}
+            </Text>
+          ) : null}
+
+          <LinearGradient
+            colors={[theme.colors.primary, theme.colors.primary2]}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={s.hero}>
+            <Text variant="overline" color="onPrimary" style={s.heroMuted}>
               {t('adminHome.market')}
             </Text>
             {d ? (
-              <>
-                <Text variant="display" tabular>
-                  {formatMoney(d.marketDetails.totalMarketAmount)}
-                </Text>
-                <Text color="muted" tabular>
-                  {[
-                    t('adminHome.repaid', {amount: formatMoneyShort(d.marketDetails.totalMarketAmountRepaid)}),
-                    d.collectedToday.amount
-                      ? t('adminHome.collectedToday', {amount: formatMoneyShort(d.collectedToday.amount)})
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </Text>
-              </>
+              <Text variant="display" color="onPrimary" tabular>
+                {formatMoney(d.marketDetails.totalMarketAmount)}
+              </Text>
             ) : (
               <Skeleton width={180} height={34} />
             )}
+            {d?.collectedToday.amount ? (
+              <Text color="onPrimary" style={s.heroMuted}>
+                {t('adminHome.collectedToday', {amount: formatMoneyShort(d.collectedToday.amount)})}
+              </Text>
+            ) : null}
             <View style={s.heroFacts}>
               <View style={s.fact}>
-                <Text variant="small" color="muted">
+                <Text variant="small" color="onPrimary" style={s.heroMuted}>
+                  {t('adminHome.repaidLabel')}
+                </Text>
+                <Text variant="h2" color="onPrimary" tabular>
+                  {d ? formatMoneyShort(d.marketDetails.totalMarketAmountRepaid) : '–'}
+                </Text>
+              </View>
+              <View style={s.fact}>
+                <Text variant="small" color="onPrimary" style={s.heroMuted}>
                   {t('adminHome.activeLoans')}
                 </Text>
-                <Text variant="h2" tabular onPress={() => go('Loans')}>
+                <Text variant="h2" color="onPrimary" tabular onPress={() => go('Loans')}>
                   {d ? d.loanCount : '–'}
                 </Text>
               </View>
               <View style={s.fact}>
-                <Text variant="small" color="muted">
+                <Text variant="small" color="onPrimary" style={s.heroMuted}>
                   {t('adminHome.customers')}
                 </Text>
-                <Text variant="h2" tabular onPress={() => go('Customers')}>
+                <Text variant="h2" color="onPrimary" tabular onPress={() => go('Customers')}>
                   {d ? d.customerCount : '–'}
                 </Text>
               </View>
             </View>
-          </Card>
+          </LinearGradient>
 
           {d && d.pendingLoans > 0 ? (
             <Card onPress={() => go('Loans')} style={s.notice}>
@@ -132,9 +146,14 @@ export default function AdminHomeScreen() {
             </Card>
           ) : null}
 
-          <View style={s.grid}>
+          <View style={s.quickRow}>
             {shortcuts.map(item => (
-              <Card key={item.key} onPress={() => go(item.route)} style={s.shortcut} accessibilityLabel={item.label}>
+              <Pressable
+                key={item.key}
+                onPress={() => go(item.route)}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+                style={({pressed}) => [s.quickItem, pressed && s.quickItemPressed]}>
                 <View style={s.shortcutIcon}>
                   <Icon name={item.icon} size={22} color="primary" />
                   {item.badge ? (
@@ -148,7 +167,7 @@ export default function AdminHomeScreen() {
                 <Text variant="small" weight="medium" numberOfLines={1}>
                   {item.label}
                 </Text>
-              </Card>
+              </Pressable>
             ))}
           </View>
 
@@ -159,12 +178,15 @@ export default function AdminHomeScreen() {
               {(d?.recentCustomers ?? []).map(c => {
                 const name = `${c.fname} ${c.lname}`;
                 const loan = c.loans[0];
+                const subtitle = loan
+                  ? `${t('adminHome.loanCount', {count: c.loans.length})} · ${formatMoney(loan.loanAmount)}`
+                  : c.phoneNumber;
                 return (
                   <ListRow
                     key={c.uid}
                     left={<Avatar name={name} uri={c.profilePic} />}
                     title={name}
-                    subtitle={loan ? formatMoney(loan.loanAmount) : c.phoneNumber}
+                    subtitle={subtitle}
                     badge={loan ? <StatusBadge set="loan" status={loan.status} /> : undefined}
                     onPress={() => go('Customer', {id: c._id, uid: c.uid})}
                   />
@@ -180,9 +202,11 @@ export default function AdminHomeScreen() {
 
 const useStyles = makeStyles(t => ({
   headerActions: {flexDirection: 'row', alignItems: 'center'},
-  hero: {padding: t.space.lg, gap: t.space.xs},
+  greeting: {marginBottom: t.space.sm},
+  hero: {padding: t.space.lg, gap: t.space.xs, borderRadius: t.radius.lg},
+  heroMuted: {opacity: 0.85},
   heroFacts: {flexDirection: 'row', gap: 10, marginTop: t.space.md},
-  fact: {flex: 1, padding: t.space.md, borderRadius: t.radius.md, backgroundColor: t.colors.surface2, gap: 2},
+  fact: {flex: 1, gap: 2},
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,15 +215,9 @@ const useStyles = makeStyles(t => ({
     backgroundColor: t.colors.warningSoft,
   },
   flex: {flex: 1},
-  grid: {flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginVertical: t.space.md},
-  shortcut: {
-    width: '47%',
-    flexGrow: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: t.space.sm,
-    padding: t.space.md,
-  },
+  quickRow: {flexDirection: 'row', marginVertical: t.space.md},
+  quickItem: {flex: 1, alignItems: 'center', gap: t.space.xs, paddingVertical: t.space.sm},
+  quickItemPressed: {opacity: 0.6},
   shortcutIcon: {
     width: 40,
     height: 40,

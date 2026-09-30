@@ -5,6 +5,8 @@
   <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
   <!-- Photos of customers, leads and documents (asked when first used). -->
   <uses-permission android:name="android.permission.CAMERA" />
+  <!-- P-04: haptics on success/error/tap (Vibration API). -->
+  <uses-permission android:name="android.permission.VIBRATE" />
   <!-- Quick unlock / app lock with the phone's fingerprint or PIN. -->
   <uses-permission android:name="android.permission.USE_BIOMETRIC" />
   <!-- Android 13+: notifications (download progress, updates). -->

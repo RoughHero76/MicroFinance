@@ -510,8 +510,9 @@
     "split": "Cash {{cash}} · Other {{other}}"
   },
   "adminHome": {
+    "welcome": "Welcome, {{name}}",
     "market": "Market amount (active + approved)",
-    "repaid": "Repaid {{amount}}",
+    "repaidLabel": "Repaid",
     "activeLoans": "Active loans",
     "customers": "Customers",
     "payments": "Payments",
@@ -522,7 +523,8 @@
     "collectedToday": "{{amount}} collected today",
     "recent": "Recent customers",
     "viewAll": "View all",
-    "pendingLoans": "{{count}} loans waiting for approval"
+    "pendingLoans": "{{count}} loans waiting for approval",
+    "loanCount": "{{count}} loan"
   },
   "loans": {
     "title": "Loans",

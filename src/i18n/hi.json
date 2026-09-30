@@ -510,8 +510,9 @@
     "split": "नकद {{cash}} · अन्य {{other}}"
   },
   "adminHome": {
+    "welcome": "नमस्ते, {{name}}",
     "market": "बाज़ार राशि (चालू + मंज़ूर)",
-    "repaid": "वापस {{amount}}",
+    "repaidLabel": "वापस मिला",
     "activeLoans": "चालू ऋण",
     "customers": "ग्राहक",
     "payments": "भुगतान",
@@ -522,7 +523,8 @@
     "collectedToday": "आज {{amount}} वसूल",
     "recent": "हाल के ग्राहक",
     "viewAll": "सभी देखें",
-    "pendingLoans": "{{count}} ऋण मंज़ूरी के इंतज़ार में"
+    "pendingLoans": "{{count}} ऋण मंज़ूरी के इंतज़ार में",
+    "loanCount": "{{count}} ऋण"
   },
   "loans": {
     "title": "ऋण",

@@ -28,16 +28,24 @@ export function initialsOf(name?: string | null): string {
   return (first + last).toUpperCase();
 }
 
+// The server occasionally sends a non-URL placeholder (empty path, "null",
+// a bare filename with no host); those never load and never fire onError,
+// so they'd otherwise leave the Image's blank background showing forever
+// instead of falling back to initials.
+function isPhotoUri(uri?: string | null): uri is string {
+  return typeof uri === 'string' && /^https?:\/\//i.test(uri);
+}
+
 export function Avatar({name, uri, size = 40, style, onEditPhoto, onPress}: AvatarProps) {
   const t = useTheme();
   const s = useStyles();
-  const [source, setSource] = useState<string | null>(uri ? cachedPathSync(uri) : null);
+  const [source, setSource] = useState<string | null>(isPhotoUri(uri) ? cachedPathSync(uri) : null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let alive = true;
     setFailed(false);
-    if (!uri) {
+    if (!isPhotoUri(uri)) {
       setSource(null);
       return;
     }
