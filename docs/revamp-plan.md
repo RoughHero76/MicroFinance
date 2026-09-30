@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** planning complete. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix B-1…B-12 done on `feat/revamp` in both repos (not released, not deployed). Next: W0. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -31,31 +31,31 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ## Hotfix (on `feat/revamp`, not released)
 
-- [ ] **B-1**: Editing an installment never saves. The admin fills in status, amount, date, method, penalty and collector, then gets an error. _Cause:_ The modal gathers every field, but handleSaveSchedule sends only {id, collectedBy}. The server requires status and returns 400. _Where:_ Loans/RepaymentSchedule.js → RepaymentScheduleController.updateRepaymentSchedule
-- [ ] **B-2**: A successful Close loan shows a red error toast ("Loan closed successfully") and stays on the screen. _Cause:_ It checks response.status !== 200, but the API returns status: 'success'. _Where:_ Loans/CloseLoan.js
-- [ ] **B-3**: Employees can't open a loan's Schedule (403). _Cause:_ The employee schedule screen calls the admin-only /api/admin/loan/repayment/schedule. _Where:_ EmployeeHome/…/Loans/RepaymentSchedule.js
-- [ ] **B-4**: Admins see "Pay Now" on NPA/SMA lists, but it always fails (403). _Cause:_ Both pay endpoints reject anyone who isn't an employee. Admins can't record payments anywhere (decided: admins may collect, via BE-10). _Where:_ LoanStatusDetailsScreen.js → LoanCollection.payOldInstallment
-- [ ] **B-5**: The employee Home "Customers" count is always empty. _Cause:_ It calls the admin-only /api/admin/customer/count/total. _Where:_ EmployeeHome/Home/HomeScreen.jsx
-- [ ] **B-6**: Approving a lead never links it to a customer. The admin re-types everything in Customer registration. _Cause:_ convertLeadToCustomer exists in the controller but has no route. _Where:_ AdminLeadController.js, routes/admin/lead/leadRoutes.js
-- [ ] **B-7**: Lead loan types (Personal, Home, Business, Education, Vehicle, Gold, Other) don't match loan types (Personal, Business, Other). _Cause:_ Two separate lists, so a "Gold Loan" lead can't become a Gold loan. _Where:_ EmployeeCreateLead.js, LoanModel.js
-- [ ] **B-8**: The login response, including the token, is written to the log. _Cause:_ console.log('Login response:', response) _Where:_ LoginScreen.js
-- [ ] **B-9**: Employees see only the first 200 installments of a long daily loan, with no "load more". _Cause:_ LoanDetalis.js requests limit=200 but sets "has more" only when exactly 5 come back (length === 5). A daily loan of 300–2200 days has 300–2200 installments, so everything after #200 is silently missing. _Where:_ EmployeeHome/…/Loans/LoanDetalis.js line 89
-- [ ] **B-10**: Payment history shows "Remaining after payment: N/A" for every payment an employee records. _Cause:_ `applyWaterfallPayment` never sets `balanceAfterPayment`. _Where:_ `helpers/paymentAllocation.js` → BE-24
-- [ ] **B-11** (security): any employee can list all overdue loans with customer contact details. _Cause:_ `getLoanStatus` / `getLoanStatusStatistics` only scope to the employee when `assignedTo=me` is sent. _Fix:_ force `assignedTo = req._id` for employees. _Where:_ `controllers/admin/loanStatus/loanStatusController.js`
-- [ ] **B-12** (security): "inactive" employees can still log in and work. _Cause:_ `accountStatus` is never checked at login or in `helpers/token.js` (only `isDeleted` is). _Fix:_ refuse login and end sessions when inactive; the app shows "Your account was deactivated". _Where:_ `controllers/employee/authController.js`, `helpers/token.js`
+- [x] **B-1** (app 96229da · backend 64f343e): Editing an installment never saves. The admin fills in status, amount, date, method, penalty and collector, then gets an error. _Cause:_ The modal gathers every field, but handleSaveSchedule sends only {id, collectedBy}. The server requires status and returns 400. _Where:_ Loans/RepaymentSchedule.js → RepaymentScheduleController.updateRepaymentSchedule
+- [x] **B-2** (app f017b3e): A successful Close loan shows a red error toast ("Loan closed successfully") and stays on the screen. _Cause:_ It checks response.status !== 200, but the API returns status: 'success'. _Where:_ Loans/CloseLoan.js
+- [x] **B-3** (app e38272d · backend c8c719e): Employees can't open a loan's Schedule (403). _Cause:_ The employee schedule screen calls the admin-only /api/admin/loan/repayment/schedule. _Where:_ EmployeeHome/…/Loans/RepaymentSchedule.js
+- [x] **B-4** (app 2d1d771 · backend 6294b15): Admins see "Pay Now" on NPA/SMA lists, but it always fails (403). _Cause:_ Both pay endpoints reject anyone who isn't an employee. Admins can't record payments anywhere (decided: admins may collect, via BE-10). _Where:_ LoanStatusDetailsScreen.js → LoanCollection.payOldInstallment
+- [x] **B-5** (app 451012a · backend db92166): The employee Home "Customers" count is always empty. _Cause:_ It calls the admin-only /api/admin/customer/count/total. _Where:_ EmployeeHome/Home/HomeScreen.jsx
+- [x] **B-6** (app 61f2e1b · backend be629e0): Approving a lead never links it to a customer. The admin re-types everything in Customer registration. _Cause:_ convertLeadToCustomer exists in the controller but has no route. _Where:_ AdminLeadController.js, routes/admin/lead/leadRoutes.js
+- [x] **B-7** (app 695472b · backend 6158bc9): Lead loan types (Personal, Home, Business, Education, Vehicle, Gold, Other) don't match loan types (Personal, Business, Other). _Cause:_ Two separate lists, so a "Gold Loan" lead can't become a Gold loan. _Where:_ EmployeeCreateLead.js, LoanModel.js
+- [x] **B-8** (app 0119860): The login response, including the token, is written to the log. _Cause:_ console.log('Login response:', response) _Where:_ LoginScreen.js
+- [x] **B-9** (app 7dfe9a2): Employees see only the first 200 installments of a long daily loan, with no "load more". _Cause:_ LoanDetalis.js requests limit=200 but sets "has more" only when exactly 5 come back (length === 5). A daily loan of 300–2200 days has 300–2200 installments, so everything after #200 is silently missing. _Where:_ EmployeeHome/…/Loans/LoanDetalis.js line 89
+- [x] **B-10** (app 15a90b8 · backend 1563653): Payment history shows "Remaining after payment: N/A" for every payment an employee records. _Cause:_ `applyWaterfallPayment` never sets `balanceAfterPayment`. _Where:_ `helpers/paymentAllocation.js` → BE-24
+- [x] **B-11** (backend 3ea0d35) (security): any employee can list all overdue loans with customer contact details. _Cause:_ `getLoanStatus` / `getLoanStatusStatistics` only scope to the employee when `assignedTo=me` is sent. _Fix:_ force `assignedTo = req._id` for employees. _Where:_ `controllers/admin/loanStatus/loanStatusController.js`
+- [x] **B-12** (app 740480f · backend c015772) (security): "inactive" employees can still log in and work. _Cause:_ `accountStatus` is never checked at login or in `helpers/token.js` (only `isDeleted` is). _Fix:_ refuse login and end sessions when inactive; the app shows "Your account was deactivated". _Where:_ `controllers/employee/authController.js`, `helpers/token.js`
 
 ## Backend (`MicroFinance-backend`)
 
-- [ ] **BE-1**: Employee schedule route: GET /employee/loan/repayment/schedule, reusing getRepaymentSchedule with the canAccessLoan check _Files:_ routes/employee/loans/loanRoutes.js, RepaymentScheduleController.js _For:_ B-3, E6b
-- [ ] **BE-2**: GET /employee/dashboard → due today (count, amount due, amount collected), my customers count, lead stats, my SMA/NPA buckets _Files:_ new controllers/employee/DashboardController.js _For:_ B-5, E1
+- [x] **BE-1** (backend c8c719e): Employee schedule route: GET /employee/loan/repayment/schedule, reusing getRepaymentSchedule with the canAccessLoan check _Files:_ routes/employee/loans/loanRoutes.js, RepaymentScheduleController.js _For:_ B-3, E6b
+- [ ] **BE-2** (partly done: `GET /employee/dashboard` returns `customersCount`, backend db92166; the rest comes in W2): GET /employee/dashboard → due today (count, amount due, amount collected), my customers count, lead stats, my SMA/NPA buckets _Files:_ new controllers/employee/DashboardController.js _For:_ B-5, E1
 - [ ] **BE-3**: Admin dashboard adds pendingRepayments, pendingLoans, collectedToday _Files:_ controllers/admin/DashboardController.js _For:_ A1, A20 badges
-- [ ] **BE-4**: Route POST /admin/lead/:id/convert (existing convertLeadToCustomer). Add POST /admin/lead/:id/create-customer, which registers and converts in one step from the lead's data _Files:_ routes/admin/lead/leadRoutes.js, AdminLeadController.js _For:_ B-6, A14
-- [ ] **BE-5**: Decided: one list of 7 loan types (Personal, Home, Business, Education, Vehicle, Gold, Other) for leads and loans; old "Personal/Business/Other" values stay valid _Files:_ LoanModel.js, LeadCustomersModel.js _For:_ B-7
+- [x] **BE-4** (backend be629e0): Route POST /admin/lead/:id/convert (existing convertLeadToCustomer). Add POST /admin/lead/:id/create-customer, which registers and converts in one step from the lead's data _Files:_ routes/admin/lead/leadRoutes.js, AdminLeadController.js _For:_ B-6, A14
+- [x] **BE-5** (backend 6158bc9): Decided: one list of 7 loan types (Personal, Home, Business, Education, Vehicle, Gold, Other) for leads and loans; old "Personal/Business/Other" values stay valid _Files:_ LoanModel.js, LeadCustomersModel.js _For:_ B-7
 - [ ] **BE-6**: Employee loan details: default page size 20, plus scheduleSummary (paid, overdue, pending, next due) and includeDocuments for assigned loans _Files:_ LoanCollection.getLoanDetails _For:_ E6, E6b
 - [ ] **BE-7**: Employee repayment history without loanId → my collections (filter by date and status) _Files:_ LoanCollection.getRepaymentHistory _For:_ E12 My payments (P-2)
 - [ ] **BE-8**: Text search q on admin customers, employee customers and admin loans (name, phone, loan number) _Files:_ customerController.getCustomers, LoanCollection.getCustomers, loanController.getLoans _For:_ A2, A5, E4
 - [ ] **BE-9**: Status recalculation as POST (keep the GET alias). Return lastRunAt from the existing CronRun model _Files:_ routes/shared/sharedRoutes.js, systemController.js _For:_ A18
-- [ ] **BE-10**: Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
+- [x] **BE-10** (backend 6294b15): Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
 - [ ] **BE-11**: Correctly spelt aliases: /apply/penalty, /remove/penalty, /profilePicture (keep the old spellings) _Files:_ route files _For:_ clean API client
 - [ ] **BE-12**: One response shape {status, message, code, data, meta:{page,totalPages,total}}. code drives app logic; title/message arrive already translated (BE-20). Fixes the meesage typo. _Files:_ middleware/errorHandler.js + controllers as they're touched _For:_ F-7 i18n, U-06
 - [ ] **BE-13**: Deployment per brand: each brand has its own backend deployment and database, with its own update APK and URL (same as today's single deployment). No code change, just documented in the brand README. _Files:_ docs _For:_ white-label
@@ -69,7 +69,7 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [ ] **BE-21**: (Optional, later) One route per resource that filters by the caller's role, like `/shared/search`. _Files:_ routes _For:_ fewer endpoint pairs
 - [ ] **BE-22**: Before a force delete of a loan (and before deleting a customer), save a JSON snapshot of the loan, schedules, repayments, penalties and document records to a DeletionArchive collection, with who and when. Kept for 90 days. It's for recovery by hand, not an app feature. Also return the counts shown in A6c (GET /admin/loan/:id/delete-preview). _Files:_ loanController.deleteLoan, customerController.deleteCustomer, new DeletionArchiveModel.js _For:_ A6c, safety
 - [ ] **BE-23**: Optional: include lastSeen and the latest loginHistory date in the admin employee response _Files:_ employeeController.getEmployees _For:_ A16 "Last login"
-- [ ] **BE-24**: Set `balanceAfterPayment` in `applyWaterfallPayment`, and return it with `outstandingAmount` in the `/pay` reply (for receipts). Optionally fill old records with a one-off script. _Files:_ helpers/paymentAllocation.js, LoanCollection.js _For:_ B-10, receipts
+- [x] **BE-24** (backend 1563653): Set `balanceAfterPayment` in `applyWaterfallPayment`, and return it with `outstandingAmount` in the `/pay` reply (for receipts). Optionally fill old records with a one-off script. _Files:_ helpers/paymentAllocation.js, LoanCollection.js _For:_ B-10, receipts
 
 ## Foundations (W0)
 
@@ -87,13 +87,13 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### H · Hotfix on today's app (S) (built on `feat/revamp`, released only when approved)
 
-- [ ] B-1: Loans/RepaymentSchedule.js handleSaveSchedule sends every field from the modal; stays on the schedule and refreshes instead of going back
-- [ ] B-2: CloseLoan.js checks response.status === 'success'
-- [ ] B-3: backend BE-1 (employee schedule route) + EmployeeHome/…/RepaymentSchedule.js calls it
-- [ ] B-4: backend BE-10 (admins may record payments) + LoanStatusDetailsScreen uses /pay
-- [ ] B-5: employee Home customer count from an employee-scoped count (a small part of BE-2)
-- [ ] B-8: remove the console.log of the login response
-- [ ] B-9: set "has more" from the page size actually requested (and page 20 at a time, with BE-6)
+- [x] B-1: Loans/RepaymentSchedule.js handleSaveSchedule sends every field from the modal; stays on the schedule and refreshes instead of going back
+- [x] B-2: CloseLoan.js checks response.status === 'success'
+- [x] B-3: backend BE-1 (employee schedule route) + EmployeeHome/…/RepaymentSchedule.js calls it
+- [x] B-4: backend BE-10 (admins may record payments) + LoanStatusDetailsScreen uses /pay
+- [x] B-5: employee Home customer count from an employee-scoped count (a small part of BE-2)
+- [x] B-8: remove the console.log of the login response
+- [x] B-9: set "has more" from the page size actually requested (and page 20 at a time, with BE-6)
 
 **Done when:**each bug's steps pass with an admin and an employee login on a real phone. The backend is deployed before the APK.
 
@@ -221,7 +221,7 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [ ] **M-2 · Business settings**: included. W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
 - [ ] **M-3 · Cash handover**: included as an **optional module, off by default**, switched on per client in Business settings. W5.
 - [ ] **M-5 · Loan statement PDF**: included. W5. Kept as **history** on the loan (date, language, who) for re-sharing; **deleted when the loan is deleted** (including force delete / BE-22).
-- [ ] **M-9 · Tests for money logic**: included. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave.
+- [ ] **M-9 · Tests for money logic**: included. _Started:_ `npm test` in the backend covers payment allocation, advance draw-down and the penalty amount (backend fa1734a). Close-loan math still needs extracting from the controller before it can be tested. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave.
 - [ ] **M-10 · Collection performance per employee**: included. W5 (Reports → By employee).
 - Skipped: M-4 KYC, M-6 holidays and off-days, M-7 reminders, M-8 areas.
 - [ ] **M-14 · Renew / top-up loan** (a new loan pre-filled from the previous one, copying documents): proposed, undecided.
