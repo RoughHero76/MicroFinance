@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix, W0–W4 done on `feat/revamp` in both repos (not released, not deployed). Next: W5. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix, W0–W5 done on `feat/revamp` in both repos (not released, not deployed). Next: W6. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -54,14 +54,14 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] **BE-6**: Employee loan details: default page size 20, plus scheduleSummary (paid, overdue, pending, next due) and includeDocuments for assigned loans _Files:_ LoanCollection.getLoanDetails _For:_ E6, E6b _(backend 45d8942)_
 - [x] **BE-7**: Employee repayment history without loanId → my collections (filter by date and status) _Files:_ LoanCollection.getRepaymentHistory _For:_ E12 My payments (P-2) _(backend 45d8942)_
 - [x] **BE-8**: Text search q on admin customers, employee customers and admin loans (name, phone, loan number) _Files:_ customerController.getCustomers, LoanCollection.getCustomers, loanController.getLoans _For:_ A2, A5, E4 _(backend 45d8942 · 6e34355 · ace3332)_
-- [ ] **BE-9**: Status recalculation as POST (keep the GET alias). Return lastRunAt from the existing CronRun model _Files:_ routes/shared/sharedRoutes.js, systemController.js _For:_ A18
+- [x] **BE-9**: Status recalculation as POST (keep the GET alias). Return lastRunAt from the existing CronRun model _Files:_ routes/shared/sharedRoutes.js, systemController.js _For:_ A18 _(backend 0ff54b7: POST + GET alias, last run)_
 - [x] **BE-10** (backend 6294b15): Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
 - [x] **BE-11**: Correctly spelt aliases: /apply/penalty, /remove/penalty, /profilePicture (keep the old spellings) _Files:_ route files _For:_ clean API client _(backend fa1c430)_
 - [x] **BE-12**: One response shape {status, message, code, data, meta:{page,totalPages,total}}. code drives app logic; title/message arrive already translated (BE-20). Fixes the meesage typo. _Files:_ middleware/errorHandler.js + controllers as they're touched _For:_ F-7 i18n, U-06 _(backend c4c4795; controllers move to codes as they're touched)_
 - [ ] **BE-13**: Deployment per brand: each brand has its own backend deployment and database, with its own update APK and URL (same as today's single deployment). No code change, just documented in the brand README. _Files:_ docs _For:_ white-label
 - [x] **BE-14**: `POST /shared/client-errors` for crash reports, written to the winston logs, limited per device. _Files:_ new route + controller _For:_ S8 crash screen _(backend 9855aea)_
 - [ ] **BE-15**: Add the remove-penalty and backup routes to the typed API client (no server change). _Files:_ app API client _For:_ A7b, X3
-- [ ] **BE-16**: Notifications: model, notify() helper called from 9 places, 4 endpoints, 09:00 follow-up cron, 90-day cleanup (see Round 9) _Files:_ new NotificationModel.js, controllers/shared/notificationController.js, crone/registry.js _For:_ X5, bell badge
+- [x] **BE-16**: Notifications: model, notify() helper called from 9 places, 4 endpoints, 09:00 follow-up cron, 90-day cleanup (see Round 9) _Files:_ new NotificationModel.js, controllers/shared/notificationController.js, crone/registry.js _For:_ X5, bell badge _(backend cf1c4dc)_
 - [x] **BE-17**: Customer summary (borrowed, outstanding, on-time rate, since) on admin and employee profile responses _Files:_ customerController.getCustomers, LoanCollection.getCustomerProfile _For:_ A3 _(backend 45d8942 · 00165df · 6e34355)_
 - [x] **BE-18**: Upload size limit on multer; Cloudinary thumbnails for the document grid _Files:_ config/storageConfig.js, storageService.js _For:_ A8, F-9 _(backend f8e00d9)_
 - [x] **BE-19**: Undo endpoints, all admin-only and time-limited: (a) un-approve a payment (Approved → Pending); (b) un-approve a loan (Active → Pending, only while there are no repayments); (c) restore a soft-deleted lead; (d) restore a soft-deleted employee. No amounts ever move. _Files:_ loanController.js, routes/admin/loans/loanRoutes.js _For:_ Undo on the approve toast _(backend ace3332)_
@@ -153,8 +153,8 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W5 · Reports, risk, notifications (M)
 
-- [ ] A17 reports (bars, PDF and Excel, history), A18 risk (cron status, run settlement), X5 notifications + bell badge, X7 calculator, hidden Diagnostics
-- [ ] Backend: BE-9, BE-16
+- [x] A17 reports (bars, PDF and Excel, history), A18 risk (cron status, run settlement), X5 notifications + bell badge, X7 calculator, hidden Diagnostics _(app 1035ccc · backend cf1c4dc, 0ff54b7, ac89738, 818e338, 9b2d0a9, 22e1143)_
+- [x] Backend: BE-9, BE-16 _(backend 0ff54b7, cf1c4dc)_
 
 **Done when:**every notification event in the BE-16 table reaches the right person and opens the right screen, and the risk screen shows last night's run.
 
@@ -219,10 +219,10 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 - [x] **M-1 · Audit log**: included. _W3 screens done (loan Activity, admin Activity log; app a013e44). W0 part done: model, audit() helper and calls in every money/status controller (backend 066ddb0, 85d6124)._ W0: an `AuditLog` model + `audit()` helper called from every money- or status-changing controller. W3: the loan "Activity" screen + the admin Activity log in More.
 - [x] **M-2 · Business settings**: included. _W3 screen done (app a013e44). W0 part done: Settings document, GET/PUT /shared/settings, penalty rate, minimum payment and SMA thresholds read from it (backend 066ddb0)._ W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
-- [ ] **M-3 · Cash handover**: included as an **optional module, off by default**, switched on per client in Business settings. W5.
-- [ ] **M-5 · Loan statement PDF**: included. W5. Kept as **history** on the loan (date, language, who) for re-sharing; **deleted when the loan is deleted** (including force delete / BE-22).
+- [x] **M-3 · Cash handover**: included as an **optional module, off by default**, switched on per client in Business settings. W5. _(backend 818e338 · app 1035ccc)_
+- [x] **M-5 · Loan statement PDF**: included. W5. Kept as **history** on the loan (date, language, who) for re-sharing; **deleted when the loan is deleted** (including force delete / BE-22). _(backend 9b2d0a9 · app 1035ccc)_
 - [ ] **M-9 · Tests for money logic**: included. _Started:_ `npm test` in the backend covers payment allocation, advance draw-down and the penalty amount (backend fa1734a). Close-loan math still needs extracting from the controller before it can be tested. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave.
-- [ ] **M-10 · Collection performance per employee**: included. W5 (Reports → By employee).
+- [x] **M-10 · Collection performance per employee**: included. W5 (Reports → By employee). _(backend ac89738 · app 1035ccc)_
 - Skipped: M-4 KYC, M-6 holidays and off-days, M-7 reminders, M-8 areas.
 - [ ] **M-14 · Renew / top-up loan** (a new loan pre-filled from the previous one, copying documents): proposed, undecided.
 - [ ] **M-15 · Re-send a receipt from payment history**: proposed, undecided (depends on BE-24).
