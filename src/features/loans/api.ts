@@ -114,3 +114,26 @@ export function applyPenalty(role: Role, loanId: string, installmentId: string, 
 export function removePenalty(loanId: string, installmentId: string) {
   return api.post<{status: string}>('/admin/loan/remove/penalty', {loanId, repaymentScheduleId: installmentId});
 }
+
+// --- M-5 loan statements (both roles)
+
+export interface LoanStatement {
+  _id: string;
+  lang: 'en' | 'hi';
+  createdAt: string;
+  createdByName?: string;
+  createdByRole?: 'admin' | 'employee';
+  size?: number;
+}
+
+export async function getStatements(loanId: string): Promise<LoanStatement[]> {
+  const res = await api.get<{data: LoanStatement[]}>(`/shared/loan/${loanId}/statements`);
+  return res.data ?? [];
+}
+
+export async function createStatement(loanId: string, lang: 'en' | 'hi'): Promise<LoanStatement> {
+  const res = await api.post<{data: LoanStatement}>(`/shared/loan/${loanId}/statements`, {lang}, {timeout: 60000});
+  return res.data;
+}
+
+export const statementPdfPath = (loanId: string, id: string) => `/shared/loan/${loanId}/statements/${id}/pdf`;

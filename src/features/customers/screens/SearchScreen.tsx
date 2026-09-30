@@ -5,7 +5,7 @@
 
 import React, {useState} from 'react';
 import {FlatList} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {formatMoneyShort} from '@/lib/format';
@@ -30,6 +30,9 @@ export default function SearchScreen() {
   const s = useStyles();
   const {t} = useTranslation();
   const navigation = useNavigation();
+  // X7 "Use for new loan": choosing a customer opens Create loan pre-filled.
+  const params = useRoute<RouteProp<{Search: {pickFor?: 'newLoan'; prefill?: object} | undefined}, 'Search'>>().params;
+  const picking = params?.pickFor === 'newLoan';
   const recent = useRecent();
   const [q, setQ] = useState('');
 
@@ -46,7 +49,15 @@ export default function SearchScreen() {
     staleTime: 30 * 1000,
   });
 
-  const open = (c: {_id: string; uid?: string}) => {
+  const open = (c: {_id: string; uid?: string; name?: string}) => {
+    if (picking) {
+      if (q) rememberSearch(q);
+      navigation.dispatch({
+        type: 'REPLACE',
+        payload: {name: 'CreateLoan', params: {customerUid: c.uid, customerName: c.name, prefill: params?.prefill}},
+      } as never);
+      return;
+    }
     if (q) rememberSearch(q);
     navigation.navigate('Customer' as never, {id: c._id, uid: c.uid} as never);
   };
@@ -68,7 +79,7 @@ export default function SearchScreen() {
   const searching = q.length >= 2;
 
   return (
-    <Screen header={{title: t('search.title')}} padded={false}>
+    <Screen header={{title: picking ? t('search.pickCustomer') : t('search.title')}} padded={false}>
       <SearchField value={q} onSearch={setQ} placeholder={t('search.placeholder')} autoFocus style={s.search} />
       {!searching ? (
         <FlatList

@@ -25,6 +25,7 @@ import {
   EmptyState,
   ErrorState,
   Fab,
+  IconButton,
   KeyValueRows,
   PhotoViewer,
   ProgressBar,
@@ -42,6 +43,7 @@ import {
 import {getLoanDetail, getPaymentsPage, loanKeys} from '../api';
 import {useCollect, type CollectTarget} from '../components/CollectSheets';
 import {InstallmentSheet} from '../components/InstallmentSheet';
+import {StatementSheet, type StatementSheetHandle} from '../components/StatementSheet';
 import {ScheduleView} from '../components/ScheduleView';
 import {amountStillDue, collectorName, installmentTotal} from '../schedule';
 import type {Installment, LoanDetail, LoanDocument, PersonRef} from '../types';
@@ -90,6 +92,7 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
   });
   const detail = query.data;
   const loan = detail?.loan;
+  const statementRef = useRef<StatementSheetHandle>(null);
   const customer = detail?.customer;
   const customerName = customer ? `${customer.fname ?? ''} ${customer.lname ?? ''}`.trim() : '';
   const collector = loan && typeof loan.assignedTo === 'object' ? (loan.assignedTo as PersonRef) : null;
@@ -308,7 +311,18 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
       header={{
         title: loan ? t('loan.title', {number: loan.loanNumber}) : t('words.loan'),
         titleAccessory: loan ? <StatusBadge set="loan" status={loan.status} /> : undefined,
-        right: extras?.headerRight && detail ? extras.headerRight(detail) : undefined,
+        right: detail ? (
+          <View style={s.headerRight}>
+            {/* M-5: statements for both roles */}
+            <IconButton
+              icon="file-document-outline"
+              label={t('statement.title')}
+              variant="plain"
+              onPress={() => statementRef.current?.open()}
+            />
+            {extras?.headerRight ? extras.headerRight(detail) : null}
+          </View>
+        ) : undefined,
       }}
       padded={false}
       fab={
@@ -476,11 +490,13 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
         />
       ) : null}
       {collect.sheets}
+      {loan ? <StatementSheet ref={statementRef} loanId={loan._id} loanNumber={loan.loanNumber} /> : null}
     </Screen>
   );
 }
 
 const useStyles = makeStyles(t => ({
+  headerRight: {flexDirection: 'row', alignItems: 'center'},
   pad: {padding: t.space.lg, paddingBottom: 96},
   flex: {flex: 1, minWidth: 0},
   customer: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},

@@ -1,10 +1,8 @@
-// Admin: 5 tabs + More (U-01). Old screens still mounted here are replaced
-// in W5 (reports, risk and calculator).
+// Admin: 5 tabs + More (U-01).
 
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {useRoute} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
@@ -21,9 +19,16 @@ import LeadListScreen from '@/features/leads/screens/LeadListScreen';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
 import AdminLoanScreen from '@/features/loans/screens/AdminLoanScreen';
 import CloseLoanScreen from '@/features/loans/screens/CloseLoanScreen';
+import CalculatorScreen from '@/features/loans/screens/CalculatorScreen';
 import CreateLoanScreen from '@/features/loans/screens/CreateLoanScreen';
 import LoansScreen from '@/features/loans/screens/LoansScreen';
+import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import PaymentsScreen from '@/features/payments/screens/PaymentsScreen';
+import PerformanceScreen from '@/features/reports/screens/PerformanceScreen';
+import ReportsScreen from '@/features/reports/screens/ReportsScreen';
+import RiskScreen from '@/features/reports/screens/RiskScreen';
+import CashHandoversScreen from '@/features/cash/screens/CashHandoversScreen';
+import DiagnosticsScreen from '@/features/settings/screens/DiagnosticsScreen';
 import AboutScreen from '@/features/settings/screens/AboutScreen';
 import ActivityScreen from '@/features/settings/screens/ActivityScreen';
 import BusinessSettingsScreen from '@/features/settings/screens/BusinessSettingsScreen';
@@ -36,14 +41,8 @@ import EmployeeFormScreen from '@/features/staff/screens/EmployeeFormScreen';
 import EmployeeProfileScreen from '@/features/staff/screens/EmployeeProfileScreen';
 import EmployeesScreen from '@/features/staff/screens/EmployeesScreen';
 import {useTheme} from '@/theme';
-import {oldScreen, stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
+import {stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
 import type {AdminTabParamList, AppStackParamList} from './types';
-
-// Old screens (replaced wave by wave).
-import ReportsScreen from '../Screens/Home/Reports/ReportsScreen.js';
-import NpaReportScreen from '../Screens/Shared/Report/NpaReportScreen.js';
-import LoanStatusDetailsScreen from '../Screens/Shared/Report/LoanStatusDetailsScreen.js';
-import LoanCalculator from '../Screens/Shared/LoanCalculator.js';
 
 const Tab = createBottomTabNavigator<AdminTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -63,6 +62,7 @@ function useAdminBadges() {
 function AdminMore() {
   const {t} = useTranslation();
   const can = useCan();
+  const {settings} = useSession();
   const badges = useAdminBadges();
   const items: MoreItem[] = [
     {key: 'payments', icon: 'cash-check', title: t('more.payments'), route: 'Payments', badge: badges.payments},
@@ -73,14 +73,21 @@ function AdminMore() {
       route: 'Employees',
       visible: can('employee.manage'),
     },
-    {key: 'reports', icon: 'chart-bar', title: t('more.reports'), route: 'ReportsScreen', visible: can('reports.view')},
-    {key: 'risk', icon: 'alert-decagram-outline', title: t('more.risk'), route: 'NpaReportScreen'},
+    {key: 'reports', icon: 'chart-bar', title: t('more.reports'), route: 'Reports', visible: can('reports.view')},
+    {key: 'risk', icon: 'alert-decagram-outline', title: t('more.risk'), route: 'Risk'},
+    {
+      key: 'cash',
+      icon: 'hand-coin-outline',
+      title: t('cash.adminTitle'),
+      route: 'CashHandovers',
+      visible: !!settings?.modules?.cashHandover,
+    },
     {key: 'activity', icon: 'history', title: t('activity.title'), route: 'Activity', visible: can('activity.view')},
     {
       key: 'calculator',
       icon: 'calculator-variant-outline',
       title: t('more.calculator'),
-      route: 'LoanCalculator',
+      route: 'Calculator',
       visible: brand.features.calculator,
     },
   ];
@@ -148,16 +155,8 @@ function AdminTabs() {
   );
 }
 
-// Old screens still open a loan's schedule by its old route name.
-function LoanScheduleAlias() {
-  const route = useRoute();
-  (route.params as {tab?: string}).tab = 'schedule';
-  return <AdminLoanScreen />;
-}
-
 export default function AdminNavigator() {
   const theme = useTheme();
-  const {t} = useTranslation();
   return (
     <Stack.Navigator screenOptions={stackScreenOptions(theme)}>
       <Stack.Screen name="Tabs" component={AdminTabs} />
@@ -180,20 +179,14 @@ export default function AdminNavigator() {
       <Stack.Screen name="Security" component={SecurityScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="Reports" component={ReportsScreen} />
+      <Stack.Screen name="Performance" component={PerformanceScreen} />
+      <Stack.Screen name="Risk" component={RiskScreen} />
+      <Stack.Screen name="Calculator" component={CalculatorScreen} />
+      <Stack.Screen name="CashHandovers" component={CashHandoversScreen} />
+      <Stack.Screen name="Diagnostics" component={DiagnosticsScreen} />
       {__DEV__ ? <Stack.Screen name="KitGallery" component={KitGallery} /> : null}
-      {/* Old route names still used by old screens, pointing at new ones. */}
-      <Stack.Screen name="LoanDetails" component={AdminLoanScreen} />
-      <Stack.Screen name="RepaymentSchedule" component={LoanScheduleAlias} />
-      <Stack.Screen name="RepaymentApprovalScreen" component={PaymentsScreen} />
-      {/* Old screens */}
-      <Stack.Screen name="ReportsScreen" component={ReportsScreen} options={oldScreen(t('more.reports'))} />
-      <Stack.Screen name="NpaReportScreen" component={NpaReportScreen} options={oldScreen(t('more.risk'))} />
-      <Stack.Screen
-        name="LoanStatusDetails"
-        component={LoanStatusDetailsScreen}
-        options={oldScreen('Loan Status Details')}
-      />
-      <Stack.Screen name="LoanCalculator" component={LoanCalculator} options={oldScreen(t('more.calculator'))} />
     </Stack.Navigator>
   );
 }

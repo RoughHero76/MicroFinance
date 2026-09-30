@@ -45,14 +45,15 @@ export type AppStackParamList = {
   Employees: undefined;
   Employee: {uid: string};
   EmployeeForm: Record<string, unknown> | undefined;
-  // Old screens, until their wave replaces them
-  RepaymentSchedule: Record<string, unknown> | undefined;
+  // New screens (W5)
+  Notifications: undefined;
+  Reports: undefined;
+  Performance: undefined;
+  Risk: undefined;
+  Calculator: undefined;
+  CashHandover: undefined;
+  CashHandovers: undefined;
+  Diagnostics: undefined;
   CreateLoan: Record<string, unknown> | undefined;
-  LoanDetails: Record<string, unknown> | undefined;
   CloseLoan: Record<string, unknown> | undefined;
-  ReportsScreen: undefined;
-  NpaReportScreen: undefined;
-  LoanStatusDetails: Record<string, unknown> | undefined;
-  RepaymentApprovalScreen: undefined;
-  LoanCalculator: undefined;
 };

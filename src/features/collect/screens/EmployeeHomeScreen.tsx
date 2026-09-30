@@ -9,6 +9,7 @@ import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {formatMoney} from '@/lib/format';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
+import {NotificationBell} from '@/features/notifications/Bell';
 import {makeStyles} from '@/theme';
 import {Card, Chips, ErrorState, Icon, IconButton, OfflineBanner, ProgressBar, Screen, Skeleton, Text} from '@/ui';
 import {collectKeys, getEmployeeDashboard, type OverdueBucket} from '../api';
@@ -31,7 +32,12 @@ export default function EmployeeHomeScreen() {
       header={{
         title: t('home.welcome', {name: user?.fname ?? ''}),
         large: true,
-        right: <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />,
+        right: (
+          <View style={s.headerActions}>
+            <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />
+            <NotificationBell />
+          </View>
+        ),
       }}
       scroll
       banner={<OfflineBanner savedAt={query.dataUpdatedAt} />}
@@ -132,6 +138,7 @@ export default function EmployeeHomeScreen() {
 }
 
 const useStyles = makeStyles(t => ({
+  headerActions: {flexDirection: 'row', alignItems: 'center'},
   hero: {gap: t.space.xs, padding: t.space.lg},
   heroHead: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
   progress: {marginTop: t.space.sm},

@@ -100,7 +100,8 @@ export async function getOverduePage(bucket: OverdueBucket, page: number): Promi
     sortBy: 'totalOverdue',
     sortOrder: 'desc',
     smaLevel: bucket === 'sma0' ? 0 : bucket === 'sma1' ? 1 : bucket === 'sma2' ? 2 : undefined,
-    npa: bucket === 'npa' ? 'true' : undefined,
+    // A loan counts once, NPA first (as in the dashboard and risk counts).
+    npa: bucket === 'npa' ? 'true' : bucket === 'all' ? undefined : 'false',
   });
   return {
     items: res.data ?? [],

@@ -12,6 +12,7 @@ import {brand} from '@/brand';
 import {formatMoney, formatMoneyShort} from '@/lib/format';
 import {useCan} from '@/features/auth/SessionProvider';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
+import {NotificationBell} from '@/features/notifications/Bell';
 import {makeStyles} from '@/theme';
 import {
   Avatar,
@@ -46,7 +47,7 @@ export default function AdminHomeScreen() {
       route: 'Payments',
       badge: d?.pendingRepayments,
     },
-    {key: 'risk', icon: 'alert-decagram-outline', label: t('adminHome.risk'), route: 'NpaReportScreen'},
+    {key: 'risk', icon: 'alert-decagram-outline', label: t('adminHome.risk'), route: 'Risk'},
     ...(can('lead.manage')
       ? [
           {
@@ -58,7 +59,7 @@ export default function AdminHomeScreen() {
           },
         ]
       : []),
-    {key: 'reports', icon: 'chart-bar', label: t('adminHome.reports'), route: 'ReportsScreen'},
+    {key: 'reports', icon: 'chart-bar', label: t('adminHome.reports'), route: 'Reports'},
   ];
 
   return (
@@ -66,7 +67,12 @@ export default function AdminHomeScreen() {
       header={{
         title: brand.name,
         large: true,
-        right: <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />,
+        right: (
+          <View style={s.headerActions}>
+            <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />
+            <NotificationBell />
+          </View>
+        ),
       }}
       scroll
       banner={<OfflineBanner savedAt={query.dataUpdatedAt} />}
@@ -173,6 +179,7 @@ export default function AdminHomeScreen() {
 }
 
 const useStyles = makeStyles(t => ({
+  headerActions: {flexDirection: 'row', alignItems: 'center'},
   hero: {padding: t.space.lg, gap: t.space.xs},
   heroFacts: {flexDirection: 'row', gap: 10, marginTop: t.space.md},
   fact: {flex: 1, padding: t.space.md, borderRadius: t.radius.md, backgroundColor: t.colors.surface2, gap: 2},

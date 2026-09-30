@@ -100,3 +100,94 @@ export async function downloadUrlToDownloads(
     ReactNativeBlobUtil.fs.unlink(tmp).catch(() => undefined);
   }
 }
+
+// --- Files kept inside the app (report history, statements): the app can
+// list, open, share and delete these, which it can't do for files it wrote
+// to the shared Downloads folder on Android 10+.
+
+export interface AppFile {
+  path: string;
+  name: string;
+  size: number;
+  modified: number;
+}
+
+const appDir = (sub: string) => `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${sub}`;
+
+/** Downloads an authenticated API file into the app's own folder. */
+export async function downloadToApp(
+  path: string,
+  sub: string,
+  name: string,
+  opts: {onProgress?: (fraction: number) => void; method?: 'GET' | 'POST'; body?: object} = {},
+): Promise<AppFile> {
+  const token = await getToken();
+  const dir = appDir(sub);
+  if (!(await ReactNativeBlobUtil.fs.exists(dir))) await ReactNativeBlobUtil.fs.mkdir(dir);
+  const dest = `${dir}/${name}`;
+  const headers: Record<string, string> = token ? {Authorization: `Bearer ${token}`} : {};
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  const res = await ReactNativeBlobUtil.config({path: dest, overwrite: true})
+    .fetch(
+      opts.method ?? 'GET',
+      `${brand.apiUrl}/api${path}`,
+      headers,
+      opts.body ? JSON.stringify(opts.body) : undefined,
+    )
+    .progress((received, total) => {
+      const t = Number(total);
+      if (t > 0) opts.onProgress?.(Number(received) / t);
+    });
+  if (res.info().status >= 400) {
+    await ReactNativeBlobUtil.fs.unlink(dest).catch(() => undefined);
+    throw new Error(`http-${res.info().status}`);
+  }
+  const stat = await ReactNativeBlobUtil.fs.stat(dest);
+  return {path: dest, name, size: Number(stat.size), modified: Number(stat.lastModified)};
+}
+
+/** Newest first. */
+export async function listAppFiles(sub: string): Promise<AppFile[]> {
+  const dir = appDir(sub);
+  if (!(await ReactNativeBlobUtil.fs.exists(dir))) return [];
+  const stats = await ReactNativeBlobUtil.fs.lstat(dir);
+  return stats
+    .filter(s => s.type === 'file')
+    .map(s => ({path: s.path, name: s.filename, size: Number(s.size), modified: Number(s.lastModified)}))
+    .sort((a, b) => b.modified - a.modified);
+}
+
+export async function appFileExists(sub: string, name: string): Promise<AppFile | null> {
+  const path = `${appDir(sub)}/${name}`;
+  if (!(await ReactNativeBlobUtil.fs.exists(path))) return null;
+  const stat = await ReactNativeBlobUtil.fs.stat(path);
+  return {path, name, size: Number(stat.size), modified: Number(stat.lastModified)};
+}
+
+export const deleteAppFile = (path: string) => ReactNativeBlobUtil.fs.unlink(path);
+
+export async function clearAppFolder(sub: string) {
+  const dir = appDir(sub);
+  if (await ReactNativeBlobUtil.fs.exists(dir)) await ReactNativeBlobUtil.fs.unlink(dir);
+}
+
+export const openAppFile = (file: AppFile, mimeType: string) =>
+  ReactNativeBlobUtil.android.actionViewIntent(file.path, mimeType);
+
+/** The system share sheet (WhatsApp, email…) with the file attached. */
+export async function shareAppFile(file: AppFile, mimeType: string, title?: string) {
+  const Share = require('react-native-share').default ?? require('react-native-share');
+  try {
+    await Share.open({url: `file://${file.path}`, type: mimeType, filename: file.name, title, failOnCancel: false});
+  } catch {
+    // Closing the share sheet isn't an error.
+  }
+}
+
+export const saveAppFileToDownloads = (file: AppFile, mimeType: string, subfolder: string) =>
+  saveToDownloads(file.path, file.name, mimeType, subfolder);
+
+export const MIME = {
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+} as const;

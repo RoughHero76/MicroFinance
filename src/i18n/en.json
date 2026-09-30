@@ -174,7 +174,8 @@
   "ui": {
     "typeToConfirm": "Type {{value}} to confirm",
     "finishing": "Finishing…",
-    "uploading": "Uploading"
+    "uploading": "Uploading",
+    "downloading": "Downloading…"
   },
   "auth": {
     "welcome": "Welcome back",
@@ -902,6 +903,205 @@
     "noResults": "No customers match \"{{q}}\"",
     "hint": "Search by name, phone, email, username or loan number",
     "noLoans": "No loans",
-    "clear": "Clear"
+    "clear": "Clear",
+    "pickCustomer": "Choose the customer"
+  },
+  "calculator": {
+    "title": "Loan calculator",
+    "inputs": "Loan",
+    "results": "Result",
+    "interest": "Interest %",
+    "grace": "Grace (days)",
+    "hint": "Enter the amount and duration to see the installments.",
+    "perInstallment": "Per installment",
+    "installments": "Installments",
+    "total": "Total repayment",
+    "period": "Start → end",
+    "useForLoan": "Use for new loan"
+  },
+  "statement": {
+    "title": "Loan statement",
+    "language": "Language",
+    "makeAndShare": "Make and share",
+    "history": "Made before",
+    "none": "No statements yet"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "readAll": "Read all",
+    "unread": "Unread",
+    "empty": "No notifications",
+    "emptyHint": "Payments, leads and loans that need you show up here.",
+    "bellUnread": "Notifications, {{count}} unread",
+    "types": {
+      "payment": {
+        "pending": {
+          "title": "{{count}} payments need approval"
+        },
+        "approved": {
+          "title": "Payment approved · {{amount}}"
+        },
+        "approvedMany": {
+          "title": "{{count}} payments approved · {{amount}}"
+        },
+        "rejected": {
+          "title": "Payment rejected · {{amount}}"
+        }
+      },
+      "loan": {
+        "pending": {
+          "title": "Loan #{{number}} waiting for approval"
+        },
+        "assigned": {
+          "title": "Loan #{{number}} assigned to you"
+        }
+      },
+      "lead": {
+        "assigned": {
+          "title": "New lead assigned · {{name}}"
+        },
+        "status": {
+          "title": "Lead {{status}} · {{name}}"
+        },
+        "conversionRequested": {
+          "title": "Conversion requested · {{name}}"
+        },
+        "followupDue": {
+          "title": "{{count}} follow-ups due today"
+        }
+      },
+      "risk": {
+        "moved": {
+          "title": "{{count}} loans moved to a higher risk level"
+        }
+      },
+      "cron": {
+        "failed": {
+          "title": "The nightly update failed"
+        }
+      },
+      "cash": {
+        "handover": {
+          "title": "Cash handed over · {{amount}}"
+        },
+        "confirmed": {
+          "title": "Cash received · {{amount}}",
+          "short": "Cash short by {{amount}}"
+        }
+      }
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "threeMonths": "3 months",
+    "custom": "Custom",
+    "from": "From",
+    "to": "To",
+    "totalLoans": "Total loans",
+    "totalAmount": "Total loan amount",
+    "totalPaid": "Total paid",
+    "totalPenalty": "Total penalty",
+    "loanDistribution": "Loan amount distribution",
+    "installmentDistribution": "Installment amount distribution",
+    "nothing": "Nothing in this period",
+    "basis": "Counts the installments due in this period on active loans.",
+    "pdf": "PDF",
+    "excel": "Excel",
+    "downloaded": "Report downloaded",
+    "noApp": "No app on this phone can open this file",
+    "saved": "Saved to {{folder}}",
+    "saveToDownloads": "Save to Downloads",
+    "history": "Download history",
+    "noHistory": "No reports downloaded yet",
+    "deleteTitle": "Delete this report?",
+    "clearTitle": "Clear all downloads?",
+    "clearHint": "Every downloaded report is deleted from this phone.",
+    "clearAll": "Clear all",
+    "byEmployee": "By employee",
+    "byEmployeeHint": "Due vs collected per employee"
+  },
+  "performance": {
+    "title": "By employee",
+    "byPercent": "% collected",
+    "byCollected": "Collected",
+    "byOverdue": "Overdue",
+    "total": "All: {{collected}} of {{due}} due ({{percent}}%)",
+    "ofDue": "{{collected}} of {{due}} due",
+    "overdue": "{{count}} overdue",
+    "empty": "Nothing was due this month"
+  },
+  "risk": {
+    "title": "Portfolio risk",
+    "activeLoans": "Active loans",
+    "npaPercent": "NPA %",
+    "totalOverdue": "Total overdue",
+    "averageOverdue": "Avg overdue / loan",
+    "levels": "Risk levels",
+    "missed": "{{count}}+ missed installments",
+    "npaHint": "Non-performing",
+    "critical": "Critical",
+    "danger": "Danger",
+    "alert": "Alert",
+    "warning": "Warning",
+    "overdueLine": "{{percent}} of active loans · {{amount}} overdue",
+    "lastRun": "Recalculated {{date}}",
+    "lastRunFailed": "The last update failed ({{date}})",
+    "neverRun": "Not recalculated yet",
+    "runNow": "Run tonight's update now",
+    "runTitle": "Run tonight's update now?",
+    "runHint": "Advance balances, overdue installments and risk levels are recalculated. It can take a minute.",
+    "ran": "Update finished"
+  },
+  "cash": {
+    "title": "Hand over cash",
+    "adminTitle": "Cash handovers",
+    "today": "Today · {{date}}",
+    "cashLabel": "cash to hand over",
+    "cashPayments": "Cash payments",
+    "other": "UPI / bank (no handover)",
+    "pending": "Waiting for approval",
+    "included": "Included",
+    "more": "+ {{count}} more",
+    "nothing": "No cash to hand over",
+    "history": "Handed over before",
+    "noHistory": "No handovers yet",
+    "handOver": "Hand over",
+    "handOverAmount": "Hand over {{amount}}",
+    "confirmTitle": "Hand over {{amount}}?",
+    "confirmHint": "Cash payments included: {{count}}. The admin confirms when they receive it.",
+    "handedOver": "{{amount}} handed over",
+    "payments": "Cash payments: {{count}}",
+    "waiting": "Waiting",
+    "noneWaiting": "Nothing waiting",
+    "received": "Received",
+    "receivedToast": "{{amount}} received",
+    "short": "Short…",
+    "shortTitle": "Short from {{name}}",
+    "handedOverAmount": "Handed over {{amount}}",
+    "receivedAmount": "Amount received",
+    "note": "Note",
+    "noteRequired": "A note is required for a shortfall",
+    "shortAmountError": "Enter less than {{amount}}, or tap Received",
+    "recordShort": "Record shortfall",
+    "shortToast": "Shortfall recorded",
+    "shortBy": "Short by {{amount}} · {{note}}",
+    "status": {
+      "Submitted": "Waiting",
+      "Received": "Received",
+      "Short": "Short"
+    }
+  },
+  "diagnostics": {
+    "title": "Diagnostics",
+    "app": "App",
+    "brand": "Brand",
+    "server": "Server",
+    "jobs": "Nightly jobs",
+    "crashes": "Crash reports",
+    "noCrashes": "No crash reports",
+    "loanCheck": "Loan status check",
+    "runCheck": "Run the check"
   }
 }

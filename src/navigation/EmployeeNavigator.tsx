@@ -1,13 +1,12 @@
 // Employee: 5 tabs + More (U-01). "Collect" is a tab because recording
-// payments is the job employees do most. Old screens still mounted here are
-// replaced by later waves (calculator W5).
+// payments is the job employees do most.
 
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
-import {useCan} from '@/features/auth/SessionProvider';
+import {useCan, useSession} from '@/features/auth/SessionProvider';
 import KitGallery from '@/dev/KitGallery';
 import CollectScreen from '@/features/collect/screens/CollectScreen';
 import EmployeeHomeScreen from '@/features/collect/screens/EmployeeHomeScreen';
@@ -18,7 +17,10 @@ import SearchScreen from '@/features/customers/screens/SearchScreen';
 import LeadDetailScreen from '@/features/leads/screens/LeadDetailScreen';
 import LeadListScreen from '@/features/leads/screens/LeadListScreen';
 import NewLeadScreen from '@/features/leads/screens/NewLeadScreen';
+import HandOverScreen from '@/features/cash/screens/HandOverScreen';
+import CalculatorScreen from '@/features/loans/screens/CalculatorScreen';
 import LoanScreen from '@/features/loans/screens/LoanScreen';
+import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import MyPaymentsScreen from '@/features/payments/screens/MyPaymentsScreen';
 import AboutScreen from '@/features/settings/screens/AboutScreen';
 import MoreScreen, {type MoreItem} from '@/features/settings/screens/MoreScreen';
@@ -27,25 +29,30 @@ import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import SettingsScreen from '@/features/settings/screens/SettingsScreen';
 import SupportScreen from '@/features/settings/screens/SupportScreen';
 import {useTheme} from '@/theme';
-import {oldScreen, stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
+import {stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
 import type {AppStackParamList, EmployeeTabParamList} from './types';
-
-// Old screens (replaced wave by wave).
-import LoanCalculator from '../Screens/Shared/LoanCalculator.js';
 
 const Tab = createBottomTabNavigator<EmployeeTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 function EmployeeMore() {
   const {t} = useTranslation();
+  const {settings} = useSession();
   const items: MoreItem[] = [
     {key: 'payments', icon: 'cash-check', title: t('more.myPayments'), route: 'MyPayments'},
     {key: 'overdue', icon: 'alert-decagram-outline', title: t('overdue.title'), route: 'Overdue'},
     {
+      key: 'cash',
+      icon: 'hand-coin-outline',
+      title: t('cash.title'),
+      route: 'CashHandover',
+      visible: !!settings?.modules?.cashHandover,
+    },
+    {
       key: 'calculator',
       icon: 'calculator-variant-outline',
       title: t('more.calculator'),
-      route: 'LoanCalculator',
+      route: 'Calculator',
       visible: brand.features.calculator,
     },
   ];
@@ -112,7 +119,6 @@ function EmployeeTabs() {
 
 export default function EmployeeNavigator() {
   const theme = useTheme();
-  const {t} = useTranslation();
   return (
     <Stack.Navigator screenOptions={stackScreenOptions(theme)}>
       <Stack.Screen name="Tabs" component={EmployeeTabs} />
@@ -129,7 +135,9 @@ export default function EmployeeNavigator() {
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Lead" component={LeadDetailScreen} />
       <Stack.Screen name="NewLead" component={NewLeadScreen} />
-      <Stack.Screen name="LoanCalculator" component={LoanCalculator} options={oldScreen(t('more.calculator'))} />
+      <Stack.Screen name="Calculator" component={CalculatorScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="CashHandover" component={HandOverScreen} />
     </Stack.Navigator>
   );
 }

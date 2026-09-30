@@ -174,7 +174,8 @@
   "ui": {
     "typeToConfirm": "पुष्टि के लिए {{value}} लिखें",
     "finishing": "पूरा हो रहा है…",
-    "uploading": "अपलोड हो रहा है"
+    "uploading": "अपलोड हो रहा है",
+    "downloading": "डाउनलोड हो रहा है…"
   },
   "auth": {
     "welcome": "फिर से स्वागत है",
@@ -902,6 +903,205 @@
     "noResults": "\"{{q}}\" से कोई ग्राहक नहीं मिला",
     "hint": "नाम, फ़ोन, ईमेल, यूज़रनेम या ऋण नंबर से खोजें",
     "noLoans": "कोई ऋण नहीं",
-    "clear": "साफ़ करें"
+    "clear": "साफ़ करें",
+    "pickCustomer": "ग्राहक चुनें"
+  },
+  "calculator": {
+    "title": "लोन कैलकुलेटर",
+    "inputs": "लोन",
+    "results": "नतीजा",
+    "interest": "ब्याज %",
+    "grace": "छूट (दिन)",
+    "hint": "किस्तें देखने के लिए राशि और अवधि डालें।",
+    "perInstallment": "प्रति किस्त",
+    "installments": "किस्तें",
+    "total": "कुल भुगतान",
+    "period": "शुरू → अंत",
+    "useForLoan": "नए लोन में इस्तेमाल करें"
+  },
+  "statement": {
+    "title": "लोन विवरण",
+    "language": "भाषा",
+    "makeAndShare": "बनाएं और भेजें",
+    "history": "पहले बनाए गए",
+    "none": "अभी कोई विवरण नहीं"
+  },
+  "notifications": {
+    "title": "सूचनाएं",
+    "readAll": "सब पढ़ा",
+    "unread": "नहीं पढ़ा",
+    "empty": "कोई सूचना नहीं",
+    "emptyHint": "जिन भुगतान, लीड और लोन पर आपका काम है, वे यहां दिखेंगे।",
+    "bellUnread": "सूचनाएं, {{count}} नहीं पढ़ीं",
+    "types": {
+      "payment": {
+        "pending": {
+          "title": "{{count}} भुगतान मंज़ूरी के इंतज़ार में"
+        },
+        "approved": {
+          "title": "भुगतान मंज़ूर · {{amount}}"
+        },
+        "approvedMany": {
+          "title": "{{count}} भुगतान मंज़ूर · {{amount}}"
+        },
+        "rejected": {
+          "title": "भुगतान नामंज़ूर · {{amount}}"
+        }
+      },
+      "loan": {
+        "pending": {
+          "title": "लोन #{{number}} मंज़ूरी के इंतज़ार में"
+        },
+        "assigned": {
+          "title": "लोन #{{number}} आपको सौंपा गया"
+        }
+      },
+      "lead": {
+        "assigned": {
+          "title": "नई लीड सौंपी गई · {{name}}"
+        },
+        "status": {
+          "title": "लीड {{status}} · {{name}}"
+        },
+        "conversionRequested": {
+          "title": "ग्राहक बनाने का अनुरोध · {{name}}"
+        },
+        "followupDue": {
+          "title": "आज {{count}} फ़ॉलो-अप बाकी"
+        }
+      },
+      "risk": {
+        "moved": {
+          "title": "{{count}} लोन ज़्यादा जोखिम में गए"
+        }
+      },
+      "cron": {
+        "failed": {
+          "title": "रात का अपडेट नहीं चल पाया"
+        }
+      },
+      "cash": {
+        "handover": {
+          "title": "नकद जमा किया · {{amount}}"
+        },
+        "confirmed": {
+          "title": "नकद मिल गया · {{amount}}",
+          "short": "नकद {{amount}} कम"
+        }
+      }
+    }
+  },
+  "reports": {
+    "title": "रिपोर्ट",
+    "thisMonth": "इस महीने",
+    "lastMonth": "पिछले महीने",
+    "threeMonths": "3 महीने",
+    "custom": "अपनी तारीख़",
+    "from": "से",
+    "to": "तक",
+    "totalLoans": "कुल लोन",
+    "totalAmount": "कुल लोन राशि",
+    "totalPaid": "कुल भुगतान",
+    "totalPenalty": "कुल जुर्माना",
+    "loanDistribution": "लोन राशि का बंटवारा",
+    "installmentDistribution": "किस्त राशि का बंटवारा",
+    "nothing": "इस अवधि में कुछ नहीं",
+    "basis": "इस अवधि में चालू लोन की देय किस्तें गिनी गई हैं।",
+    "pdf": "PDF",
+    "excel": "Excel",
+    "downloaded": "रिपोर्ट डाउनलोड हो गई",
+    "noApp": "इस फ़ोन में यह फ़ाइल खोलने वाला ऐप नहीं है",
+    "saved": "{{folder}} में सेव हुआ",
+    "saveToDownloads": "Downloads में सेव करें",
+    "history": "डाउनलोड इतिहास",
+    "noHistory": "अभी कोई रिपोर्ट डाउनलोड नहीं हुई",
+    "deleteTitle": "यह रिपोर्ट हटाएं?",
+    "clearTitle": "सारे डाउनलोड हटाएं?",
+    "clearHint": "डाउनलोड की गई हर रिपोर्ट इस फ़ोन से हट जाएगी।",
+    "clearAll": "सब हटाएं",
+    "byEmployee": "कर्मचारी के हिसाब से",
+    "byEmployeeHint": "हर कर्मचारी का देय बनाम वसूली"
+  },
+  "performance": {
+    "title": "कर्मचारी के हिसाब से",
+    "byPercent": "% वसूली",
+    "byCollected": "वसूली",
+    "byOverdue": "बकाया",
+    "total": "सब: {{due}} देय में से {{collected}} ({{percent}}%)",
+    "ofDue": "{{due}} देय में से {{collected}}",
+    "overdue": "{{count}} बकाया",
+    "empty": "इस महीने कुछ देय नहीं था"
+  },
+  "risk": {
+    "title": "पोर्टफ़ोलियो जोखिम",
+    "activeLoans": "चालू लोन",
+    "npaPercent": "NPA %",
+    "totalOverdue": "कुल बकाया",
+    "averageOverdue": "औसत बकाया / लोन",
+    "levels": "जोखिम स्तर",
+    "missed": "{{count}}+ किस्तें छूटीं",
+    "npaHint": "डूबत खाता",
+    "critical": "गंभीर",
+    "danger": "ख़तरा",
+    "alert": "सावधान",
+    "warning": "चेतावनी",
+    "overdueLine": "चालू लोन का {{percent}} · {{amount}} बकाया",
+    "lastRun": "{{date}} को दोबारा गिना गया",
+    "lastRunFailed": "पिछला अपडेट नहीं चला ({{date}})",
+    "neverRun": "अभी दोबारा नहीं गिना गया",
+    "runNow": "रात का अपडेट अभी चलाएं",
+    "runTitle": "रात का अपडेट अभी चलाएं?",
+    "runHint": "अग्रिम जमा, बकाया किस्तें और जोखिम स्तर दोबारा गिने जाएंगे। इसमें एक मिनट लग सकता है।",
+    "ran": "अपडेट पूरा हुआ"
+  },
+  "cash": {
+    "title": "नकद जमा करें",
+    "adminTitle": "नकद जमा",
+    "today": "आज · {{date}}",
+    "cashLabel": "जमा करने को नकद",
+    "cashPayments": "नकद भुगतान",
+    "other": "UPI / बैंक (जमा नहीं)",
+    "pending": "मंज़ूरी के इंतज़ार में",
+    "included": "शामिल",
+    "more": "+ {{count}} और",
+    "nothing": "जमा करने को नकद नहीं",
+    "history": "पहले जमा किया",
+    "noHistory": "अभी कुछ जमा नहीं हुआ",
+    "handOver": "जमा करें",
+    "handOverAmount": "{{amount}} जमा करें",
+    "confirmTitle": "{{amount}} जमा करें?",
+    "confirmHint": "शामिल नकद भुगतान: {{count}}। मिलने पर एडमिन पुष्टि करेंगे।",
+    "handedOver": "{{amount}} जमा किए",
+    "payments": "नकद भुगतान: {{count}}",
+    "waiting": "इंतज़ार में",
+    "noneWaiting": "कुछ इंतज़ार में नहीं",
+    "received": "मिल गया",
+    "receivedToast": "{{amount}} मिले",
+    "short": "कम…",
+    "shortTitle": "{{name}} से कम मिला",
+    "handedOverAmount": "{{amount}} जमा किए",
+    "receivedAmount": "मिली राशि",
+    "note": "टिप्पणी",
+    "noteRequired": "कमी के लिए टिप्पणी ज़रूरी है",
+    "shortAmountError": "{{amount}} से कम डालें, या 'मिल गया' दबाएं",
+    "recordShort": "कमी दर्ज करें",
+    "shortToast": "कमी दर्ज हुई",
+    "shortBy": "{{amount}} कम · {{note}}",
+    "status": {
+      "Submitted": "इंतज़ार में",
+      "Received": "मिल गया",
+      "Short": "कम"
+    }
+  },
+  "diagnostics": {
+    "title": "डायग्नोस्टिक्स",
+    "app": "ऐप",
+    "brand": "ब्रांड",
+    "server": "सर्वर",
+    "jobs": "रात के काम",
+    "crashes": "क्रैश रिपोर्ट",
+    "noCrashes": "कोई क्रैश रिपोर्ट नहीं",
+    "loanCheck": "लोन स्थिति जांच",
+    "runCheck": "जांच चलाएं"
   }
 }
