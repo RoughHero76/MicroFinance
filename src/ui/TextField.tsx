@@ -4,7 +4,7 @@ import React, {forwardRef, useState} from 'react';
 import {Pressable, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle} from 'react-native';
 import {makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
-import {Text} from './Text';
+import {MAX_FONT_SCALE, Text} from './Text';
 
 export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -60,6 +60,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         ) : null}
         <TextInput
           ref={ref}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           style={s.input}
           placeholderTextColor={t.colors.muted}
           editable={editable}

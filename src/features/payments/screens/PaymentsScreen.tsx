@@ -261,6 +261,8 @@ export default function PaymentsScreen() {
                     ? () => navigation.navigate('Loan' as never, {loanId: item.loan!._id} as never)
                     : undefined
                 }
+                accessibilityRole="link"
+                accessibilityLabel={`${borrower(item)}, ${formatMoney(item.amount)}`}
                 style={s.line}>
                 <Text variant="bodyLg" weight="semibold" numberOfLines={1} style={s.flex}>
                   {borrower(item)}

@@ -65,6 +65,8 @@ function variantStyle(t: Theme, variant: TextVariant): TextStyle {
   }
 }
 
+export const MAX_FONT_SCALE = 1.4;
+
 export function Text({variant = 'body', color = 'text', weight, align, tabular, style, ...rest}: TextProps) {
   const t = useTheme();
   const base: TextStyle = {
@@ -74,5 +76,7 @@ export function Text({variant = 'body', color = 'text', weight, align, tabular, 
     ...(align ? {textAlign: align} : null),
     ...(tabular ? {fontVariant: ['tabular-nums']} : null),
   };
-  return <RNText style={[base, style]} {...rest} />;
+  // Large system font sizes are honoured up to 1.4×, so rows, amounts and
+  // tab labels still fit (accessibility pass, W6).
+  return <RNText style={[base, style]} maxFontSizeMultiplier={MAX_FONT_SCALE} {...rest} />;
 }

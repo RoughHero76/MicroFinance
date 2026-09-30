@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Pressable, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
 import {makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
+import {MAX_FONT_SCALE} from './Text';
 
 export interface SearchFieldProps {
   value: string;
@@ -33,6 +34,7 @@ export function SearchField({value, onSearch, placeholder, autoFocus, style, deb
       <Icon name="magnify" size={20} color="muted" />
       <TextInput
         style={s.input}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         value={text}
         onChangeText={change}
         placeholder={placeholder}
