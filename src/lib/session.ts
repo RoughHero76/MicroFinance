@@ -1,7 +1,12 @@
-// Where the signed-in session lives on the phone. The keys match what the
-// old screens (HomeContext) read, so old and new code share one session.
+// Where the signed-in session lives on the phone. The profile (name, role)
+// is in AsyncStorage; the token is only in the Android Keystore-backed
+// keychain (W6). Sessions saved by older versions keep working: their
+// AsyncStorage token is moved to the keychain on first load. If a phone's
+// keychain fails, the token falls back to AsyncStorage so sign-in still
+// works there.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 
 export type Role = 'admin' | 'employee';
 
@@ -18,21 +23,47 @@ export interface SessionUser {
 }
 
 const KEYS = {user: 'user', token: 'token', isLoggedIn: 'isLoggedIn', role: 'userRole'} as const;
+const SERVICE = 'session.token';
 
-// Read on every request (not cached), because old screens still write and
-// remove the token directly.
-export async function getToken(): Promise<string | null> {
+// Read on every request, so kept in memory once loaded.
+let memoryToken: string | null = null;
+
+async function writeToken(token: string): Promise<void> {
   try {
-    return await AsyncStorage.getItem(KEYS.token);
+    await Keychain.setGenericPassword('token', token, {service: SERVICE});
+    await AsyncStorage.removeItem(KEYS.token);
   } catch {
-    return null;
+    await AsyncStorage.setItem(KEYS.token, token);
   }
 }
 
+async function readToken(): Promise<string | null> {
+  try {
+    const entry = await Keychain.getGenericPassword({service: SERVICE});
+    if (entry && entry.password) return entry.password;
+  } catch {
+    // fall through to the fallback / old location
+  }
+  const old = await AsyncStorage.getItem(KEYS.token);
+  if (old) await writeToken(old); // moves it into the keychain when possible
+  return old;
+}
+
+export async function getToken(): Promise<string | null> {
+  if (memoryToken) return memoryToken;
+  try {
+    memoryToken = await readToken();
+  } catch {
+    memoryToken = null;
+  }
+  return memoryToken;
+}
+
 export async function saveSession(user: SessionUser, token: string): Promise<void> {
+  memoryToken = token;
+  await writeToken(token);
   await AsyncStorage.multiSet([
     [KEYS.user, JSON.stringify(user)],
-    [KEYS.token, token],
     [KEYS.isLoggedIn, 'true'],
     [KEYS.role, user.role],
   ]);
@@ -40,10 +71,13 @@ export async function saveSession(user: SessionUser, token: string): Promise<voi
 
 export async function loadSession(): Promise<{user: SessionUser; token: string} | null> {
   try {
-    const [[, user], [, token], [, loggedIn]] = await AsyncStorage.multiGet([KEYS.user, KEYS.token, KEYS.isLoggedIn]);
-    if (!user || !token || loggedIn !== 'true') {
+    const [[, user], [, loggedIn]] = await AsyncStorage.multiGet([KEYS.user, KEYS.isLoggedIn]);
+    if (!user || loggedIn !== 'true') {
       return null;
     }
+    memoryToken = null;
+    const token = await getToken();
+    if (!token) return null;
     return {user: JSON.parse(user) as SessionUser, token};
   } catch {
     return null;
@@ -55,5 +89,11 @@ export async function updateSessionUser(user: SessionUser): Promise<void> {
 }
 
 export async function clearSession(): Promise<void> {
+  memoryToken = null;
   await AsyncStorage.multiRemove([KEYS.user, KEYS.token, KEYS.isLoggedIn, KEYS.role]);
+  try {
+    await Keychain.resetGenericPassword({service: SERVICE});
+  } catch {
+    // nothing stored
+  }
 }

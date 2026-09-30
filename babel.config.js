@@ -1,5 +1,12 @@
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
+  env: {
+    // Release builds drop console.log/info/debug (W6); warnings and errors
+    // stay for crash reports.
+    production: {
+      plugins: [['transform-remove-console', {exclude: ['error', 'warn']}]],
+    },
+  },
   plugins: [
     [
       'module-resolver',

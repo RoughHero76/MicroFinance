@@ -11,14 +11,7 @@ import {clearQueryCache} from '@/lib/query';
 import {clearSession, loadSession, saveSession, updateSessionUser, type Role, type SessionUser} from '@/lib/session';
 import {clearPerUserStorage} from '@/lib/storage';
 import {getBusinessSettings, type BusinessSettings} from './api';
-import {
-  canUseDeviceLock,
-  clearSecureToken,
-  getLockSettings,
-  saveLockSettings,
-  storeTokenSecurely,
-  type LockSettings,
-} from './lock';
+import {canUseDeviceLock, getLockSettings, saveLockSettings, type LockSettings} from './lock';
 
 export type SessionStatus = 'loading' | 'signedOut' | 'locked' | 'signedIn';
 export type LogoutReason = SessionEndReason | null;
@@ -71,7 +64,7 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
     setStatus('signedOut');
     // Clears everything that belongs to this person, so a shared phone never
     // shows the previous person's customers. Theme and language stay.
-    await Promise.all([clearSession(), clearPerUserStorage(), clearQueryCache(), clearSecureToken()]);
+    await Promise.all([clearSession(), clearPerUserStorage(), clearQueryCache()]);
   }, []);
 
   // A 401 that means the session is over (expired, removed, deactivated).
@@ -100,7 +93,6 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
 
   const signIn = useCallback(async (nextUser: SessionUser, token: string) => {
     await saveSession(nextUser, token);
-    await storeTokenSecurely(token);
     setLogoutReason(null);
     setUser(nextUser);
     setStatus('signedIn');

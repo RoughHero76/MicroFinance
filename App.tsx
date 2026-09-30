@@ -1,8 +1,8 @@
 import React, {useEffect} from 'react';
+import {StyleSheet} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
-import {HomeProvider} from './src/components/context/HomeContext';
 import {UpdateProvider} from '@/features/app/updates';
 import {SessionProvider} from '@/features/auth/SessionProvider';
 import {loadSavedLanguage} from '@/i18n';
@@ -17,20 +17,17 @@ const App = () => {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryProvider>
             <SessionProvider>
               <UpdateProvider>
-                {/* HomeProvider: the old screens' view of the session (until W6). */}
-                <HomeProvider>
-                  <BottomSheetModalProvider>
-                    <RootNavigator />
-                    {/* The one toast host, above navigation and sheets. */}
-                    <ToastHost />
-                  </BottomSheetModalProvider>
-                </HomeProvider>
+                <BottomSheetModalProvider>
+                  <RootNavigator />
+                  {/* The one toast host, above navigation and sheets. */}
+                  <ToastHost />
+                </BottomSheetModalProvider>
               </UpdateProvider>
             </SessionProvider>
           </QueryProvider>
@@ -39,5 +36,7 @@ const App = () => {
     </GestureHandlerRootView>
   );
 };
+
+const styles = StyleSheet.create({root: {flex: 1}});
 
 export default App;

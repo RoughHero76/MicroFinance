@@ -1,14 +1,12 @@
 // Quick unlock and app lock (S2b, X3): after the first password login the
 // app opens with the phone's fingerprint or PIN/pattern while the 30-day
 // session is valid. The password is never stored; the token is kept in the
-// Android Keystore-backed keychain.
+// Android Keystore-backed keychain (see lib/session.ts).
 
 import ReactNativeBiometrics from 'react-native-biometrics';
-import * as Keychain from 'react-native-keychain';
 import {readJson, StorageKeys, writeJson} from '@/lib/storage';
 
 const biometrics = new ReactNativeBiometrics({allowDeviceCredentials: true});
-const SERVICE = 'session.token';
 
 export interface LockSettings {
   enabled: boolean;
@@ -44,21 +42,5 @@ export async function promptUnlock(message: string): Promise<boolean> {
     return success;
   } catch {
     return false;
-  }
-}
-
-export async function storeTokenSecurely(token: string) {
-  try {
-    await Keychain.setGenericPassword('token', token, {service: SERVICE});
-  } catch {
-    // The keychain is a hardening step; the session still works without it.
-  }
-}
-
-export async function clearSecureToken() {
-  try {
-    await Keychain.resetGenericPassword({service: SERVICE});
-  } catch {
-    // ignore
   }
 }

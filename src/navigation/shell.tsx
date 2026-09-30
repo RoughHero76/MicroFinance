@@ -15,7 +15,7 @@ export interface TabConfig<Name extends string> {
   icon: string;
   iconFocused: string;
   component: React.ComponentType<any>;
-  /** Old screens get the navigator's header; new screens draw their own. */
+  /** New screens draw their own header; `false` hides the navigator's. */
   header?: {title: string; right?: HeaderAction[]} | false;
   badge?: number;
   visible?: boolean;
@@ -76,16 +76,6 @@ export function tabOptions<N extends string>(tab: TabConfig<N>): BottomTabNaviga
       tab.header && tab.header.right
         ? () => <HeaderActions actions={(tab.header as {right: HeaderAction[]}).right} />
         : undefined,
-  };
-}
-
-/** The native header for old screens, themed, until they're replaced. */
-export function oldScreen(title: string, right?: HeaderAction[]): NativeStackNavigationOptions {
-  return {
-    headerShown: true,
-    headerTitle: title,
-    headerTitleAlign: 'center',
-    headerRight: right ? () => <HeaderActions actions={right} /> : undefined,
   };
 }
 

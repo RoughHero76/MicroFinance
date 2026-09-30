@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Every key the new code stores on the phone, in one place. The old screens
-// still use 'user', 'token', 'isLoggedIn' and 'userRole' directly.
+// Every key the app stores on the phone, in one place (the session's own
+// keys are in session.ts; the token is in the keychain).
 export const StorageKeys = {
   theme: 'settings.theme',
   language: 'settings.language',
