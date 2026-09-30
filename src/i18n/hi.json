@@ -1,0 +1,174 @@
+{
+  "common": {
+    "save": "सेव करें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "done": "हो गया",
+    "next": "आगे",
+    "back": "पीछे",
+    "retry": "फिर से कोशिश करें",
+    "close": "बंद करें",
+    "delete": "हटाएँ",
+    "edit": "बदलें",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "filters": "फ़िल्टर",
+    "apply": "लागू करें",
+    "clear": "साफ़ करें",
+    "all": "सभी",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "optional": "वैकल्पिक",
+    "loading": "लोड हो रहा है…",
+    "loadMore": "और दिखाएँ",
+    "copied": "कॉपी हो गया",
+    "copiedValue": "{{value}} कॉपी हो गया",
+    "undo": "वापस लें",
+    "more": "और",
+    "details": "विवरण",
+    "today": "आज",
+    "yesterday": "कल",
+    "admin": "एडमिन",
+    "employee": "कर्मचारी",
+    "unassigned": "किसी को नहीं सौंपा",
+    "selectDate": "तारीख चुनें",
+    "select": "चुनें",
+    "call": "कॉल",
+    "sms": "SMS",
+    "whatsapp": "WhatsApp",
+    "email": "ईमेल",
+    "map": "नक्शा",
+    "share": "शेयर करें",
+    "download": "डाउनलोड",
+    "open": "खोलें",
+    "logout": "लॉग आउट",
+    "version": "वर्ज़न {{version}}",
+    "required": "ज़रूरी"
+  },
+  "errors": {
+    "offline": "इंटरनेट कनेक्शन नहीं है",
+    "offlineDetail": "कुछ नहीं भेजा गया। कनेक्शन जाँचें और फिर कोशिश करें।",
+    "timeout": "सर्वर ने जवाब देने में बहुत देर की",
+    "server": "सर्वर पर कुछ गड़बड़ हुई",
+    "unknown": "कुछ गड़बड़ हुई",
+    "loadFailed": "{{what}} लोड नहीं हो सका",
+    "sessionExpired": "सत्र समाप्त हो गया, कृपया फिर से साइन इन करें",
+    "deactivated": "आपका खाता बंद कर दिया गया है, अपने एडमिन से संपर्क करें",
+    "required": "यह ज़रूरी है",
+    "invalidPhone": "10 अंकों का मोबाइल नंबर डालें",
+    "invalidEmail": "सही ईमेल पता डालें",
+    "invalidAmount": "सही राशि डालें",
+    "minAmount": "कम से कम {{amount}}",
+    "maxAmount": "ज़्यादा से ज़्यादा {{amount}}"
+  },
+  "states": {
+    "offlineBanner": "आप ऑफ़लाइन हैं · {{time}} की सूची दिख रही है",
+    "offlineBannerNoTime": "आप ऑफ़लाइन हैं",
+    "empty": "अभी यहाँ कुछ नहीं है"
+  },
+  "status": {
+    "loan": {
+      "Pending": "मंज़ूरी बाकी",
+      "Approved": "मंज़ूर",
+      "Active": "चालू",
+      "Rejected": "अस्वीकार",
+      "Closed": "बंद"
+    },
+    "schedule": {
+      "Pending": "बाकी",
+      "Paid": "जमा",
+      "PartiallyPaid": "आंशिक जमा",
+      "Overdue": "बकाया",
+      "AdvancePaid": "पहले जमा",
+      "OverduePaid": "देर से जमा",
+      "PartiallyPaidFullyPaid": "किस्तों में जमा",
+      "Waived": "माफ़"
+    },
+    "repayment": {
+      "Pending": "मंज़ूरी बाकी",
+      "Approved": "मंज़ूर",
+      "Rejected": "अस्वीकार"
+    },
+    "lead": {
+      "Pending": "बाकी",
+      "InProgress": "प्रगति में",
+      "Approved": "मंज़ूर",
+      "Rejected": "अस्वीकार",
+      "Converted": "ग्राहक बना"
+    },
+    "followup": {
+      "Pending": "फ़ॉलो-अप बाकी",
+      "Completed": "फ़ॉलो-अप पूरा"
+    },
+    "document": {
+      "Pending": "बाकी",
+      "Approved": "सत्यापित",
+      "Rejected": "अस्वीकार"
+    },
+    "account": {
+      "active": "सक्रिय",
+      "inactive": "निष्क्रिय"
+    },
+    "risk": {
+      "sma0": "SMA-0",
+      "sma1": "SMA-1",
+      "sma2": "SMA-2",
+      "npa": "NPA"
+    },
+    "penalty": {
+      "Pending": "बाकी",
+      "Paid": "जमा",
+      "Waived": "माफ़"
+    }
+  },
+  "enums": {
+    "paymentMethod": {
+      "Cash": "नकद",
+      "Bank Transfer": "बैंक ट्रांसफ़र",
+      "GooglePay": "GooglePay",
+      "PhonePay": "PhonePe",
+      "Paytm": "Paytm",
+      "Cheque": "चेक",
+      "Other": "अन्य"
+    },
+    "frequency": {
+      "Daily": "रोज़",
+      "Weekly": "साप्ताहिक",
+      "Monthly": "मासिक"
+    },
+    "loanType": {
+      "Personal": "पर्सनल लोन",
+      "Home": "होम लोन",
+      "Business": "बिज़नेस लोन",
+      "Education": "शिक्षा लोन",
+      "Vehicle": "वाहन लोन",
+      "Gold": "गोल्ड लोन",
+      "Other": "अन्य"
+    },
+    "gender": {
+      "Male": "पुरुष",
+      "Female": "महिला",
+      "Other": "अन्य"
+    },
+    "documentType": {
+      "Id Proof": "पहचान पत्र",
+      "Bank": "बैंक",
+      "Goverment": "सरकारी",
+      "Photo": "फ़ोटो",
+      "Signature": "हस्ताक्षर",
+      "Other": "अन्य"
+    },
+    "days": "{{count}} दिन"
+  },
+  "words": {
+    "installment": "किस्त",
+    "installments": "किस्तें",
+    "penalty": "जुर्माना",
+    "collector": "वसूलीकर्ता",
+    "loan": "ऋण",
+    "loanNo": "ऋण #{{number}}",
+    "customer": "ग्राहक",
+    "outstanding": "बकाया",
+    "paid": "जमा"
+  }
+}

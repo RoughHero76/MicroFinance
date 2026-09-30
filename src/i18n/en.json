@@ -1,0 +1,174 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "done": "Done",
+    "next": "Next",
+    "back": "Back",
+    "retry": "Try again",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filters": "Filters",
+    "apply": "Apply",
+    "clear": "Clear",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "optional": "Optional",
+    "loading": "Loading…",
+    "loadMore": "Load more",
+    "copied": "Copied",
+    "copiedValue": "Copied {{value}}",
+    "undo": "Undo",
+    "more": "More",
+    "details": "Details",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "admin": "Admin",
+    "employee": "Employee",
+    "unassigned": "Unassigned",
+    "selectDate": "Select date",
+    "select": "Select",
+    "call": "Call",
+    "sms": "SMS",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "map": "Map",
+    "share": "Share",
+    "download": "Download",
+    "open": "Open",
+    "logout": "Log out",
+    "version": "Version {{version}}",
+    "required": "Required"
+  },
+  "errors": {
+    "offline": "No internet connection",
+    "offlineDetail": "Nothing was sent. Check your connection and try again.",
+    "timeout": "The server took too long to respond",
+    "server": "Something went wrong on the server",
+    "unknown": "Something went wrong",
+    "loadFailed": "Couldn't load {{what}}",
+    "sessionExpired": "Session expired, please sign in",
+    "deactivated": "Your account was deactivated, contact your admin",
+    "required": "This field is required",
+    "invalidPhone": "Enter a 10-digit mobile number",
+    "invalidEmail": "Enter a valid email address",
+    "invalidAmount": "Enter a valid amount",
+    "minAmount": "Minimum is {{amount}}",
+    "maxAmount": "Maximum is {{amount}}"
+  },
+  "states": {
+    "offlineBanner": "You're offline · showing list from {{time}}",
+    "offlineBannerNoTime": "You're offline",
+    "empty": "Nothing here yet"
+  },
+  "status": {
+    "loan": {
+      "Pending": "Pending",
+      "Approved": "Approved",
+      "Active": "Active",
+      "Rejected": "Rejected",
+      "Closed": "Closed"
+    },
+    "schedule": {
+      "Pending": "Pending",
+      "Paid": "Paid",
+      "PartiallyPaid": "Partly paid",
+      "Overdue": "Overdue",
+      "AdvancePaid": "Paid early",
+      "OverduePaid": "Paid late",
+      "PartiallyPaidFullyPaid": "Paid in parts",
+      "Waived": "Waived"
+    },
+    "repayment": {
+      "Pending": "Waiting for approval",
+      "Approved": "Approved",
+      "Rejected": "Rejected"
+    },
+    "lead": {
+      "Pending": "Pending",
+      "InProgress": "In progress",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Converted": "Converted"
+    },
+    "followup": {
+      "Pending": "Follow-up due",
+      "Completed": "Follow-up done"
+    },
+    "document": {
+      "Pending": "Pending",
+      "Approved": "Verified",
+      "Rejected": "Rejected"
+    },
+    "account": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "risk": {
+      "sma0": "SMA-0",
+      "sma1": "SMA-1",
+      "sma2": "SMA-2",
+      "npa": "NPA"
+    },
+    "penalty": {
+      "Pending": "Unpaid",
+      "Paid": "Paid",
+      "Waived": "Waived"
+    }
+  },
+  "enums": {
+    "paymentMethod": {
+      "Cash": "Cash",
+      "Bank Transfer": "Bank transfer",
+      "GooglePay": "GooglePay",
+      "PhonePay": "PhonePe",
+      "Paytm": "Paytm",
+      "Cheque": "Cheque",
+      "Other": "Other"
+    },
+    "frequency": {
+      "Daily": "Daily",
+      "Weekly": "Weekly",
+      "Monthly": "Monthly"
+    },
+    "loanType": {
+      "Personal": "Personal Loan",
+      "Home": "Home Loan",
+      "Business": "Business Loan",
+      "Education": "Education Loan",
+      "Vehicle": "Vehicle Loan",
+      "Gold": "Gold Loan",
+      "Other": "Other"
+    },
+    "gender": {
+      "Male": "Male",
+      "Female": "Female",
+      "Other": "Other"
+    },
+    "documentType": {
+      "Id Proof": "ID proof",
+      "Bank": "Bank",
+      "Goverment": "Government",
+      "Photo": "Photo",
+      "Signature": "Signature",
+      "Other": "Other"
+    },
+    "days": "{{count}} days"
+  },
+  "words": {
+    "installment": "Installment",
+    "installments": "Installments",
+    "penalty": "Penalty",
+    "collector": "Collector",
+    "loan": "Loan",
+    "loanNo": "Loan #{{number}}",
+    "customer": "Customer",
+    "outstanding": "Outstanding",
+    "paid": "Paid"
+  }
+}
