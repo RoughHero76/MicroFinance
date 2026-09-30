@@ -63,14 +63,15 @@ const RepaymentSchedule = () => {
                 collectedBy: updatedSchedule.collectedBy
             };
 
-            console.log('Collected by: ', updatedSchedule.collectedBy);
             const response = await apiCall('/api/admin/loan/repayment/schedule/update', 'POST', payload);
             if (response.status === 'success') {
                 setShowEditModal(false);
-                updatedSchedule = null;
-                navigation.goBack();
+                setSelectedSchedule(null);
                 showToast('success', 'Repayment schedule updated successfully');
-
+                // Stay here and reload, so the edited installment shows its
+                // new status and amounts.
+                setPage(1);
+                fetchRepaymentSchedules({ pageToLoad: 1, replace: true });
             } else {
                 showToast('error', response.message || 'Failed to update repayment schedule');
             }
@@ -79,11 +80,11 @@ const RepaymentSchedule = () => {
             Alert.alert('Error', 'Failed to update repayment schedule. Please try again.');
         }
     };
-    const fetchRepaymentSchedules = async () => {
+    const fetchRepaymentSchedules = async ({ pageToLoad = page, replace = false } = {}) => {
         setLoading(true);
         try {
             const queryParams = new URLSearchParams({
-                page,
+                page: pageToLoad,
                 loanId,
                 ...(searchTerm && { searchTerm }),
                 ...(statusFilter && { statusFilter }),
@@ -99,6 +100,12 @@ const RepaymentSchedule = () => {
 
             if (data && Array.isArray(data.repaymentSchedule)) {
                 const newSchedules = data.repaymentSchedule;
+
+                if (replace) {
+                    setRepaymentSchedules(newSchedules);
+                    setTotalPages(data.totalPages || 1);
+                    return;
+                }
 
                 setRepaymentSchedules(prevSchedules => {
                     // Create a Set of the current schedule IDs

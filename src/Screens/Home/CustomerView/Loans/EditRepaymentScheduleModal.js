@@ -20,7 +20,9 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
     const { employees } = useHomeContext();
 
     const [collectedBy, setCollectedBy] = useState('');
-    const employeeItems = employees.map(emp => ({
+    // employees loads in the background after login, so it can still be
+    // null when this screen first renders.
+    const employeeItems = (employees || []).map(emp => ({
         label: `${emp.fname} ${emp.lname}`,
         value: emp._id
     }));
@@ -31,6 +33,7 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
 
     useEffect(() => {
         if (scheduleItem) {
+            setCollectedBy('');
             setNewStatus(scheduleItem.status);
             setAmount(scheduleItem.amount?.toString() || '');
             setPaymentDate(scheduleItem.paymentDate ? new Date(scheduleItem.paymentDate) : new Date());
@@ -42,22 +45,26 @@ const EditRepaymentScheduleModal = ({ visible, onClose, onSave, scheduleItem }) 
         }
     }, [scheduleItem]);
 
-    const handleSave = () => {
-        console.log(paymentMethod);
+    // Empty fields go as undefined, not NaN/"" — NaN is sent as null and
+    // would overwrite the installment amount on the server.
+    const toNumber = (value) => {
+        const number = parseFloat(value);
+        return Number.isFinite(number) ? number : undefined;
+    };
 
+    const handleSave = () => {
         onSave({
             id: scheduleItem._id,
             status: newStatus,
-            amount: parseFloat(amount),
+            amount: toNumber(amount),
             paymentDate: paymentDate.toISOString(),
-            paymentMethod,
-            penaltyAmount: penaltyAmount ? parseFloat(penaltyAmount) : undefined,
-            penaltyReason,
+            paymentMethod: paymentMethod || undefined,
+            penaltyAmount: toNumber(penaltyAmount),
+            penaltyReason: penaltyReason || undefined,
             penaltyAppliedDate: penaltyAppliedDate.toISOString(),
-            transactionId,
-            collectedBy
+            transactionId: transactionId || undefined,
+            collectedBy: collectedBy || undefined
         });
-        onClose();
     };
 
     const renderConditionalFields = () => {
