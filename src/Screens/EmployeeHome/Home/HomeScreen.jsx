@@ -24,12 +24,12 @@ const HomeScreen = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [loanCountRes, customerCountRes] = await Promise.all([
+            const [loanCountRes, dashboardRes] = await Promise.all([
                 apiCall('/api/employee/loan/collection/today/count', 'GET'),
-                apiCall('/api/admin/customer/count/total', 'GET')
+                apiCall('/api/employee/dashboard', 'GET')
             ]);
             setLoanCount(loanCountRes.count);
-            setCustomerCount(customerCountRes.data);
+            setCustomerCount(dashboardRes.data?.customersCount ?? 0);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
