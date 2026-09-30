@@ -1,0 +1,47 @@
+{
+  "id": "evi",
+  "name": "EviFinance",
+  "shortName": "Evi",
+  "tagline": "Loans made simple",
+  "poweredBy": "76Softwares",
+  "showPoweredBy": true,
+  "palette": "evi",
+  "allowedPalettes": ["evi", "indigo", "emerald", "saffron"],
+  "defaultMode": "system",
+  "languages": ["en", "hi"],
+  "apiUrl": "https://microfinance-backend.76softwares.in",
+  "storageFolder": "EviFinance",
+  "support": {
+    "phone": "",
+    "whatsapp": "",
+    "email": "",
+    "hours": "Mon–Sat 9–6"
+  },
+  "legal": {
+    "termsUrl": "",
+    "privacyUrl": ""
+  },
+  "receipt": {
+    "sms": {
+      "en": "{brand}: Rs{amount} recd for loan #{loanNo} on {date} ({method}). Bal Rs{balance}. Ref {ref}",
+      "hi": "{brand}: ₹{amount} प्राप्त, ऋण #{loanNo}, {date}. शेष ₹{balance}. {ref}"
+    },
+    "whatsapp": {
+      "en": "*{brand}* · Payment receipt\n₹{amount} received ({method})\nLoan #{loanNo} · Installment {inst}\n{datetime}\nBalance: ₹{balance}\nRef {ref} · _pending verification_",
+      "hi": "*{brand}* · भुगतान रसीद\n₹{amount} प्राप्त ({method})\nऋण #{loanNo} · किस्त {inst}\n{datetime}\nशेष: ₹{balance}\nRef {ref} · _सत्यापन बाकी_"
+    },
+    "penalty": {
+      "en": "{brand}: Late fee Rs{amount} on loan #{loanNo} ({date}). Pay with next installment.",
+      "hi": "{brand}: ऋण #{loanNo} पर ₹{amount} विलंब शुल्क ({date})। अगली किस्त के साथ भरें।"
+    }
+  },
+  "features": {
+    "leads": true,
+    "calculator": true,
+    "appLock": true
+  },
+  "android": {
+    "applicationId": "com.softwares76.microfinance.evi",
+    "appName": "EviFinance"
+  }
+}
