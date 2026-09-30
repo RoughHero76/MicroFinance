@@ -80,7 +80,6 @@ const dashboard = {
   overdue: {sma0: 6, sma1: 2, sma2: 1, npa: 1, totalOverdue: 58400, loans: 10},
 };
 
-let getSpy: jest.SpiedFunction<typeof api.get>;
 let postSpy: jest.SpiedFunction<typeof api.post>;
 
 beforeEach(async () => {
@@ -92,7 +91,7 @@ beforeEach(async () => {
     ['isLoggedIn', 'true'],
     ['settings.appLock', JSON.stringify({enabled: false, afterMs: 60000})],
   ]);
-  getSpy = jest.spyOn(api, 'get').mockImplementation(async (url: string) => {
+  jest.spyOn(api, 'get').mockImplementation(async (url: string) => {
     if (url === '/employee/loan/collection/today') return {data: collections} as never;
     if (url === '/employee/dashboard') return {data: dashboard} as never;
     if (url === '/shared/settings') return {data: {minPayment: 100, penaltyRate: 0.1, modules: {leads: true}}} as never;
