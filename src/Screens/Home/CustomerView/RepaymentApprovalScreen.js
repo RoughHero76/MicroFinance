@@ -233,13 +233,6 @@ const RepaymentApprovalScreen = () => {
                     <Text style={styles.filterButtonText}>Filters</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.switchButton}
-                    onPress={() => navigation.navigate('OldRepaymentApproval')}
-                >
-                    <Icon name="swap-horizontal" size={24} color="#6200EE" />
-                    <Text style={styles.filterButtonText}>Old Version</Text>
-                </TouchableOpacity>
             </View>
             <SectionList
                 sections={groupedRepayments}

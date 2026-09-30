@@ -57,7 +57,7 @@ const CustomerRegistration = () => {
                 if (lead) {
                     navigation.goBack();
                 } else {
-                    navigation.navigate('Menu');
+                    navigation.goBack();
                 }
             } else {
                 showToast("error", "Error", response.message || "Registration failed. Please try again.");

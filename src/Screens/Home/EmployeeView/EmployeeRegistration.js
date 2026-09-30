@@ -93,7 +93,7 @@ const EmployeeRegistration = () => {
       const response = await apiCall("/api/admin/employee", "POST", formData);
       if (response.status === "success") {
         showToast("success", "Success", response.message);
-        navigation.navigate('Menu');
+        navigation.goBack();
       } else {
         showToast("error", "Error", response.message || "Registration failed. Please try again.");
       }
