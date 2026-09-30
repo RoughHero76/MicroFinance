@@ -4,8 +4,8 @@
 
 export type AdminTabParamList = {
   Home: undefined;
-  AllCustomerView: undefined;
-  LoansView: undefined;
+  Customers: undefined;
+  Loans: undefined;
   AdminLeadsScreen: undefined;
   More: undefined;
 };
@@ -34,6 +34,10 @@ export type AppStackParamList = {
   Loan: {loanId: string; tab?: 'overview' | 'schedule' | 'documents'};
   Overdue: {bucket?: 'all' | 'sma0' | 'sma1' | 'sma2' | 'npa'} | undefined;
   MyPayments: undefined;
+  // New admin screens (W3)
+  Payments: undefined;
+  Activity: {loanId?: string; loanNumber?: string} | undefined;
+  BusinessSettings: undefined;
   // Old screens, until their wave replaces them
   CustomerView: Record<string, unknown> | undefined;
   EditCustomer: Record<string, unknown> | undefined;

@@ -1612,6 +1612,11 @@
   dependencies:
     merge-options "^3.0.4"
 
+"@react-native-clipboard/clipboard@^1.14.3":
+  version "1.14.3"
+  resolved "https://registry.npmjs.org/@react-native-clipboard/clipboard/-/clipboard-1.14.3.tgz"
+  integrity sha512-EVWxJfCSyBN2SH5b3JrA/w1qlYu3vihQOfdD7fs/BYp63xL6qy93CvbFDHzF8ooFpGM6f67hkAN+gxl1RfOKuw==
+
 "@react-native-community/cli-clean@14.1.0":
   version "14.1.0"
   resolved "https://registry.npmjs.org/@react-native-community/cli-clean/-/cli-clean-14.1.0.tgz"
@@ -7336,7 +7341,7 @@ react-native-vector-icons@^10.1.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-react-native-windows@*, react-native-windows@^0.75.0:
+react-native-windows@*, react-native-windows@^0.75.0, "react-native-windows@>= 0.61.0":
   version "0.75.4"
   resolved "https://registry.npmjs.org/react-native-windows/-/react-native-windows-0.75.4.tgz"
   integrity sha512-tYzDym8BMGka7EWu1TnpErNCTFR1mptk9Dqv1nYFMQDGv1YAfcWCCk9cdCAYTbEjstj/emI2LrcGUdcjMXGVlQ==
@@ -7386,7 +7391,7 @@ react-native-windows@*, react-native-windows@^0.75.0:
     ws "^6.2.2"
     yargs "^17.6.2"
 
-react-native@*, "react-native@^0.0.0-0 || >=0.60 <1.0", react-native@^0.75.2, react-native@^0.75.3, react-native@^0.75.4, "react-native@>= 0.50.0", react-native@>=0.40.0, react-native@>=0.59, react-native@>=0.60.0:
+react-native@*, "react-native@^0.0.0-0 || >=0.60 <1.0", react-native@^0.75.2, react-native@^0.75.3, react-native@^0.75.4, "react-native@>= 0.50.0", "react-native@>= 0.61.5", react-native@>=0.40.0, react-native@>=0.59, react-native@>=0.60.0:
   version "0.75.4"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.75.4.tgz"
   integrity sha512-Jehg4AMNIAXu9cn0/1jbTCoNg3tc+t6EekwucCalN8YoRmxGd/PY6osQTI/5fSAM40JQ4O8uv8Qg09Ycpb5sxQ==
@@ -7453,7 +7458,7 @@ react-test-renderer@>=16.8.0, react-test-renderer@18.3.1:
     react-shallow-renderer "^16.15.0"
     scheduler "^0.23.2"
 
-react@*, "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17 || ^18 || ^19", "react@^18 || ^19", react@^18.2.0, react@^18.3.1, "react@> 16.7.0", "react@>= 16.8.0", react@>=16.8, react@>=16.8.0, react@>=17.0.0:
+react@*, "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17 || ^18 || ^19", "react@^18 || ^19", react@^18.2.0, react@^18.3.1, "react@> 16.7.0", "react@>= 16.8.0", "react@>= 16.9.0", react@>=16.8, react@>=16.8.0, react@>=17.0.0:
   version "18.3.1"
   resolved "https://registry.npmjs.org/react/-/react-18.3.1.tgz"
   integrity sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==

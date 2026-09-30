@@ -55,3 +55,4 @@ jest.mock('react-native-biometrics', () =>
     simplePrompt: jest.fn(() => Promise.resolve({success: true})),
   })),
 );
+jest.mock('@react-native-clipboard/clipboard', () => require('@react-native-clipboard/clipboard/jest/clipboard-mock'));

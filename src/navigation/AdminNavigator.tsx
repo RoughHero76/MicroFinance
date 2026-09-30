@@ -1,14 +1,27 @@
-// Admin: 5 tabs + More (U-01). Old screens are mounted inside the new tabs
-// until their wave replaces them (W1). All of the admin's routes are here.
+// Admin: 5 tabs + More (U-01). Old screens still mounted here are replaced
+// by later waves (customers, staff and leads W4; reports, risk, search and
+// calculator W5).
 
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useRoute} from '@react-navigation/native';
+import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
-import {useCan} from '@/features/auth/SessionProvider';
+import {useCan, useSession} from '@/features/auth/SessionProvider';
 import KitGallery from '@/dev/KitGallery';
+import OverdueListScreen from '@/features/collect/screens/OverdueListScreen';
+import AdminHomeScreen from '@/features/dashboard/screens/AdminHomeScreen';
+import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
+import AdminLoanScreen from '@/features/loans/screens/AdminLoanScreen';
+import CloseLoanScreen from '@/features/loans/screens/CloseLoanScreen';
+import CreateLoanScreen from '@/features/loans/screens/CreateLoanScreen';
+import LoansScreen from '@/features/loans/screens/LoansScreen';
+import PaymentsScreen from '@/features/payments/screens/PaymentsScreen';
 import AboutScreen from '@/features/settings/screens/AboutScreen';
+import ActivityScreen from '@/features/settings/screens/ActivityScreen';
+import BusinessSettingsScreen from '@/features/settings/screens/BusinessSettingsScreen';
 import MoreScreen, {type MoreItem} from '@/features/settings/screens/MoreScreen';
 import ProfileScreen from '@/features/settings/screens/ProfileScreen';
 import SecurityScreen from '@/features/settings/screens/SecurityScreen';
@@ -19,18 +32,11 @@ import {oldScreen, stackScreenOptions, tabOptions, tabScreenOptions, type TabCon
 import type {AdminTabParamList, AppStackParamList} from './types';
 
 // Old screens (replaced wave by wave).
-import HomeScreen from '../Screens/Home/HomeScreen.js';
 import AllCustomerView from '../Screens/Home/CustomerView/AllCustomerView.js';
 import CustomerView from '../Screens/Home/CustomerView/CustomerView.js';
 import EditCustomerScreen from '../Screens/Home/CustomerView/EditCustomerView.js';
 import CustomerRegistration from '../Screens/Home/CustomerView/CustomerRegistration.js';
-import LoansView from '../Screens/Home/CustomerView/Loans/LoansView.js';
-import LoanDetails from '../Screens/Home/CustomerView/Loans/LoanDetails.js';
-import RepaymentSchedule from '../Screens/Home/CustomerView/Loans/RepaymentSchedule.js';
-import CreateLoan from '../Screens/Home/CustomerView/Loans/CreateLoan.js';
-import CloseLoan from '../Screens/Home/CustomerView/Loans/CloseLoan.js';
 import PaymentHistory from '../Screens/Shared/Customer/Loan/PaymentHistory.js';
-import RepaymentApprovalScreen from '../Screens/Home/CustomerView/RepaymentApprovalScreen.js';
 import ReportsScreen from '../Screens/Home/Reports/ReportsScreen.js';
 import NpaReportScreen from '../Screens/Shared/Report/NpaReportScreen.js';
 import LoanStatusDetailsScreen from '../Screens/Shared/Report/LoanStatusDetailsScreen.js';
@@ -45,11 +51,24 @@ import LoanCalculator from '../Screens/Shared/LoanCalculator.js';
 const Tab = createBottomTabNavigator<AdminTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
+function useAdminBadges() {
+  const {status} = useSession();
+  const query = useQuery({
+    queryKey: adminLoanKeys.dashboard,
+    queryFn: getAdminDashboard,
+    enabled: status === 'signedIn',
+    staleTime: 60 * 1000,
+    meta: {persist: true},
+  });
+  return {payments: query.data?.pendingRepayments ?? 0, loans: query.data?.pendingLoans ?? 0};
+}
+
 function AdminMore() {
   const {t} = useTranslation();
   const can = useCan();
+  const badges = useAdminBadges();
   const items: MoreItem[] = [
-    {key: 'payments', icon: 'cash-check', title: t('more.payments'), route: 'RepaymentApprovalScreen'},
+    {key: 'payments', icon: 'cash-check', title: t('more.payments'), route: 'Payments', badge: badges.payments},
     {
       key: 'employees',
       icon: 'account-tie-outline',
@@ -59,6 +78,7 @@ function AdminMore() {
     },
     {key: 'reports', icon: 'chart-bar', title: t('more.reports'), route: 'ReportsScreen', visible: can('reports.view')},
     {key: 'risk', icon: 'alert-decagram-outline', title: t('more.risk'), route: 'NpaReportScreen'},
+    {key: 'activity', icon: 'history', title: t('activity.title'), route: 'Activity', visible: can('activity.view')},
     {
       key: 'calculator',
       icon: 'calculator-variant-outline',
@@ -74,6 +94,7 @@ function AdminTabs() {
   const theme = useTheme();
   const {t} = useTranslation();
   const can = useCan();
+  const badges = useAdminBadges();
   const search = {icon: 'magnify', label: t('common.search'), route: 'SearchScreen'};
   const tabs: TabConfig<keyof AdminTabParamList>[] = [
     {
@@ -81,11 +102,12 @@ function AdminTabs() {
       label: t('nav.home'),
       icon: 'home-outline',
       iconFocused: 'home',
-      component: HomeScreen,
-      header: {title: brand.name, right: [search]},
+      component: AdminHomeScreen,
+      header: false,
+      badge: badges.payments,
     },
     {
-      name: 'AllCustomerView',
+      name: 'Customers',
       label: t('nav.customers'),
       icon: 'account-group-outline',
       iconFocused: 'account-group',
@@ -96,12 +118,13 @@ function AdminTabs() {
       },
     },
     {
-      name: 'LoansView',
+      name: 'Loans',
       label: t('nav.loans'),
       icon: 'bank-outline',
       iconFocused: 'bank',
-      component: LoansView,
-      header: {title: t('nav.loans'), right: [search]},
+      component: LoansScreen,
+      header: false,
+      badge: badges.loans,
     },
     {
       name: 'AdminLeadsScreen',
@@ -132,20 +155,38 @@ function AdminTabs() {
   );
 }
 
+// Old screens still open a loan's schedule by its old route name.
+function LoanScheduleAlias() {
+  const route = useRoute();
+  (route.params as {tab?: string}).tab = 'schedule';
+  return <AdminLoanScreen />;
+}
+
 export default function AdminNavigator() {
   const theme = useTheme();
   const {t} = useTranslation();
   return (
     <Stack.Navigator screenOptions={stackScreenOptions(theme)}>
       <Stack.Screen name="Tabs" component={AdminTabs} />
-      {/* New shared screens */}
+      <Stack.Screen name="Loan" component={AdminLoanScreen} />
+      <Stack.Screen name="CreateLoan" component={CreateLoanScreen} />
+      <Stack.Screen name="CloseLoan" component={CloseLoanScreen} />
+      <Stack.Screen name="Payments" component={PaymentsScreen} />
+      <Stack.Screen name="Activity" component={ActivityScreen} />
+      <Stack.Screen name="BusinessSettings" component={BusinessSettingsScreen} />
+      <Stack.Screen name="Overdue" component={OverdueListScreen} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       {__DEV__ ? <Stack.Screen name="KitGallery" component={KitGallery} /> : null}
+      {/* Old route names still used by old screens, pointing at new ones. */}
+      <Stack.Screen name="LoanDetails" component={AdminLoanScreen} />
+      <Stack.Screen name="RepaymentSchedule" component={LoanScheduleAlias} />
+      <Stack.Screen name="RepaymentApprovalScreen" component={PaymentsScreen} />
       {/* Old screens */}
+      <Stack.Screen name="Customer" component={CustomerView} options={oldScreen('Customer View')} />
       <Stack.Screen name="CustomerView" component={CustomerView} options={oldScreen('Customer View')} />
       <Stack.Screen name="EditCustomer" component={EditCustomerScreen} options={oldScreen('Edit Customer')} />
       <Stack.Screen
@@ -153,16 +194,7 @@ export default function AdminNavigator() {
         component={CustomerRegistration}
         options={oldScreen('Customer Registration')}
       />
-      <Stack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={oldScreen('Repayment Schedule')} />
-      <Stack.Screen name="CreateLoan" component={CreateLoan} options={oldScreen('Create Loan')} />
-      <Stack.Screen name="LoanDetails" component={LoanDetails} options={oldScreen('Loan Details')} />
       <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={oldScreen('Payment History')} />
-      <Stack.Screen name="CloseLoan" component={CloseLoan} options={oldScreen('Close Loan')} />
-      <Stack.Screen
-        name="RepaymentApprovalScreen"
-        component={RepaymentApprovalScreen}
-        options={oldScreen(t('more.payments'))}
-      />
       <Stack.Screen name="ReportsScreen" component={ReportsScreen} options={oldScreen(t('more.reports'))} />
       <Stack.Screen name="NpaReportScreen" component={NpaReportScreen} options={oldScreen(t('more.risk'))} />
       <Stack.Screen

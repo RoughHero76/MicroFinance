@@ -17,6 +17,7 @@
     "@dr.pogodin/react-native-fs": "^2.28.1",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-clipboard/clipboard": "^1.14.3",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-native-picker/picker": "^2.8.0",
