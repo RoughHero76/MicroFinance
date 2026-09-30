@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix B-1…B-12 done on `feat/revamp` in both repos (not released, not deployed). Next: W0. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix and W0 done on `feat/revamp` in both repos (not released, not deployed). Next: W1. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -56,16 +56,16 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [ ] **BE-8**: Text search q on admin customers, employee customers and admin loans (name, phone, loan number) _Files:_ customerController.getCustomers, LoanCollection.getCustomers, loanController.getLoans _For:_ A2, A5, E4
 - [ ] **BE-9**: Status recalculation as POST (keep the GET alias). Return lastRunAt from the existing CronRun model _Files:_ routes/shared/sharedRoutes.js, systemController.js _For:_ A18
 - [x] **BE-10** (backend 6294b15): Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
-- [ ] **BE-11**: Correctly spelt aliases: /apply/penalty, /remove/penalty, /profilePicture (keep the old spellings) _Files:_ route files _For:_ clean API client
-- [ ] **BE-12**: One response shape {status, message, code, data, meta:{page,totalPages,total}}. code drives app logic; title/message arrive already translated (BE-20). Fixes the meesage typo. _Files:_ middleware/errorHandler.js + controllers as they're touched _For:_ F-7 i18n, U-06
+- [x] **BE-11**: Correctly spelt aliases: /apply/penalty, /remove/penalty, /profilePicture (keep the old spellings) _Files:_ route files _For:_ clean API client _(backend fa1c430)_
+- [x] **BE-12**: One response shape {status, message, code, data, meta:{page,totalPages,total}}. code drives app logic; title/message arrive already translated (BE-20). Fixes the meesage typo. _Files:_ middleware/errorHandler.js + controllers as they're touched _For:_ F-7 i18n, U-06 _(backend c4c4795; controllers move to codes as they're touched)_
 - [ ] **BE-13**: Deployment per brand: each brand has its own backend deployment and database, with its own update APK and URL (same as today's single deployment). No code change, just documented in the brand README. _Files:_ docs _For:_ white-label
-- [ ] **BE-14**: `POST /shared/client-errors` for crash reports, written to the winston logs, limited per device. _Files:_ new route + controller _For:_ S8 crash screen
+- [x] **BE-14**: `POST /shared/client-errors` for crash reports, written to the winston logs, limited per device. _Files:_ new route + controller _For:_ S8 crash screen _(backend 9855aea)_
 - [ ] **BE-15**: Add the remove-penalty and backup routes to the typed API client (no server change). _Files:_ app API client _For:_ A7b, X3
 - [ ] **BE-16**: Notifications: model, notify() helper called from 9 places, 4 endpoints, 09:00 follow-up cron, 90-day cleanup (see Round 9) _Files:_ new NotificationModel.js, controllers/shared/notificationController.js, crone/registry.js _For:_ X5, bell badge
 - [ ] **BE-17**: Customer summary (borrowed, outstanding, on-time rate, since) on admin and employee profile responses _Files:_ customerController.getCustomers, LoanCollection.getCustomerProfile _For:_ A3
 - [ ] **BE-18**: Upload size limit on multer; Cloudinary thumbnails for the document grid _Files:_ config/storageConfig.js, storageService.js _For:_ A8, F-9
 - [ ] **BE-19**: Undo endpoints, all admin-only and time-limited: (a) un-approve a payment (Approved → Pending); (b) un-approve a loan (Active → Pending, only while there are no repayments); (c) restore a soft-deleted lead; (d) restore a soft-deleted employee. No amounts ever move. _Files:_ loanController.js, routes/admin/loans/loanRoutes.js _For:_ Undo on the approve toast
-- [ ] **BE-20**: Server-side message translation: locales/en.json and hi.json, and middleware that reads Accept-Language and fills title/message from code + params _Files:_ new src/i18n/, middleware/errorHandler.js, controllers as touched _For:_ Server-driven toasts in Hindi
+- [x] **BE-20**: Server-side message translation: locales/en.json and hi.json, and middleware that reads Accept-Language and fills title/message from code + params _Files:_ new src/i18n/, middleware/errorHandler.js, controllers as touched _For:_ Server-driven toasts in Hindi _(backend c4c4795)_
 - [ ] **BE-21**: (Optional, later) One route per resource that filters by the caller's role, like `/shared/search`. _Files:_ routes _For:_ fewer endpoint pairs
 - [ ] **BE-22**: Before a force delete of a loan (and before deleting a customer), save a JSON snapshot of the loan, schedules, repayments, penalties and document records to a DeletionArchive collection, with who and when. Kept for 90 days. It's for recovery by hand, not an app feature. Also return the counts shown in A6c (GET /admin/loan/:id/delete-preview). _Files:_ loanController.deleteLoan, customerController.deleteCustomer, new DeletionArchiveModel.js _For:_ A6c, safety
 - [ ] **BE-23**: Optional: include lastSeen and the latest loginHistory date in the admin employee response _Files:_ employeeController.getEmployees _For:_ A16 "Last login"
@@ -74,14 +74,14 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 ## Foundations (W0)
 
 - [ ] **F-1 · Folder structure by feature**: src/features/<loans|customers|leads|payments|reports|staff>/ each holding api.ts, components/, admin/ screens and employee/ screens. Plus src/ui (kit), src/theme, src/brand, src/i18n, src/lib (API client, formatters), src/navigation. The same 40 screens end up in predictable places.
-- [ ] **F-2 · No URLs inside screens**: Today 67 apiCall('/api/…') strings are scattered across screens. Each feature's api.ts owns its endpoints (loansApi.schedule(loanId, {page, status})), so a backend path change touches one file.
-- [ ] **F-3 · A data layer (Q-A)**: One library handles loading, error, paging, pull-to-refresh, caching and "refresh after approve". Without it, every screen repeats ~40 lines of useState and useEffect (as today), and offline caching (U-10) would be added screen by screen later.
-- [ ] **F-4 · TypeScript for new code (Q-B)**: App.tsx and tsconfig.json already exist. Typing the API responses (Loan, Schedule, Repayment, Lead) catches field mistakes like LogicNote vs logicNote and totalPenalty vs totalPenaltyAmount at build time. Adopting it later means re-touching every file.
-- [ ] **F-5 · One source for enums and statuses**: Loan, schedule, repayment, lead and document statuses, payment methods, frequencies and durations are defined once (mirroring the Mongoose enums), with a colour tone and a t() label each. Today "Approved" is yellow on one screen and green on another.
-- [ ] **F-6 · Permissions in one place**: can(user, 'loan.close') decides what each role sees (U-13). Screens never check user.role === 'admin' themselves, so adding a role later (for example a branch manager) doesn't touch every screen.
-- [ ] **F-7 · i18n from the first screen**: i18next with en and hi JSON files, with amounts and dates formatted by locale. Hindi text is ~30% longer, so layouts are checked in Hindi as part of each wave.
+- [x] **F-2 · No URLs inside screens**: Today 67 apiCall('/api/…') strings are scattered across screens. Each feature's api.ts owns its endpoints (loansApi.schedule(loanId, {page, status})), so a backend path change touches one file. _(api client 606efd1; screens move over wave by wave)_
+- [x] **F-3 · A data layer (Q-A)**: One library handles loading, error, paging, pull-to-refresh, caching and "refresh after approve". Without it, every screen repeats ~40 lines of useState and useEffect (as today), and offline caching (U-10) would be added screen by screen later. _(606efd1)_
+- [x] **F-4 · TypeScript for new code (Q-B)**: App.tsx and tsconfig.json already exist. Typing the API responses (Loan, Schedule, Repayment, Lead) catches field mistakes like LogicNote vs logicNote and totalPenalty vs totalPenaltyAmount at build time. Adopting it later means re-touching every file. _(57155d9)_
+- [x] **F-5 · One source for enums and statuses**: Loan, schedule, repayment, lead and document statuses, payment methods, frequencies and durations are defined once (mirroring the Mongoose enums), with a colour tone and a t() label each. Today "Approved" is yellow on one screen and green on another. _(606efd1)_
+- [x] **F-6 · Permissions in one place**: can(user, 'loan.close') decides what each role sees (U-13). Screens never check user.role === 'admin' themselves, so adding a role later (for example a branch manager) doesn't touch every screen. _(606efd1)_
+- [x] **F-7 · i18n from the first screen**: i18next with en and hi JSON files, with amounts and dates formatted by locale. Hindi text is ~30% longer, so layouts are checked in Hindi as part of each wave. _(606efd1)_
 - [ ] **F-8 · Navigation as config**: Each role's tabs and screens are listed in one file per role, and brand feature flags (for example features.leads) can hide a tab there. No more headers built inline in the navigator.
-- [ ] **F-9 · Image rules**: `react-native-image-crop-picker`. Profile and lead photos: square 512px, JPEG 0.8. Documents: free, A4 or rotate crop, 1600px max, JPEG 0.75, under 400 KB. Upload progress + retry.
+- [x] **F-9 · Image rules**: `react-native-image-crop-picker`. Profile and lead photos: square 512px, JPEG 0.8. Documents: free, A4 or rotate crop, 1600px max, JPEG 0.75, under 400 KB. Upload progress + retry. _(606efd1)_
 
 ## Waves
 
@@ -99,19 +99,19 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W0 · Foundation, with no visible change to users (L)
 
-- [ ] TypeScript setup; src/features/*, src/ui, src/lib, src/theme, src/brand, src/i18n folders (F-1)
-- [ ] lib/api.ts: an axios instance with the token, Accept-Language, a 15 s timeout, the 401 → logout handler, ApiError, and typed feature APIs (F-2)
-- [ ] TanStack Query provider, query-key helpers, and useInfiniteList (F-3)
-- [ ] Theme: palettes × modes, ThemeProvider, makeStyles, and adapters for navigation, status bar and charts
-- [ ] Brand: brands/evi/ (with logo-dark.png), npm run brand, Android flavors, new package ID
-- [ ] i18n: i18next, en and hi, formatMoney, formatDate, amountInWords (en and hi)
-- [ ] UI kit: Button, IconButton, TextField, MoneyField, Chips, UnderlineTabs, SegmentedControl, Card, ListRow, Avatar (with cache), StatusBadge, EmptyState, ErrorState, Skeleton, BottomSheet, ConfirmSheet, Header, Stepper, Timeline, Switch, ToastHost, AppModal, OfflineBanner, BrandLogo
-- [ ] Utilities: pickImage (crop and compress, F-9), ensurePermission, can() (F-6), the status map (F-5), openSms and openWhatsApp
-- [ ] Remove React Native Paper, add the ESLint no-hex rule, npm run release
-- [ ] A developer-only kit gallery screen showing every component
-- [ ] BE-12 one response shape + BE-20 server-side message translation
-- [ ] BE-11 correctly spelt route aliases
-- [ ] BE-14 /shared/client-errors
+- [x] TypeScript setup; src/features/*, src/ui, src/lib, src/theme, src/brand, src/i18n folders (F-1) _(app 57155d9; feature folders fill in with each wave)_
+- [x] lib/api.ts: an axios instance with the token, Accept-Language, a 15 s timeout, the 401 → logout handler, ApiError, and typed feature APIs (F-2) _(app 606efd1; typed feature APIs are added with each feature's screens)_
+- [x] TanStack Query provider, query-key helpers, and useInfiniteList (F-3) _(app 606efd1)_
+- [x] Theme: palettes × modes, ThemeProvider, makeStyles, and adapters for navigation, status bar and charts _(app ced0fa7)_
+- [x] Brand: brands/evi/ (with logo-dark.png), npm run brand, Android flavors, new package ID _(app 94ea1a7, 512d385)_
+- [x] i18n: i18next, en and hi, formatMoney, formatDate, amountInWords (en and hi) _(app 606efd1, 6d6e1e3)_
+- [x] UI kit: Button, IconButton, TextField, MoneyField, Chips, UnderlineTabs, SegmentedControl, Card, ListRow, Avatar (with cache), StatusBadge, EmptyState, ErrorState, Skeleton, BottomSheet, ConfirmSheet, Header, Stepper, Timeline, Switch, ToastHost, AppModal, OfflineBanner, BrandLogo _(app d29b2ef)_
+- [x] Utilities: pickImage (crop and compress, F-9), ensurePermission, can() (F-6), the status map (F-5), openSms and openWhatsApp _(app 606efd1)_
+- [x] Remove React Native Paper, add the ESLint no-hex rule, npm run release _(app 57155d9, 512d385)_
+- [x] A developer-only kit gallery screen showing every component _(app d29b2ef)_
+- [x] BE-12 one response shape + BE-20 server-side message translation _(backend c4c4795)_
+- [x] BE-11 correctly spelt route aliases _(backend fa1c430)_
+- [x] BE-14 /shared/client-errors _(backend 9855aea)_
 
 **Done when:**the kit gallery looks right in 4 palettes × light/dark × English/Hindi at 360dp width and 130% font size. npm run release produces app-evi-x.y.z.apk with the new ID. The old screens still work unchanged.
 
@@ -217,8 +217,8 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ## Optional suggestions: decided (round 21)
 
-- [ ] **M-1 · Audit log**: included. W0: an `AuditLog` model + `audit()` helper called from every money- or status-changing controller. W3: the loan "Activity" screen + the admin Activity log in More.
-- [ ] **M-2 · Business settings**: included. W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
+- [ ] **M-1 · Audit log**: included. _W0 part done: model, audit() helper and calls in every money/status controller (backend 066ddb0, 85d6124)._ W0: an `AuditLog` model + `audit()` helper called from every money- or status-changing controller. W3: the loan "Activity" screen + the admin Activity log in More.
+- [ ] **M-2 · Business settings**: included. _W0 part done: Settings document, GET/PUT /shared/settings, penalty rate, minimum payment and SMA thresholds read from it (backend 066ddb0)._ W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
 - [ ] **M-3 · Cash handover**: included as an **optional module, off by default**, switched on per client in Business settings. W5.
 - [ ] **M-5 · Loan statement PDF**: included. W5. Kept as **history** on the loan (date, language, who) for re-sharing; **deleted when the loan is deleted** (including force delete / BE-22).
 - [ ] **M-9 · Tests for money logic**: included. _Started:_ `npm test` in the backend covers payment allocation, advance draw-down and the penalty amount (backend fa1734a). Close-loan math still needs extracting from the controller before it can be tested. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave.
@@ -226,8 +226,8 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - Skipped: M-4 KYC, M-6 holidays and off-days, M-7 reminders, M-8 areas.
 - [ ] **M-14 · Renew / top-up loan** (a new loan pre-filled from the previous one, copying documents): proposed, undecided.
 - [ ] **M-15 · Re-send a receipt from payment history**: proposed, undecided (depends on BE-24).
-- [ ] **M-11 · Module switches (server-side)**: included. W0: `modules` on the `Settings` document (Leads, Cash handover, Performance report), read by the app at login and on resume; `can()` hides disabled modules. W3: switches on the Business settings screen. Cash handover defaults to **off**.
-- [ ] **M-12 · Automatic daily DB backup**: included. W0 backend: a 02:00 IST cron using the existing `backupUtils`, writing dated zips on the server and keeping the last 14. No app screen.
+- [ ] **M-11 · Module switches (server-side)**: included. _W0 part done: modules on Settings, lead routes refused when off, can() honours them (backend 066ddb0, app 606efd1)._ W0: `modules` on the `Settings` document (Leads, Cash handover, Performance report), read by the app at login and on resume; `can()` hides disabled modules. W3: switches on the Business settings screen. Cash handover defaults to **off**.
+- [x] **M-12 · Automatic daily DB backup**: included. W0 backend: a 02:00 IST cron using the existing `backupUtils`, writing dated zips on the server and keeping the last 14. No app screen. _(backend 4694db1)_
 - [ ] **M-13 · Settings changes in the audit log**: included. W3: every Business settings or module change goes through `audit()` (who, old → new); the settings screen shows "Last changed by … · date".
 
 ## Shared screens (one implementation, role config)
