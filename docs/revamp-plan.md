@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix and W0 done on `feat/revamp` in both repos (not released, not deployed). Next: W1. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix, W0 and W1 done on `feat/revamp` in both repos (not released, not deployed). Next: W2. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -73,14 +73,14 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ## Foundations (W0)
 
-- [ ] **F-1 · Folder structure by feature**: src/features/<loans|customers|leads|payments|reports|staff>/ each holding api.ts, components/, admin/ screens and employee/ screens. Plus src/ui (kit), src/theme, src/brand, src/i18n, src/lib (API client, formatters), src/navigation. The same 40 screens end up in predictable places.
+- [x] **F-1 · Folder structure by feature**: src/features/<loans|customers|leads|payments|reports|staff>/ each holding api.ts, components/, admin/ screens and employee/ screens. Plus src/ui (kit), src/theme, src/brand, src/i18n, src/lib (API client, formatters), src/navigation. The same 40 screens end up in predictable places. _(src/features, src/ui, src/lib, src/theme, src/brand, src/i18n, src/navigation; old screens move in as they're replaced)_
 - [x] **F-2 · No URLs inside screens**: Today 67 apiCall('/api/…') strings are scattered across screens. Each feature's api.ts owns its endpoints (loansApi.schedule(loanId, {page, status})), so a backend path change touches one file. _(api client 606efd1; screens move over wave by wave)_
 - [x] **F-3 · A data layer (Q-A)**: One library handles loading, error, paging, pull-to-refresh, caching and "refresh after approve". Without it, every screen repeats ~40 lines of useState and useEffect (as today), and offline caching (U-10) would be added screen by screen later. _(606efd1)_
 - [x] **F-4 · TypeScript for new code (Q-B)**: App.tsx and tsconfig.json already exist. Typing the API responses (Loan, Schedule, Repayment, Lead) catches field mistakes like LogicNote vs logicNote and totalPenalty vs totalPenaltyAmount at build time. Adopting it later means re-touching every file. _(57155d9)_
 - [x] **F-5 · One source for enums and statuses**: Loan, schedule, repayment, lead and document statuses, payment methods, frequencies and durations are defined once (mirroring the Mongoose enums), with a colour tone and a t() label each. Today "Approved" is yellow on one screen and green on another. _(606efd1)_
 - [x] **F-6 · Permissions in one place**: can(user, 'loan.close') decides what each role sees (U-13). Screens never check user.role === 'admin' themselves, so adding a role later (for example a branch manager) doesn't touch every screen. _(606efd1)_
 - [x] **F-7 · i18n from the first screen**: i18next with en and hi JSON files, with amounts and dates formatted by locale. Hindi text is ~30% longer, so layouts are checked in Hindi as part of each wave. _(606efd1)_
-- [ ] **F-8 · Navigation as config**: Each role's tabs and screens are listed in one file per role, and brand feature flags (for example features.leads) can hide a tab there. No more headers built inline in the navigator.
+- [x] **F-8 · Navigation as config**: Each role's tabs and screens are listed in one file per role, and brand feature flags (for example features.leads) can hide a tab there. No more headers built inline in the navigator. _(app 4344c30)_
 - [x] **F-9 · Image rules**: `react-native-image-crop-picker`. Profile and lead photos: square 512px, JPEG 0.8. Documents: free, A4 or rotate crop, 1600px max, JPEG 0.75, under 400 KB. Upload progress + retry. _(606efd1)_
 
 ## Waves
@@ -117,12 +117,12 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W1 · New shell around the old screens (M)
 
-- [ ] Navigation configured per role (F-8): 5 tabs + More for admin and employee. Old screens are mounted inside the new tabs until their wave replaces them
-- [ ] S1 Splash, S2 Login (role switch, logout reason), S2b Quick unlock and app lock, S4 permissions explainer
-- [ ] Android: delete SMSModule and SMSPackage; remove the 8 SMS, phone and storage permissions from the manifest; save to Downloads through Android's media storage
-- [ ] Logout clears drafts, cached lists, recent searches and quick unlock
-- [ ] S5 update sheet, S6 states, S7 offline banner, S8 crash screen → BE-14; the single ToastHost, with all 39 <CustomToast /> removed
-- [ ] X1 Profile (photo crop), X2 Settings (mode, palette, language), X3 Security (admin: password, backup), X4 Support, X6 About
+- [x] Navigation configured per role (F-8): 5 tabs + More for admin and employee. Old screens are mounted inside the new tabs until their wave replaces them _(app 4344c30)_
+- [x] S1 Splash, S2 Login (role switch, logout reason), S2b Quick unlock and app lock, S4 permissions explainer _(app 4344c30; quick unlock uses react-native-biometrics (keychain 8 has no PIN fallback on Android))_
+- [x] Android: delete SMSModule and SMSPackage; remove the 8 SMS, phone and storage permissions from the manifest; save to Downloads through Android's media storage _(app 9a06de2; WRITE_EXTERNAL_STORAGE kept only up to Android 10)_
+- [x] Logout clears drafts, cached lists, recent searches and quick unlock _(app 4344c30, 9a06de2)_
+- [x] S5 update sheet, S6 states, S7 offline banner, S8 crash screen → BE-14; the single ToastHost, with all 39 <CustomToast /> removed _(app 4344c30; backend c42c274 (size + notes))_
+- [x] X1 Profile (photo crop), X2 Settings (mode, palette, language), X3 Security (admin: password, backup), X4 Support, X6 About _(app 4344c30)_
 
 **Done when:**both roles can log in with a password, then with fingerprint, and reach every old feature from the new tabs. Switching theme and language applies without a restart. A toast shows above an open modal.
 
