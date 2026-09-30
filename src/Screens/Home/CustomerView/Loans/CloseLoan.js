@@ -189,12 +189,14 @@ const CloseLoan = ({ route, navigation }) => {
         forgivePenalties: data.forgivePenalties,
       });
 
-      if(response.status !== 200) {
+      // apiCall returns the body, so success is status: 'success' — not
+      // the HTTP code.
+      if (response.status !== 'success') {
         showToast('error', response.message || 'Unknown error');
         return;
       }
       showToast('success', 'Loan closed successfully');
-      //Wait for 2 seconds before navigating back
+      // Give the toast a moment before navigating back
       setTimeout(() => {
         navigation.goBack();
       }, 1000);
