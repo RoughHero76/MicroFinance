@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix, W0–W5 done on `feat/revamp` in both repos (not released, not deployed). Next: W6. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix and W0–W6 done on `feat/revamp` in both repos (not released, not deployed). Left: a low-end phone check, the Hindi review, then release when the owner says so. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -58,9 +58,9 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] **BE-10** (backend 6294b15): Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
 - [x] **BE-11**: Correctly spelt aliases: /apply/penalty, /remove/penalty, /profilePicture (keep the old spellings) _Files:_ route files _For:_ clean API client _(backend fa1c430)_
 - [x] **BE-12**: One response shape {status, message, code, data, meta:{page,totalPages,total}}. code drives app logic; title/message arrive already translated (BE-20). Fixes the meesage typo. _Files:_ middleware/errorHandler.js + controllers as they're touched _For:_ F-7 i18n, U-06 _(backend c4c4795; controllers move to codes as they're touched)_
-- [ ] **BE-13**: Deployment per brand: each brand has its own backend deployment and database, with its own update APK and URL (same as today's single deployment). No code change, just documented in the brand README. _Files:_ docs _For:_ white-label
+- [x] **BE-13**: Deployment per brand: each brand has its own backend deployment and database, with its own update APK and URL (same as today's single deployment). No code change, just documented in the brand README. _Files:_ docs _For:_ white-label _(app 8436a28: brands/README.md)_
 - [x] **BE-14**: `POST /shared/client-errors` for crash reports, written to the winston logs, limited per device. _Files:_ new route + controller _For:_ S8 crash screen _(backend 9855aea)_
-- [ ] **BE-15**: Add the remove-penalty and backup routes to the typed API client (no server change). _Files:_ app API client _For:_ A7b, X3
+- [x] **BE-15**: Add the remove-penalty and backup routes to the typed API client (no server change). _Files:_ app API client _For:_ A7b, X3 _(app ee1be66 removePenalty · 4344c30 backup)_
 - [x] **BE-16**: Notifications: model, notify() helper called from 9 places, 4 endpoints, 09:00 follow-up cron, 90-day cleanup (see Round 9) _Files:_ new NotificationModel.js, controllers/shared/notificationController.js, crone/registry.js _For:_ X5, bell badge _(backend cf1c4dc)_
 - [x] **BE-17**: Customer summary (borrowed, outstanding, on-time rate, since) on admin and employee profile responses _Files:_ customerController.getCustomers, LoanCollection.getCustomerProfile _For:_ A3 _(backend 45d8942 · 00165df · 6e34355)_
 - [x] **BE-18**: Upload size limit on multer; Cloudinary thumbnails for the document grid _Files:_ config/storageConfig.js, storageService.js _For:_ A8, F-9 _(backend f8e00d9)_
@@ -160,9 +160,9 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W6 · Clean-up and final checks (S–M)
 
-- [ ] Delete every old screen file, HomeDARK-.js, RepaymentApprovalScreenOld.js and the unused WelcomeScreen.js; remove md5, @react-navigation/stack, material-top-tabs and react-native-rename; remove react-native-image-picker and react-native-toast-message
-- [ ] Strip console output from release builds, check list performance on a low-end phone, run an accessibility pass
-- [ ] A native speaker reviews the Hindi text in the app and on the server
+- [x] Delete every old screen file, HomeDARK-.js, RepaymentApprovalScreenOld.js and the unused WelcomeScreen.js; remove md5, @react-navigation/stack, material-top-tabs and react-native-rename; remove react-native-image-picker and react-native-toast-message _(app 1035ccc, 79a0b2d; the three named old files were already gone)_
+- [ ] Strip console output from release builds, check list performance on a low-end phone, run an accessibility pass _(console stripped: app 79a0b2d; accessibility pass: app 8470552. Still open: list performance on a low-end phone, which needs a device.)_
+- [ ] A native speaker reviews the Hindi text in the app and on the server _(every string has Hindi; review sheet with all 987 strings: docs/hindi-review.md)_
 
 ## UX rules (every screen)
 
@@ -191,14 +191,14 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] P-01 · Amount in words _(app ee1be66)_
 - [x] P-02 · ₹ grouping while typing _(app ee1be66)_
 - [x] P-03 · Badges on tabs _(app a013e44)_
-- [ ] P-04 · Haptics
-- [ ] P-05 · Filters and tabs are remembered
+- [x] P-04 · Haptics _(app ee1be66, a013e44: payment recorded/approved, copy)_
+- [x] P-05 · Filters and tabs are remembered _(app 6cc7fef: Loans, Payments, Leads)_
 - [x] P-06 · Smart defaults _(payment method remembered; app ee1be66)_
-- [ ] P-07 · Tap to copy
-- [ ] P-08 · Empty states that help
-- [ ] P-09 · Map from address
-- [ ] P-10 · Keyboard never hides the button
-- [ ] P-11 · Subtle motion
+- [x] P-07 · Tap to copy _(app 6cc7fef)_
+- [x] P-08 · Empty states that help _(app ee1be66 onward: each empty list has one next step)_
+- [x] P-09 · Map from address _(app ee1be66: customer, employee and lead addresses)_
+- [x] P-10 · Keyboard never hides the button _(app d29b2ef: Screen keyboard avoidance, floating buttons)_
+- [x] P-11 · Subtle motion _(app d29b2ef: toasts, sheets, skeletons)_
 - [x] P-12 · Photo viewer everywhere _(app ee1be66)_
 - [x] P-13 · End-of-day summary for employees _(app ee1be66)_
 - [x] P-14 · Approve a whole collector group _(backend ace3332, app a013e44)_
@@ -221,7 +221,7 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] **M-2 · Business settings**: included. _W3 screen done (app a013e44). W0 part done: Settings document, GET/PUT /shared/settings, penalty rate, minimum payment and SMA thresholds read from it (backend 066ddb0)._ W0: a `Settings` document (default interest, grace, penalty rate, min payment, SMA thresholds, **optional** loan-number prefix that is **empty by default**). W3: admin screen; Create loan and the calculator read their defaults from it. **No holidays or off-days.**
 - [x] **M-3 · Cash handover**: included as an **optional module, off by default**, switched on per client in Business settings. W5. _(backend 818e338 · app 1035ccc)_
 - [x] **M-5 · Loan statement PDF**: included. W5. Kept as **history** on the loan (date, language, who) for re-sharing; **deleted when the loan is deleted** (including force delete / BE-22). _(backend 9b2d0a9 · app 1035ccc)_
-- [ ] **M-9 · Tests for money logic**: included. _Started:_ `npm test` in the backend covers payment allocation, advance draw-down and the penalty amount (backend fa1734a). Close-loan math still needs extracting from the controller before it can be tested. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave.
+- [x] **M-9 · Tests for money logic**: included. _Started:_ `npm test` in the backend covers payment allocation, advance draw-down and the penalty amount (backend fa1734a). Close-loan math still needs extracting from the controller before it can be tested. They start in the hotfix (payment allocation, close loan, penalties) and grow each wave. _(backend fa1734a, 34ea518 (close loan, un-approve), cf1c4dc, 818e338, 9b2d0a9 · app tests every wave: 89)_
 - [x] **M-10 · Collection performance per employee**: included. W5 (Reports → By employee). _(backend ac89738 · app 1035ccc)_
 - Skipped: M-4 KYC, M-6 holidays and off-days, M-7 reminders, M-8 areas.
 - [ ] **M-14 · Renew / top-up loan** (a new loan pre-filled from the previous one, copying documents): proposed, undecided.
