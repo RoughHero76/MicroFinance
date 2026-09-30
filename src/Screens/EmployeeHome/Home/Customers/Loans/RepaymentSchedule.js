@@ -40,7 +40,11 @@ const RepaymentSchedule = () => {
                 ...(dateTo && { dateTo: dateTo.toISOString() }),
             }).toString();
 
-            const response = await apiCall(`/api/admin/loan/repayment/schedule?${queryParams}`, 'GET');
+            const response = await apiCall(`/api/employee/loan/repayment/schedule?${queryParams}`, 'GET');
+            if (response.status !== 'success') {
+                Alert.alert('Error', response.message || 'Failed to fetch repayment schedules. Please try again later.');
+                return;
+            }
             const { data } = response;
 
             setTotalEntries(data.totalEntries || 0);
