@@ -12,8 +12,8 @@ export type AdminTabParamList = {
 
 export type EmployeeTabParamList = {
   Home: undefined;
-  TodaysCollectionScreen: undefined;
-  AllCustomerView: undefined;
+  Collect: undefined;
+  Customers: undefined;
   LeadListScreen: undefined;
   More: undefined;
 };
@@ -29,6 +29,11 @@ export type AppStackParamList = {
   Support: undefined;
   About: undefined;
   KitGallery: undefined;
+  // New shared screens (W2)
+  Customer: {id?: string; uid?: string} | undefined;
+  Loan: {loanId: string; tab?: 'overview' | 'schedule' | 'documents'};
+  Overdue: {bucket?: 'all' | 'sma0' | 'sma1' | 'sma2' | 'npa'} | undefined;
+  MyPayments: undefined;
   // Old screens, until their wave replaces them
   CustomerView: Record<string, unknown> | undefined;
   EditCustomer: Record<string, unknown> | undefined;

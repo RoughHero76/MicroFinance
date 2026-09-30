@@ -31,3 +31,6 @@ export type {SelectOption} from './Pickers';
 export {StepTracker, Stepper, Timeline} from './Steps';
 export type {TimelineItem} from './Steps';
 export {OptionRow, Switch} from './OptionRow';
+export {PhotoViewer} from './PhotoViewer';
+export type {Photo} from './PhotoViewer';
+export {Thumbnail} from './Thumbnail';

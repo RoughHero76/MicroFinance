@@ -1,6 +1,6 @@
 // Employee: 5 tabs + More (U-01). "Collect" is a tab because recording
-// payments is the job employees do most. Old screens are mounted inside the
-// new tabs until their wave replaces them (W1).
+// payments is the job employees do most. Old screens still mounted here are
+// replaced by later waves (leads W4, search and calculator W5).
 
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -9,6 +9,13 @@ import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
 import {useCan} from '@/features/auth/SessionProvider';
 import KitGallery from '@/dev/KitGallery';
+import CollectScreen from '@/features/collect/screens/CollectScreen';
+import EmployeeHomeScreen from '@/features/collect/screens/EmployeeHomeScreen';
+import OverdueListScreen from '@/features/collect/screens/OverdueListScreen';
+import CustomerListScreen from '@/features/customers/screens/CustomerListScreen';
+import CustomerProfileScreen from '@/features/customers/screens/CustomerProfileScreen';
+import LoanScreen from '@/features/loans/screens/LoanScreen';
+import MyPaymentsScreen from '@/features/payments/screens/MyPaymentsScreen';
 import AboutScreen from '@/features/settings/screens/AboutScreen';
 import MoreScreen, {type MoreItem} from '@/features/settings/screens/MoreScreen';
 import ProfileScreen from '@/features/settings/screens/ProfileScreen';
@@ -20,14 +27,6 @@ import {oldScreen, stackScreenOptions, tabOptions, tabScreenOptions, type TabCon
 import type {AppStackParamList, EmployeeTabParamList} from './types';
 
 // Old screens (replaced wave by wave).
-import HomeScreen from '../Screens/EmployeeHome/Home/HomeScreen.jsx';
-import TodaysCollectionScreen from '../Screens/EmployeeHome/Home/Collections/TodaysCollectionScreen.jsx';
-import AllCustomerView from '../Screens/EmployeeHome/Home/Customers/AllCustomers.js';
-import CustomerView from '../Screens/EmployeeHome/Home/Customers/CustomerView.jsx';
-import RepaymentSchedule from '../Screens/EmployeeHome/Home/Customers/Loans/RepaymentSchedule.js';
-import LoanDetailsScreen from '../Screens/EmployeeHome/Home/Customers/Loans/LoanDetalis.js';
-import PaymentHistory from '../Screens/Shared/Customer/Loan/PaymentHistory.js';
-import LoanStatusDetailsScreen from '../Screens/Shared/Report/LoanStatusDetailsScreen.js';
 import SearchScreen from '../Screens/Shared/Searching/SearchScreen.js';
 import LoanCalculator from '../Screens/Shared/LoanCalculator.js';
 import LeadListScreen from '../Screens/Shared/Leads/EmployeeLeadScreen.js';
@@ -40,6 +39,8 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 function EmployeeMore() {
   const {t} = useTranslation();
   const items: MoreItem[] = [
+    {key: 'payments', icon: 'cash-check', title: t('more.myPayments'), route: 'MyPayments'},
+    {key: 'overdue', icon: 'alert-decagram-outline', title: t('overdue.title'), route: 'Overdue'},
     {
       key: 'calculator',
       icon: 'calculator-variant-outline',
@@ -55,31 +56,30 @@ function EmployeeTabs() {
   const theme = useTheme();
   const {t} = useTranslation();
   const can = useCan();
-  const search = {icon: 'magnify', label: t('common.search'), route: 'SearchScreen'};
   const tabs: TabConfig<keyof EmployeeTabParamList>[] = [
     {
       name: 'Home',
       label: t('nav.home'),
       icon: 'home-outline',
       iconFocused: 'home',
-      component: HomeScreen,
-      header: {title: brand.name, right: [search]},
+      component: EmployeeHomeScreen,
+      header: false,
     },
     {
-      name: 'TodaysCollectionScreen',
+      name: 'Collect',
       label: t('nav.collect'),
       icon: 'hand-coin-outline',
       iconFocused: 'hand-coin',
-      component: TodaysCollectionScreen,
-      header: {title: t('nav.collect')},
+      component: CollectScreen,
+      header: false,
     },
     {
-      name: 'AllCustomerView',
+      name: 'Customers',
       label: t('nav.customers'),
       icon: 'account-group-outline',
       iconFocused: 'account-group',
-      component: AllCustomerView,
-      header: {title: t('nav.myCustomers'), right: [search]},
+      component: CustomerListScreen,
+      header: false,
     },
     {
       name: 'LeadListScreen',
@@ -116,21 +116,18 @@ export default function EmployeeNavigator() {
   return (
     <Stack.Navigator screenOptions={stackScreenOptions(theme)}>
       <Stack.Screen name="Tabs" component={EmployeeTabs} />
+      <Stack.Screen name="Customer" component={CustomerProfileScreen} />
+      <Stack.Screen name="Loan" component={LoanScreen} />
+      <Stack.Screen name="Overdue" component={OverdueListScreen} />
+      <Stack.Screen name="MyPayments" component={MyPaymentsScreen} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       {__DEV__ ? <Stack.Screen name="KitGallery" component={KitGallery} /> : null}
-      <Stack.Screen name="CustomerView" component={CustomerView} options={oldScreen('Customer Details')} />
-      <Stack.Screen name="RepaymentSchedule" component={RepaymentSchedule} options={oldScreen('Repayment Schedule')} />
-      <Stack.Screen name="LoanDetailsScreen" component={LoanDetailsScreen} options={oldScreen('Loan Details')} />
-      <Stack.Screen name="PaymentHistory" component={PaymentHistory} options={oldScreen('Payment History')} />
-      <Stack.Screen
-        name="LoanStatusDetails"
-        component={LoanStatusDetailsScreen}
-        options={oldScreen('Loan Status Details')}
-      />
+      {/* The old search opens customers as 'CustomerView' until W4 replaces it. */}
+      <Stack.Screen name="CustomerView" component={CustomerProfileScreen} />
       <Stack.Screen name="SearchScreen" component={SearchScreen} options={oldScreen(t('common.search'))} />
       <Stack.Screen name="LoanCalculator" component={LoanCalculator} options={oldScreen(t('more.calculator'))} />
       <Stack.Screen name="LeadDetailsScreen" component={LeadDetailsScreen} options={oldScreen('Lead Details')} />

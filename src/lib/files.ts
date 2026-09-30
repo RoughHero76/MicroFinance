@@ -80,3 +80,23 @@ export async function downloadToDownloads(
 export function openFile(file: SavedFile, mimeType: string) {
   return ReactNativeBlobUtil.android.actionViewIntent(file.uri.replace(/^file:\/\//, ''), mimeType);
 }
+
+/** Saves a remote file (e.g. a signed document URL) to Download/<brand>/<subfolder>/. */
+export async function downloadUrlToDownloads(
+  url: string,
+  name: string,
+  mimeType: string,
+  subfolder?: string,
+): Promise<SavedFile> {
+  const tmp = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${Date.now()}-${name}`;
+  const res = await ReactNativeBlobUtil.config({fileCache: true, path: tmp, overwrite: true}).fetch('GET', url);
+  if (res.info().status >= 400) {
+    await ReactNativeBlobUtil.fs.unlink(tmp).catch(() => undefined);
+    throw new Error(`http-${res.info().status}`);
+  }
+  try {
+    return await saveToDownloads(res.path(), name, mimeType, subfolder);
+  } finally {
+    ReactNativeBlobUtil.fs.unlink(tmp).catch(() => undefined);
+  }
+}
