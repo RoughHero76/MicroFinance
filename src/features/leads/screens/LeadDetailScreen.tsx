@@ -469,7 +469,7 @@ export default function LeadDetailScreen() {
       <BottomSheet ref={detailsRef} title={t('leads.allDetails')}>
         <KeyValueRows
           rows={[
-            {label: t('leads.phone'), value: lead.phone, onPress: () => callPhone(lead.phone)},
+            {label: t('leads.phone'), value: lead.phone, onPress: () => callPhone(lead.phone), copy: true},
             {
               label: t('customers.email'),
               value: lead.email,

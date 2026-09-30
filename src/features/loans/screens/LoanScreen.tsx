@@ -157,7 +157,7 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
 
   const terms: KeyValue[] = loan
     ? [
-        {label: t('loan.number'), value: loan.loanNumber},
+        {label: t('loan.number'), value: loan.loanNumber, copy: true},
         {
           label: t('loan.type'),
           value: loan.loanType ? t(`enums.loanType.${normalizeLoanType(loan.loanType) ?? 'Other'}`) : '',
@@ -421,7 +421,7 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
                     label: t('loan.remaining'),
                     value: p.balanceAfterPayment != null ? formatMoney(p.balanceAfterPayment) : '',
                   },
-                  {label: t('loan.transaction'), value: p.transactionId},
+                  {label: t('loan.transaction'), value: p.transactionId, copy: true},
                   {label: t('loan.note'), value: p.logicNote},
                   {label: t('loan.rejectedReason'), value: p.rejectionReason, valueColor: 'danger'},
                 ]}

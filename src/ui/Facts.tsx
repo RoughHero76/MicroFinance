@@ -3,9 +3,13 @@
 
 import React from 'react';
 import {Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
+import {useTranslation} from 'react-i18next';
+import {haptics} from '@/lib/haptics';
 import {makeStyles} from '@/theme';
 import {Icon} from './Icon';
 import {Text, type TextColor} from './Text';
+import {toast} from './Toast';
 
 export interface KeyValue {
   label: string;
@@ -13,12 +17,15 @@ export interface KeyValue {
   valueColor?: TextColor;
   onPress?: () => void;
   onLongPress?: () => void;
+  /** P-07: long-press copies this (true copies the value itself). */
+  copy?: string | boolean;
   /** Keep the row even when the value is empty. */
   keepEmpty?: boolean;
 }
 
 export function KeyValueRows({rows, style, dense}: {rows: KeyValue[]; style?: StyleProp<ViewStyle>; dense?: boolean}) {
   const s = useStyles();
+  const {t} = useTranslation();
   const visible = rows.filter(r => r.keepEmpty || (r.value !== undefined && r.value !== null && r.value !== ''));
   return (
     <View style={style}>
@@ -41,12 +48,21 @@ export function KeyValueRows({rows, style, dense}: {rows: KeyValue[]; style?: St
           </>
         );
         const rowStyle = [s.row, dense && s.dense, i > 0 && s.border];
-        return row.onPress || row.onLongPress ? (
+        const copyText = row.copy === true ? String(row.value ?? '') : row.copy || '';
+        const onLongPress = copyText
+          ? () => {
+              Clipboard.setString(copyText);
+              haptics.tap();
+              toast.info(t('common.copiedValue', {value: copyText}));
+            }
+          : row.onLongPress;
+        return row.onPress || onLongPress ? (
           <Pressable
             key={`${row.label}-${i}`}
             onPress={row.onPress}
-            onLongPress={row.onLongPress}
+            onLongPress={onLongPress}
             accessibilityRole={row.onPress ? 'button' : undefined}
+            accessibilityHint={copyText ? t('ui.longPressToCopy') : undefined}
             style={({pressed}) => [...rowStyle, pressed && s.pressed]}>
             {content}
           </Pressable>

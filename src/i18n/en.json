@@ -175,7 +175,8 @@
     "typeToConfirm": "Type {{value}} to confirm",
     "finishing": "Finishing…",
     "uploading": "Uploading",
-    "downloading": "Downloading…"
+    "downloading": "Downloading…",
+    "longPressToCopy": "Long-press to copy"
   },
   "auth": {
     "welcome": "Welcome back",

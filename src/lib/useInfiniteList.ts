@@ -64,7 +64,8 @@ export function useInfiniteList<P extends Page<unknown>>({
     total,
     /** The first page as returned, for extras sent with it (e.g. counts). */
     firstPage: query.data?.pages[0],
-    isLoading: query.isPending && query.fetchStatus !== 'idle',
+    // Waiting to be enabled (e.g. for a saved filter) counts as loading.
+    isLoading: query.isPending && (query.fetchStatus !== 'idle' || !enabled),
     isError: query.isError && items.length === 0,
     error: query.error,
     hasMore: !!query.hasNextPage,

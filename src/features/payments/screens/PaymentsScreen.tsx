@@ -13,6 +13,7 @@ import {useI18n} from '@/i18n';
 import {errorMessage} from '@/lib/api';
 import {formatDate, formatDateTime, formatMoney, toISODate} from '@/lib/format';
 import {haptics} from '@/lib/haptics';
+import {useRemembered} from '@/lib/useRemembered';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {makeStyles} from '@/theme';
 import {
@@ -66,7 +67,7 @@ export default function PaymentsScreen() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const filterRef = useRef<SheetHandle>(null);
-  const [tab, setTab] = useState<Tab>('Pending');
+  const [tab, setTab, tabReady] = useRemembered<Tab>('payments.tab', 'Pending');
   const [loanNumber, setLoanNumber] = useState('');
   const [date, setDate] = useState<Date | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -75,6 +76,7 @@ export default function PaymentsScreen() {
   const list = useInfiniteList({
     queryKey: adminLoanKeys.approvals(tab, JSON.stringify(filter)),
     fetchPage: page => getApprovalsPage(tab, filter, page),
+    enabled: tabReady,
     persist: tab === 'Pending' && !filter.loanNumber && !filter.date,
   });
 
@@ -294,7 +296,7 @@ export default function PaymentsScreen() {
                     label: t('approvals.remaining'),
                     value: item.balanceAfterPayment != null ? formatMoney(item.balanceAfterPayment) : '',
                   },
-                  {label: t('approvals.transaction'), value: item.transactionId},
+                  {label: t('approvals.transaction'), value: item.transactionId, copy: true},
                   {label: t('approvals.note'), value: item.logicNote},
                   {label: t('loan.rejectedReason'), value: item.rejectionReason, valueColor: 'danger'},
                 ]}

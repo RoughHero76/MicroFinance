@@ -14,6 +14,7 @@ import type {TFunction} from 'i18next';
 import {useI18n} from '@/i18n';
 import {leadDisplayStatus, normalizeLoanType} from '@/lib/enums';
 import {formatDate, formatMoney, isSameDay} from '@/lib/format';
+import {useRemembered} from '@/lib/useRemembered';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {listEmployees, staffKeys} from '@/features/staff/api';
@@ -62,14 +63,14 @@ export default function LeadListScreen() {
   const admin = role === 'admin';
   const filtersRef = useRef<SheetHandle>(null);
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<LeadFilter>('all');
+  const [filter, setFilter, filterReady] = useRemembered<LeadFilter>(`leads.filter.${role}`, 'all');
   const [followupStatus, setFollowupStatus] = useState<'' | 'Pending' | 'Completed'>('');
   const [assignedTo, setAssignedTo] = useState('');
 
   const list = useInfiniteList({
     queryKey: [...leadKeys.list(role, filter, q, assignedTo), followupStatus],
     fetchPage: page => getLeadsPage(role!, {filter, q, assignedTo, followupStatus}, page),
-    enabled: !!role,
+    enabled: !!role && filterReady,
     persist: filter === 'all' && !q && !assignedTo && !followupStatus,
   });
   // Keep the last counts while another chip's first page loads.

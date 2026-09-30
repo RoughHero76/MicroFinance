@@ -175,7 +175,8 @@
     "typeToConfirm": "पुष्टि के लिए {{value}} लिखें",
     "finishing": "पूरा हो रहा है…",
     "uploading": "अपलोड हो रहा है",
-    "downloading": "डाउनलोड हो रहा है…"
+    "downloading": "डाउनलोड हो रहा है…",
+    "longPressToCopy": "कॉपी करने के लिए देर तक दबाएं"
   },
   "auth": {
     "welcome": "फिर से स्वागत है",

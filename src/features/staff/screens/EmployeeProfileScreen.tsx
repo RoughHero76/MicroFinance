@@ -177,6 +177,7 @@ export default function EmployeeProfileScreen() {
                 },
                 {
                   label: t('staff.phone'),
+                  copy: true,
                   value: e.phoneNumber,
                   onPress: e.phoneNumber ? () => callPhone(e.phoneNumber!) : undefined,
                 },

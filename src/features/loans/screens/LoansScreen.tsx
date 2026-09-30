@@ -8,6 +8,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {LOAN_STATUSES, type LoanStatus} from '@/lib/enums';
 import {formatMoney} from '@/lib/format';
+import {useRemembered} from '@/lib/useRemembered';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {makeStyles} from '@/theme';
 import {
@@ -35,14 +36,15 @@ export default function LoansScreen() {
   const s = useStyles();
   const {t} = useTranslation();
   const navigation = useNavigation();
-  const [status, setStatus] = useState<Filter>('all');
+  const [status, setStatus, statusReady] = useRemembered<Filter>('loans.status', 'all');
   const [q, setQ] = useState('');
-  const [sort, setSort] = useState<LoanSort>('createdAt');
+  const [sort, setSort, sortReady] = useRemembered<LoanSort>('loans.sort', 'createdAt');
   const sortRef = useRef<SheetHandle>(null);
 
   const list = useInfiniteList({
     queryKey: adminLoanKeys.list(status, q, sort),
     fetchPage: page => getLoansPage(status, q, sort, page),
+    enabled: statusReady && sortReady,
     persist: status === 'all' && !q,
   });
 

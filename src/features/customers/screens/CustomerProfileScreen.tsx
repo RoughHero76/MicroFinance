@@ -245,6 +245,7 @@ export default function CustomerProfileScreen() {
                 rows={[
                   {
                     label: t('customers.phone'),
+                    copy: true,
                     value: c.phoneNumber,
                     onPress: c.phoneNumber ? () => callPhone(c.phoneNumber!) : undefined,
                   },
