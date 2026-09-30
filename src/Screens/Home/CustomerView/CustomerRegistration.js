@@ -5,25 +5,33 @@ import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { showToast, CustomToast } from "../../../components/toast/CustomToast";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+
+// Opened from an approved lead: pre-fill what the lead already has. The lead
+// stores one "name", so the first word becomes the first name.
+const initialFormFromLead = (lead) => {
+    const [fname = "", ...rest] = (lead?.name || "").trim().split(/\s+/);
+    return {
+        fname,
+        lname: rest.join(" "),
+        gender: "",
+        email: lead?.email || "",
+        userName: "",
+        phoneNumber: lead?.phone || "",
+        address: lead?.address || "",
+        city: lead?.city || "",
+        state: lead?.state || "",
+        country: "",
+        pincode: "",
+    };
+};
 
 const CustomerRegistration = () => {
 
     const navigation = useNavigation();
+    const lead = useRoute().params?.lead;
 
-    const [formData, setFormData] = useState({
-        fname: "",
-        lname: "",
-        gender: "",
-        email: "",
-        userName: "",
-        phoneNumber: "",
-        address: "",
-        city: "",
-        state: "",
-        country: "",
-        pincode: "",
-    });
+    const [formData, setFormData] = useState(() => initialFormFromLead(lead));
 
     const [loading, setLoading] = useState(false);
 
@@ -39,10 +47,18 @@ const CustomerRegistration = () => {
         setLoading(true);
         try {
 
-            const response = await apiCall("/api/admin/customer", "POST", formData);
+            // From a lead, the server registers the customer and links the
+            // lead to it in one step.
+            const response = lead
+                ? await apiCall(`/api/admin/lead/${lead._id}/create-customer`, "POST", formData)
+                : await apiCall("/api/admin/customer", "POST", formData);
             if (response.status === "success") {
                 showToast("success", "Success", response.message);
-                navigation.navigate('Menu')
+                if (lead) {
+                    navigation.goBack();
+                } else {
+                    navigation.navigate('Menu');
+                }
             } else {
                 showToast("error", "Error", response.message || "Registration failed. Please try again.");
             }
@@ -77,6 +93,9 @@ const CustomerRegistration = () => {
                 <View style={styles.header}>
                     <Icon name="account-plus" size={40} color="#4F46E5" />
                     <Text style={styles.headerText}>Customer Registration</Text>
+                    {lead && (
+                        <Text style={styles.leadNote}>From lead: {lead.name}. Check the details and pick a gender.</Text>
+                    )}
                 </View>
 
                 {renderInput("fname", "First Name", "account")}
@@ -142,6 +161,12 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#1F2937",
         marginTop: 10,
+    },
+    leadNote: {
+        fontSize: 14,
+        color: "#6B7280",
+        marginTop: 6,
+        textAlign: "center",
     },
     inputContainer: {
         backgroundColor: "#FFFFFF",

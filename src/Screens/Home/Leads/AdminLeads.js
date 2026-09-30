@@ -307,6 +307,15 @@ const AdminLeadsScreen = ({ navigation }) => {
           <Icon name="clipboard-check" size={18} color="#FF9800" />
           <Text style={styles.actionText}>Status</Text>
         </TouchableOpacity>
+        {item.status === 'Approved' && !item.isLeadConverted && (
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('CustomerRegistration', { lead: item })}
+          >
+            <Icon name="account-plus" size={18} color="#1E88E5" />
+            <Text style={styles.actionText}>Customer</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => handleDeleteLead(item._id)}
