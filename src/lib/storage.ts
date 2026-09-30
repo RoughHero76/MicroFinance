@@ -23,6 +23,7 @@ export const StorageKeys = {
 // stay.
 export const PER_USER_PREFIXES = [
   StorageKeys.quickUnlock,
+  StorageKeys.appLock,
   StorageKeys.recentCustomers,
   StorageKeys.recentSearches,
   StorageKeys.queryCache,

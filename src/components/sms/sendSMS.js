@@ -1,16 +1,8 @@
-import { NativeModules } from 'react-native';
-
-const { SMSModule } = NativeModules;
-
+// Old screens call handleSendSMS after a payment or penalty. The native SMS
+// module is gone (no SMS permission any more): this opens the phone's SMS
+// app with the text filled in, and the employee taps Send.
+import { openSms } from '@/lib/messaging';
 
 export const handleSendSMS = async (phoneNumber, message) => {
-    try {
-        const result = await SMSModule.sendSMS(phoneNumber, message)
-        console.log('SMS send result:', result);
-    } catch (error) {
-        console.error('Error sending SMS:', error);
-
-    }
+    await openSms(phoneNumber, message);
 };
-
-
