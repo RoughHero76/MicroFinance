@@ -106,7 +106,8 @@ const LoanStatusDetailsScreen = ({ route, navigation }) => {
     const handlePayment = async () => {
         try {
             setConfirmPaymentLoading(true);
-            const response = await apiCall('/api/employee/loan/pay/old', 'POST', {
+            // /pay accepts admins too (BE-10); /pay/old is employee-only.
+            const response = await apiCall('/api/employee/loan/pay', 'POST', {
                 loanId: selectedLoan._id,
                 repaymentScheduleId: selectedSchedule._id,
                 amount: parseFloat(paymentDetails.amount),
