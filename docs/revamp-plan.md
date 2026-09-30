@@ -3,7 +3,7 @@
 Source of truth for progress across sessions. The full visual plan (mocks, flows, rationale) is `.lavish/ui-consistency.html`.
 IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** = waves, **U** = UX rules, **P** = polish, **M** = optional suggestions.
 
-> **Status:** hotfix, W0–W3 done on `feat/revamp` in both repos (not released, not deployed). Next: W4. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
+> **Status:** hotfix, W0–W4 done on `feat/revamp` in both repos (not released, not deployed). Next: W5. Nothing is released until the owner says so. Tick items here as they are done (`[x]`), with the commit hash.
 
 ## Ground rules
 
@@ -53,7 +53,7 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] **BE-5** (backend 6158bc9): Decided: one list of 7 loan types (Personal, Home, Business, Education, Vehicle, Gold, Other) for leads and loans; old "Personal/Business/Other" values stay valid _Files:_ LoanModel.js, LeadCustomersModel.js _For:_ B-7
 - [x] **BE-6**: Employee loan details: default page size 20, plus scheduleSummary (paid, overdue, pending, next due) and includeDocuments for assigned loans _Files:_ LoanCollection.getLoanDetails _For:_ E6, E6b _(backend 45d8942)_
 - [x] **BE-7**: Employee repayment history without loanId → my collections (filter by date and status) _Files:_ LoanCollection.getRepaymentHistory _For:_ E12 My payments (P-2) _(backend 45d8942)_
-- [ ] **BE-8**: Text search q on admin customers, employee customers and admin loans (name, phone, loan number) _Files:_ customerController.getCustomers, LoanCollection.getCustomers, loanController.getLoans _For:_ A2, A5, E4
+- [x] **BE-8**: Text search q on admin customers, employee customers and admin loans (name, phone, loan number) _Files:_ customerController.getCustomers, LoanCollection.getCustomers, loanController.getLoans _For:_ A2, A5, E4 _(backend 45d8942 · 6e34355 · ace3332)_
 - [ ] **BE-9**: Status recalculation as POST (keep the GET alias). Return lastRunAt from the existing CronRun model _Files:_ routes/shared/sharedRoutes.js, systemController.js _For:_ A18
 - [x] **BE-10** (backend 6294b15): Decided: allow admins in payACustomerInstallment (collectedBy = null → shown as "Admin", which the schedule already supports) _Files:_ LoanCollection.js, routes/admin/loans/loanRoutes.js _For:_ B-4
 - [x] **BE-11**: Correctly spelt aliases: /apply/penalty, /remove/penalty, /profilePicture (keep the old spellings) _Files:_ route files _For:_ clean API client _(backend fa1c430)_
@@ -62,13 +62,13 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] **BE-14**: `POST /shared/client-errors` for crash reports, written to the winston logs, limited per device. _Files:_ new route + controller _For:_ S8 crash screen _(backend 9855aea)_
 - [ ] **BE-15**: Add the remove-penalty and backup routes to the typed API client (no server change). _Files:_ app API client _For:_ A7b, X3
 - [ ] **BE-16**: Notifications: model, notify() helper called from 9 places, 4 endpoints, 09:00 follow-up cron, 90-day cleanup (see Round 9) _Files:_ new NotificationModel.js, controllers/shared/notificationController.js, crone/registry.js _For:_ X5, bell badge
-- [ ] **BE-17**: Customer summary (borrowed, outstanding, on-time rate, since) on admin and employee profile responses _Files:_ customerController.getCustomers, LoanCollection.getCustomerProfile _For:_ A3
+- [x] **BE-17**: Customer summary (borrowed, outstanding, on-time rate, since) on admin and employee profile responses _Files:_ customerController.getCustomers, LoanCollection.getCustomerProfile _For:_ A3 _(backend 45d8942 · 00165df · 6e34355)_
 - [x] **BE-18**: Upload size limit on multer; Cloudinary thumbnails for the document grid _Files:_ config/storageConfig.js, storageService.js _For:_ A8, F-9 _(backend f8e00d9)_
 - [x] **BE-19**: Undo endpoints, all admin-only and time-limited: (a) un-approve a payment (Approved → Pending); (b) un-approve a loan (Active → Pending, only while there are no repayments); (c) restore a soft-deleted lead; (d) restore a soft-deleted employee. No amounts ever move. _Files:_ loanController.js, routes/admin/loans/loanRoutes.js _For:_ Undo on the approve toast _(backend ace3332)_
 - [x] **BE-20**: Server-side message translation: locales/en.json and hi.json, and middleware that reads Accept-Language and fills title/message from code + params _Files:_ new src/i18n/, middleware/errorHandler.js, controllers as touched _For:_ Server-driven toasts in Hindi _(backend c4c4795)_
 - [ ] **BE-21**: (Optional, later) One route per resource that filters by the caller's role, like `/shared/search`. _Files:_ routes _For:_ fewer endpoint pairs
 - [x] **BE-22**: Before a force delete of a loan (and before deleting a customer), save a JSON snapshot of the loan, schedules, repayments, penalties and document records to a DeletionArchive collection, with who and when. Kept for 90 days. It's for recovery by hand, not an app feature. Also return the counts shown in A6c (GET /admin/loan/:id/delete-preview). _Files:_ loanController.deleteLoan, customerController.deleteCustomer, new DeletionArchiveModel.js _For:_ A6c, safety _(backend ace3332)_
-- [ ] **BE-23**: Optional: include lastSeen and the latest loginHistory date in the admin employee response _Files:_ employeeController.getEmployees _For:_ A16 "Last login"
+- [x] **BE-23**: Optional: include lastSeen and the latest loginHistory date in the admin employee response _Files:_ employeeController.getEmployees _For:_ A16 "Last login" _(backend 472566e: GET /admin/employee/profile)_
 - [x] **BE-24** (backend 1563653): Set `balanceAfterPayment` in `applyWaterfallPayment`, and return it with `outstandingAmount` in the `/pay` reply (for receipts). Optionally fill old records with a one-off script. _Files:_ helpers/paymentAllocation.js, LoanCollection.js _For:_ B-10, receipts
 
 ## Foundations (W0)
@@ -118,10 +118,10 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 ### W1 · New shell around the old screens (M)
 
 - [x] Navigation configured per role (F-8): 5 tabs + More for admin and employee. Old screens are mounted inside the new tabs until their wave replaces them _(app 4344c30)_
-- [x] S1 Splash, S2 Login (role switch, logout reason), S2b Quick unlock and app lock, S4 permissions explainer _(app 4344c30; quick unlock uses react-native-biometrics (keychain 8 has no PIN fallback on Android))_
+- [x] S1 Splash, S2 Login (role switch, logout reason), S2b Quick unlock and app lock, S4 permissions explainer _(app 4344c30; quick unlock uses react-native-biometrics (keychain 8 has no PIN fallback on Android)_
 - [x] Android: delete SMSModule and SMSPackage; remove the 8 SMS, phone and storage permissions from the manifest; save to Downloads through Android's media storage _(app 9a06de2; WRITE_EXTERNAL_STORAGE kept only up to Android 10)_
 - [x] Logout clears drafts, cached lists, recent searches and quick unlock _(app 4344c30, 9a06de2)_
-- [x] S5 update sheet, S6 states, S7 offline banner, S8 crash screen → BE-14; the single ToastHost, with all 39 <CustomToast /> removed _(app 4344c30; backend c42c274 (size + notes))_
+- [x] S5 update sheet, S6 states, S7 offline banner, S8 crash screen → BE-14; the single ToastHost, with all 39 <CustomToast /> removed _(app 4344c30; backend c42c274 (size + notes)_
 - [x] X1 Profile (photo crop), X2 Settings (mode, palette, language), X3 Security (admin: password, backup), X4 Support, X6 About _(app 4344c30)_
 
 **Done when:**both roles can log in with a password, then with fingerprint, and reach every old feature from the new tabs. Switching theme and language applies without a restart. A toast shows above an open modal.
@@ -146,8 +146,8 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 
 ### W4 · Customers, staff, leads (M)
 
-- [ ] A2 customers, A3 profile (summary numbers), A4 form; A15/A16 employees (deactivate); A13/A14/A14b leads + convert; E8/E9/E10 employee leads; A19 search
-- [ ] Backend: BE-4, BE-8, BE-17
+- [x] A2 customers, A3 profile (summary numbers), A4 form; A15/A16 employees (deactivate); A13/A14/A14b leads + convert; E8/E9/E10 employee leads; A19 search _(app ee44d73 · backend 685acf3, 8593a66, 63c4e9d, c78efb5)_
+- [x] Backend: BE-4, BE-8, BE-17 _(backend be629e0, 685acf3, 45d8942, 6e34355, ace3332)_
 
 **Done when:**an employee adds a lead with a cropped photo, records a follow-up and requests conversion, and the admin approves and converts it into a customer. The new customer has the lead's details, and a loan can be started straight away.
 
@@ -205,7 +205,7 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [x] P-15 · Drafts survive _(Create loan; lead and customer forms in W4 — app a013e44)_
 - [x] P-16 · Collect list order _(app ee1be66)_
 - [x] P-17 · Big-number check before money is sent _(app ee1be66)_
-- [ ] P-18 · Recent customers on Search
+- [x] P-18 · Recent customers on Search _(app ee44d73)_
 
 ## Feasibility adjustments (final audit, round 23)
 
