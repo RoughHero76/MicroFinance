@@ -2,7 +2,7 @@
 // every other screen gets back + title + at most one action (⋯).
 // U-03: the main action floats bottom-right (Fab), never a full-width bar.
 
-import React from 'react';
+import React, {useContext} from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -14,7 +14,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {NavigationContext} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {FadeIn} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -56,9 +56,11 @@ export function Header({
 }: HeaderProps) {
   const t = useTheme();
   const s = useStyles();
-  const navigation = useNavigation();
+  // May render before the navigator exists (permissions screen), so no
+  // useNavigation(), which would throw there.
+  const navigation = useContext(NavigationContext);
   const insets = useSafeAreaInsets();
-  const canBack = back && (onBack || navigation.canGoBack());
+  const canBack = back && (onBack || navigation?.canGoBack());
   // Pushed screens: the mock's centred title between two 36dp buttons.
   const centred = !large && !logo;
   return (
@@ -72,7 +74,7 @@ export function Header({
               label="Back"
               variant="plain"
               color={band ? t.colors.onPrimary : undefined}
-              onPress={onBack ?? (() => navigation.goBack())}
+              onPress={onBack ?? (() => navigation?.goBack())}
             />
           </HeaderSlot.Provider>
         ) : centred ? (
