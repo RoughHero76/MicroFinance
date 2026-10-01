@@ -19,7 +19,8 @@ import {openSms, openWhatsApp} from '@/lib/messaging';
 import {buildPenaltyNotice, buildReceipt} from '@/lib/receipt';
 import {readJson, StorageKeys, writeJson} from '@/lib/storage';
 import {useSession} from '@/features/auth/SessionProvider';
-import {collectKeys} from '@/features/collect/api';
+import {collectKeys, type CollectionItem} from '@/features/collect/api';
+import {animateNextLayout} from '@/lib/motion';
 import {customerKeys} from '@/features/customers/api';
 import {makeStyles} from '@/theme';
 import {
@@ -127,6 +128,7 @@ function PaymentSheet({
   const {settings} = useSession();
   const offline = useIsOffline();
   const invalidate = useInvalidateMoney();
+  const queryClient = useQueryClient();
   const confirm = useConfirm();
   const [amount, setAmount] = useState<number | null>(null);
   const [method, setMethod] = useState<PaymentMethod>('Cash');
@@ -158,6 +160,18 @@ function PaymentSheet({
       }),
     onSuccess: result => {
       writeJson(StorageKeys.lastPaymentMethod, method);
+      // W7: a fully paid row glides into "Done" on Collect right away; the
+      // refetch below confirms it.
+      if (amount! >= target!.dueAmount) {
+        const today = queryClient.getQueryData<CollectionItem[]>(collectKeys.today);
+        if (today?.some(item => item._id === target!.installmentId)) {
+          animateNextLayout();
+          queryClient.setQueryData<CollectionItem[]>(
+            collectKeys.today,
+            today.map(item => (item._id === target!.installmentId ? {...item, done: true} : item)),
+          );
+        }
+      }
       invalidate(target!.loanId);
       haptics.success();
       toast.success(t('pay.recorded'), {message: `${formatMoney(amount!)} · ${t('pay.waiting')}`});
