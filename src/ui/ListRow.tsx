@@ -17,6 +17,8 @@ export interface ListRowProps {
   right?: React.ReactNode;
   badge?: React.ReactNode;
   chevron?: boolean;
+  /** A standalone card in a list (mock A5/A13): rounded, bordered, soft shadow, spaced. */
+  card?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -32,6 +34,7 @@ export const ListRow = React.memo(function ListRow({
   right,
   badge,
   chevron,
+  card,
   onPress,
   onLongPress,
   style,
@@ -47,15 +50,15 @@ export const ListRow = React.memo(function ListRow({
       accessibilityRole={onPress ? 'button' : undefined}
       android_ripple={onPress || onLongPress ? {color: t.colors.primarySoft} : undefined}
       accessibilityLabel={accessibilityLabel ?? [title, value, subtitle].filter(Boolean).join(', ')}
-      style={({pressed}) => [s.row, pressed && s.pressed, style]}>
+      style={({pressed}) => [s.row, card && s.card, pressed && s.pressed, style]}>
       {left}
       <View style={s.body}>
         <View style={s.line}>
-          <Text variant="bodyLg" weight="semibold" numberOfLines={1} style={s.title}>
+          <Text variant="bodyLg" weight="bold" numberOfLines={1} style={s.title}>
             {title}
           </Text>
           {value ? (
-            <Text variant="bodyLg" weight="semibold" tabular numberOfLines={1}>
+            <Text variant="bodyLg" weight="bold" tabular numberOfLines={1}>
               {value}
             </Text>
           ) : null}
@@ -95,6 +98,14 @@ const useStyles = makeStyles(t => ({
     backgroundColor: t.colors.surface,
   },
   // iOS has no ripple; Android shows both, which reads as one highlight.
+  card: {
+    borderRadius: t.radius.lg,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    marginBottom: 10,
+    overflow: 'hidden',
+    ...t.shadow.card,
+  },
   pressed: {backgroundColor: t.colors.surface2},
   body: {flex: 1, gap: 3, minWidth: 0},
   line: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},

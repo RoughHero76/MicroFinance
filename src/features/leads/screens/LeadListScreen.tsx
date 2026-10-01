@@ -118,6 +118,7 @@ export default function LeadListScreen() {
         meta={due ? second : undefined}
         badge={<StatusBadge set="lead" status={leadDisplayStatus(item)} />}
         onPress={() => navigation.navigate('Lead' as never, {id: item._id} as never)}
+        card
       />
     );
   };

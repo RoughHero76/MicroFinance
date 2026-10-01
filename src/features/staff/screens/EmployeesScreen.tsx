@@ -64,6 +64,7 @@ export default function EmployeesScreen() {
                   ) : undefined
                 }
                 onPress={() => navigation.navigate('Employee' as never, {uid: item.uid} as never)}
+                card
               />
             );
           }}

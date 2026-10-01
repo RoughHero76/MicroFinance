@@ -69,7 +69,7 @@ export default function LoansScreen() {
         })}
         badge={<StatusBadge set="loan" status={item.status} />}
         onPress={() => navigation.navigate('Loan' as never, {loanId: item._id} as never)}
-        style={s.row}
+        card
       />
     );
   };
@@ -147,5 +147,4 @@ const useStyles = makeStyles(t => ({
   search: {marginHorizontal: t.space.lg, marginBottom: t.space.sm},
   chips: {marginBottom: t.space.sm},
   list: {paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, flexGrow: 1},
-  row: {borderRadius: t.radius.lg, marginBottom: t.space.sm, borderWidth: 1, borderColor: t.colors.border},
 }));

@@ -77,7 +77,7 @@ export default function MyPaymentsScreen() {
           .join(' · ')}
         badge={<StatusBadge set="repayment" status={item.status} />}
         onPress={loan?._id ? () => navigation.navigate('Loan' as never, {loanId: loan._id} as never) : undefined}
-        style={s.row}
+        card
       />
     );
   };
@@ -141,5 +141,4 @@ const useStyles = makeStyles(t => ({
   top: {paddingHorizontal: t.space.lg, gap: t.space.md, marginBottom: t.space.md},
   summary: {gap: t.space.xs},
   list: {paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, flexGrow: 1},
-  row: {borderRadius: t.radius.lg, marginBottom: t.space.sm, borderWidth: 1, borderColor: t.colors.border},
 }));
