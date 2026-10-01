@@ -8,6 +8,7 @@
 import React, {useMemo, useRef, useState} from 'react';
 import {Pressable, RefreshControl, ScrollView, View} from 'react-native';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
+import Animated, {FadeIn} from 'react-native-reanimated';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
@@ -18,10 +19,12 @@ import {useInfiniteList} from '@/lib/useInfiniteList';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {makeStyles} from '@/theme';
 import {
+  Appear,
   Avatar,
   BottomSheet,
   Button,
   Card,
+  CountUp,
   EmptyState,
   ErrorState,
   Fab,
@@ -192,85 +195,94 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
       contentContainerStyle={s.pad}
       refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={query.refetch} />}>
       {extras?.overviewTop && detail ? extras.overviewTop(detail) : null}
-      <Card
-        style={s.customer}
-        onPress={
-          customer
-            ? () => navigation.navigate('Customer' as never, {id: customer._id, uid: customer.uid} as never)
-            : undefined
-        }>
-        <Avatar name={customerName} uri={customer?.profilePic} size={44} />
-        <View style={s.flex}>
-          <Text variant="bodyLg" weight="semibold" numberOfLines={1}>
-            {customerName || t('loan.customerRow')}
-          </Text>
-          <Text variant="small" color="muted" numberOfLines={1}>
-            {t('loan.collector')}{' '}
-            {collector ? [collector.fname, collector.lname].filter(Boolean).join(' ') : t('common.unassigned')}
-          </Text>
-        </View>
-        <StatusBadge set="loan" status={loan.status} />
-      </Card>
+      {/* Mock A6: who, status and the outstanding amount in one card. */}
+      <Appear>
+        <Card style={s.summary}>
+          <Pressable
+            style={s.customer}
+            disabled={!customer}
+            onPress={
+              customer
+                ? () => navigation.navigate('Customer' as never, {id: customer._id, uid: customer.uid} as never)
+                : undefined
+            }
+            accessibilityRole={customer ? 'button' : undefined}>
+            <Avatar name={customerName} uri={customer?.profilePic} size={44} />
+            <View style={s.flex}>
+              <Text variant="bodyLg" weight="bold" numberOfLines={1}>
+                {customerName || t('loan.customerRow')}
+              </Text>
+              <Text variant="small" color="muted" numberOfLines={1}>
+                {t('loan.collector')}{' '}
+                {collector ? [collector.fname, collector.lname].filter(Boolean).join(' ') : t('common.unassigned')}
+              </Text>
+            </View>
+            <StatusBadge set="loan" status={loan.status} />
+          </Pressable>
+          <View style={s.outstanding}>
+            <Text variant="small" color="muted">
+              {t('loan.outstanding')}
+            </Text>
+            <CountUp value={loan.outstandingAmount} format={formatMoney} variant="display" weight="bold" />
+            <ProgressBar
+              value={(loan.totalPaid ?? 0) / Math.max(1, (loan.totalPaid ?? 0) + loan.outstandingAmount)}
+              style={s.progress}
+            />
+            <Text variant="small" color="muted" tabular>
+              {t('loan.paidOf', {
+                paid: formatMoney(loan.totalPaid ?? 0),
+                total: formatMoney((loan.totalPaid ?? 0) + loan.outstandingAmount),
+              })}
+            </Text>
+          </View>
+        </Card>
+      </Appear>
 
-      <Card style={s.outstanding}>
-        <Text variant="overline" color="muted">
-          {t('loan.outstanding')}
-        </Text>
-        <Text variant="display" tabular>
-          {formatMoney(loan.outstandingAmount)}
-        </Text>
-        <Text variant="small" color="muted" tabular>
-          {t('loan.paidOf', {
-            paid: formatMoney(loan.totalPaid ?? 0),
-            total: formatMoney((loan.totalPaid ?? 0) + loan.outstandingAmount),
-          })}
-        </Text>
-        <ProgressBar
-          value={(loan.totalPaid ?? 0) / Math.max(1, (loan.totalPaid ?? 0) + loan.outstandingAmount)}
-          tone="success"
-          style={s.progress}
-        />
-      </Card>
-
-      <Card padded={false} style={s.rows}>
-        <KeyValueRows
-          style={s.rowsInner}
-          rows={[
-            {
-              label: t('loan.terms'),
-              value: t('loan.termsValue', {amount: formatMoney(loan.loanAmount), duration: loan.loanDuration ?? ''}),
-              onPress: () => termsRef.current?.open(),
-            },
-            {label: t('loan.business'), value: loan.businessFirmName, onPress: () => businessRef.current?.open()},
-            {
-              label: t('loan.nextDue'),
-              value: detail?.summary?.nextDue
-                ? `${formatMoney(detail.summary.nextDue.amount)} · ${formatDate(detail.summary.nextDue.dueDate, lang, {
-                    short: true,
-                  })}`
-                : '',
-            },
-            {
-              label: t('loan.payments'),
-              value: payments.items.length ? `${payments.items.length}${payments.hasMore ? '+' : ''}` : '0',
-              onPress: () => paymentsRef.current?.open(),
-              keepEmpty: true,
-            },
-            {
-              label: t('loan.penalties'),
-              value: loan.totalPenaltyAmount ? formatMoney(loan.totalPenaltyAmount) : t('loan.noPenalties'),
-              valueColor: loan.totalPenaltyAmount ? 'danger' : 'muted',
-              onPress: penalties.length ? () => penaltiesRef.current?.open() : undefined,
-            },
-            {label: t('loan.advance'), value: loan.advanceBalance ? formatMoney(loan.advanceBalance) : ''},
-            {
-              label: t('loan.documents'),
-              value: detail?.documents.length ? String(detail.documents.length) : '',
-              onPress: () => setTab('documents'),
-            },
-          ]}
-        />
-      </Card>
+      <Appear index={1}>
+        <Card padded={false} style={s.rows}>
+          <KeyValueRows
+            style={s.rowsInner}
+            rows={[
+              {
+                label: t('loan.terms'),
+                value: t('loan.termsValue', {amount: formatMoney(loan.loanAmount), duration: loan.loanDuration ?? ''}),
+                onPress: () => termsRef.current?.open(),
+              },
+              {label: t('loan.business'), value: loan.businessFirmName, onPress: () => businessRef.current?.open()},
+              {
+                label: t('loan.nextDue'),
+                value: detail?.summary?.nextDue
+                  ? `${formatMoney(detail.summary.nextDue.amount)} · ${formatDate(
+                      detail.summary.nextDue.dueDate,
+                      lang,
+                      {
+                        short: true,
+                      },
+                    )}`
+                  : '',
+              },
+              {
+                label: t('loan.payments'),
+                value: payments.items.length ? `${payments.items.length}${payments.hasMore ? '+' : ''}` : '0',
+                onPress: () => paymentsRef.current?.open(),
+                keepEmpty: true,
+              },
+              {
+                label: t('loan.penalties'),
+                value: loan.totalPenaltyAmount ? formatMoney(loan.totalPenaltyAmount) : t('loan.noPenalties'),
+                valueColor: loan.totalPenaltyAmount ? 'danger' : 'muted',
+                onPress: penalties.length ? () => penaltiesRef.current?.open() : undefined,
+              },
+              {label: t('loan.advance'), value: loan.advanceBalance ? formatMoney(loan.advanceBalance) : ''},
+              {
+                label: t('loan.documents'),
+                value: detail?.documents.length ? String(detail.documents.length) : '',
+                onPress: () => setTab('documents'),
+              },
+            ]}
+          />
+        </Card>
+      </Appear>
     </ScrollView>
   ) : null;
 
@@ -310,7 +322,6 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
     <Screen
       header={{
         title: loan ? t('loan.title', {number: loan.loanNumber}) : t('words.loan'),
-        titleAccessory: loan ? <StatusBadge set="loan" status={loan.status} /> : undefined,
         right: detail ? (
           <View style={s.headerRight}>
             {/* M-5: statements for both roles */}
@@ -325,6 +336,7 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
         ) : undefined,
       }}
       padded={false}
+      defer
       fab={
         loan &&
         loan.status === 'Active' &&
@@ -351,12 +363,17 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
         <SkeletonRows count={5} avatar={false} />
       ) : query.isError || !detail ? (
         <ErrorState error={query.error} what={t('words.loan')} onRetry={query.refetch} />
-      ) : tab === 'overview' ? (
-        overview
-      ) : tab === 'schedule' ? (
-        <ScheduleView role={role!} loanId={loanId} onOpen={openInstallment} />
       ) : (
-        documents
+        // A short fade when switching tabs instead of a hard swap.
+        <Animated.View key={tab} entering={FadeIn.duration(160)} style={s.flex}>
+          {tab === 'overview' ? (
+            overview
+          ) : tab === 'schedule' ? (
+            <ScheduleView role={role!} loanId={loanId} onOpen={openInstallment} />
+          ) : (
+            documents
+          )}
+        </Animated.View>
       )}
 
       <InstallmentSheet
@@ -499,8 +516,9 @@ const useStyles = makeStyles(t => ({
   headerRight: {flexDirection: 'row', alignItems: 'center'},
   pad: {padding: t.space.lg, paddingBottom: 96},
   flex: {flex: 1, minWidth: 0},
+  summary: {padding: t.space.lg, gap: t.space.lg},
   customer: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
-  outstanding: {marginTop: t.space.md, padding: t.space.lg, gap: t.space.xs},
+  outstanding: {gap: t.space.xs},
   progress: {marginTop: t.space.sm},
   rows: {marginTop: t.space.md},
   rowsInner: {paddingHorizontal: t.space.lg},
