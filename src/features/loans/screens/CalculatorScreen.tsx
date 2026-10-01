@@ -16,6 +16,7 @@ import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {makeStyles} from '@/theme';
 import {
   Card,
+  CountUp,
   DateField,
   ErrorState,
   Fab,
@@ -122,13 +123,20 @@ export default function CalculatorScreen() {
             />
           </View>
         </View>
-        <SelectField<string>
-          label={t('create.duration')}
-          required
-          value={duration}
-          options={LOAN_DURATIONS.map(d => ({value: d, label: t('enums.days', {count: parseInt(d, 10)})}))}
-          onChange={setDuration}
-        />
+        <View style={s.row}>
+          <View style={s.half}>
+            <SelectField<string>
+              label={t('create.duration')}
+              required
+              value={duration}
+              options={LOAN_DURATIONS.map(d => ({value: d, label: t('enums.days', {count: parseInt(d, 10)})}))}
+              onChange={setDuration}
+            />
+          </View>
+          <View style={s.half}>
+            <DateField label={t('create.startDate')} value={start} onChange={d => d && setStart(d)} />
+          </View>
+        </View>
         <Text variant="label" weight="semibold" style={s.label}>
           {t('create.frequency')}
         </Text>
@@ -138,7 +146,6 @@ export default function CalculatorScreen() {
           onChange={setFrequency}
           style={s.segment}
         />
-        <DateField label={t('create.startDate')} value={start} onChange={d => d && setStart(d)} />
         <View style={s.row}>
           <View style={s.half}>
             <TextField
@@ -163,13 +170,14 @@ export default function CalculatorScreen() {
           <Skeleton height={140} />
         ) : (
           <Card>
-            <Text variant="overline" color="muted">
-              {t('calculator.perInstallment')}
-            </Text>
-            <Text variant="display" style={s.big}>
-              {formatMoney(r.repaymentAmountPerInstallment)}
-            </Text>
+            <View style={s.perRow}>
+              <Text variant="small" color="muted" style={s.flex}>
+                {t('calculator.perInstallment')}
+              </Text>
+              <CountUp value={r.repaymentAmountPerInstallment} format={formatMoney} variant="h1" weight="bold" />
+            </View>
             <KeyValueRows
+              dense
               rows={[
                 {label: t('calculator.installments'), value: String(r.numberOfInstallments)},
                 {label: t('calculator.total'), value: formatMoney(r.totalRepaymentAmount)},
@@ -193,5 +201,6 @@ const useStyles = makeStyles(t => ({
   half: {flex: 1, minWidth: 0},
   label: {marginBottom: t.space.sm},
   segment: {marginBottom: t.space.md},
-  big: {marginBottom: t.space.sm},
+  perRow: {flexDirection: 'row', alignItems: 'center', marginBottom: t.space.xs},
+  flex: {flex: 1},
 }));
