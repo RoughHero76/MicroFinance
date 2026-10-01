@@ -1,2 +1,4 @@
 {"ip":"::ffff:127.0.0.1","level":"warn","message":"Release upload refused: wrong key","timestamp":"2026-10-01 16:28:26"}
 {"brand":"evi","ip":"::ffff:127.0.0.1","level":"info","mandatory":true,"message":"App release published","size":11,"timestamp":"2026-10-01 16:28:27","version":"1.0.4"}
+{"brand":"evi","ip":"::ffff:127.0.0.1","level":"info","mandatory":true,"message":"App release published","size":8,"timestamp":"2026-10-01 17:43:47","version":"1.0.5"}
+{"brand":"evi","ip":"::ffff:127.0.0.1","level":"info","mandatory":false,"message":"App release published","size":8,"timestamp":"2026-10-01 17:43:48","version":"1.0.5"}

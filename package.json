@@ -10,7 +10,9 @@
     "test": "jest",
     "brand": "node scripts/brand.js",
     "typecheck": "tsc --noEmit",
-    "release": "node scripts/release.js",
+    "release:build": "node scripts/release.js build",
+    "release:publish": "node scripts/release.js publish",
+    "release:upload": "node scripts/release.js upload",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"__tests__/**/*.{ts,tsx}\" App.tsx scripts/*.js"
   },
   "dependencies": {
