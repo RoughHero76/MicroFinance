@@ -17,7 +17,9 @@ import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {useCollect} from '@/features/loans/components/CollectSheets';
 import {makeStyles, useTheme} from '@/theme';
 import {
+  Appear,
   Avatar,
+  BandExtension,
   BottomSheet,
   Button,
   Card,
@@ -25,7 +27,6 @@ import {
   EmptyState,
   ErrorState,
   Fab,
-  FactTiles,
   IconButton,
   KeyValueRows,
   OptionRow,
@@ -36,12 +37,27 @@ import {
   toast,
   useConfirm,
   type SheetHandle,
+  type TextColor,
 } from '@/ui';
 import {customerKeys, deleteCustomer, getCustomerProfile, uploadCustomerPhoto} from '../api';
 import {ContactActions, LoanCard} from '../components/CustomerParts';
 import {rememberCustomer} from '../recent';
 
 type Params = {Customer: {id?: string; uid?: string; customerId?: string}};
+
+function Stat({label, value, color = 'text'}: {label: string; value: string; color?: TextColor}) {
+  const s = useStyles();
+  return (
+    <View style={s.stat}>
+      <Text variant="bodyLg" weight="bold" color={color} tabular numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      <Text variant="caption" color="muted" numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
+  );
+}
 
 export default function CustomerProfileScreen() {
   const s = useStyles();
@@ -129,7 +145,7 @@ export default function CustomerProfileScreen() {
   return (
     <Screen
       header={{
-        title: name,
+        // The name is on the card right below (mock A3), so the band stays clean.
         band: true,
         right:
           c && admin ? (
@@ -159,43 +175,48 @@ export default function CustomerProfileScreen() {
         <ErrorState error={query.error} what={t('words.customer')} onRetry={query.refetch} />
       ) : (
         <>
-          <Card style={s.head}>
-            <Avatar
-              name={name}
-              uri={c.profilePic}
-              size={80}
-              onEditPhoto={can('customer.photo') ? () => photoRef.current?.open() : undefined}
-            />
-            <Text variant="h2" align="center" style={s.name}>
-              {name}
-            </Text>
-            <Text variant="small" color="muted" align="center">
-              {[
-                c.userName ? `@${c.userName}` : null,
-                c.summary?.since ? t('customers.since', {date: formatDate(c.summary.since, lang)}) : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </Text>
-            <View style={s.contacts}>
-              <ContactActions phone={c.phoneNumber} address={address} name={name} />
-            </View>
-          </Card>
-
-          {c.summary ? (
-            <FactTiles
-              style={s.facts}
-              facts={[
-                {label: t('customers.borrowed'), value: formatMoneyShort(c.summary.borrowed)},
-                {label: t('words.outstanding'), value: formatMoneyShort(c.summary.outstanding)},
-                {
-                  label: t('customers.onTime'),
-                  value: c.summary.onTimeRate == null ? '–' : `${c.summary.onTimeRate}%`,
-                  color: c.summary.onTimeRate != null && c.summary.onTimeRate < 70 ? 'warning' : 'success',
-                },
-              ]}
-            />
-          ) : null}
+          <BandExtension height={56} />
+          <Appear>
+            <Card style={s.head}>
+              <View style={s.who}>
+                <Avatar
+                  name={name}
+                  uri={c.profilePic}
+                  size={64}
+                  onEditPhoto={can('customer.photo') ? () => photoRef.current?.open() : undefined}
+                />
+                <View style={s.whoText}>
+                  <Text variant="h2" weight="bold" numberOfLines={2}>
+                    {name}
+                  </Text>
+                  <Text variant="small" color="muted" numberOfLines={1}>
+                    {[
+                      c.userName ? `@${c.userName}` : null,
+                      c.summary?.since ? t('customers.since', {date: formatDate(c.summary.since, lang)}) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                </View>
+              </View>
+              <ContactActions phone={c.phoneNumber} address={address} name={name} variant="ring" align="start" />
+              {c.summary ? (
+                <View style={s.stats}>
+                  <Stat label={t('customers.borrowed')} value={formatMoneyShort(c.summary.borrowed)} />
+                  <Stat
+                    label={t('words.outstanding')}
+                    value={formatMoneyShort(c.summary.outstanding)}
+                    color={c.summary.outstanding > 0 ? 'danger' : 'text'}
+                  />
+                  <Stat
+                    label={t('customers.onTime')}
+                    value={c.summary.onTimeRate == null ? '–' : `${c.summary.onTimeRate}%`}
+                    color={c.summary.onTimeRate == null ? 'text' : c.summary.onTimeRate < 70 ? 'warning' : 'success'}
+                  />
+                </View>
+              ) : null}
+            </Card>
+          </Appear>
 
           <UnderlineTabs
             options={[
@@ -302,9 +323,15 @@ export default function CustomerProfileScreen() {
 }
 
 const useStyles = makeStyles(t => ({
-  head: {alignItems: 'center', paddingVertical: t.space.xl, gap: t.space.xs},
-  name: {marginTop: t.space.sm},
-  contacts: {marginTop: t.space.md},
-  facts: {marginTop: t.space.md},
+  head: {marginTop: -44, padding: t.space.lg, gap: t.space.md},
+  who: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
+  whoText: {flex: 1, minWidth: 0, gap: 2},
+  stats: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+    paddingTop: t.space.md,
+  },
+  stat: {flex: 1, alignItems: 'center', gap: 2, minWidth: 0},
   tabs: {marginVertical: t.space.md},
 }));

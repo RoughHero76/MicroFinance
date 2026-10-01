@@ -4,14 +4,14 @@
 // SMS, WhatsApp, map).
 
 import React from 'react';
-import {Pressable, View} from 'react-native';
+import {View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {formatDate, formatMoney, isSameDay} from '@/lib/format';
 import {callPhone, openMaps, openSms, openWhatsApp} from '@/lib/messaging';
 import type {Loan, PersonRef} from '@/features/loans/types';
 import {makeStyles} from '@/theme';
-import {Avatar, Card, IconButton, ProgressBar, StatusBadge, Text} from '@/ui';
+import {Avatar, Card, IconButton, PressableScale, ProgressBar, StatusBadge, Text} from '@/ui';
 import type {CustomerListItem} from '../api';
 
 export function CustomerRow({
@@ -30,11 +30,7 @@ export function CustomerRow({
   const open = loans.filter(l => l.status !== 'Closed' && l.status !== 'Rejected');
   const closed = loans.length - open.length;
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={name}
-      style={({pressed}) => [s.row, pressed && s.pressed]}>
+    <PressableScale onPress={onPress} scaleTo={0.98} accessibilityRole="button" accessibilityLabel={name} style={s.row}>
       <Avatar name={name} uri={customer.profilePic} size={48} />
       <View style={s.body}>
         <Text variant="bodyLg" weight="semibold" numberOfLines={1}>
@@ -70,7 +66,7 @@ export function CustomerRow({
         ) : null}
       </View>
       {right}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -128,18 +124,54 @@ export function LoanCard({loan, onPress, action}: {loan: Loan; onPress: () => vo
   );
 }
 
-export function ContactActions({phone, address, name}: {phone?: string; address?: string; name?: string}) {
+export function ContactActions({
+  phone,
+  address,
+  name,
+  variant = 'tonal',
+  align = 'center',
+}: {
+  phone?: string;
+  address?: string;
+  name?: string;
+  variant?: 'tonal' | 'ring';
+  align?: 'center' | 'start';
+}) {
   const s = useStyles();
   const {t} = useTranslation();
   return (
-    <View style={s.contacts}>
+    <View style={[s.contacts, align === 'start' && s.contactsStart]}>
       {phone ? (
-        <IconButton icon="phone" label={`${t('common.call')} ${name ?? ''}`} onPress={() => callPhone(phone)} />
+        <IconButton
+          icon="phone"
+          variant={variant}
+          label={`${t('common.call')} ${name ?? ''}`}
+          onPress={() => callPhone(phone)}
+        />
       ) : null}
-      {phone ? <IconButton icon="message-text-outline" label={t('common.sms')} onPress={() => openSms(phone)} /> : null}
-      {phone ? <IconButton icon="whatsapp" label={t('common.whatsapp')} onPress={() => openWhatsApp(phone)} /> : null}
+      {phone ? (
+        <IconButton
+          icon="message-text-outline"
+          variant={variant}
+          label={t('common.sms')}
+          onPress={() => openSms(phone)}
+        />
+      ) : null}
+      {phone ? (
+        <IconButton
+          icon="whatsapp"
+          variant={variant}
+          label={t('common.whatsapp')}
+          onPress={() => openWhatsApp(phone)}
+        />
+      ) : null}
       {address ? (
-        <IconButton icon="map-marker-outline" label={t('common.map')} onPress={() => openMaps(address)} />
+        <IconButton
+          icon="map-marker-outline"
+          variant={variant}
+          label={t('common.map')}
+          onPress={() => openMaps(address)}
+        />
       ) : null}
     </View>
   );
@@ -158,7 +190,6 @@ const useStyles = makeStyles(t => ({
     ...t.shadow.card,
     marginBottom: 10,
   },
-  pressed: {backgroundColor: t.colors.surface2},
   body: {flex: 1, gap: 3, minWidth: 0},
   loanLine: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
   flex: {flex: 1, minWidth: 0},
@@ -167,4 +198,5 @@ const useStyles = makeStyles(t => ({
   collector: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs, maxWidth: '35%'},
   cardAction: {flexDirection: 'row', justifyContent: 'flex-end'},
   contacts: {flexDirection: 'row', justifyContent: 'center', gap: t.space.md},
+  contactsStart: {justifyContent: 'flex-start', gap: 10},
 }));

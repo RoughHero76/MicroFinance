@@ -18,7 +18,7 @@ export {StatusBadge, toneColors} from './StatusBadge';
 export {KeyValueRows, FactTiles, ProgressBar} from './Facts';
 export type {KeyValue, Fact} from './Facts';
 export {EmptyState, ErrorState, Skeleton, SkeletonRows, OfflineBanner, useIsOffline} from './States';
-export {Screen, Header, Fab, ActionRow} from './Screen';
+export {Screen, Header, Fab, ActionRow, BandExtension} from './Screen';
 export {BrandLogo} from './BrandLogo';
 export {ToastHost, toast} from './Toast';
 export {BottomSheet, useSheet} from './Sheet';

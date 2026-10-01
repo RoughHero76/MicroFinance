@@ -5,6 +5,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -49,6 +50,7 @@ export function Header({title, subtitle, large, back = !large, onBack, right, ba
   const canBack = back && (onBack || navigation.canGoBack());
   return (
     <View style={[s.header, large && s.headerClear, band && s.band, {paddingTop: insets.top + (large ? 12 : 4)}]}>
+      {band ? <BandGradient /> : null}
       <View style={s.headerRow}>
         {canBack ? (
           <IconButton
@@ -83,6 +85,35 @@ export function Header({title, subtitle, large, back = !large, onBack, right, ba
         </View>
         {right ? <View style={s.right}>{right}</View> : null}
       </View>
+    </View>
+  );
+}
+
+// Horizontal, so the header band and its extension in the content
+// (BandExtension) join without a visible seam.
+function BandGradient({style}: {style?: StyleProp<ViewStyle>}) {
+  const t = useTheme();
+  return (
+    <LinearGradient
+      pointerEvents="none"
+      colors={[t.colors.primary, t.colors.primary2]}
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 0}}
+      style={[StyleSheet.absoluteFill, style]}
+    />
+  );
+}
+
+/**
+ * Continues a `band` header into the top of the content, so the first card
+ * can overlap it (mock A3). Put it first in a padded, scrolling Screen and
+ * give the next card a negative top margin.
+ */
+export function BandExtension({height = 64}: {height?: number}) {
+  const s = useStyles();
+  return (
+    <View style={[s.bandExtension, {height}]} pointerEvents="none">
+      <BandGradient />
     </View>
   );
 }
@@ -238,6 +269,7 @@ const useStyles = makeStyles(t => ({
   glow: {position: 'absolute', top: 0, left: 0, right: 0},
   placeholder: {gap: t.space.md},
   band: {backgroundColor: t.colors.primary},
+  bandExtension: {marginTop: -t.space.lg, marginHorizontal: -t.space.lg, marginBottom: 0},
   headerRow: {flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingHorizontal: t.space.sm},
   back: {marginRight: t.space.xs},
   titles: {flex: 1, minWidth: 0},

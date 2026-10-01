@@ -11,7 +11,8 @@ export interface IconButtonProps {
   label: string;
   onPress?: () => void;
   /** outline: the mock's header button, a bordered rounded square on the surface. */
-  variant?: 'tonal' | 'plain' | 'filled' | 'outline';
+  /** ring: a round bordered button (contact actions in the mock). */
+  variant?: 'tonal' | 'plain' | 'filled' | 'outline' | 'ring';
   size?: number;
   color?: string;
   badge?: number;
@@ -52,6 +53,7 @@ export function IconButton({
         variant === 'tonal' && s.tonal,
         variant === 'filled' && s.filled,
         variant === 'outline' && s.outline,
+        variant === 'ring' && s.ring,
         disabled && s.disabled,
         style,
       ]}>
@@ -71,6 +73,7 @@ const useStyles = makeStyles(t => ({
   base: {alignItems: 'center', justifyContent: 'center'},
   tonal: {backgroundColor: t.colors.primarySoft},
   filled: {backgroundColor: t.colors.primary},
+  ring: {borderWidth: 1, borderColor: t.colors.border, backgroundColor: t.colors.surface},
   outline: {borderRadius: 12, borderWidth: 1, borderColor: t.colors.border, backgroundColor: t.colors.surface},
   disabled: {opacity: 0.4},
   badge: {
