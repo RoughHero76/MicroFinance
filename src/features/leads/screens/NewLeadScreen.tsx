@@ -15,6 +15,8 @@ import {useDraft} from '@/lib/useDraft';
 import {makeStyles} from '@/theme';
 import {
   Button,
+  Icon,
+  PressableScale,
   Chips,
   ConfirmSheet,
   Fab,
@@ -184,37 +186,49 @@ export default function NewLeadScreen() {
           loading={create.isPending}
         />
       }>
-      <Section title={t('leads.photo')}>
-        <View style={s.photoRow}>
-          {form.picture ? <Thumbnail uri={form.picture.uri} size={72} /> : null}
+      {/* Mock E10: a round photo slot with Camera · Gallery beside it. */}
+      <View style={s.photoRow}>
+        {form.picture ? (
+          <Thumbnail uri={form.picture.uri} size={64} />
+        ) : (
+          <PressableScale
+            onPress={() => pick('camera')}
+            accessibilityRole="button"
+            accessibilityLabel={t('leads.camera')}
+            style={[s.photoSlot, !!errors.picture && s.photoSlotError]}>
+            <Icon name="camera-outline" size={24} color="muted" />
+          </PressableScale>
+        )}
+        <View style={s.photoText}>
+          <Text weight="semibold">
+            {t('leads.photo')} <Text color="danger">*</Text>
+          </Text>
           <View style={s.photoButtons}>
-            <Button
-              title={t('leads.camera')}
-              icon="camera-outline"
-              variant="secondary"
-              onPress={() => pick('camera')}
-            />
-            <Button
-              title={t('leads.gallery')}
-              icon="image-outline"
-              variant="secondary"
-              onPress={() => pick('gallery')}
-            />
+            <Button title={t('leads.camera')} icon="camera-outline" variant="text" onPress={() => pick('camera')} />
+            <Button title={t('leads.gallery')} icon="image-outline" variant="text" onPress={() => pick('gallery')} />
           </View>
         </View>
-        {errors.picture ? (
-          <Text variant="caption" color="danger" style={s.error}>
-            {errors.picture}
-          </Text>
-        ) : null}
-      </Section>
+      </View>
+      {errors.picture ? (
+        <Text variant="caption" color="danger" style={s.error}>
+          {errors.picture}
+        </Text>
+      ) : null}
       <Section title={t('leads.personal')}>
         {field('name', t('leads.name'), {required: true, autoCapitalize: 'words'})}
-        {field('phone', t('leads.phone'), {required: true, keyboardType: 'phone-pad', maxLength: 14})}
-        {field('email', t('leads.email'), {keyboardType: 'email-address', autoCapitalize: 'none'})}
+        <View style={s.pair}>
+          <View style={s.half}>
+            {field('phone', t('leads.phone'), {required: true, keyboardType: 'phone-pad', maxLength: 14})}
+          </View>
+          <View style={s.half}>
+            {field('email', t('leads.email'), {keyboardType: 'email-address', autoCapitalize: 'none'})}
+          </View>
+        </View>
         {field('address', t('leads.street'), {required: true, multiline: true})}
-        {field('city', t('leads.city'), {required: true})}
-        {field('state', t('leads.state'), {required: true})}
+        <View style={s.pair}>
+          <View style={s.half}>{field('city', t('leads.city'), {required: true})}</View>
+          <View style={s.half}>{field('state', t('leads.state'), {required: true})}</View>
+        </View>
       </Section>
       <Section title={t('leads.loan')}>
         <Text variant="label" weight="semibold" style={s.label}>
@@ -249,8 +263,23 @@ export default function NewLeadScreen() {
 }
 
 const useStyles = makeStyles(t => ({
-  photoRow: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
-  photoButtons: {flexDirection: 'row', gap: t.space.sm, flexWrap: 'wrap', flex: 1},
+  photoRow: {flexDirection: 'row', alignItems: 'center', gap: t.space.md, marginBottom: t.space.md},
+  photoSlot: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoSlotError: {borderColor: t.colors.danger},
+  photoText: {flex: 1, gap: 2},
+  photoButtons: {flexDirection: 'row', flexWrap: 'wrap', marginLeft: -t.space.sm},
+  pair: {flexDirection: 'row', gap: t.space.sm},
+  half: {flex: 1, minWidth: 0},
   error: {marginTop: t.space.xs},
   label: {marginBottom: t.space.sm},
   chips: {marginBottom: t.space.md},
