@@ -15,7 +15,7 @@ export {Card, Section, Divider} from './Card';
 export {ListRow} from './ListRow';
 export {Avatar, initialsOf} from './Avatar';
 export {StatusBadge, toneColors} from './StatusBadge';
-export {KeyValueRows, FactTiles, ProgressBar} from './Facts';
+export {KeyValueRows, FactTiles, ProgressBar, StatGrid} from './Facts';
 export type {KeyValue, Fact} from './Facts';
 export {EmptyState, ErrorState, Skeleton, SkeletonRows, OfflineBanner, useIsOffline} from './States';
 export {Screen, Header, Fab, ActionRow, BandExtension} from './Screen';

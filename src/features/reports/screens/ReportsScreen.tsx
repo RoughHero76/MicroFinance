@@ -22,7 +22,7 @@ import {
   shareAppFile,
   type AppFile,
 } from '@/lib/files';
-import {formatDateTime, formatMoneyShort} from '@/lib/format';
+import {formatDateTime, formatMoney} from '@/lib/format';
 import {brand} from '@/brand';
 import {useSession} from '@/features/auth/SessionProvider';
 import {makeStyles} from '@/theme';
@@ -35,13 +35,12 @@ import {
   DateField,
   EmptyState,
   ErrorState,
-  FactTiles,
+  StatGrid,
   Icon,
   IconButton,
   ListRow,
   OptionRow,
   Screen,
-  Section,
   Skeleton,
   Text,
   toast,
@@ -203,36 +202,37 @@ export default function ReportsScreen() {
         <Skeleton height={160} />
       ) : (
         <>
-          <FactTiles
-            facts={[
-              {label: t('reports.totalLoans'), value: String(sum.totalLoans ?? 0)},
-              {label: t('reports.totalAmount'), value: formatMoneyShort(sum.totalLoanAmount)},
-            ]}
-          />
-          <FactTiles
+          <StatGrid
             style={s.tiles}
-            facts={[
-              {label: t('reports.totalPaid'), value: formatMoneyShort(sum.totalPaidAmount), color: 'success'},
-              {label: t('reports.totalPenalty'), value: formatMoneyShort(sum.totalPenaltyAmount), color: 'warning'},
+            stats={[
+              {label: t('reports.totalLoans'), value: sum.totalLoans ?? 0},
+              {label: t('reports.totalAmount'), value: sum.totalLoanAmount ?? 0, format: formatMoney},
+              {label: t('reports.totalPaid'), value: sum.totalPaidAmount ?? 0, format: formatMoney},
+              {
+                label: t('reports.totalPenalty'),
+                value: sum.totalPenaltyAmount ?? 0,
+                format: formatMoney,
+                color: sum.totalPenaltyAmount ? 'danger' : 'text',
+              },
             ]}
           />
-          <Section title={t('reports.loanDistribution')}>
-            <Card>
-              {report.data!.loanAmounts.length ? (
-                <Bars
-                  items={report.data!.loanAmounts.map(b => ({label: rangeLabel(b.range, 10000), value: b.count}))}
-                />
-              ) : (
-                <Text color="muted">{t('reports.nothing')}</Text>
-              )}
-            </Card>
-          </Section>
-          <Card padded={false} style={s.tiles}>
-            <OptionRow
-              icon="chart-bar"
-              title={t('reports.installmentDistribution')}
-              onPress={() => installmentsRef.current?.open()}
-            />
+          <Card style={s.tiles}>
+            <View style={s.cardHead}>
+              <Text variant="bodyLg" weight="bold" style={s.flex}>
+                {t('reports.loanDistribution')}
+              </Text>
+              <Button
+                title={t('reports.installmentDistribution')}
+                variant="text"
+                icon="chevron-right"
+                onPress={() => installmentsRef.current?.open()}
+              />
+            </View>
+            {report.data!.loanAmounts.length ? (
+              <Bars items={report.data!.loanAmounts.map(b => ({label: rangeLabel(b.range, 10000), value: b.count}))} />
+            ) : (
+              <Text color="muted">{t('reports.nothing')}</Text>
+            )}
           </Card>
           <Text variant="small" color="muted" style={s.note}>
             {t('reports.basis')}
@@ -343,6 +343,8 @@ const useStyles = makeStyles(t => ({
   dates: {flexDirection: 'row', gap: t.space.sm, marginTop: t.space.md},
   half: {flex: 1, minWidth: 0},
   tiles: {marginTop: t.space.md},
+  cardHead: {flexDirection: 'row', alignItems: 'center', marginBottom: t.space.sm, gap: t.space.sm},
+  flex: {flex: 1},
   note: {marginTop: t.space.sm},
   actions: {flexDirection: 'row', gap: t.space.sm, marginTop: t.space.lg, flexWrap: 'wrap'},
   rowActions: {flexDirection: 'row'},

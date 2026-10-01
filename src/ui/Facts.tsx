@@ -8,6 +8,8 @@ import {useTranslation} from 'react-i18next';
 import {haptics} from '@/lib/haptics';
 import Animated, {Easing, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
 import {makeStyles, withAlpha} from '@/theme';
+import {Card} from './Card';
+import {CountUp} from './Hero';
 import {Icon} from './Icon';
 import {Text, type TextColor} from './Text';
 import {toast} from './Toast';
@@ -107,6 +109,40 @@ export function FactTiles({facts, style}: {facts: Fact[]; style?: StyleProp<View
   );
 }
 
+/**
+ * W7: headline totals as white cards, two per row (mock A17), each number
+ * rolling up. Pass numbers with a formatter so they can animate.
+ */
+export function StatGrid({
+  stats,
+  style,
+}: {
+  stats: {label: string; value: number; format?: (n: number) => string; color?: TextColor}[];
+  style?: StyleProp<ViewStyle>;
+}) {
+  const s = useStyles();
+  return (
+    <View style={[s.grid, style]}>
+      {stats.map(stat => (
+        <Card key={stat.label} style={s.stat}>
+          <Text variant="small" color="muted" numberOfLines={1}>
+            {stat.label}
+          </Text>
+          <CountUp
+            value={stat.value}
+            format={stat.format}
+            variant="h2"
+            weight="bold"
+            color={stat.color ?? 'text'}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          />
+        </Card>
+      ))}
+    </View>
+  );
+}
+
 export function ProgressBar({
   value,
   tone = 'primary',
@@ -159,6 +195,8 @@ const useStyles = makeStyles(t => ({
   success: {backgroundColor: t.colors.success},
   warning: {backgroundColor: t.colors.warning},
   danger: {backgroundColor: t.colors.danger},
+  grid: {flexDirection: 'row', flexWrap: 'wrap', gap: 10},
+  stat: {flexBasis: '47%', flexGrow: 1, gap: t.space.xs, padding: t.space.md},
   heroTrack: {backgroundColor: withAlpha(t.colors.white, 0.25)},
   heroFill: {backgroundColor: t.colors.white},
 }));
