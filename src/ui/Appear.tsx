@@ -7,8 +7,8 @@ import React from 'react';
 import type {StyleProp, ViewStyle} from 'react-native';
 import Animated, {FadeInDown} from 'react-native-reanimated';
 
-const STEP_MS = 50;
-const MAX_STEPS = 6;
+const STEP_MS = 30;
+const MAX_STEPS = 4;
 
 export function Appear({
   index = 0,
@@ -21,11 +21,9 @@ export function Appear({
 }) {
   return (
     <Animated.View
-      entering={FadeInDown.delay(Math.min(index, MAX_STEPS) * STEP_MS)
-        .duration(320)
-        .springify()
-        .damping(20)
-        .stiffness(180)}
+      // A short eased fade, not a spring: springs take ~0.5 s to settle and
+      // made every screen feel slow.
+      entering={FadeInDown.delay(Math.min(index, MAX_STEPS) * STEP_MS).duration(200)}
       style={style}>
       {children}
     </Animated.View>

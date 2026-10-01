@@ -193,11 +193,15 @@ export function Screen({
   ) : (
     <View style={[s.flex, padded && s.padded, contentStyle]}>{content}</View>
   );
-  // A quick fade as the content arrives, instead of popping in.
-  const body = (
-    <Animated.View key={ready ? 'ready' : 'wait'} entering={FadeIn.duration(180)} style={s.flex}>
+  // Content is there as the screen slides in (a fade on top made pushes feel
+  // slow). Only a deferred screen fades its real content in over the
+  // placeholders.
+  const body = defer ? (
+    <Animated.View key={ready ? 'ready' : 'wait'} entering={ready ? FadeIn.duration(120) : undefined} style={s.flex}>
       {inner}
     </Animated.View>
+  ) : (
+    inner
   );
   const glow = header && header.large && !header.band;
 

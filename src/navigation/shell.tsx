@@ -87,6 +87,8 @@ export function stackScreenOptions(t: Theme): NativeStackNavigationOptions {
     headerTitleStyle: {color: t.colors.text},
     headerShadowVisible: false,
     contentStyle: {backgroundColor: t.colors.bg},
-    animation: 'slide_from_right',
+    // Android's own slide takes 400 ms and felt like slow motion; the
+    // iOS-style one is 200 ms with a smooth ease and a slight parallax.
+    animation: 'ios',
   };
 }

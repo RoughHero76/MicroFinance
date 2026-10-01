@@ -8,9 +8,9 @@
 import {useCallback, useRef} from 'react';
 import {FadeInDown} from 'react-native-reanimated';
 
-const WINDOW_MS = 700;
-const MAX_ROWS = 8;
-const STEP_MS = 40;
+const WINDOW_MS = 500;
+const MAX_ROWS = 6;
+const STEP_MS = 25;
 
 export function useListEntrance() {
   const mountedAt = useRef(Date.now());
@@ -18,10 +18,6 @@ export function useListEntrance() {
     if (index >= MAX_ROWS || Date.now() - mountedAt.current > WINDOW_MS) {
       return undefined;
     }
-    return FadeInDown.delay(index * STEP_MS)
-      .duration(280)
-      .springify()
-      .damping(20)
-      .stiffness(190);
+    return FadeInDown.delay(index * STEP_MS).duration(180);
   }, []);
 }
