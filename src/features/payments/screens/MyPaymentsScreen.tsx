@@ -5,6 +5,7 @@
 import React, {useMemo, useState} from 'react';
 import {FlatList, RefreshControl, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {formatDateTime, formatMoney, toISODate} from '@/lib/format';
@@ -25,6 +26,7 @@ import {
   StatusBadge,
   Text,
   listProps,
+  useListEntrance,
 } from '@/ui';
 
 type Range = 'today' | 'week' | 'month';
@@ -39,6 +41,7 @@ function rangeDates(range: Range) {
 
 export default function MyPaymentsScreen() {
   const s = useStyles();
+  const entering = useListEntrance();
   const {t} = useTranslation();
   const {lang} = useI18n();
   const navigation = useNavigation();
@@ -119,7 +122,7 @@ export default function MyPaymentsScreen() {
           {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
-          renderItem={renderItem}
+          renderItem={info => <Animated.View entering={entering(info.index)}>{renderItem(info)}</Animated.View>}
           onEndReached={list.loadMore}
           onEndReachedThreshold={0.4}
           contentContainerStyle={s.list}

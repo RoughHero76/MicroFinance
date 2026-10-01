@@ -5,6 +5,7 @@
 import React, {useState} from 'react';
 import {FlatList, RefreshControl} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import {callPhone} from '@/lib/messaging';
 import {useInfiniteList} from '@/lib/useInfiniteList';
@@ -20,12 +21,14 @@ import {
   SearchField,
   SkeletonRows,
   listProps,
+  useListEntrance,
 } from '@/ui';
 import {customerKeys, getCustomersPage, type CustomerListItem} from '../api';
 import {CustomerRow} from '../components/CustomerParts';
 
 export default function CustomerListScreen() {
   const s = useStyles();
+  const entering = useListEntrance();
   const {t} = useTranslation();
   const navigation = useNavigation();
   const {role} = useSession();
@@ -76,16 +79,18 @@ export default function CustomerListScreen() {
           {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
-          renderItem={({item}) => (
-            <CustomerRow
-              customer={item}
-              onPress={() => open(item)}
-              right={
-                mine && item.phoneNumber ? (
-                  <IconButton icon="phone" label={t('common.call')} onPress={() => callPhone(item.phoneNumber!)} />
-                ) : undefined
-              }
-            />
+          renderItem={({item, index}) => (
+            <Animated.View entering={entering(index)}>
+              <CustomerRow
+                customer={item}
+                onPress={() => open(item)}
+                right={
+                  mine && item.phoneNumber ? (
+                    <IconButton icon="phone" label={t('common.call')} onPress={() => callPhone(item.phoneNumber!)} />
+                  ) : undefined
+                }
+              />
+            </Animated.View>
           )}
           contentContainerStyle={s.list}
           onEndReached={list.loadMore}

@@ -6,6 +6,7 @@
 import React, {useMemo, useRef, useState} from 'react';
 import {FlatList, RefreshControl, View} from 'react-native';
 import {useRoute, type RouteProp} from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {formatDate, formatMoney} from '@/lib/format';
@@ -32,11 +33,13 @@ import {
   Text,
   type SheetHandle,
   listProps,
+  useListEntrance,
 } from '@/ui';
 import {collectKeys, getOverduePage, type OverdueBucket, type OverdueLoan} from '../api';
 
 export default function OverdueListScreen() {
   const s = useStyles();
+  const entering = useListEntrance();
   const {t} = useTranslation();
   const {lang} = useI18n();
   const {role} = useSession();
@@ -134,7 +137,7 @@ export default function OverdueListScreen() {
           {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
-          renderItem={renderItem}
+          renderItem={info => <Animated.View entering={entering(info.index)}>{renderItem(info)}</Animated.View>}
           contentContainerStyle={s.list}
           onEndReached={list.loadMore}
           onEndReachedThreshold={0.4}

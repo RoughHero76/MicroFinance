@@ -5,6 +5,7 @@
 import React, {useRef, useState} from 'react';
 import {FlatList, RefreshControl} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import {LOAN_STATUSES, type LoanStatus} from '@/lib/enums';
 import {formatMoney} from '@/lib/format';
@@ -27,6 +28,7 @@ import {
   Chips,
   type SheetHandle,
   listProps,
+  useListEntrance,
 } from '@/ui';
 import {adminLoanKeys, getLoansPage, type LoanSort} from '../adminApi';
 import type {CustomerRef, Loan, PersonRef} from '../types';
@@ -35,6 +37,7 @@ type Filter = 'all' | LoanStatus;
 
 export default function LoansScreen() {
   const s = useStyles();
+  const entering = useListEntrance();
   const {t} = useTranslation();
   const navigation = useNavigation();
   const [status, setStatus, statusReady] = useRemembered<Filter>('loans.status', 'all');
@@ -108,7 +111,7 @@ export default function LoansScreen() {
           {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
-          renderItem={renderItem}
+          renderItem={info => <Animated.View entering={entering(info.index)}>{renderItem(info)}</Animated.View>}
           contentContainerStyle={s.list}
           onEndReached={list.loadMore}
           onEndReachedThreshold={0.4}

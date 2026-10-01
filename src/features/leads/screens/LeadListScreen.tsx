@@ -9,6 +9,7 @@ import React, {useRef, useState} from 'react';
 import {FlatList, RefreshControl, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
+import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import type {TFunction} from 'i18next';
 import {useI18n} from '@/i18n';
@@ -38,6 +39,7 @@ import {
   type ChipOption,
   type SheetHandle,
   listProps,
+  useListEntrance,
 } from '@/ui';
 import {getLeadsPage, leadKeys, type Lead, type LeadFilter, type LeadStats} from '../api';
 
@@ -56,6 +58,7 @@ const personName = (p: Lead['AssignedTo']) =>
 
 export default function LeadListScreen() {
   const s = useStyles();
+  const entering = useListEntrance();
   const {t} = useTranslation();
   const {lang} = useI18n();
   const navigation = useNavigation();
@@ -148,7 +151,7 @@ export default function LeadListScreen() {
           {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
-          renderItem={renderItem}
+          renderItem={info => <Animated.View entering={entering(info.index)}>{renderItem(info)}</Animated.View>}
           contentContainerStyle={s.list}
           onEndReached={list.loadMore}
           onEndReachedThreshold={0.4}

@@ -11,7 +11,7 @@ import {formatDate, formatMoney, isSameDay} from '@/lib/format';
 import {callPhone, openMaps, openSms, openWhatsApp} from '@/lib/messaging';
 import type {Loan, PersonRef} from '@/features/loans/types';
 import {makeStyles} from '@/theme';
-import {Avatar, Card, IconButton, PressableScale, ProgressBar, StatusBadge, Text} from '@/ui';
+import {Avatar, Card, Icon, IconButton, PressableScale, ProgressBar, StatusBadge, Text} from '@/ui';
 import type {CustomerListItem} from '../api';
 
 export function CustomerRow({
@@ -31,41 +31,50 @@ export function CustomerRow({
   const closed = loans.length - open.length;
   return (
     <PressableScale onPress={onPress} scaleTo={0.98} accessibilityRole="button" accessibilityLabel={name} style={s.row}>
-      <Avatar name={name} uri={customer.profilePic} size={48} />
-      <View style={s.body}>
-        <Text variant="bodyLg" weight="semibold" numberOfLines={1}>
-          {name}
-        </Text>
-        {customer.phoneNumber ? (
-          <Text variant="small" color="muted">
-            {customer.phoneNumber}
+      <View style={s.rowTop}>
+        <Avatar name={name} uri={customer.profilePic} size={48} />
+        <View style={s.body}>
+          <Text variant="bodyLg" weight="bold" numberOfLines={1}>
+            {name}
           </Text>
-        ) : null}
-        {open.slice(0, 2).map(loan => (
-          <View key={loan._id} style={s.loanLine}>
-            <Text variant="small" tabular numberOfLines={1} style={s.flex}>
-              {formatMoney(loan.loanAmount)} · #{loan.loanNumber}
-            </Text>
-            <StatusBadge set="loan" status={loan.status} />
-          </View>
-        ))}
-        {open.length > 2 || closed > 0 ? (
-          <Text variant="caption" color="muted">
-            {[
-              open.length > 2 ? `+${open.length - 2}` : null,
-              closed > 0 ? t('customers.closedLoans', {count: closed}) : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </Text>
-        ) : null}
-        {!loans.length ? (
-          <Text variant="caption" color="muted">
-            {t('customers.noLoans')}
-          </Text>
-        ) : null}
+          {customer.phoneNumber ? (
+            <View style={s.phone}>
+              <Icon name="phone-outline" size={14} color="muted" />
+              <Text variant="small" color="muted" tabular>
+                {customer.phoneNumber}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        {right ?? <Icon name="chevron-right" size={20} color="muted" />}
       </View>
-      {right}
+      {/* Mock A2: each open loan as its own small block. */}
+      {open.slice(0, 2).map(loan => (
+        <View key={loan._id} style={s.loanChip}>
+          <Text variant="small" tabular numberOfLines={1} style={s.flex}>
+            <Text variant="small" weight="bold" tabular>
+              {formatMoney(loan.loanAmount)}
+            </Text>
+            <Text variant="small" color="muted">{` · #${loan.loanNumber}`}</Text>
+          </Text>
+          <StatusBadge set="loan" status={loan.status} />
+        </View>
+      ))}
+      {open.length > 2 || closed > 0 ? (
+        <Text variant="caption" color="muted" style={s.more}>
+          {[
+            open.length > 2 ? `+${open.length - 2}` : null,
+            closed > 0 ? t('customers.closedLoans', {count: closed}) : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </Text>
+      ) : null}
+      {!loans.length ? (
+        <Text variant="caption" color="muted" style={s.more}>
+          {t('customers.noLoans')}
+        </Text>
+      ) : null}
     </PressableScale>
   );
 }
@@ -179,9 +188,7 @@ export function ContactActions({
 
 const useStyles = makeStyles(t => ({
   row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: t.space.md,
+    gap: 10,
     padding: t.space.md,
     backgroundColor: t.colors.surface,
     borderRadius: t.radius.lg,
@@ -190,7 +197,20 @@ const useStyles = makeStyles(t => ({
     ...t.shadow.card,
     marginBottom: 10,
   },
+  rowTop: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
   body: {flex: 1, gap: 3, minWidth: 0},
+  phone: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs},
+  loanChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.sm,
+    paddingVertical: t.space.sm,
+    paddingHorizontal: t.space.md,
+    borderRadius: t.radius.md,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  more: {marginLeft: 2},
   loanLine: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
   flex: {flex: 1, minWidth: 0},
   loanCard: {marginBottom: 10, gap: t.space.sm},
