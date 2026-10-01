@@ -155,6 +155,7 @@ export default function CloseLoanScreen() {
         <>
           <Card>
             <KeyValueRows
+              dense
               rows={[
                 {label: t('closeLoan.loanAmount'), value: formatMoney(loan.loanAmount), keepEmpty: true},
                 {
@@ -163,19 +164,33 @@ export default function CloseLoanScreen() {
                   keepEmpty: true,
                 },
                 {label: t('closeLoan.totalPaid'), value: formatMoney(loan.totalPaid ?? 0), keepEmpty: true},
-                {label: t('closeLoan.penalties'), value: formatMoney(bounds.penalties), keepEmpty: true},
-                {label: t('closeLoan.advanceCredit'), value: bounds.advance ? `− ${formatMoney(bounds.advance)}` : ''},
+                {
+                  label: t('closeLoan.penalties'),
+                  value: formatMoney(bounds.penalties),
+                  valueColor: bounds.penalties ? 'danger' : undefined,
+                  keepEmpty: true,
+                },
+                {
+                  label: t('closeLoan.advanceCredit'),
+                  value: bounds.advance ? `− ${formatMoney(bounds.advance)}` : '',
+                  valueColor: 'success',
+                },
                 {
                   label: t('closeLoan.totalOutstanding'),
-                  value: formatMoney(Math.max(0, bounds.totalDue - bounds.advance)),
+                  value: (
+                    <Text weight="bold" tabular>
+                      {formatMoney(Math.max(0, bounds.totalDue - bounds.advance))}
+                    </Text>
+                  ),
                   keepEmpty: true,
                 },
               ]}
             />
           </Card>
 
-          <Card style={s.gap}>
+          <View style={s.gap}>
             <MoneyField
+              large
               label={t('closeLoan.amountPaying')}
               value={amount}
               onChangeValue={setAmount}
@@ -186,9 +201,9 @@ export default function CloseLoanScreen() {
                   : t('closeLoan.bounds', {min: formatMoney(bounds.min), max: formatMoney(bounds.max)})
               }
             />
-          </Card>
+          </View>
 
-          <Card padded={false} style={s.gap}>
+          <Card padded={false} dividers>
             <OptionRow
               title={t('closeLoan.forgiveLoan')}
               hint={t('closeLoan.forgiveLoanHint')}
