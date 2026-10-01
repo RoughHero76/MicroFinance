@@ -12,6 +12,7 @@ import {formatDate, formatMoney} from '@/lib/format';
 import {readJson, StorageKeys, writeJson} from '@/lib/storage';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import type {Role} from '@/lib/session';
+import Animated, {FadeIn} from 'react-native-reanimated';
 import {makeStyles} from '@/theme';
 import {Chips, EmptyState, ErrorState, Icon, SegmentedControl, SkeletonRows, StatusBadge, Text, listProps} from '@/ui';
 import {getSchedulePage, loanKeys} from '../api';
@@ -64,7 +65,7 @@ export function ScheduleView({
         style={({pressed}) => [s.row, pressed && s.pressed]}
         accessibilityRole="button">
         <View style={s.rowText}>
-          <Text weight="semibold" tabular>
+          <Text weight="bold" tabular>
             #{item.loanInstallmentNumber ?? '-'} · {formatDate(item.dueDate, lang, {short: true})}
           </Text>
           <Text variant="small" color="muted" tabular numberOfLines={1}>
@@ -90,7 +91,7 @@ export function ScheduleView({
           accessibilityRole="button"
           accessibilityState={{expanded: open}}>
           <View style={s.rowText}>
-            <Text weight="semibold">
+            <Text weight="bold">
               {t(`status.schedule.${run.status}`)} · {t('loan.installmentsCount', {count: run.items.length})}
             </Text>
             <Text variant="small" color="muted" tabular numberOfLines={1}>
@@ -105,7 +106,11 @@ export function ScheduleView({
           <StatusBadge set="schedule" status={run.status} />
           <Icon name={open ? 'chevron-up' : 'chevron-down'} size={20} color="muted" />
         </Pressable>
-        {open ? <View style={s.runItems}>{run.items.map(row)}</View> : null}
+        {open ? (
+          <Animated.View entering={FadeIn.duration(180)} style={s.runItems}>
+            {run.items.map(row)}
+          </Animated.View>
+        ) : null}
       </View>
     );
   };
@@ -118,14 +123,19 @@ export function ScheduleView({
     {value: 'Paid', label: t('status.schedule.Paid')},
   ];
 
+  const data = mode === 'grouped' ? runs : list.items.map(item => ({key: item._id, item}));
   return (
     <FlatList<InstallmentRun | {key: string; item: Installment}>
       {...listProps}
-      data={mode === 'grouped' ? runs : list.items.map(item => ({key: item._id, item}))}
+      data={data}
       keyExtractor={entry => entry.key}
-      renderItem={({item: entry}) =>
-        'items' in entry ? runRow(entry as InstallmentRun) : row((entry as {item: Installment}).item)
-      }
+      // Mock A7: the rows sit together in one card, split by thin lines.
+      renderItem={({item: entry, index}) => (
+        <View style={[s.cell, index === 0 && s.cellFirst, index === data.length - 1 && s.cellLast]}>
+          {index > 0 ? <View style={s.divider} /> : null}
+          {'items' in entry ? runRow(entry as InstallmentRun) : row((entry as {item: Installment}).item)}
+        </View>
+      )}
       ListHeaderComponent={
         <View style={s.controls}>
           {header}
@@ -173,22 +183,27 @@ const useStyles = makeStyles(t => ({
   list: {padding: t.space.lg, paddingBottom: 96, flexGrow: 1},
   controls: {gap: t.space.sm, marginBottom: t.space.md},
   chips: {marginHorizontal: -t.space.lg},
+  cell: {
+    backgroundColor: t.colors.surface,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: t.colors.border,
+    overflow: 'hidden',
+  },
+  cellFirst: {borderTopWidth: 1, borderTopLeftRadius: t.radius.lg, borderTopRightRadius: t.radius.lg},
+  cellLast: {borderBottomWidth: 1, borderBottomLeftRadius: t.radius.lg, borderBottomRightRadius: t.radius.lg},
+  divider: {height: 1, marginHorizontal: t.space.md, backgroundColor: t.colors.border},
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.space.sm,
-    padding: t.space.md,
-    minHeight: 56,
-    backgroundColor: t.colors.surface,
-    borderRadius: t.radius.md,
-    borderWidth: 1,
-    borderColor: t.colors.border,
-    ...t.shadow.card,
-    marginBottom: t.space.sm,
+    paddingVertical: t.space.md,
+    paddingHorizontal: t.space.lg,
+    minHeight: 60,
   },
   pressed: {backgroundColor: t.colors.surface2},
   rowText: {flex: 1, gap: 2, minWidth: 0},
   run: {},
-  runItems: {paddingLeft: t.space.lg},
+  runItems: {paddingLeft: t.space.md, backgroundColor: t.colors.bg},
   footer: {padding: t.space.md},
 }));
