@@ -3,7 +3,7 @@
 // button; the admin version gets the "+" floating button (U-03).
 
 import React, {useState} from 'react';
-import {FlatList, RefreshControl} from 'react-native';
+import {FlatList} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
@@ -22,6 +22,7 @@ import {
   SkeletonRows,
   listProps,
   useListEntrance,
+  RefreshControl,
 } from '@/ui';
 import {customerKeys, getCustomersPage, type CustomerListItem} from '../api';
 import {CustomerRow} from '../components/CustomerParts';

@@ -6,7 +6,7 @@
 // Links to "By employee" (M-10) and Cash handovers (M-3) when switched on.
 
 import React, {useRef, useState} from 'react';
-import {FlatList, RefreshControl, View} from 'react-native';
+import {FlatList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -48,6 +48,7 @@ import {
   useConfirm,
   type SheetHandle,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {downloadReport, getReport, REPORTS_FOLDER, reportKeys} from '../api';
 import {Bars, rangeLabel} from '../components/Bars';

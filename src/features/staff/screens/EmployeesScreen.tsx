@@ -2,7 +2,7 @@
 // switched-off accounts; "+" floating button to register (U-03).
 
 import React from 'react';
-import {FlatList, RefreshControl} from 'react-native';
+import {FlatList} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {callPhone} from '@/lib/messaging';
@@ -20,6 +20,7 @@ import {
   SkeletonRows,
   StatusBadge,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {getEmployeesPage, staffKeys} from '../api';
 

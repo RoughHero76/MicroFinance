@@ -4,7 +4,7 @@
 // 5 recent customers.
 
 import React from 'react';
-import {Pressable, RefreshControl, View} from 'react-native';
+import {Pressable, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -29,6 +29,7 @@ import {
   Skeleton,
   StatusBadge,
   Text,
+  RefreshControl,
 } from '@/ui';
 
 export default function AdminHomeScreen() {

@@ -4,7 +4,7 @@
 // reset password, remove (with Undo, BE-19d).
 
 import React, {useRef, useState} from 'react';
-import {RefreshControl, View} from 'react-native';
+import {View} from 'react-native';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -34,6 +34,7 @@ import {
   toast,
   useConfirm,
   type SheetHandle,
+  RefreshControl,
 } from '@/ui';
 import {getEmployeeProfile, removeEmployee, resetEmployeePassword, restoreEmployee, staffKeys} from '../api';
 import {passwordOk} from './EmployeeFormScreen';

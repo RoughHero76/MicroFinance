@@ -3,7 +3,7 @@
 // over can be checked against the app.
 
 import React, {useMemo, useState} from 'react';
-import {FlatList, RefreshControl, View} from 'react-native';
+import {FlatList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
@@ -27,6 +27,7 @@ import {
   Text,
   listProps,
   useListEntrance,
+  RefreshControl,
 } from '@/ui';
 
 type Range = 'today' | 'week' | 'month';

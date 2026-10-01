@@ -2,7 +2,7 @@
 // activity log (More). Every change with who, when and before → after.
 
 import React from 'react';
-import {FlatList, RefreshControl} from 'react-native';
+import {FlatList} from 'react-native';
 import {useRoute, type RouteProp} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
@@ -10,7 +10,7 @@ import {formatDateTime, formatMoney} from '@/lib/format';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {adminLoanKeys, getActivityPage, type ActivityEntry} from '@/features/loans/adminApi';
 import {makeStyles} from '@/theme';
-import {EmptyState, ErrorState, Screen, SkeletonRows, Timeline, listProps} from '@/ui';
+import {EmptyState, ErrorState, Screen, SkeletonRows, Timeline, listProps, RefreshControl} from '@/ui';
 
 function describeChange(entry: ActivityEntry): string | undefined {
   const keys = Object.keys(entry.after ?? {});

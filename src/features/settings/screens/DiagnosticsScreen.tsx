@@ -4,7 +4,7 @@
 // for daily use, so it stays plain.
 
 import React, {useState} from 'react';
-import {RefreshControl, View} from 'react-native';
+import {View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {getBuildNumber, getVersion} from 'react-native-device-info';
@@ -27,6 +27,7 @@ import {
   SkeletonRows,
   StatusBadge,
   Text,
+  RefreshControl,
 } from '@/ui';
 
 export default function DiagnosticsScreen() {

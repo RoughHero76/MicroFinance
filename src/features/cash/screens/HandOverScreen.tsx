@@ -4,7 +4,7 @@
 // button to hand it over. Past handovers below with their status.
 
 import React from 'react';
-import {FlatList, RefreshControl} from 'react-native';
+import {FlatList} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
@@ -28,6 +28,7 @@ import {
   toast,
   useConfirm,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {cashKeys, getHandoversPage, getHolding, handOverCash, type CashHandover} from '../api';
 

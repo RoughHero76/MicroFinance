@@ -6,7 +6,7 @@
 // installment) are added by the admin wave through `adminExtras`.
 
 import React, {useMemo, useRef, useState} from 'react';
-import {Pressable, RefreshControl, ScrollView, View} from 'react-native';
+import {Pressable, ScrollView, View} from 'react-native';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import Animated, {FadeIn} from 'react-native-reanimated';
 import {useQuery} from '@tanstack/react-query';
@@ -42,6 +42,7 @@ import {
   toast,
   type KeyValue,
   type SheetHandle,
+  RefreshControl,
 } from '@/ui';
 import {getLoanDetail, getPaymentsPage, loanKeys} from '../api';
 import {useCollect, type CollectTarget} from '../components/CollectSheets';

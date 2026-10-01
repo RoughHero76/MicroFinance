@@ -5,7 +5,7 @@
 // list of loans. "⟳" runs tonight's update now (BE-9), with the last run.
 
 import React from 'react';
-import {RefreshControl, View} from 'react-native';
+import {View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -28,6 +28,7 @@ import {
   Text,
   toast,
   useConfirm,
+  RefreshControl,
 } from '@/ui';
 import {getRiskOverview, reportKeys, runSettlement} from '../api';
 

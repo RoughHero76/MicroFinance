@@ -6,7 +6,7 @@
 // "+" floating button for a new lead.
 
 import React, {useRef, useState} from 'react';
-import {FlatList, RefreshControl, View} from 'react-native';
+import {FlatList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import Animated from 'react-native-reanimated';
@@ -40,6 +40,7 @@ import {
   type SheetHandle,
   listProps,
   useListEntrance,
+  RefreshControl,
 } from '@/ui';
 import {getLeadsPage, leadKeys, type Lead, type LeadFilter, type LeadStats} from '../api';
 

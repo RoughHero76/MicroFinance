@@ -3,7 +3,7 @@
 // and status. Search covers loan number, name and phone (BE-8).
 
 import React, {useRef, useState} from 'react';
-import {FlatList, RefreshControl} from 'react-native';
+import {FlatList} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
@@ -29,6 +29,7 @@ import {
   type SheetHandle,
   listProps,
   useListEntrance,
+  RefreshControl,
 } from '@/ui';
 import {adminLoanKeys, getLoansPage, type LoanSort} from '../adminApi';
 import type {CustomerRef, Loan, PersonRef} from '../types';

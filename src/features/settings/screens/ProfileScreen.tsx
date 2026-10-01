@@ -4,7 +4,7 @@
 // square and compressed before upload (F-9).
 
 import React, {useState} from 'react';
-import {RefreshControl, View} from 'react-native';
+import {View} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
@@ -30,6 +30,7 @@ import {
   TextField,
   toast,
   useSheet,
+  RefreshControl,
 } from '@/ui';
 
 export default function ProfileScreen() {

@@ -4,7 +4,7 @@
 // level, as drawn in the mock. All numbers come from one call (BE-2).
 
 import React from 'react';
-import {RefreshControl, View} from 'react-native';
+import {View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -26,6 +26,7 @@ import {
   Skeleton,
   Text,
   type TextColor,
+  RefreshControl,
 } from '@/ui';
 import {collectKeys, getEmployeeDashboard, type OverdueBucket} from '../api';
 

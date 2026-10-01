@@ -3,7 +3,7 @@
 // month or last month, sortable.
 
 import React, {useState} from 'react';
-import {FlatList, RefreshControl, View} from 'react-native';
+import {FlatList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -21,6 +21,7 @@ import {
   SkeletonRows,
   Text,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {getPerformance, reportKeys, type PerformanceRow} from '../api';
 

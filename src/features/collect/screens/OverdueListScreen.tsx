@@ -4,7 +4,7 @@
 // collect too (BE-10). The server limits employees to their own loans.
 
 import React, {useMemo, useRef, useState} from 'react';
-import {FlatList, RefreshControl, View} from 'react-native';
+import {FlatList, View} from 'react-native';
 import {useRoute, type RouteProp} from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
@@ -35,6 +35,7 @@ import {
   type SheetHandle,
   listProps,
   useListEntrance,
+  RefreshControl,
 } from '@/ui';
 import {collectKeys, getOverduePage, type OverdueBucket, type OverdueLoan} from '../api';
 

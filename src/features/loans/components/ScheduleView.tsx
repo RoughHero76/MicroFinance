@@ -4,7 +4,7 @@
 // Tapping an installment opens the InstallmentSheet (A7b).
 
 import React, {useEffect, useMemo, useState} from 'react';
-import {FlatList, Pressable, RefreshControl, View} from 'react-native';
+import {FlatList, Pressable, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import type {ScheduleStatus} from '@/lib/enums';
@@ -14,7 +14,18 @@ import {useInfiniteList} from '@/lib/useInfiniteList';
 import type {Role} from '@/lib/session';
 import Animated, {FadeIn} from 'react-native-reanimated';
 import {makeStyles} from '@/theme';
-import {Chips, EmptyState, ErrorState, Icon, SegmentedControl, SkeletonRows, StatusBadge, Text, listProps} from '@/ui';
+import {
+  Chips,
+  EmptyState,
+  ErrorState,
+  Icon,
+  SegmentedControl,
+  SkeletonRows,
+  StatusBadge,
+  Text,
+  listProps,
+  RefreshControl,
+} from '@/ui';
 import {getSchedulePage, loanKeys} from '../api';
 import {amountPaidSoFar, groupRuns, installmentTotal, penaltyAmount, type InstallmentRun} from '../schedule';
 import type {Installment} from '../types';

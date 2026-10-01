@@ -4,7 +4,7 @@
 // or loan number. Pay and Penalty open the shared sheets (E3, E3b).
 
 import React, {useMemo, useState} from 'react';
-import {RefreshControl, SectionList, View} from 'react-native';
+import {SectionList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import {useQuery} from '@tanstack/react-query';
@@ -27,6 +27,7 @@ import {
   useIsOffline,
   useListEntrance,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {collectKeys, getTodaysCollections, type CollectionItem} from '../api';
 

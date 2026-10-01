@@ -3,7 +3,7 @@
 // records the amount received and a required note. Tabs by status.
 
 import React, {useRef, useState} from 'react';
-import {FlatList, RefreshControl, View} from 'react-native';
+import {FlatList, View} from 'react-native';
 import {useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
@@ -28,6 +28,7 @@ import {
   toast,
   type SheetHandle,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {cashKeys, confirmHandover, getHandoversPage, type CashHandover} from '../api';
 import {handoverTone} from './HandOverScreen';

@@ -5,7 +5,7 @@
 // reason and has no Undo, because it moves money back.
 
 import React, {useMemo, useRef, useState} from 'react';
-import {Pressable, RefreshControl, SectionList, View} from 'react-native';
+import {Pressable, SectionList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -38,6 +38,7 @@ import {
   useConfirm,
   type SheetHandle,
   listProps,
+  RefreshControl,
 } from '@/ui';
 import {
   adminLoanKeys,

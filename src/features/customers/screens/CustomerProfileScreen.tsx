@@ -4,7 +4,7 @@
 // admins get the photo badge, ⋯ (edit, delete) and "+ Loan" (W4).
 
 import React, {useEffect, useRef, useState} from 'react';
-import {RefreshControl, View} from 'react-native';
+import {View} from 'react-native';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -38,6 +38,7 @@ import {
   useConfirm,
   type SheetHandle,
   type TextColor,
+  RefreshControl,
 } from '@/ui';
 import {customerKeys, deleteCustomer, getCustomerProfile, uploadCustomerPhoto} from '../api';
 import {ContactActions, LoanCard} from '../components/CustomerParts';
