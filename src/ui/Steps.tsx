@@ -3,9 +3,10 @@
 // equal-width column and the connecting line runs through the circle
 // centres, so nothing drifts with label length ("these are crooked").
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {View} from 'react-native';
-import {makeStyles} from '@/theme';
+import Animated, {Easing, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
+import {makeStyles, withAlpha} from '@/theme';
 import {Icon} from './Icon';
 import {Text} from './Text';
 
@@ -23,23 +24,25 @@ export interface StepTrackerProps {
 export function StepTracker({steps, current, failed, showLabels = true}: StepTrackerProps) {
   const s = useStyles();
   const n = steps.length;
+  // W7: the done line draws itself up to the current step.
+  const target = (Math.max(0, Math.min(current, n - 1)) / n) * 100;
+  const grow = useSharedValue(0);
+  useEffect(() => {
+    grow.value = withTiming(target, {duration: 600, easing: Easing.out(Easing.cubic)});
+  }, [target, grow]);
+  const doneLine = useAnimatedStyle(() => ({width: `${grow.value}%`}));
   return (
     <View accessibilityRole="progressbar" accessibilityLabel={`${current + 1} / ${n}: ${steps[current] ?? ''}`}>
       <View style={s.track}>
         {/* The line spans from the first circle's centre to the last one's. */}
         <View style={[s.line, {left: `${50 / n}%`, right: `${50 / n}%`}]} />
-        <View
-          style={[
-            s.line,
-            s.lineDone,
-            {left: `${50 / n}%`, width: `${(Math.max(0, Math.min(current, n - 1)) / n) * 100}%`},
-          ]}
-        />
+        <Animated.View style={[s.line, s.lineDone, {left: `${50 / n}%`}, doneLine]} />
         {steps.map((label, i) => {
           const done = i < current;
           const isCurrent = i === current;
           return (
             <View key={label} style={s.column}>
+              {isCurrent && !failed ? <View style={s.halo} /> : null}
               <View style={[s.circle, done && s.circleDone, isCurrent && (failed ? s.circleFailed : s.circleCurrent)]}>
                 {done ? (
                   <Icon name="check" size={14} color="onPrimary" />
@@ -141,7 +144,7 @@ export function Timeline({items, conversation}: {items: TimelineItem[]; conversa
 const useStyles = makeStyles(t => ({
   track: {flexDirection: 'row', alignItems: 'center', height: CIRCLE},
   line: {position: 'absolute', top: CIRCLE / 2 - 1, height: 2, backgroundColor: t.colors.border},
-  lineDone: {backgroundColor: t.colors.primary},
+  lineDone: {backgroundColor: t.colors.success},
   column: {flex: 1, alignItems: 'center'},
   circle: {
     width: CIRCLE,
@@ -153,7 +156,16 @@ const useStyles = makeStyles(t => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleDone: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
+  circleDone: {backgroundColor: t.colors.success, borderColor: t.colors.success},
+  // The mock's soft ring around the current step.
+  halo: {
+    position: 'absolute',
+    width: CIRCLE + 8,
+    height: CIRCLE + 8,
+    borderRadius: (CIRCLE + 8) / 2,
+    top: -4,
+    backgroundColor: withAlpha(t.colors.primary, 0.22),
+  },
   circleCurrent: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
   circleFailed: {backgroundColor: t.colors.danger, borderColor: t.colors.danger},
   labels: {flexDirection: 'row', marginTop: t.space.xs},

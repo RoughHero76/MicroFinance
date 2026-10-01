@@ -22,6 +22,7 @@ import {ContactActions} from '@/features/customers/components/CustomerParts';
 import {listEmployees, staffKeys} from '@/features/staff/api';
 import {makeStyles} from '@/theme';
 import {
+  Appear,
   Avatar,
   BottomSheet,
   Button,
@@ -31,7 +32,6 @@ import {
   DateField,
   ErrorState,
   Fab,
-  FactTiles,
   IconButton,
   KeyValueRows,
   OptionRow,
@@ -330,68 +330,86 @@ export default function LeadDetailScreen() {
         ),
       }}
       scroll
+      defer
       fab={fab}
       refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={query.refetch} />}>
-      <Card style={s.head}>
-        <View style={s.headRow}>
-          <Avatar
-            name={lead.name}
-            uri={lead.pictureUrl}
-            size={56}
-            onPress={lead.pictureUrl ? () => setPhotoOpen(true) : undefined}
-          />
-          <View style={s.headText}>
-            <Text variant="title" numberOfLines={1}>
-              {lead.name}
-            </Text>
-            <Text variant="small" color="muted" numberOfLines={1}>
-              {admin && addedBy
-                ? t('leads.addedBy', {name: addedBy})
-                : [lead.city, lead.state].filter(Boolean).join(', ')}
-            </Text>
-          </View>
-          <StatusBadge set="lead" status={leadDisplayStatus(lead)} />
-        </View>
-        <ContactActions phone={lead.phone} address={address} name={lead.name} />
-      </Card>
-
-      <Card style={s.block}>
-        <StepTracker steps={steps} current={step.current} failed={step.failed} showLabels={false} />
-        <Text variant="small" color="muted" align="center" style={s.stepText}>
-          {t('leads.stepOf', {
-            step: step.current + 1,
-            name: step.failed ? t('status.lead.Rejected') : steps[step.current],
-          })}
-        </Text>
-      </Card>
-
-      <FactTiles
-        style={s.block}
-        facts={[
-          {label: t('leads.amount'), value: formatMoney(lead.loanAmount)},
-          {label: t('leads.duration'), value: lead.loanDuration},
-          {label: t('leads.type'), value: type},
-        ]}
-      />
-
-      {!closed && lead.followupDate ? (
-        <Card style={s.block}>
+      <Appear>
+        <Card style={s.head}>
           <View style={s.headRow}>
+            <Avatar
+              name={lead.name}
+              uri={lead.pictureUrl}
+              size={56}
+              onPress={lead.pictureUrl ? () => setPhotoOpen(true) : undefined}
+            />
             <View style={s.headText}>
-              <Text variant="label" color="muted">
-                {t('leads.nextFollowup')}
+              <Text variant="title" weight="bold" numberOfLines={1}>
+                {lead.name}
               </Text>
-              <Text variant="body" weight="medium">
-                {formatDate(lead.followupDate, lang)}
+              <Text variant="small" color="muted" numberOfLines={1}>
+                {admin && addedBy
+                  ? t('leads.addedBy', {name: addedBy})
+                  : [lead.city, lead.state].filter(Boolean).join(', ')}
               </Text>
             </View>
-            {lead.followupStatus === 'Completed' ? (
-              <StatusBadge set="followup" status="Completed" />
-            ) : due ? (
-              <StatusBadge tone="warning" label={t('leads.due')} />
-            ) : null}
+            <StatusBadge set="lead" status={leadDisplayStatus(lead)} />
+          </View>
+          <ContactActions phone={lead.phone} address={address} name={lead.name} variant="ring" align="start" />
+          {/* Mock E9: the 5-step progress lives in the header card. */}
+          <View>
+            <StepTracker steps={steps} current={step.current} failed={step.failed} showLabels={false} />
+            <Text variant="small" color="muted" align="center" style={s.stepText}>
+              {t('leads.stepOf', {
+                step: step.current + 1,
+                name: step.failed ? t('status.lead.Rejected') : steps[step.current],
+              })}
+            </Text>
           </View>
         </Card>
+      </Appear>
+
+      <Appear index={1}>
+        <Card style={s.facts}>
+          <KeyValueRows
+            rows={[
+              {
+                label: t('leads.amount'),
+                value: (
+                  <Text weight="bold" tabular>
+                    {formatMoney(lead.loanAmount)}
+                  </Text>
+                ),
+              },
+              {
+                label: t('leads.duration'),
+                value: lead.loanDuration ? <Text weight="bold">{lead.loanDuration}</Text> : '',
+              },
+              {label: t('leads.type'), value: <Text weight="bold">{type}</Text>},
+            ]}
+          />
+        </Card>
+      </Appear>
+
+      {!closed && lead.followupDate ? (
+        <Appear index={2}>
+          <Card style={[s.block, due && lead.followupStatus !== 'Completed' && s.followupDue]}>
+            <View style={s.headRow}>
+              <View style={s.headText}>
+                <Text variant="small" color="muted">
+                  {t('leads.nextFollowup')}
+                </Text>
+                <Text variant="bodyLg" weight="bold">
+                  {formatDate(lead.followupDate, lang)}
+                </Text>
+              </View>
+              {lead.followupStatus === 'Completed' ? (
+                <StatusBadge set="followup" status="Completed" />
+              ) : due ? (
+                <StatusBadge tone="warning" label={t('leads.due')} />
+              ) : null}
+            </View>
+          </Card>
+        </Appear>
       ) : null}
 
       {admin && lead.conversionRequested && !lead.isLeadConverted ? (
@@ -574,6 +592,8 @@ const useStyles = makeStyles(t => ({
   headRow: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
   headText: {flex: 1, minWidth: 0},
   block: {marginTop: t.space.md},
+  facts: {marginTop: t.space.md, paddingVertical: t.space.xs, paddingHorizontal: t.space.lg},
+  followupDue: {borderColor: t.colors.warning, borderWidth: 1.5},
   stepText: {marginTop: t.space.sm},
   label: {marginBottom: t.space.sm},
   chips: {marginBottom: t.space.md},
