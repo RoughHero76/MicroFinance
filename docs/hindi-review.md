@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (951 strings)
+## App (959 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -959,6 +959,14 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `ui.cameraBlocked` | Camera is turned off for this app | इस ऐप के लिए कैमरा बंद है |
 | `ui.cameraBlockedHint` | Allow it in the app settings to take photos. | फ़ोटो लेने के लिए ऐप सेटिंग में इसकी अनुमति दें। |
 | `ui.openSettings` | Open settings | सेटिंग खोलें |
+| `settings.pushTest` | Send me a test notification | मुझे टेस्ट सूचना भेजें |
+| `settings.pushTestSent` | Test sent | टेस्ट भेजा गया |
+| `settings.pushTestSentHint` | It should appear in your notification bar in a few seconds. | कुछ सेकंड में यह सूचना-पट्टी में दिखनी चाहिए। |
+| `settings.pushTestOff` | Phone notifications aren't set up on the server yet. | सर्वर पर फ़ोन सूचनाएँ अभी चालू नहीं हैं। |
+| `settings.pushTestNoPhone` | This phone isn't registered. Turn Phone notifications off and on again, then retry. | यह फ़ोन जुड़ा नहीं है। फ़ोन सूचनाएँ बंद करके फिर चालू करें, फिर दोबारा कोशिश करें। |
+| `settings.pushTestFailed` | The server couldn't deliver it to this phone. | सर्वर इस फ़ोन तक सूचना नहीं पहुँचा सका। |
+| `notifications.types.test.push.title` | Test notification | टेस्ट सूचना |
+| `notifications.types.test.push.body` | Notifications reach this phone. | सूचनाएँ इस फ़ोन पर ठीक से आ रही हैं। |
 
 ## Server (48 strings)
 

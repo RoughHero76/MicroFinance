@@ -54,6 +54,8 @@ export function notificationText(n: AppNotification, t: TFunction): {title: stri
         title: t(`${known}.title`, {count: Number(p.total) || 0}),
         body: `SMA-1 ${p.sma1 ?? 0} · SMA-2 ${p.sma2 ?? 0} · NPA ${p.npa ?? 0}`,
       };
+    case 'test.push':
+      return {title: t(`${known}.title`), body: t(`${known}.body`)};
     case 'cron.failed':
       return {title: t(`${known}.title`), body: String(p.job ?? '')};
     case 'cash.handover':

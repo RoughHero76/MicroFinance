@@ -297,7 +297,13 @@
       "saffron": "Saffron"
     },
     "push": "Phone notifications",
-    "pushHint": "Payments, loans, leads and follow-ups, even when the app is closed"
+    "pushHint": "Payments, loans, leads and follow-ups, even when the app is closed",
+    "pushTest": "Send me a test notification",
+    "pushTestSent": "Test sent",
+    "pushTestSentHint": "It should appear in your notification bar in a few seconds.",
+    "pushTestOff": "Phone notifications aren't set up on the server yet.",
+    "pushTestNoPhone": "This phone isn't registered. Turn Phone notifications off and on again, then retry.",
+    "pushTestFailed": "The server couldn't deliver it to this phone."
   },
   "security": {
     "title": "Security",
@@ -1000,6 +1006,12 @@
         "confirmed": {
           "title": "Cash received · {{amount}}",
           "short": "Cash short by {{amount}}"
+        }
+      },
+      "test": {
+        "push": {
+          "title": "Test notification",
+          "body": "Notifications reach this phone."
         }
       }
     },

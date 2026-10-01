@@ -36,3 +36,19 @@ export async function getUnreadCount(): Promise<number> {
 
 export const markRead = (id: string) => api.post(`/shared/notifications/${id}/read`);
 export const markAllRead = () => api.post('/shared/notifications/read-all');
+
+export interface PushTestResult {
+  /** The server has its Firebase key. */
+  configured: boolean;
+  /** Phones registered for this person. */
+  devices: number;
+  sent: number;
+  failed: number;
+  errors: string[];
+}
+
+/** Sends the signed-in person a test notification and says what happened. */
+export async function sendTestNotification(): Promise<PushTestResult> {
+  const res = await api.post<{data: PushTestResult}>('/shared/notifications/test');
+  return res.data;
+}

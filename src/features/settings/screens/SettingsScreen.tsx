@@ -12,9 +12,11 @@ import type {Lang} from '@/brand';
 import {LANGUAGES, setLanguage, useI18n} from '@/i18n';
 import {useUpdates} from '@/features/app/updates';
 import {useCan} from '@/features/auth/SessionProvider';
-import {isPushEnabled, setPushEnabled} from '@/lib/push';
+import {sendTestNotification} from '@/features/notifications/api';
+import {errorMessage} from '@/lib/api';
+import {isPushEnabled, registerPush, setPushEnabled} from '@/lib/push';
 import {makeStyles, palettes, useThemeSettings, type ModeSetting, type PaletteId} from '@/theme';
-import {Card, Icon, OptionRow, PressableScale, Screen, Section, SegmentedControl, SelectField, Text} from '@/ui';
+import {Card, Icon, OptionRow, PressableScale, Screen, Section, SegmentedControl, SelectField, Text, toast} from '@/ui';
 import type {AppStackParamList} from '@/navigation/types';
 
 export default function SettingsScreen() {
@@ -32,6 +34,25 @@ export default function SettingsScreen() {
   const togglePush = (next: boolean) => {
     setPush(next);
     setPushEnabled(next, lang);
+  };
+  const [testing, setTesting] = useState(false);
+  // Checks the whole chain on a live server: the server's key, this phone's
+  // registration, and delivery.
+  const testPush = async () => {
+    if (testing) return;
+    setTesting(true);
+    try {
+      await registerPush(lang);
+      const r = await sendTestNotification();
+      if (!r.configured) toast.error(t('settings.pushTestOff'));
+      else if (!r.devices) toast.error(t('settings.pushTestNoPhone'));
+      else if (!r.sent) toast.error(t('settings.pushTestFailed'), {message: r.errors[0]});
+      else toast.success(t('settings.pushTestSent'), {message: t('settings.pushTestSentHint')});
+    } catch (error) {
+      toast.error(errorMessage(error, t));
+    } finally {
+      setTesting(false);
+    }
   };
 
   return (
@@ -91,6 +112,7 @@ export default function SettingsScreen() {
             hint={t('settings.pushHint')}
             toggle={{value: push, onChange: togglePush}}
           />
+          {push ? <OptionRow icon="bell-check-outline" title={t('settings.pushTest')} onPress={testPush} /> : null}
           <OptionRow
             icon="shield-lock-outline"
             title={t('settings.security')}
