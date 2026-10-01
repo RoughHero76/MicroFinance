@@ -1141,5 +1141,29 @@
     "view": "फ़ोटो देखें",
     "recrop": "मौजूदा फ़ोटो फिर से क्रॉप करें",
     "recropHint": "नई फ़ोटो लिए बिना फ़्रेम ठीक करें"
+  },
+  "send": {
+    "title": "सूचना भेजें",
+    "who": "किसे",
+    "to": {
+      "employees": "सभी कर्मचारी",
+      "admins": "एडमिन",
+      "everyone": "सभी"
+    },
+    "chooseEmployees": "कर्मचारी चुनें",
+    "message": "संदेश",
+    "titleLabel": "शीर्षक",
+    "titlePlaceholder": "जैसे कल ऑफ़िस बंद है",
+    "messageLabel": "संदेश (वैकल्पिक)",
+    "messagePlaceholder": "लोगों को क्या जानना चाहिए",
+    "send": "भेजें",
+    "confirm": "{{who}} को भेजें?",
+    "limits": "यह उनकी सूचनाओं और फ़ोन पर दिखेगा। आप दिन में 5 संदेश तक भेज सकते हैं, हर 2 मिनट में एक।",
+    "toChosen": "{{count}} कर्मचारी",
+    "toChosen_plural": "{{count}} कर्मचारी",
+    "sent": "{{count}} व्यक्ति को भेजा गया",
+    "sent_plural": "{{count}} लोगों को भेजा गया",
+    "phones": "{{count}} फ़ोन पर सूचना गई",
+    "phones_plural": "{{count}} फ़ोन पर सूचना गई"
   }
 }

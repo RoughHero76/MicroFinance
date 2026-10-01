@@ -1141,5 +1141,29 @@
     "view": "View photo",
     "recrop": "Re-crop current photo",
     "recropHint": "Fix the framing without taking a new one"
+  },
+  "send": {
+    "title": "Send notification",
+    "who": "To",
+    "to": {
+      "employees": "All employees",
+      "admins": "Admins",
+      "everyone": "Everyone"
+    },
+    "chooseEmployees": "Choose employees",
+    "message": "Message",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Office closed tomorrow",
+    "messageLabel": "Message (optional)",
+    "messagePlaceholder": "Details people should know",
+    "send": "Send",
+    "confirm": "Send to {{who}}?",
+    "limits": "It appears in their notifications and on their phones. You can send up to 5 messages a day, one every 2 minutes.",
+    "toChosen": "{{count}} employee",
+    "toChosen_plural": "{{count}} employees",
+    "sent": "Sent to {{count}} person",
+    "sent_plural": "Sent to {{count}} people",
+    "phones": "{{count}} phone notified",
+    "phones_plural": "{{count}} phones notified"
   }
 }

@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (969 strings)
+## App (989 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -977,6 +977,26 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `pay.collectedBy` | Collected by | किसने वसूला |
 | `pay.collectedByMe` | Me (admin) | मैं (एडमिन) |
 | `pay.collectedByHint` | Counts as this employee's collection (cash in hand, reports). | यह इस कर्मचारी की वसूली में गिना जाएगा (हाथ में नकद, रिपोर्ट)। |
+| `send.title` | Send notification | सूचना भेजें |
+| `send.who` | To | किसे |
+| `send.to.employees` | All employees | सभी कर्मचारी |
+| `send.to.admins` | Admins | एडमिन |
+| `send.to.everyone` | Everyone | सभी |
+| `send.chooseEmployees` | Choose employees | कर्मचारी चुनें |
+| `send.message` | Message | संदेश |
+| `send.titleLabel` | Title | शीर्षक |
+| `send.titlePlaceholder` | e.g. Office closed tomorrow | जैसे कल ऑफ़िस बंद है |
+| `send.messageLabel` | Message (optional) | संदेश (वैकल्पिक) |
+| `send.messagePlaceholder` | Details people should know | लोगों को क्या जानना चाहिए |
+| `send.send` | Send | भेजें |
+| `send.confirm` | Send to {{who}}? | {{who}} को भेजें? |
+| `send.limits` | It appears in their notifications and on their phones. You can send up to 5 messages a day, one every 2 minutes. | यह उनकी सूचनाओं और फ़ोन पर दिखेगा। आप दिन में 5 संदेश तक भेज सकते हैं, हर 2 मिनट में एक। |
+| `send.toChosen` | {{count}} employee | {{count}} कर्मचारी |
+| `send.toChosen_plural` | {{count}} employees | {{count}} कर्मचारी |
+| `send.sent` | Sent to {{count}} person | {{count}} व्यक्ति को भेजा गया |
+| `send.sent_plural` | Sent to {{count}} people | {{count}} लोगों को भेजा गया |
+| `send.phones` | {{count}} phone notified | {{count}} फ़ोन पर सूचना गई |
+| `send.phones_plural` | {{count}} phones notified | {{count}} फ़ोन पर सूचना गई |
 
 ## Server (48 strings)
 
@@ -1035,3 +1055,5 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 ## Push notifications (server, `src/helpers/pushText.js`)
 
 The phone notification titles use the same Hindi as the app's notification list (`notifications.types.*` above).
+
+Server-only notification types carry their own Hindi in `MicroFinance-backend/src/helpers/pushText.js` (e.g. `collect.today`: "आज: 5 वसूली · ₹6,390"). Review new ones there.

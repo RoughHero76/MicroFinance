@@ -23,6 +23,7 @@ import CalculatorScreen from '@/features/loans/screens/CalculatorScreen';
 import CreateLoanScreen from '@/features/loans/screens/CreateLoanScreen';
 import LoansScreen from '@/features/loans/screens/LoansScreen';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
+import SendNotificationScreen from '@/features/notifications/screens/SendNotificationScreen';
 import PaymentsScreen from '@/features/payments/screens/PaymentsScreen';
 import PerformanceScreen from '@/features/reports/screens/PerformanceScreen';
 import ReportsScreen from '@/features/reports/screens/ReportsScreen';
@@ -84,6 +85,13 @@ function AdminMore() {
       visible: !!settings?.modules?.cashHandover,
     },
     {key: 'activity', icon: 'history', title: t('activity.title'), route: 'Activity', visible: can('activity.view')},
+    {
+      key: 'send',
+      icon: 'bullhorn-outline',
+      title: t('send.title'),
+      route: 'SendNotification',
+      visible: can('employee.manage'),
+    },
     {
       key: 'calculator',
       icon: 'calculator-variant-outline',
@@ -181,6 +189,7 @@ export default function AdminNavigator() {
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="SendNotification" component={SendNotificationScreen} />
       <Stack.Screen name="Reports" component={ReportsScreen} />
       <Stack.Screen name="Performance" component={PerformanceScreen} />
       <Stack.Screen name="Risk" component={RiskScreen} />

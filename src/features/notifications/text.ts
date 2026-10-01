@@ -1,8 +1,10 @@
 // X5: a notification's title and line, written in the app's language from
-// its type and parameters (BE-16). Unknown types fall back to the server's
-// English copy.
+// its type and parameters (BE-16). Types the app doesn't know (added on the
+// server later) show the server's own text, in Hindi when the server sent
+// it, so new kinds of notification need no app update.
 
 import type {TFunction} from 'i18next';
+import i18n from '@/i18n';
 import {formatMoney} from '@/lib/format';
 import type {AppNotification} from './api';
 
@@ -64,8 +66,13 @@ export function notificationText(n: AppNotification, t: TFunction): {title: stri
       return p.short
         ? {title: t(`${known}.short`, {amount: money(p.short)}), body: p.note ? String(p.note) : undefined}
         : {title: t(`${known}.title`, {amount: money(p.amount)})};
-    default:
-      return {title: n.title ?? n.type, body: n.body};
+    case 'custom.message':
+      // An admin's own words: the same in every language.
+      return {title: String(p.title ?? n.title ?? ''), body: p.message ? String(p.message) : undefined};
+    default: {
+      const hi = i18n.language === 'hi' ? n.i18n?.hi : undefined;
+      return {title: hi?.title || n.title || n.type, body: hi?.body ?? n.body};
+    }
   }
 }
 
@@ -77,8 +84,15 @@ export function notificationTarget(n: AppNotification): [string, object | undefi
       return link.id ? ['Loan', {loanId: link.id}] : null;
     case 'Lead':
       return link.id ? ['Lead', {id: link.id}] : null;
+    case 'Customer':
+      return link.id ? ['Customer', {id: link.id}] : null;
     case 'Leads':
-      return ['Tabs', {screen: 'Leads'}];
+    case 'Collect':
+    case 'Customers':
+    case 'Loans':
+      return ['Tabs', {screen: link.screen}];
+    case 'Notifications':
+      return ['Notifications', undefined];
     case 'Payments':
     case 'MyPayments':
     case 'Risk':

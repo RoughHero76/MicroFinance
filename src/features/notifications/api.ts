@@ -11,6 +11,8 @@ export interface AppNotification {
   body?: string;
   params: Record<string, unknown>;
   link?: {screen?: string; id?: string};
+  /** The server's text in other languages, for types the app doesn't know. */
+  i18n?: {hi?: {title?: string; body?: string}};
   readAt: string | null;
   createdAt: string;
 }
@@ -56,5 +58,18 @@ export interface PushTestResult {
  */
 export async function sendTestNotification(delaySeconds = 0): Promise<PushTestResult> {
   const res = await api.post<{data: PushTestResult}>('/shared/notifications/test', {delaySeconds});
+  return res.data;
+}
+
+export type SendTo = 'employees' | 'admins' | 'everyone' | string[];
+
+export interface SendResult {
+  recipients: number;
+  push?: {configured: boolean; sent?: number; failed?: number};
+}
+
+/** Admins: a message of their own to employees, admins or everyone. */
+export async function sendNotification(input: {to: SendTo; title: string; message: string}): Promise<SendResult> {
+  const res = await api.post<{data: SendResult}>('/shared/notifications/send', input);
   return res.data;
 }
