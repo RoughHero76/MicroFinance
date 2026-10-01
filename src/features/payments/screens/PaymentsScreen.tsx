@@ -117,6 +117,8 @@ export default function PaymentsScreen() {
     try {
       await approvePayment(item._id);
       haptics.success();
+      // The row leaves the Pending list right away; the refetch confirms it.
+      const putBack = tab === 'Pending' ? list.removeLocally(row => row._id === item._id) : () => {};
       refresh();
       toast.success(t('approvals.approvedToast', {name: borrower(item), amount: formatMoney(item.amount)}), {
         action: {
@@ -124,6 +126,7 @@ export default function PaymentsScreen() {
           onPress: async () => {
             try {
               await unapprovePayment(item._id);
+              putBack();
               refresh();
               toast.info(t('loanAdmin.undone'));
             } catch (error) {
@@ -147,6 +150,9 @@ export default function PaymentsScreen() {
       onConfirm: async reason => {
         try {
           await rejectPayment(item._id, reason);
+          if (tab === 'Pending') {
+            list.removeLocally(row => row._id === item._id);
+          }
           refresh();
           toast.success(t('approvals.rejected'));
         } catch (error) {
@@ -165,6 +171,10 @@ export default function PaymentsScreen() {
         try {
           const res = await approvePayments(group.pendingIds);
           haptics.success();
+          if (tab === 'Pending') {
+            const done = new Set(res.data.approved.map(String));
+            list.removeLocally(row => done.has(String(row._id)));
+          }
           refresh();
           toast.success(t('approvals.approvedMany', {count: res.data.approved.length}));
         } catch (error) {

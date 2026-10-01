@@ -68,8 +68,11 @@ const approvals = [
 ];
 
 let postSpy: jest.SpiedFunction<typeof api.post>;
+// Payments the fake server has approved, so a refetch leaves them out.
+const approvedIds = new Set<string>();
 
 beforeEach(async () => {
+  approvedIds.clear();
   await i18n.changeLanguage('en');
   await AsyncStorage.clear();
   await AsyncStorage.multiSet([
@@ -80,7 +83,10 @@ beforeEach(async () => {
   ]);
   jest.spyOn(api, 'get').mockImplementation(async (url: string) => {
     if (url === '/admin/loan/repayment/history/approve')
-      return {data: approvals, pagination: {page: 1, pages: 1, total: 3}} as never;
+      return {
+        data: approvals.filter(a => !approvedIds.has(a._id)),
+        pagination: {page: 1, pages: 1, total: 3},
+      } as never;
     if (url === '/shared/settings') return {data: {minPayment: 100, modules: {leads: true}}} as never;
     if (url === '/admin/dashboard') {
       return {
@@ -102,6 +108,8 @@ beforeEach(async () => {
   });
   postSpy = jest.spyOn(api, 'post').mockImplementation(async (url: string, body: any) => {
     if (url.endsWith('/approve-many')) return {data: {approved: body.repaymentIds, skipped: 0, amount: 5580}} as never;
+    if (url.endsWith('/history/approve')) approvedIds.add(body.repaymentId);
+    if (url.endsWith('/history/unapprove')) approvedIds.delete(body.repaymentId);
     return {status: 'success'} as never;
   });
 });
@@ -166,6 +174,20 @@ describe('A12 Payments', () => {
       fireEvent.press(screen.getByText('Undo'));
     });
     expect(postSpy).toHaveBeenCalledWith('/admin/loan/repayment/history/unapprove', {repaymentId: 'r1'});
+  });
+
+  it('takes an approved payment out of the list at once and puts it back on Undo (W7)', async () => {
+    renderScreen(PaymentsScreen);
+    await waitFor(() => expect(screen.getByText('Sunita Devi')).toBeTruthy());
+    await act(async () => {
+      fireEvent.press(screen.getAllByText('Approve')[0]);
+    });
+    await waitFor(() => expect(screen.queryByText('Sunita Devi')).toBeNull());
+    await waitFor(() => expect(screen.getByText('Undo')).toBeTruthy());
+    await act(async () => {
+      fireEvent.press(screen.getByText('Undo'));
+    });
+    await waitFor(() => expect(screen.getByText('Sunita Devi')).toBeTruthy());
   });
 
   it('needs a reason to reject', async () => {

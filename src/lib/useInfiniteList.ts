@@ -1,5 +1,6 @@
 import {useCallback, useMemo, useState} from 'react';
-import {useInfiniteQuery, type QueryKey} from '@tanstack/react-query';
+import {useInfiniteQuery, useQueryClient, type InfiniteData, type QueryKey} from '@tanstack/react-query';
+import {animateNextLayout} from './motion';
 
 export interface Page<T> {
   items: T[];
@@ -29,6 +30,7 @@ export function useInfiniteList<P extends Page<unknown>>({
   staleTime,
 }: Options<P>) {
   type T = P['items'][number];
+  const queryClient = useQueryClient();
   const query = useInfiniteQuery({
     queryKey,
     queryFn: ({pageParam}) => fetchPage(pageParam),
@@ -59,8 +61,35 @@ export function useInfiniteList<P extends Page<unknown>>({
     }
   }, [query]);
 
+  /**
+   * Takes rows out of the list at once, with an animation (W7), e.g. after
+   * Approve. Returns a function that puts them back (for Undo). A refetch
+   * later replaces the cache either way.
+   */
+  const removeLocally = useCallback(
+    (match: (item: T) => boolean) => {
+      const before = queryClient.getQueryData<InfiniteData<P>>(queryKey);
+      if (!before) {
+        return () => {};
+      }
+      animateNextLayout();
+      queryClient.setQueryData<InfiniteData<P>>(queryKey, {
+        ...before,
+        pages: before.pages.map(page => ({...page, items: (page.items as T[]).filter(item => !match(item))})),
+      });
+      return () => {
+        animateNextLayout();
+        queryClient.setQueryData(queryKey, before);
+      };
+    },
+    // queryKey is an array literal at call sites; compare it by value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queryClient, JSON.stringify(queryKey)],
+  );
+
   return {
     items,
+    removeLocally,
     total,
     /** The first page as returned, for extras sent with it (e.g. counts). */
     firstPage: query.data?.pages[0],
