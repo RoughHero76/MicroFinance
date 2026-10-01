@@ -81,6 +81,7 @@ export interface OverdueLoan {
       address?: string;
       city?: string;
       email?: string;
+      profilePic?: string;
     };
   };
 }

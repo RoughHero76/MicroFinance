@@ -22,6 +22,7 @@ import {
   Button,
   Card,
   Chips,
+  Avatar,
   EmptyState,
   ErrorState,
   IconButton,
@@ -96,26 +97,33 @@ export default function OverdueListScreen() {
     const phone = item.loan.customer?.phoneNumber;
     return (
       <Card style={s.card}>
-        <View style={s.line}>
-          <Text variant="bodyLg" weight="semibold" numberOfLines={1} style={s.flex}>
-            {name}
-          </Text>
-          <Text variant="bodyLg" weight="semibold" color="danger" tabular>
-            {formatMoney(item.totalOverdue)}
-          </Text>
-        </View>
-        <View style={s.line}>
-          <Text variant="small" color="muted" numberOfLines={1} style={s.flex}>
-            #{item.loan.loanNumber} ·{' '}
-            {count === 1 ? t('overdue.installmentOverdue') : t('overdue.installmentsOverdue', {count})}
-          </Text>
-          <StatusBadge
-            label={item.npa ? t('status.risk.npa') : t(`status.risk.sma${item.smaLevel ?? 0}`)}
-            tone={item.npa ? 'danger' : item.smaLevel === 2 ? 'danger' : 'warning'}
-          />
+        <View style={s.top}>
+          <Avatar name={name} uri={item.loan.customer?.profilePic} size={44} />
+          <View style={s.flex}>
+            <View style={s.line}>
+              <Text variant="bodyLg" weight="bold" numberOfLines={1} style={s.flex}>
+                {name}
+              </Text>
+              <Text variant="bodyLg" weight="bold" color="danger" tabular>
+                {formatMoney(item.totalOverdue)}
+              </Text>
+            </View>
+            <View style={s.line}>
+              <Text variant="small" color="muted" numberOfLines={1} style={s.flex}>
+                #{item.loan.loanNumber} ·{' '}
+                {count === 1 ? t('overdue.installmentOverdue') : t('overdue.installmentsOverdue', {count})}
+              </Text>
+              <StatusBadge
+                label={item.npa ? t('status.risk.npa') : t(`status.risk.sma${item.smaLevel ?? 0}`)}
+                tone={item.npa ? 'danger' : item.smaLevel === 2 ? 'danger' : 'warning'}
+              />
+            </View>
+          </View>
         </View>
         <View style={s.actions}>
-          {phone ? <IconButton icon="phone" label={t('common.call')} onPress={() => callPhone(phone)} /> : null}
+          {phone ? (
+            <IconButton icon="phone" variant="ring" label={t('common.call')} onPress={() => callPhone(phone)} />
+          ) : null}
           {can('payment.record') ? <Button title={t('overdue.collect')} onPress={() => openCollect(item)} /> : null}
         </View>
       </Card>
@@ -177,7 +185,8 @@ export default function OverdueListScreen() {
 const useStyles = makeStyles(t => ({
   chips: {marginBottom: t.space.sm},
   list: {paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, flexGrow: 1},
-  card: {marginBottom: 10, gap: t.space.xs},
+  card: {marginBottom: 10, gap: t.space.sm},
+  top: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
   line: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
   flex: {flex: 1, minWidth: 0},
   actions: {
