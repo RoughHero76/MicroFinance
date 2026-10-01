@@ -78,9 +78,43 @@ export function StepTracker({steps, current, failed, showLabels = true}: StepTra
   );
 }
 
-/** Form steps: "1 Terms · 2 Business · 3 Documents". */
+/**
+ * Form steps: "1 Terms · 2 Business · 3 Documents" (mock A9). Equal columns,
+ * each with a bar on top that fills in brand colour for the current step and
+ * green for finished ones.
+ */
 export function Stepper({steps, current}: {steps: string[]; current: number}) {
-  return <StepTracker steps={steps} current={current} />;
+  const s = useStyles();
+  return (
+    <View
+      style={s.stepper}
+      accessibilityRole="progressbar"
+      accessibilityLabel={`${current + 1} / ${steps.length}: ${steps[current] ?? ''}`}>
+      {steps.map((label, i) => {
+        const done = i < current;
+        const on = i === current;
+        return (
+          <View key={label} style={[s.stepCol, on && s.stepColOn, done && s.stepColDone]}>
+            <View style={[s.stepDot, on && s.stepDotOn, done && s.stepDotDone]}>
+              {done ? (
+                <Icon name="check" size={11} color="white" />
+              ) : (
+                <Text style={[s.stepNum, on && s.stepNumOn]}>{i + 1}</Text>
+              )}
+            </View>
+            <Text
+              variant="caption"
+              weight={on ? 'bold' : 'semibold'}
+              color={on ? 'primary' : done ? 'success' : 'muted'}
+              numberOfLines={1}
+              style={s.stepLabel}>
+              {label}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
 }
 
 export interface TimelineItem {
@@ -169,6 +203,32 @@ const useStyles = makeStyles(t => ({
   circleCurrent: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
   circleFailed: {backgroundColor: t.colors.danger, borderColor: t.colors.danger},
   labels: {flexDirection: 'row', marginTop: t.space.xs},
+  stepper: {flexDirection: 'row', gap: 6},
+  stepCol: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: t.space.sm,
+    borderTopWidth: 3,
+    borderTopColor: t.colors.surface2,
+  },
+  stepColOn: {borderTopColor: t.colors.primary},
+  stepColDone: {borderTopColor: t.colors.success},
+  stepDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: t.colors.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepDotOn: {backgroundColor: t.colors.primary},
+  stepDotDone: {backgroundColor: t.colors.success},
+  stepNum: {fontSize: 10, lineHeight: 12, fontWeight: '700', color: t.colors.muted},
+  stepNumOn: {color: t.colors.onPrimary},
+  stepLabel: {flexShrink: 1},
   label: {flex: 1, paddingHorizontal: 2},
   conversation: {gap: t.space.sm},
   bubble: {maxWidth: '85%', padding: t.space.md, borderRadius: t.radius.lg, gap: 2},

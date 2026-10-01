@@ -7,6 +7,7 @@
 
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {View} from 'react-native';
+import Animated, {SlideInLeft, SlideInRight} from 'react-native-reanimated';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -88,6 +89,11 @@ export default function CreateLoanScreen() {
   const {settings} = useSession();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
+  // The step shown before this render, to pick the slide direction.
+  const lastStep = useRef(0);
+  useEffect(() => {
+    lastStep.current = step;
+  }, [step]);
   const [errors, setErrors] = useState<Partial<Record<keyof Form | 'documents', string>>>({});
   const [docs, setDocs] = useState<NewDocument[]>([]);
   const [docType, setDocType] = useState<DocumentType>('Id Proof');
@@ -275,7 +281,11 @@ export default function CreateLoanScreen() {
         />
       }>
       <Stepper steps={[t('create.stepTerms'), t('create.stepBusiness'), t('create.stepDocuments')]} current={step} />
-      <View style={s.body}>
+      {/* Each step slides in from the side it comes from. */}
+      <Animated.View
+        key={step}
+        entering={(step >= lastStep.current ? SlideInRight : SlideInLeft).duration(220)}
+        style={s.body}>
         {step === 0 ? (
           <>
             <TextField
@@ -286,7 +296,7 @@ export default function CreateLoanScreen() {
               keyboardType="number-pad"
               error={errors.loanNumber}
             />
-            <Text variant="label" color="muted" style={s.label}>
+            <Text variant="label" weight="semibold" style={s.label}>
               {t('create.loanType')}
             </Text>
             <Chips<LoanType>
@@ -324,7 +334,7 @@ export default function CreateLoanScreen() {
               onChange={v => set('loanDuration', v)}
               error={errors.loanDuration}
             />
-            <Text variant="label" color="muted" style={s.label}>
+            <Text variant="label" weight="semibold" style={s.label}>
               {t('create.frequency')}
             </Text>
             <SegmentedControl<Frequency>
@@ -402,7 +412,7 @@ export default function CreateLoanScreen() {
           </>
         ) : (
           <>
-            <Text variant="label" color="muted">
+            <Text variant="label" weight="semibold">
               {t('loanAdmin.documentType')}
             </Text>
             <Chips<DocumentType>
@@ -460,7 +470,7 @@ export default function CreateLoanScreen() {
             </Card>
           </>
         )}
-      </View>
+      </Animated.View>
     </Screen>
   );
 }

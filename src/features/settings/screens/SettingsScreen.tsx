@@ -28,7 +28,7 @@ export default function SettingsScreen() {
     <Screen header={{title: t('settings.title')}} scroll>
       <Section title={t('settings.appearance')}>
         <Card>
-          <Text variant="label" color="muted" style={s.label}>
+          <Text variant="label" weight="semibold" style={s.label}>
             {t('settings.mode')}
           </Text>
           <SegmentedControl<ModeSetting>
@@ -40,7 +40,7 @@ export default function SettingsScreen() {
             value={modeSetting}
             onChange={setModeSetting}
           />
-          <Text variant="label" color="muted" style={[s.label, s.gap]}>
+          <Text variant="label" weight="semibold" style={[s.label, s.gap]}>
             {t('settings.colour')}
           </Text>
           <View style={s.swatches} accessibilityRole="radiogroup">
@@ -54,7 +54,7 @@ export default function SettingsScreen() {
               />
             ))}
           </View>
-          <Text variant="label" color="muted" style={[s.label, s.gap]}>
+          <Text variant="label" weight="semibold" style={[s.label, s.gap]}>
             {t('settings.language')}
           </Text>
           {LANGUAGES.length <= 2 ? (

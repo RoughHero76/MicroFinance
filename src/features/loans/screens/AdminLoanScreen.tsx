@@ -524,7 +524,7 @@ function UploadSheet({
           />
         </>
       }>
-      <Text variant="label" color="muted">
+      <Text variant="label" weight="semibold">
         {t('loanAdmin.documentType')}
       </Text>
       <Chips<DocumentType>

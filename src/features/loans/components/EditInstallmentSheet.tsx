@@ -150,7 +150,7 @@ export const EditInstallmentSheet = forwardRef<SheetHandle, {installment: Instal
             />
           </>
         }>
-        <Text variant="label" color="muted">
+        <Text variant="label" weight="semibold">
           {t('loanAdmin.newStatus')}
         </Text>
         <Chips<ScheduleStatus>

@@ -520,7 +520,7 @@ export default function LeadDetailScreen() {
             <Button title={t('common.save')} onPress={() => saveFollowup.mutate()} loading={saveFollowup.isPending} />
           </>
         }>
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {t('leads.followupStatus')}
         </Text>
         <Chips

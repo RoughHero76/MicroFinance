@@ -88,7 +88,7 @@ export const StatementSheet = forwardRef<StatementSheetHandle, {loanId: string; 
         subtitle={t('loan.title', {number: loanNumber})}
         snapPoints={['70%']}
         onClose={() => setOpen(false)}>
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {t('statement.language')}
         </Text>
         <SegmentedControl<'en' | 'hi'>

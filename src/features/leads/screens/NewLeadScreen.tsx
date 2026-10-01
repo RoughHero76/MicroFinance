@@ -217,7 +217,7 @@ export default function NewLeadScreen() {
         {field('state', t('leads.state'), {required: true})}
       </Section>
       <Section title={t('leads.loan')}>
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {t('leads.loanType')}
         </Text>
         <Chips

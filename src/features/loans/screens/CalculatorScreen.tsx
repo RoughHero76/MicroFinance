@@ -129,7 +129,7 @@ export default function CalculatorScreen() {
           options={LOAN_DURATIONS.map(d => ({value: d, label: t('enums.days', {count: parseInt(d, 10)})}))}
           onChange={setDuration}
         />
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {t('create.frequency')}
         </Text>
         <SegmentedControl<Frequency>

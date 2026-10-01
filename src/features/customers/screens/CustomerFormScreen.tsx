@@ -214,7 +214,7 @@ export default function CustomerFormScreen() {
       <Section title={t('customerForm.personal')}>
         {field('fname', t('customerForm.firstName'), {required: true, autoCapitalize: 'words'})}
         {field('lname', t('customerForm.lastName'), {required: true, autoCapitalize: 'words'})}
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {t('customerForm.gender')}
           <Text color="danger"> *</Text>
         </Text>
