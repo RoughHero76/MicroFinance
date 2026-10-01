@@ -7,7 +7,7 @@
 
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {View} from 'react-native';
-import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
 import {useI18n} from '@/i18n';
@@ -22,6 +22,7 @@ import {useSession} from '@/features/auth/SessionProvider';
 import {collectKeys, type CollectionItem} from '@/features/collect/api';
 import {animateNextLayout} from '@/lib/motion';
 import {customerKeys} from '@/features/customers/api';
+import {listEmployees, staffKeys} from '@/features/staff/api';
 import {makeStyles} from '@/theme';
 import {
   BottomSheet,
@@ -29,6 +30,7 @@ import {
   Chips,
   ConfirmSheet,
   MoneyField,
+  SelectField,
   OptionRow,
   Switch,
   Text,
@@ -125,7 +127,8 @@ function PaymentSheet({
 }) {
   const s = useStyles();
   const {t} = useTranslation();
-  const {settings} = useSession();
+  const {settings, role} = useSession();
+  const admin = role === 'admin';
   const offline = useIsOffline();
   const invalidate = useInvalidateMoney();
   const queryClient = useQueryClient();
@@ -134,6 +137,14 @@ function PaymentSheet({
   const [method, setMethod] = useState<PaymentMethod>('Cash');
   const [txn, setTxn] = useState('');
   const [errors, setErrors] = useState<{amount?: string; txn?: string}>({});
+  // Admins: record as themselves ('me') or on behalf of an employee.
+  const [collector, setCollector] = useState('me');
+  const employees = useQuery({
+    queryKey: staffKeys.list(),
+    queryFn: listEmployees,
+    enabled: admin,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // New target: pre-fill what's due; the method defaults to the last used (P-06).
   useEffect(() => {
@@ -141,6 +152,7 @@ function PaymentSheet({
     setAmount(target.dueAmount > 0 ? target.dueAmount : null);
     setTxn('');
     setErrors({});
+    setCollector('me');
     readJson<PaymentMethod>(StorageKeys.lastPaymentMethod, 'Cash').then(m =>
       setMethod(PAYMENT_METHODS.includes(m) ? m : 'Cash'),
     );
@@ -157,6 +169,7 @@ function PaymentSheet({
         amount: amount!,
         paymentMethod: method,
         transactionId: txn,
+        collectedBy: admin && collector !== 'me' ? collector : undefined,
       }),
     onSuccess: result => {
       writeJson(StorageKeys.lastPaymentMethod, method);
@@ -249,6 +262,20 @@ function PaymentSheet({
           <Text variant="small" color="warning" style={s.offline}>
             {t('collect.offlinePay')}
           </Text>
+        ) : null}
+        {admin ? (
+          <SelectField<string>
+            label={t('pay.collectedBy')}
+            value={collector}
+            onChange={setCollector}
+            options={[
+              {value: 'me', label: t('pay.collectedByMe')},
+              ...(employees.data ?? [])
+                .filter(e => e.accountStatus !== false)
+                .map(e => ({value: e._id, label: `${e.fname} ${e.lname}`.trim()})),
+            ]}
+            hint={collector === 'me' ? undefined : t('pay.collectedByHint')}
+          />
         ) : null}
         <MoneyField
           large

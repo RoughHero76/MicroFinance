@@ -92,6 +92,8 @@ export interface PayInput {
   amount: number;
   paymentMethod: PaymentMethod;
   transactionId?: string;
+  /** Admins only: record on behalf of this employee (else as the admin). */
+  collectedBy?: string;
 }
 
 /** Both roles record through /pay (BE-10). Never retried automatically. */
@@ -102,6 +104,7 @@ export async function recordPayment(input: PayInput): Promise<PayResult> {
     amount: input.amount,
     paymentMethod: input.paymentMethod,
     transactionId: input.transactionId?.trim() || undefined,
+    collectedBy: input.collectedBy || undefined,
   });
   return res.data;
 }

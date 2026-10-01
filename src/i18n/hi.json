@@ -375,7 +375,10 @@
     "receiptWhatsapp": "WhatsApp",
     "receiptWhatsappHint": "रसीद के साथ WhatsApp खुलेगा",
     "noPhone": "इस ग्राहक का फ़ोन नंबर नहीं है",
-    "installmentShort": "किस्त {{number}}"
+    "installmentShort": "किस्त {{number}}",
+    "collectedBy": "किसने वसूला",
+    "collectedByMe": "मैं (एडमिन)",
+    "collectedByHint": "यह इस कर्मचारी की वसूली में गिना जाएगा (हाथ में नकद, रिपोर्ट)।"
   },
   "penalty": {
     "title": "जुर्माना लगाएँ",

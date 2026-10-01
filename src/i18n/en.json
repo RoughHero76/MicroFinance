@@ -375,7 +375,10 @@
     "receiptWhatsapp": "WhatsApp",
     "receiptWhatsappHint": "Opens WhatsApp with the receipt filled in",
     "noPhone": "No phone number on this customer",
-    "installmentShort": "inst. {{number}}"
+    "installmentShort": "inst. {{number}}",
+    "collectedBy": "Collected by",
+    "collectedByMe": "Me (admin)",
+    "collectedByHint": "Counts as this employee's collection (cash in hand, reports)."
   },
   "penalty": {
     "title": "Apply penalty",
