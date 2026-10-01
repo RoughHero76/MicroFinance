@@ -20,6 +20,8 @@
     "@react-native-clipboard/clipboard": "^1.14.3",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-firebase/app": "22.4.0",
+    "@react-native-firebase/messaging": "22.4.0",
     "@react-native/gradle-plugin": "^0.77.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",

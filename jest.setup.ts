@@ -71,3 +71,24 @@ jest.mock('react-native-haptic-feedback', () => ({
   default: {trigger: jest.fn()},
   HapticFeedbackTypes: {},
 }));
+// Firebase messaging: a fake phone token and listeners that tests can fire.
+jest.mock('@react-native-firebase/messaging', () => {
+  const listeners: Record<string, ((m: unknown) => void)[]> = {};
+  const add = (name: string) => (_m: unknown, fn: (m: unknown) => void) => {
+    (listeners[name] = listeners[name] ?? []).push(fn);
+    return () => {
+      listeners[name] = (listeners[name] ?? []).filter(f => f !== fn);
+    };
+  };
+  return {
+    getMessaging: jest.fn(() => ({})),
+    getToken: jest.fn(() => Promise.resolve('fcm-token-for-tests-0000000000')),
+    deleteToken: jest.fn(() => Promise.resolve()),
+    onMessage: jest.fn(add('message')),
+    onNotificationOpenedApp: jest.fn(add('opened')),
+    onTokenRefresh: jest.fn(add('token')),
+    getInitialNotification: jest.fn(() => Promise.resolve(null)),
+    setBackgroundMessageHandler: jest.fn(),
+    __fire: (name: string, message: unknown) => (listeners[name] ?? []).forEach(fn => fn(message)),
+  };
+});

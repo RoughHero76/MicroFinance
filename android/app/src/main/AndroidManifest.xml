@@ -28,6 +28,12 @@
     android:usesCleartextTraffic="true"
     android:supportsRtl="true">
 
+    <!-- Push notifications (Firebase): the small status-bar icon. The channel
+         and its colour come from firebase.json. -->
+    <meta-data
+      android:name="com.google.firebase.messaging.default_notification_icon"
+      android:resource="@drawable/ic_notification" />
+
    
        <activity
       android:name=".MainActivity"

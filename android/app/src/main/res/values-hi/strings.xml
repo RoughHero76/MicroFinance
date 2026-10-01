@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="notification_channel_name">अपडेट</string>
+  <string name="notification_channel_description">भुगतान, लोन, लीड और फ़ॉलो-अप</string>
+</resources>

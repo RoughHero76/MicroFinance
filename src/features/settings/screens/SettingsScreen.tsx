@@ -2,7 +2,7 @@
 // applied immediately. With 2 languages the language is a switch; from the
 // third (Marathi) it becomes a dropdown.
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
@@ -12,6 +12,7 @@ import type {Lang} from '@/brand';
 import {LANGUAGES, setLanguage, useI18n} from '@/i18n';
 import {useUpdates} from '@/features/app/updates';
 import {useCan} from '@/features/auth/SessionProvider';
+import {isPushEnabled, setPushEnabled} from '@/lib/push';
 import {makeStyles, palettes, useThemeSettings, type ModeSetting, type PaletteId} from '@/theme';
 import {Card, Icon, OptionRow, PressableScale, Screen, Section, SegmentedControl, SelectField, Text} from '@/ui';
 import type {AppStackParamList} from '@/navigation/types';
@@ -24,6 +25,14 @@ export default function SettingsScreen() {
   const {theme, modeSetting, setModeSetting, setPalette, allowedPalettes} = useThemeSettings();
   const {currentVersion, update} = useUpdates();
   const can = useCan();
+  const [push, setPush] = useState(true);
+  useEffect(() => {
+    isPushEnabled().then(setPush);
+  }, []);
+  const togglePush = (next: boolean) => {
+    setPush(next);
+    setPushEnabled(next, lang);
+  };
 
   return (
     <Screen header={{title: t('settings.title')}} scroll>
@@ -76,6 +85,12 @@ export default function SettingsScreen() {
 
       <Section title={t('settings.account')}>
         <Card padded={false} dividers>
+          <OptionRow
+            icon="bell-ring-outline"
+            title={t('settings.push')}
+            hint={t('settings.pushHint')}
+            toggle={{value: push, onChange: togglePush}}
+          />
           <OptionRow
             icon="shield-lock-outline"
             title={t('settings.security')}

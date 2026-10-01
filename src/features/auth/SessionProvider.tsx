@@ -8,6 +8,7 @@ import {useQuery} from '@tanstack/react-query';
 import {onSessionEnded, type SessionEndReason} from '@/lib/api';
 import {can, type Modules, type Permission} from '@/lib/can';
 import {clearQueryCache} from '@/lib/query';
+import {unregisterPush} from '@/lib/push';
 import {clearSession, loadSession, saveSession, updateSessionUser, type Role, type SessionUser} from '@/lib/session';
 import {clearPerUserStorage} from '@/lib/storage';
 import {getBusinessSettings, type BusinessSettings} from './api';
@@ -62,6 +63,8 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
     setLogoutReason(reason);
     setUser(null);
     setStatus('signedOut');
+    // Stop pushes to this phone while the session token still works.
+    await unregisterPush();
     // Clears everything that belongs to this person, so a shared phone never
     // shows the previous person's customers. Theme and language stay.
     await Promise.all([clearSession(), clearPerUserStorage(), clearQueryCache()]);

@@ -41,3 +41,13 @@ Optional or mandatory: by default an update is **optional**. The app shows a "ne
 Release notes: an optional `app-<id>-1.2.0.txt` next to the APK, with one line per item, is shown as "what's new".
 
 Then set the brand's `apiUrl` in `brand.json` to this deployment's URL and build the app.
+
+## Push notifications (Firebase)
+
+Phone notifications go through Firebase Cloud Messaging. Each brand needs its own Firebase Android app:
+
+1. In the Firebase console (any project; one per brand keeps data apart), add an Android app with the brand's `android.applicationId` from `brand.json`.
+2. Download its `google-services.json` into `brands/<id>/`. The Android build copies it into place; a brand without one fails to build.
+3. Backend: in Project settings → Service accounts, generate a private key. Save it on the server only, for example `secrets/firebase.json` (ignored by git), and set `FIREBASE_SERVICE_ACCOUNT=./secrets/firebase.json` in the backend's `.env`. Restart the backend. Without it, pushes are off and everything else works.
+
+What gets pushed: every in-app notification except "nightly update failed", in the language the phone uses. "N payments need approval" is one notification, updated in place. People can turn pushes off in Settings → Phone notifications.

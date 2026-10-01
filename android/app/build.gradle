@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Push notifications (Firebase). Every brand needs brands/<id>/google-services.json.
+apply plugin: "com.google.gms.google-services"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -103,6 +105,15 @@ android {
                     dimension "brand"
                     applicationId brand.android.applicationId
                     resValue "string", "app_name", brand.android.appName
+                }
+                // The brand's Firebase config goes where the Google services
+                // plugin looks for this flavor (src/<id>/).
+                def services = new File(dir, "google-services.json")
+                if (services.exists()) {
+                    copy {
+                        from services
+                        into file("src/${brand.id}")
+                    }
                 }
             }
         }

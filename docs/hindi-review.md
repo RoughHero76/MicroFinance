@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (943 strings)
+## App (948 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -951,6 +951,11 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `diagnostics.noCrashes` | No crash reports | कोई क्रैश रिपोर्ट नहीं |
 | `diagnostics.loanCheck` | Loan status check | लोन स्थिति जांच |
 | `diagnostics.runCheck` | Run the check | जांच चलाएं |
+| `notifications.open` | Open | खोलें |
+| `settings.push` | Phone notifications | फ़ोन पर सूचनाएँ |
+| `settings.pushHint` | Payments, loans, leads and follow-ups, even when the app is closed | भुगतान, लोन, लीड और फ़ॉलो-अप, ऐप बंद होने पर भी |
+| `android: notification_channel_name` | Updates | अपडेट |
+| `android: notification_channel_description` | Payments, loans, leads and follow-ups | भुगतान, लोन, लीड और फ़ॉलो-अप |
 
 ## Server (48 strings)
 
@@ -1005,3 +1010,7 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `ALREADY_CONFIRMED` | Already confirmed | पहले ही पुष्टि हो चुकी है |
 | `STATEMENT_CREATED` | Statement ready | विवरण तैयार है |
 
+
+## Push notifications (server, `src/helpers/pushText.js`)
+
+The phone notification titles use the same Hindi as the app's notification list (`notifications.types.*` above).

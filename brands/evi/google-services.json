@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "666354081117",
+    "project_id": "microfinance-evi",
+    "storage_bucket": "microfinance-evi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666354081117:android:28071108d687b5b704dcb4",
+        "android_client_info": {
+          "package_name": "com.softwares76.microfinance.evi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI8C7j8cHSD6tugprKzqnPHw_fr3iwbEA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

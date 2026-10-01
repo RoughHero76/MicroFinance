@@ -292,7 +292,9 @@
       "emerald": "Emerald",
       "evi": "Evi",
       "saffron": "Saffron"
-    }
+    },
+    "push": "Phone notifications",
+    "pushHint": "Payments, loans, leads and follow-ups, even when the app is closed"
   },
   "security": {
     "title": "Security",
@@ -997,7 +999,8 @@
           "short": "Cash short by {{amount}}"
         }
       }
-    }
+    },
+    "open": "Open"
   },
   "reports": {
     "title": "Reports",

@@ -13,6 +13,7 @@ import SplashScreen from '@/features/auth/screens/SplashScreen';
 import {CrashBoundary, flushPendingReports, setCurrentScreen} from '@/features/app/crash';
 import UpdateGate from '@/features/app/UpdateGate';
 import UpdateSheet from '@/features/app/UpdateSheet';
+import {PushBridge} from '@/features/notifications/PushBridge';
 import {readJson, writeJson} from '@/lib/storage';
 import {navigationTheme, useTheme} from '@/theme';
 import {OfflineBanner} from '@/ui';
@@ -63,6 +64,7 @@ export default function RootNavigator() {
       <OfflineBanner />
       <UpdateSheet />
       <UpdateGate />
+      <PushBridge navRef={navRef} />
     </View>
   );
 }
