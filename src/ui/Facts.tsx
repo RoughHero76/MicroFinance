@@ -1,12 +1,13 @@
 // KeyValueRows (U-18: details as label/value rows; empty values hide their
 // row) and FactTiles (U-17: at most 3 figures in a row, 12px padding).
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useTranslation} from 'react-i18next';
 import {haptics} from '@/lib/haptics';
-import {makeStyles} from '@/theme';
+import Animated, {Easing, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
+import {makeStyles, withAlpha} from '@/theme';
 import {Icon} from './Icon';
 import {Text, type TextColor} from './Text';
 import {toast} from './Toast';
@@ -109,20 +110,29 @@ export function FactTiles({facts, style}: {facts: Fact[]; style?: StyleProp<View
 export function ProgressBar({
   value,
   tone = 'primary',
+  onHero,
   style,
 }: {
   value: number;
   tone?: 'primary' | 'success' | 'warning' | 'danger';
+  /** White bar on a translucent track, for use on a HeroCard. */
+  onHero?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   const s = useStyles();
   const pct = Math.max(0, Math.min(1, value || 0));
+  // W7: the bar grows to its value instead of appearing at it.
+  const width = useSharedValue(0);
+  useEffect(() => {
+    width.value = withTiming(pct, {duration: 700, easing: Easing.out(Easing.cubic)});
+  }, [pct, width]);
+  const fill = useAnimatedStyle(() => ({width: `${width.value * 100}%`}));
   return (
     <View
-      style={[s.track, style]}
+      style={[s.track, onHero && s.heroTrack, style]}
       accessibilityRole="progressbar"
       accessibilityValue={{min: 0, max: 100, now: Math.round(pct * 100)}}>
-      <View style={[s.fill, s[tone], {width: `${pct * 100}%`}]} />
+      <Animated.View style={[s.fill, onHero ? s.heroFill : s[tone], fill]} />
     </View>
   );
 }
@@ -149,4 +159,6 @@ const useStyles = makeStyles(t => ({
   success: {backgroundColor: t.colors.success},
   warning: {backgroundColor: t.colors.warning},
   danger: {backgroundColor: t.colors.danger},
+  heroTrack: {backgroundColor: withAlpha(t.colors.white, 0.25)},
+  heroFill: {backgroundColor: t.colors.white},
 }));

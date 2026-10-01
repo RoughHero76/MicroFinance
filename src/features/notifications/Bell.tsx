@@ -9,7 +9,7 @@ import {useSession} from '@/features/auth/SessionProvider';
 import {IconButton} from '@/ui';
 import {getUnreadCount, notificationKeys} from './api';
 
-export function NotificationBell() {
+export function NotificationBell({variant = 'plain'}: {variant?: 'plain' | 'outline'}) {
   const {t} = useTranslation();
   const navigation = useNavigation();
   const {status} = useSession();
@@ -25,7 +25,7 @@ export function NotificationBell() {
     <IconButton
       icon={count ? 'bell-badge-outline' : 'bell-outline'}
       label={count ? t('notifications.bellUnread', {count}) : t('notifications.title')}
-      variant="plain"
+      variant={variant}
       badge={count}
       onPress={() => navigation.navigate('Notifications' as never)}
     />

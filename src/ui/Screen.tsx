@@ -18,6 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Animated, {FadeIn} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {makeStyles, statusBarStyle, useTheme, withAlpha} from '@/theme';
+import {BrandLogo} from './BrandLogo';
 import {Icon} from './Icon';
 import {IconButton} from './IconButton';
 import {PressableScale} from './PressableScale';
@@ -36,9 +37,11 @@ export interface HeaderProps {
   /** Brand-colour band behind the header (customer profile). */
   band?: boolean;
   titleAccessory?: React.ReactNode;
+  /** Home screens: the brand logo in place of the title (mock A1/E1). */
+  logo?: boolean;
 }
 
-export function Header({title, subtitle, large, back = !large, onBack, right, band, titleAccessory}: HeaderProps) {
+export function Header({title, subtitle, large, back = !large, onBack, right, band, titleAccessory, logo}: HeaderProps) {
   const t = useTheme();
   const s = useStyles();
   const navigation = useNavigation();
@@ -58,7 +61,8 @@ export function Header({title, subtitle, large, back = !large, onBack, right, ba
           />
         ) : null}
         <View style={s.titles}>
-          {title ? (
+          {logo ? <BrandLogo width={110} height={34} style={s.logo} /> : null}
+          {title && !logo ? (
             <View style={s.titleLine}>
               <Text
                 variant={large ? 'h1' : 'title'}
@@ -239,6 +243,7 @@ const useStyles = makeStyles(t => ({
   titles: {flex: 1, minWidth: 0},
   titleLine: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
   titleText: {flexShrink: 1},
+  logo: {alignSelf: 'flex-start'},
   right: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs, marginLeft: t.space.sm},
   fab: {position: 'absolute', right: 16, flexDirection: 'row', gap: t.space.sm},
   fabButton: {

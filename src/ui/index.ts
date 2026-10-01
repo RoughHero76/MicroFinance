@@ -38,3 +38,4 @@ export {PressableScale} from './PressableScale';
 export {Appear} from './Appear';
 export {listProps} from './listProps';
 export {useTransitionDone} from './useTransitionDone';
+export {HeroCard, CountUp} from './Hero';

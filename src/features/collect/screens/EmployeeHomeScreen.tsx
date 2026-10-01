@@ -1,9 +1,10 @@
-// E1 employee Home. Keeps every card from today: today's collections,
-// customers, leads, create lead (+), NPA and SMA 0/1/2 (as chips, U-17).
-// All numbers come from one call (BE-2).
+// E1 employee Home (mock E1). Keeps every card from today: today's
+// collections, customers, leads, create lead (+), NPA and SMA 0/1/2.
+// W7: the gradient hero, compact count tiles and one small tile per overdue
+// level, as drawn in the mock. All numbers come from one call (BE-2).
 
 import React from 'react';
-import {Pressable, RefreshControl, View} from 'react-native';
+import {RefreshControl, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -11,7 +12,21 @@ import {formatMoney} from '@/lib/format';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {NotificationBell} from '@/features/notifications/Bell';
 import {makeStyles} from '@/theme';
-import {Card, Chips, ErrorState, Icon, IconButton, OfflineBanner, ProgressBar, Screen, Skeleton, Text} from '@/ui';
+import {
+  Appear,
+  Card,
+  CountUp,
+  ErrorState,
+  HeroCard,
+  Icon,
+  IconButton,
+  OfflineBanner,
+  ProgressBar,
+  Screen,
+  Skeleton,
+  Text,
+  type TextColor,
+} from '@/ui';
 import {collectKeys, getEmployeeDashboard, type OverdueBucket} from '../api';
 
 export default function EmployeeHomeScreen() {
@@ -27,15 +42,23 @@ export default function EmployeeHomeScreen() {
   const total = d ? d.today.amountCollected + d.today.amountDue : 0;
   const progress = total > 0 ? (d?.today.amountCollected ?? 0) / total : 0;
 
+  const levels: {bucket: OverdueBucket; label: string; count?: number; color: TextColor}[] = [
+    {bucket: 'sma0', label: t('status.risk.sma0'), count: d?.overdue.sma0, color: 'warning'},
+    {bucket: 'sma1', label: t('status.risk.sma1'), count: d?.overdue.sma1, color: 'warning'},
+    {bucket: 'sma2', label: t('status.risk.sma2'), count: d?.overdue.sma2, color: 'danger'},
+    {bucket: 'npa', label: t('status.risk.npa'), count: d?.overdue.npa, color: 'danger'},
+  ];
+
   return (
     <Screen
       header={{
         title: t('home.welcome', {name: user?.fname ?? ''}),
+        logo: true,
         large: true,
         right: (
           <View style={s.headerActions}>
-            <IconButton icon="magnify" label={t('common.search')} variant="plain" onPress={() => go('Search')} />
-            <NotificationBell />
+            <IconButton icon="magnify" label={t('common.search')} variant="outline" onPress={() => go('Search')} />
+            <NotificationBell variant="outline" />
           </View>
         ),
       }}
@@ -46,91 +69,108 @@ export default function EmployeeHomeScreen() {
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : (
         <>
-          <Card onPress={() => go('Collect')} style={s.hero} accessibilityLabel={t('home.todaysCollections')}>
-            <View style={s.heroHead}>
-              <Text variant="overline" color="muted">
-                {t('home.todaysCollections')}
+          {user?.fname ? (
+            <Appear>
+              <Text variant="h2" weight="bold" style={s.greeting}>
+                {t('home.welcome', {name: user.fname})}
               </Text>
-              <Icon name="chevron-right" size={20} color="muted" />
-            </View>
-            {d ? (
-              <>
-                <Text variant="display" tabular>
-                  {t('home.dueCount', {count: d.today.dueCount})}
-                </Text>
-                <Text color="muted" tabular>
-                  {t('home.collectedOf', {collected: formatMoney(d.today.amountCollected), total: formatMoney(total)})}
-                </Text>
-                <ProgressBar value={progress} tone="success" style={s.progress} />
-              </>
-            ) : (
-              <>
-                <Skeleton width={120} height={34} />
-                <Skeleton width="70%" style={s.gap} />
-              </>
-            )}
-          </Card>
+            </Appear>
+          ) : null}
 
-          <View style={s.tiles}>
-            <Card onPress={() => go('Customers')} style={s.tile}>
-              <Icon name="account-group-outline" size={22} color="primary" />
-              <Text variant="small" color="muted">
+          <Appear index={1}>
+            <HeroCard onPress={() => go('Collect')} accessibilityLabel={t('home.todaysCollections')}>
+              <View style={s.heroHead}>
+                <Text variant="small" color="onPrimary" style={s.heroMuted}>
+                  {t('home.todaysCollections')}
+                </Text>
+                <Icon name="chevron-right" size={20} color="onPrimary" />
+              </View>
+              {d ? (
+                <>
+                  <Text variant="display" weight="bold" color="onPrimary" tabular style={s.heroFigure}>
+                    {t('home.dueCount', {count: d.today.dueCount})}
+                  </Text>
+                  <Text variant="small" color="onPrimary" tabular style={s.heroMuted}>
+                    {t('home.collectedOf', {
+                      collected: formatMoney(d.today.amountCollected),
+                      total: formatMoney(total),
+                    })}
+                  </Text>
+                  <ProgressBar value={progress} onHero style={s.progress} />
+                </>
+              ) : (
+                <View style={s.heroSkeleton}>
+                  <Skeleton width={120} height={34} />
+                  <Skeleton width="70%" />
+                </View>
+              )}
+            </HeroCard>
+          </Appear>
+
+          <Appear index={2} style={s.tiles}>
+            <Card onPress={() => go('Customers')} style={s.tile} accessibilityLabel={t('home.myCustomers')}>
+              <Text variant="small" color="muted" numberOfLines={1} style={s.flex}>
                 {t('home.myCustomers')}
               </Text>
-              <Text variant="h2" tabular>
-                {d ? d.customersCount : '–'}
-              </Text>
+              {d ? <CountUp value={d.customersCount} variant="bodyLg" weight="bold" /> : <Skeleton width={24} />}
             </Card>
             {can('lead.create') ? (
-              <Card onPress={() => go('Leads')} style={s.tile}>
-                <View style={s.tileHead}>
-                  <Icon name="account-search-outline" size={22} color="primary" />
-                  <Pressable
-                    onPress={() => go('NewLead')}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('home.newLead')}
-                    style={s.plus}>
-                    <Icon name="plus" size={18} color="onPrimary" />
-                  </Pressable>
-                </View>
-                <Text variant="small" color="muted">
+              <Card onPress={() => go('Leads')} style={s.tile} accessibilityLabel={t('home.leads')}>
+                <Text variant="small" color="muted" numberOfLines={1} style={s.flex}>
                   {t('home.leads')}
                 </Text>
-                <Text variant="h2" tabular>
-                  {d ? d.leads.total : '–'}
-                </Text>
+                {d ? <CountUp value={d.leads.total} variant="bodyLg" weight="bold" /> : <Skeleton width={24} />}
+                <IconButton
+                  icon="plus"
+                  label={t('home.newLead')}
+                  variant="tonal"
+                  size={26}
+                  onPress={() => go('NewLead')}
+                />
               </Card>
             ) : null}
-          </View>
+          </Appear>
 
-          <Card style={s.overdue}>
-            <Pressable onPress={() => go('Overdue', {bucket: 'all'})} style={s.overdueHead} accessibilityRole="button">
+          <Appear index={3}>
+            <Card padded={false} onPress={() => go('Overdue', {bucket: 'all'})} style={s.overdueHead}>
               <View style={s.flex}>
-                <Text variant="title">{t('home.myOverdue')}</Text>
+                <Text variant="bodyLg" weight="bold">
+                  {t('home.myOverdue')}
+                </Text>
                 {d ? (
                   <Text variant="small" color="muted" tabular>
                     {t('home.overdueTotal', {amount: formatMoney(d.overdue.totalOverdue)})}
                   </Text>
                 ) : null}
               </View>
-              <Text variant="h1" color={d && d.overdue.loans > 0 ? 'danger' : 'text'} tabular>
+              <Text variant="h2" weight="bold" color={d && d.overdue.loans > 0 ? 'danger' : 'text'} tabular>
                 {d ? d.overdue.loans : '–'}
               </Text>
-            </Pressable>
-            <Chips<OverdueBucket>
-              wrap
-              options={[
-                {value: 'sma0', label: t('status.risk.sma0'), count: d?.overdue.sma0 ?? 0},
-                {value: 'sma1', label: t('status.risk.sma1'), count: d?.overdue.sma1 ?? 0},
-                {value: 'sma2', label: t('status.risk.sma2'), count: d?.overdue.sma2 ?? 0},
-                {value: 'npa', label: t('status.risk.npa'), count: d?.overdue.npa ?? 0},
-              ]}
-              value={null}
-              onChange={bucket => go('Overdue', {bucket})}
-              style={s.gap}
-            />
-          </Card>
+              <Icon name="chevron-right" size={20} color="muted" />
+            </Card>
+          </Appear>
+
+          <Appear index={4} style={s.levels}>
+            {levels.map(level => (
+              <Card
+                key={level.bucket}
+                onPress={() => go('Overdue', {bucket: level.bucket})}
+                style={s.level}
+                accessibilityLabel={`${level.label}: ${level.count ?? 0}`}>
+                <Text
+                  variant="title"
+                  weight="bold"
+                  color={level.count ? level.color : 'muted'}
+                  tabular
+                  numberOfLines={1}>
+                  {d ? level.count ?? 0 : '–'}
+                </Text>
+                <Text variant="caption" color="muted" numberOfLines={1}>
+                  {level.label}
+                </Text>
+              </Card>
+            ))}
+          </Appear>
         </>
       )}
     </Screen>
@@ -138,23 +178,31 @@ export default function EmployeeHomeScreen() {
 }
 
 const useStyles = makeStyles(t => ({
-  headerActions: {flexDirection: 'row', alignItems: 'center'},
-  hero: {gap: t.space.xs, padding: t.space.lg},
+  headerActions: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
+  greeting: {marginBottom: t.space.md},
   heroHead: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
-  progress: {marginTop: t.space.sm},
-  gap: {marginTop: t.space.sm},
+  heroMuted: {opacity: 0.85},
+  heroFigure: {marginTop: t.space.xs},
+  heroSkeleton: {gap: t.space.sm, marginTop: t.space.sm},
+  progress: {marginTop: t.space.md},
   tiles: {flexDirection: 'row', gap: 10, marginTop: t.space.md},
-  tile: {flex: 1, gap: t.space.xs, padding: t.space.md},
-  tileHead: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
-  plus: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: t.colors.primary,
+  tile: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: t.space.sm,
+    minHeight: 48,
+    paddingVertical: t.space.sm,
+    paddingHorizontal: t.space.md,
   },
-  overdue: {marginTop: t.space.md, padding: t.space.lg},
-  overdueHead: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
+  overdueHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.sm,
+    marginTop: t.space.lg,
+    padding: t.space.md,
+  },
+  levels: {flexDirection: 'row', gap: t.space.sm, marginTop: 10},
+  level: {flex: 1, alignItems: 'center', gap: 2, paddingVertical: t.space.md, paddingHorizontal: t.space.xs},
   flex: {flex: 1},
 }));
