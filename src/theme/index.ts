@@ -4,4 +4,4 @@ export {makeStyles} from './makeStyles';
 export {navigationTheme, statusBarStyle, chartConfig} from './adapters';
 export {palettes, paletteIds} from './palettes';
 export type {PaletteId, ModeId} from './palettes';
-export {withAlpha} from './tokens';
+export {withAlpha, fontFor, fontFamily} from './tokens';

@@ -1,6 +1,6 @@
 import React from 'react';
-import {Text as RNText, type TextProps as RNTextProps, type TextStyle} from 'react-native';
-import {useTheme, type Theme} from '@/theme';
+import {StyleSheet, Text as RNText, type TextProps as RNTextProps, type TextStyle} from 'react-native';
+import {fontFor, useTheme, type Theme} from '@/theme';
 
 export type TextVariant =
   | 'display'
@@ -37,11 +37,11 @@ export interface TextProps extends RNTextProps {
 function variantStyle(t: Theme, variant: TextVariant): TextStyle {
   switch (variant) {
     case 'display':
-      return {fontSize: t.font.display, lineHeight: 38, fontWeight: t.weight.bold};
+      return {fontSize: t.font.display, lineHeight: 38, fontWeight: t.weight.bold, letterSpacing: -0.6};
     case 'h1':
-      return {fontSize: t.font.h1, lineHeight: 30, fontWeight: t.weight.bold};
+      return {fontSize: t.font.h1, lineHeight: 30, fontWeight: t.weight.bold, letterSpacing: -0.4};
     case 'h2':
-      return {fontSize: t.font.h2, lineHeight: 26, fontWeight: t.weight.semibold};
+      return {fontSize: t.font.h2, lineHeight: 26, fontWeight: t.weight.semibold, letterSpacing: -0.2};
     case 'title':
       return {fontSize: t.font.title, lineHeight: 24, fontWeight: t.weight.semibold};
     case 'bodyLg':
@@ -78,5 +78,12 @@ export function Text({variant = 'body', color = 'text', weight, align, tabular, 
   };
   // Large system font sizes are honoured up to 1.4×, so rows, amounts and
   // tab labels still fit (accessibility pass, W6).
-  return <RNText style={[base, style]} maxFontSizeMultiplier={MAX_FONT_SCALE} {...rest} />;
+  // The weight picks the Inter file; fontWeight itself is dropped, or Android
+  // would embolden the already-bold file a second time.
+  const flat = StyleSheet.flatten([base, style]);
+  const {fontWeight, ...resolved} = flat;
+  if (!resolved.fontFamily) {
+    resolved.fontFamily = fontFor(fontWeight);
+  }
+  return <RNText style={resolved} maxFontSizeMultiplier={MAX_FONT_SCALE} {...rest} />;
 }

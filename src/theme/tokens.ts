@@ -43,3 +43,28 @@ export function withAlpha(hex: string, alpha: number): string {
     .padStart(2, '0');
   return `#${h}${a}`;
 }
+
+// W7: Inter, as in the mocks. Android needs one font file per weight, so a
+// weight is turned into its own family name (files in
+// android/app/src/main/assets/fonts, trimmed to Latin + ₹ and symbols;
+// Hindi falls back to the system font).
+export const fontFamily = {
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  semibold: 'Inter-SemiBold',
+  bold: 'Inter-Bold',
+} as const;
+
+export function fontFor(fontWeight?: string | number | null): string {
+  const w = Number(fontWeight === 'bold' ? 700 : fontWeight === 'normal' || fontWeight == null ? 400 : fontWeight);
+  if (w >= 700) {
+    return fontFamily.bold;
+  }
+  if (w >= 600) {
+    return fontFamily.semibold;
+  }
+  if (w >= 500) {
+    return fontFamily.medium;
+  }
+  return fontFamily.regular;
+}

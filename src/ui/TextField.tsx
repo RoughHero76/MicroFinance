@@ -2,7 +2,7 @@
 
 import React, {forwardRef, useState} from 'react';
 import {Pressable, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle} from 'react-native';
-import {makeStyles, useTheme} from '@/theme';
+import {fontFamily, makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
 import {MAX_FONT_SCALE, Text} from './Text';
 
@@ -133,7 +133,13 @@ const useStyles = makeStyles(t => ({
   focused: {borderColor: t.colors.primary},
   errored: {borderColor: t.colors.danger},
   readonly: {backgroundColor: t.colors.surface2},
-  input: {flex: 1, fontSize: t.font.bodyLg, color: t.colors.text, paddingVertical: t.space.sm},
-  inputLarge: {fontSize: t.font.h2, fontWeight: '700', paddingVertical: t.space.md},
+  input: {
+    flex: 1,
+    fontSize: t.font.bodyLg,
+    fontFamily: fontFamily.regular,
+    color: t.colors.text,
+    paddingVertical: t.space.sm,
+  },
+  inputLarge: {fontSize: t.font.h2, fontFamily: fontFamily.bold, paddingVertical: t.space.md},
   below: {marginTop: t.space.xs},
 }));

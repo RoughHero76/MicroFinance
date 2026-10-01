@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Pressable, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
-import {makeStyles, useTheme} from '@/theme';
+import {fontFamily, makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
 import {MAX_FONT_SCALE} from './Text';
 
@@ -67,5 +67,5 @@ const useStyles = makeStyles(t => ({
     borderRadius: t.radius.pill,
     backgroundColor: t.colors.surface2,
   },
-  input: {flex: 1, fontSize: t.font.body, color: t.colors.text, paddingVertical: 0},
+  input: {flex: 1, fontSize: t.font.body, fontFamily: fontFamily.regular, color: t.colors.text, paddingVertical: 0},
 }));
