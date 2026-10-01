@@ -15,7 +15,7 @@ Each client is a **brand**: its own app build, its own backend deployment and it
    - `features` (leads, calculator)
 2. Replace `logo.png` and `logo-dark.png` (transparent PNG). Launcher icons are optional: put them in `brands/<id>/android/res/`.
 3. `npm run brand <id>` points the JavaScript at the brand. The Android flavor is generated from `brand.json` automatically.
-4. Build: `npm run release -- --brand <id>` (or `--dry-run` first). The APK is written to `dist/app-<id>-<version>.apk`.
+4. Build: `npm run release -- --brand <id>` (or `--dry-run` first). The APK is written to `dist/app-<id>-<version>.apk`. Works on Windows, macOS and Linux. Add `--upload` to publish it (see "Releasing an update" below).
 
 Business rules that change per client (interest, grace, penalty rate, minimum payment, SMA thresholds, loan-number prefix, and the optional modules like Cash handover) are **not** in the brand file: an admin sets them in the app under More → Business settings, and they're stored in that brand's database.
 
@@ -51,3 +51,31 @@ Phone notifications go through Firebase Cloud Messaging. Each brand needs its ow
 3. Backend: in Project settings → Service accounts, generate a private key. Save it on the server only, for example `secrets/firebase.json` (ignored by git), and set `FIREBASE_SERVICE_ACCOUNT=./secrets/firebase.json` in the backend's `.env`. Restart the backend. Without it, pushes are off and everything else works.
 
 What gets pushed: every in-app notification except "nightly update failed", in the language the phone uses. "N payments need approval" is one notification, updated in place. People can turn pushes off in Settings → Phone notifications.
+
+## Releasing an update (from any machine)
+
+```
+npm run release -- patch --brand evi --upload --notes "Faster lists; Fix rounding"
+npm run release -- --upload-only            # retry the upload of the last build
+npm run release -- minor --upload --mandatory   # phones on older versions must update
+```
+
+The script bumps the version, builds the signed APK, and uploads it to the brand's server over HTTPS. Phones see it on their next update check. If the build fails, the version number is put back.
+
+One-time setup:
+
+- **Server:** add `RELEASE_UPLOAD_KEY=<a long random string, 32+ characters>` to the backend's `.env` and restart. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Without it, the upload endpoint doesn't exist.
+- **Your machine:** put the same key in `release.local.json` at the app's root (ignored by git), or in the `RELEASE_UPLOAD_KEY` environment variable:
+  ```json
+  { "evi": { "key": "<the same key>" } }
+  ```
+  `"url"` is optional and defaults to the brand's `apiUrl`.
+- **Proxy:** if nginx sits in front of the backend, allow large uploads on that path, e.g. `client_max_body_size 300m;`. nginx's default is 1 MB.
+
+The server checks the key before accepting the file, then:
+- accepts only a real APK with a newer version (use `--replace` to overwrite the same version)
+- verifies the checksum
+- saves the notes and, with `--mandatory`, sets `min-version.txt`
+- keeps the newest 3 APKs
+
+After 5 wrong keys, that address is locked out for 15 minutes.
