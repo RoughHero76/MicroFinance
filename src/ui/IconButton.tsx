@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {View, type StyleProp, type ViewStyle} from 'react-native';
-import {makeStyles, useTheme} from '@/theme';
+import {makeStyles, useTheme, withAlpha} from '@/theme';
 import {Icon} from './Icon';
 import {PressableScale} from './PressableScale';
+import {HeaderSlot} from './headerSlot';
 import {Text} from './Text';
 
 export interface IconButtonProps {
@@ -36,6 +37,8 @@ export function IconButton({
 }: IconButtonProps) {
   const t = useTheme();
   const s = useStyles();
+  const slot = useContext(HeaderSlot);
+  const inHeader = slot !== null && variant === 'plain';
   const fg =
     color ?? (variant === 'filled' ? t.colors.onPrimary : variant === 'tonal' ? t.colors.primary : t.colors.text);
   return (
@@ -54,6 +57,7 @@ export function IconButton({
         variant === 'filled' && s.filled,
         variant === 'outline' && s.outline,
         variant === 'ring' && s.ring,
+        inHeader && (slot === 'band' ? s.glass : s.outline),
         disabled && s.disabled,
         style,
       ]}>
@@ -73,6 +77,12 @@ const useStyles = makeStyles(t => ({
   base: {alignItems: 'center', justifyContent: 'center'},
   tonal: {backgroundColor: t.colors.primarySoft},
   filled: {backgroundColor: t.colors.primary},
+  glass: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: withAlpha(t.colors.white, 0.28),
+    backgroundColor: withAlpha(t.colors.white, 0.16),
+  },
   ring: {borderWidth: 1, borderColor: t.colors.border, backgroundColor: t.colors.surface},
   outline: {borderRadius: 12, borderWidth: 1, borderColor: t.colors.border, backgroundColor: t.colors.surface},
   disabled: {opacity: 0.4},

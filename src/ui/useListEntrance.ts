@@ -18,6 +18,10 @@ export function useListEntrance() {
     if (index >= MAX_ROWS || Date.now() - mountedAt.current > WINDOW_MS) {
       return undefined;
     }
-    return FadeInDown.delay(index * STEP_MS).duration(280).springify().damping(20).stiffness(190);
+    return FadeInDown.delay(index * STEP_MS)
+      .duration(280)
+      .springify()
+      .damping(20)
+      .stiffness(190);
   }, []);
 }

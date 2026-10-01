@@ -20,6 +20,7 @@ import Animated, {FadeIn} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {makeStyles, statusBarStyle, useTheme, withAlpha} from '@/theme';
 import {BrandLogo} from './BrandLogo';
+import {HeaderSlot} from './headerSlot';
 import {Icon} from './Icon';
 import {IconButton} from './IconButton';
 import {PressableScale} from './PressableScale';
@@ -42,32 +43,48 @@ export interface HeaderProps {
   logo?: boolean;
 }
 
-export function Header({title, subtitle, large, back = !large, onBack, right, band, titleAccessory, logo}: HeaderProps) {
+export function Header({
+  title,
+  subtitle,
+  large,
+  back = !large,
+  onBack,
+  right,
+  band,
+  titleAccessory,
+  logo,
+}: HeaderProps) {
   const t = useTheme();
   const s = useStyles();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const canBack = back && (onBack || navigation.canGoBack());
+  // Pushed screens: the mock's centred title between two 36dp buttons.
+  const centred = !large && !logo;
   return (
     <View style={[s.header, large && s.headerClear, band && s.band, {paddingTop: insets.top + (large ? 12 : 4)}]}>
       {band ? <BandGradient /> : null}
       <View style={s.headerRow}>
         {canBack ? (
-          <IconButton
-            icon="arrow-left"
-            label="Back"
-            variant="plain"
-            color={band ? t.colors.onPrimary : undefined}
-            onPress={onBack ?? (() => navigation.goBack())}
-            style={s.back}
-          />
+          <HeaderSlot.Provider value={band ? 'band' : 'header'}>
+            <IconButton
+              icon="arrow-left"
+              label="Back"
+              variant="plain"
+              color={band ? t.colors.onPrimary : undefined}
+              onPress={onBack ?? (() => navigation.goBack())}
+            />
+          </HeaderSlot.Provider>
+        ) : centred ? (
+          <View style={s.spacer} />
         ) : null}
-        <View style={s.titles}>
+        <View style={[s.titles, centred && s.titlesCentred]}>
           {logo ? <BrandLogo width={110} height={34} style={s.logo} /> : null}
           {title && !logo ? (
-            <View style={s.titleLine}>
+            <View style={[s.titleLine, centred && s.titleLineCentred]}>
               <Text
-                variant={large ? 'h1' : 'title'}
+                variant={large ? 'h1' : 'bodyLg'}
+                weight="bold"
                 color={band ? 'onPrimary' : 'text'}
                 numberOfLines={1}
                 style={s.titleText}
@@ -78,12 +95,22 @@ export function Header({title, subtitle, large, back = !large, onBack, right, ba
             </View>
           ) : null}
           {subtitle ? (
-            <Text variant="small" color={band ? 'onPrimary' : 'muted'} numberOfLines={1}>
+            <Text
+              variant="small"
+              color={band ? 'onPrimary' : 'muted'}
+              numberOfLines={1}
+              align={centred ? 'center' : undefined}>
               {subtitle}
             </Text>
           ) : null}
         </View>
-        {right ? <View style={s.right}>{right}</View> : null}
+        {right ? (
+          <HeaderSlot.Provider value={band ? 'band' : 'header'}>
+            <View style={s.right}>{right}</View>
+          </HeaderSlot.Provider>
+        ) : centred ? (
+          <View style={s.spacer} />
+        ) : null}
       </View>
     </View>
   );
@@ -271,12 +298,14 @@ const useStyles = makeStyles(t => ({
   band: {backgroundColor: t.colors.primary},
   bandExtension: {marginTop: -t.space.lg, marginHorizontal: -t.space.lg, marginBottom: 0},
   headerRow: {flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingHorizontal: t.space.sm},
-  back: {marginRight: t.space.xs},
+  spacer: {width: 36},
+  titlesCentred: {alignItems: 'center', paddingHorizontal: t.space.sm},
+  titleLineCentred: {justifyContent: 'center'},
   titles: {flex: 1, minWidth: 0},
   titleLine: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
   titleText: {flexShrink: 1},
   logo: {alignSelf: 'flex-start'},
-  right: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs, marginLeft: t.space.sm},
+  right: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm, marginLeft: t.space.sm},
   fab: {position: 'absolute', right: 16, flexDirection: 'row', gap: t.space.sm},
   fabButton: {
     flexDirection: 'row',
