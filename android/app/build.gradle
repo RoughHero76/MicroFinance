@@ -86,8 +86,8 @@ android {
         applicationId "com.softwares76.microfinance"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.0.4"
+        versionCode 6
+        versionName "1.0.5"
         // Needed by react-native-image-crop-picker.
         vectorDrawables.useSupportLibrary = true
     }
