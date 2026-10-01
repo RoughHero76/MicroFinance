@@ -237,6 +237,7 @@ function PaymentSheet({
           </Text>
         ) : null}
         <MoneyField
+          large
           label={t('pay.amount')}
           value={amount}
           onChangeValue={setAmount}
@@ -244,7 +245,7 @@ function PaymentSheet({
           error={errors.amount}
           autoFocus
         />
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {t('pay.method')}
         </Text>
         <Chips<PaymentMethod>
@@ -381,7 +382,7 @@ function ReceiptSheet({sheetRef, receipt}: {sheetRef: React.RefObject<SheetHandl
       footer={<Button title={t('common.done')} variant="text" onPress={() => sheetRef.current?.close()} />}>
       {target.phone ? (
         <>
-          <Text variant="label" color="muted" style={s.label}>
+          <Text variant="label" weight="semibold" style={s.label}>
             {t('pay.sendReceipt', {name: first})}
           </Text>
           <OptionRow

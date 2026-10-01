@@ -5,6 +5,7 @@ import React, {forwardRef} from 'react';
 import type {TextInput} from 'react-native';
 import {useI18n} from '@/i18n';
 import {amountInWords, formatMoneyInput, parseMoney} from '@/lib/format';
+import {Text} from './Text';
 import {TextField, type TextFieldProps} from './TextField';
 
 export interface MoneyFieldProps extends Omit<TextFieldProps, 'value' | 'onChangeText' | 'keyboardType'> {
@@ -43,7 +44,14 @@ export const MoneyField = forwardRef<TextInput, MoneyFieldProps>(function MoneyF
         onChangeValue(parseMoney(formatted));
       }}
       error={error}
-      hint={words ? (hint ? `${words}\n${hint}` : words) : hint}
+      below={
+        words ? (
+          <Text variant="small" weight="semibold">
+            {words}
+          </Text>
+        ) : undefined
+      }
+      hint={hint}
       {...rest}
     />
   );

@@ -17,6 +17,10 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   secureToggle?: boolean;
   right?: React.ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
+  /** Big bold input (the amount on payment sheets, mock E3). */
+  large?: boolean;
+  /** A line under the field, above the hint (amount in words). */
+  below?: React.ReactNode;
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
@@ -30,6 +34,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
     secureToggle,
     right,
     containerStyle,
+    large,
+    below,
     editable = true,
     secureTextEntry,
     onFocus,
@@ -46,7 +52,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   return (
     <View style={[s.container, containerStyle]}>
       {label ? (
-        <Text variant="label" color="muted" style={s.label}>
+        <Text variant="label" weight="semibold" style={s.label}>
           {label}
           {required ? <Text color="danger"> *</Text> : null}
         </Text>
@@ -55,14 +61,17 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         <View style={[s.field, focused && s.focused, !!error && s.errored, !editable && s.readonly]}>
           {icon ? <Icon name={icon} size={18} color="muted" /> : null}
           {prefix ? (
-            <Text variant="bodyLg" color="muted">
+            <Text
+              variant={large ? 'h2' : 'bodyLg'}
+              weight={large ? 'bold' : undefined}
+              color={large ? 'text' : 'muted'}>
               {prefix}
             </Text>
           ) : null}
           <TextInput
             ref={ref}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
-            style={s.input}
+            style={[s.input, large && s.inputLarge]}
             placeholderTextColor={t.colors.muted}
             editable={editable}
             secureTextEntry={secureToggle ? hidden : secureTextEntry}
@@ -89,6 +98,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           {right}
         </View>
       </View>
+      {below ? <View style={s.below}>{below}</View> : null}
       {error ? (
         <Text variant="caption" color="danger" style={s.below}>
           {error}
@@ -124,5 +134,6 @@ const useStyles = makeStyles(t => ({
   errored: {borderColor: t.colors.danger},
   readonly: {backgroundColor: t.colors.surface2},
   input: {flex: 1, fontSize: t.font.bodyLg, color: t.colors.text, paddingVertical: t.space.sm},
+  inputLarge: {fontSize: t.font.h2, fontWeight: '700', paddingVertical: t.space.md},
   below: {marginTop: t.space.xs},
 }));

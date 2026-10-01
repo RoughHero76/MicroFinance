@@ -177,10 +177,9 @@ describe('E2 Collect', () => {
     await waitFor(() => expect(screen.getByText('Sunita Devi')).toBeTruthy());
     fireEvent.press(screen.getAllByText('Pay')[1]);
     await waitFor(() => expect(screen.getByText('Confirm ₹1,065')).toBeTruthy());
+    expect(screen.getByText('One thousand sixty-five rupees')).toBeTruthy();
     expect(
-      screen.getByText(
-        'One thousand sixty-five rupees\nMin ₹100. Anything above this installment goes to older dues first, then future ones.',
-      ),
+      screen.getByText('Min ₹100. Anything above this installment goes to older dues first, then future ones.'),
     ).toBeTruthy();
     fireEvent.press(screen.getByText('Confirm ₹1,065'));
     await waitFor(() =>
