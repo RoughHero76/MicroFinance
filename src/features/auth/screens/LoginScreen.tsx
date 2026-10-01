@@ -4,14 +4,15 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 import {KeyboardAvoidingView, Platform, ScrollView, StatusBar, TextInput, View} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
 import {errorMessage, isApiError} from '@/lib/api';
 import type {Role} from '@/lib/session';
 import {readJson, StorageKeys, writeJson} from '@/lib/storage';
-import {makeStyles, statusBarStyle, useTheme} from '@/theme';
-import {BrandLogo, Button, Card, Icon, SegmentedControl, Text, TextField} from '@/ui';
+import {makeStyles, statusBarStyle, useTheme, withAlpha} from '@/theme';
+import {Appear, BrandLogo, Button, Icon, SegmentedControl, Text, TextField} from '@/ui';
 import {login} from '../api';
 import {useSession} from '../SessionProvider';
 
@@ -71,14 +72,25 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle={statusBarStyle(t)} backgroundColor={t.colors.bg} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[withAlpha(t.colors.primary, t.dark ? 0.18 : 0.12), withAlpha(t.colors.primary, 0)]}
+        style={s.glow}
+      />
       <ScrollView
         contentContainerStyle={[s.content, {paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24}]}
         keyboardShouldPersistTaps="handled">
-        <BrandLogo width={180} height={72} style={s.logo} />
-        <Text variant="h1">{tr('auth.welcome')}</Text>
-        <Text color="muted" style={s.subtitle}>
-          {tr('auth.signInTo', {brand: brand.name})}
-        </Text>
+        <Appear>
+          <BrandLogo width={180} height={72} style={s.logo} />
+        </Appear>
+        <Appear index={1}>
+          <Text variant="h1" weight="bold">
+            {tr('auth.welcome')}
+          </Text>
+          <Text color="muted" style={s.subtitle}>
+            {tr('auth.signInTo', {brand: brand.name})}
+          </Text>
+        </Appear>
 
         {reasonText ? (
           <View style={s.reason} accessibilityRole="alert">
@@ -89,7 +101,8 @@ export default function LoginScreen() {
           </View>
         ) : null}
 
-        <Card style={s.card}>
+        {/* Mock S2: the form sits on the page, no card around it. */}
+        <Appear index={2}>
           <SegmentedControl<Role>
             options={[
               {value: 'employee', label: tr('auth.roleEmployee')},
@@ -130,8 +143,8 @@ export default function LoginScreen() {
               {errors.form}
             </Text>
           ) : null}
-          <Button title={tr('auth.signIn')} onPress={submit} loading={busy} block style={s.submit} />
-        </Card>
+          <Button title={tr('auth.signIn')} onPress={submit} loading={busy} style={s.submit} />
+        </Appear>
 
         <Text variant="small" color="muted" align="center" style={s.forgot}>
           {tr('auth.forgot')}
@@ -156,9 +169,9 @@ const useStyles = makeStyles(t => ({
     marginBottom: t.space.md,
   },
   reasonText: {flex: 1},
-  card: {padding: t.space.lg},
+  glow: {position: 'absolute', top: 0, left: 0, right: 0, height: 320},
   switch: {marginBottom: t.space.lg},
   formError: {marginBottom: t.space.sm},
-  submit: {marginTop: t.space.sm, minHeight: 44},
+  submit: {marginTop: t.space.sm, minHeight: 44, paddingHorizontal: t.space.xl},
   forgot: {marginTop: t.space.lg},
 }));
