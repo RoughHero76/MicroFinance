@@ -169,7 +169,7 @@ describe('E2 Collect', () => {
     expect(screen.getByText('2 due today')).toBeTruthy();
     const headers = screen.getAllByText(/ · \d$/).map(n => (n.props.children as string[]).join(''));
     expect(headers).toEqual(['Overdue · 1', 'Due today · 1', 'Done · 1']);
-    expect(screen.getByText('Due ₹1,065')).toBeTruthy();
+    expect(screen.getByLabelText('Due ₹1,065')).toBeTruthy();
   });
 
   it('records a payment and offers the SMS receipt', async () => {
