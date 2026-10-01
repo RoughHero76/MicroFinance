@@ -164,6 +164,15 @@ IDs match the plan: **B** = bugs, **BE** = backend, **F** = foundations, **W** =
 - [ ] Strip console output from release builds, check list performance on a low-end phone, run an accessibility pass _(console stripped: app 79a0b2d; accessibility pass: app 8470552. Still open: list performance on a low-end phone, which needs a device.)_
 - [ ] A native speaker reviews the Hindi text in the app and on the server _(every string has Hindi; review sheet with all 987 strings: docs/hindi-review.md)_
 
+### W7 · Polish: depth, motion, speed (M–L)
+
+Added 2026-10-01 after device testing. The screens matched the mocks' layout but felt flat, static and slow. This wave adds the qualities that made the mocks look good.
+
+- [x] **W7-K · Kit**: shadow tokens, press spring (PressableScale), floating tab bar with a sliding pill, sliding segmented control and underline tabs, tinted chips, shimmer skeletons, field focus ring, header glow, content fade-in, `Screen defer`, `Appear`, list batching settings, memoised rows, freezing of hidden screens. _(b83e460)_
+- [ ] **W7-S · Screen fidelity**: compare every screen with its mock (rendered PNGs) and close the gaps: hero cards, tinted icon tiles, card grouping, spacing and type sizes. Order: E-Home, Collect, Customer profile, Loan (A6/E6), Payments, lists, Lead detail, Create loan, More/Settings, the rest.
+- [ ] **W7-M · Motion on screens**: staggered entrances on Home and detail screens, `defer` on heavy pushes, layout animation when rows are removed or undone, a count-up on hero amounts, sheet and toast timing.
+- [ ] **W7-P · Speed check on a release-mode build** (debug builds on an emulator are several times slower): scroll long lists, push heavy screens, and record any dropped frames.
+
 ## UX rules (every screen)
 
 - U-14 · List rows: photo + at most 2–3 lines
