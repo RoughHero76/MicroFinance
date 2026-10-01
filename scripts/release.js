@@ -89,6 +89,9 @@ function uploadConfig(brandId, brand) {
         `  { "${brandId}": { "key": "<the server's RELEASE_UPLOAD_KEY>" } }`,
     );
   }
+  if (key.startsWith('PASTE_') || key.length < 32) {
+    fail(`The upload key for ${brandId} in release.local.json is still the placeholder (or too short).`);
+  }
   if (!base) fail(`No server URL for ${brandId} (brand.json apiUrl or release.local.json "url")`);
   return {key, url: `${base}/api/shared/app/release`};
 }
