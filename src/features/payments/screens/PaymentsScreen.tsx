@@ -362,6 +362,7 @@ const useStyles = makeStyles(t => ({
     borderRadius: t.radius.lg,
     borderWidth: 1,
     borderColor: t.colors.border,
+    ...t.shadow.card,
     padding: t.space.md,
     marginBottom: 10,
     gap: t.space.xs,

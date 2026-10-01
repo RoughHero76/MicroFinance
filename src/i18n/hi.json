@@ -376,6 +376,7 @@
     "pay": "भुगतान",
     "penalty": "जुर्माना",
     "due": "बाकी {{amount}}",
+    "dueLabel": "बाकी",
     "installmentLine": "#{{loan}} · किस्त {{number}}",
     "groupOverdue": "बकाया",
     "groupDue": "आज देय",

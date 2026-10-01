@@ -6,6 +6,7 @@
 import React, {useMemo, useState} from 'react';
 import {RefreshControl, SectionList, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {formatMoney} from '@/lib/format';
@@ -24,6 +25,7 @@ import {
   StatusBadge,
   Text,
   useIsOffline,
+  useListEntrance,
   listProps,
 } from '@/ui';
 import {collectKeys, getTodaysCollections, type CollectionItem} from '../api';
@@ -49,6 +51,7 @@ export default function CollectScreen() {
   const offline = useIsOffline();
   const collect = useCollect();
   const [q, setQ] = useState('');
+  const entering = useListEntrance();
 
   const query = useQuery({queryKey: collectKeys.today, queryFn: getTodaysCollections, meta: {persist: true}});
   const items = useMemo(() => query.data ?? [], [query.data]);
@@ -89,11 +92,11 @@ export default function CollectScreen() {
     phone: item.loan.customer.phoneNumber,
   });
 
-  const renderItem = ({item}: {item: CollectionItem}) => {
+  const renderItem = ({item, index}: {item: CollectionItem; index: number}) => {
     const name = customerName(item);
     const due = amountStillDue(item);
     return (
-      <View style={[s.row, item.done && s.rowDone]}>
+      <Animated.View entering={entering(index)} style={[s.row, item.done && s.rowDone]}>
         <View style={s.rowTop}>
           <Avatar name={name} uri={item.loan.customer.profilePic} size={44} />
           <View style={s.rowText}>
@@ -110,14 +113,19 @@ export default function CollectScreen() {
         </View>
         {!item.done ? (
           <View style={s.actions}>
-            <Text variant="bodyLg" weight="semibold" tabular style={s.flex}>
-              {t('collect.due', {amount: formatMoney(due)})}
-            </Text>
+            <View style={s.due} accessibilityLabel={t('collect.due', {amount: formatMoney(due)})}>
+              <Text variant="small" color="muted">
+                {t('collect.dueLabel')}
+              </Text>
+              <Text variant="title" weight="bold" tabular numberOfLines={1}>
+                {formatMoney(due)}
+              </Text>
+            </View>
             <Button title={t('collect.penalty')} variant="text" onPress={() => collect.penalty(targetOf(item))} />
             <Button title={t('collect.pay')} onPress={() => collect.pay(targetOf(item))} disabled={offline} />
           </View>
         ) : null}
-      </View>
+      </Animated.View>
     );
   };
 
@@ -186,6 +194,7 @@ const useStyles = makeStyles(t => ({
     borderRadius: t.radius.lg,
     borderWidth: 1,
     borderColor: t.colors.border,
+    ...t.shadow.card,
     padding: t.space.md,
     marginBottom: 10,
     gap: t.space.sm,
@@ -195,5 +204,6 @@ const useStyles = makeStyles(t => ({
   rowText: {flex: 1, gap: 2, minWidth: 0},
   line: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
   flex: {flex: 1, minWidth: 0},
-  actions: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs, paddingLeft: 56},
+  actions: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs},
+  due: {flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'baseline', gap: t.space.xs},
 }));

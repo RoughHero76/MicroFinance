@@ -183,6 +183,7 @@ const useStyles = makeStyles(t => ({
     borderRadius: t.radius.md,
     borderWidth: 1,
     borderColor: t.colors.border,
+    ...t.shadow.card,
     marginBottom: t.space.sm,
   },
   pressed: {backgroundColor: t.colors.surface2},

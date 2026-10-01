@@ -376,6 +376,7 @@
     "pay": "Pay",
     "penalty": "Penalty",
     "due": "Due {{amount}}",
+    "dueLabel": "Due",
     "installmentLine": "#{{loan}} · installment {{number}}",
     "groupOverdue": "Overdue",
     "groupDue": "Due today",
