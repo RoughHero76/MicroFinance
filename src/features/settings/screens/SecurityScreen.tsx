@@ -79,7 +79,7 @@ export default function SecurityScreen() {
   return (
     <Screen header={{title: t('security.title')}} scroll>
       <Section>
-        <Card padded={false}>
+        <Card padded={false} dividers>
           <OptionRow
             icon="fingerprint"
             title={t('security.appLock')}
@@ -106,7 +106,7 @@ export default function SecurityScreen() {
 
       {can('security.changePassword') || can('security.backup') ? (
         <Section title={t('security.adminsOnly')}>
-          <Card padded={false}>
+          <Card padded={false} dividers>
             {can('security.changePassword') ? (
               <OptionRow icon="key-outline" title={t('security.changePassword')} onPress={passwordSheet.open} />
             ) : null}

@@ -8,12 +8,24 @@ export interface CardProps extends ViewProps {
   onPress?: () => void;
   onLongPress?: () => void;
   padded?: boolean;
+  /** Thin lines between the children (grouped rows, mock A20). */
+  dividers?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
 }
 
-export function Card({onPress, onLongPress, padded = true, style, children, accessibilityLabel, ...rest}: CardProps) {
+export function Card({
+  onPress,
+  onLongPress,
+  padded = true,
+  dividers,
+  style,
+  children: rawChildren,
+  accessibilityLabel,
+  ...rest
+}: CardProps) {
   const s = useStyles();
+  const children = dividers ? withDividers(rawChildren) : rawChildren;
   if (onPress || onLongPress) {
     return (
       <PressableScale
@@ -22,14 +34,14 @@ export function Card({onPress, onLongPress, padded = true, style, children, acce
         scaleTo={0.98}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        style={[s.card, padded && s.padded, style]}
+        style={[s.card, padded && s.padded, dividers && s.clip, style]}
         {...rest}>
         {children}
       </PressableScale>
     );
   }
   return (
-    <View style={[s.card, padded && s.padded, style]} {...rest}>
+    <View style={[s.card, padded && s.padded, dividers && s.clip, style]} {...rest}>
       {children}
     </View>
   );
@@ -67,6 +79,20 @@ export function Section({
   );
 }
 
+function withDividers(children: React.ReactNode) {
+  const items = React.Children.toArray(children).filter(Boolean);
+  return items.map((child, i) =>
+    i === 0 ? (
+      child
+    ) : (
+      <React.Fragment key={`d${i}`}>
+        <Divider inset={16} />
+        {child}
+      </React.Fragment>
+    ),
+  );
+}
+
 export function Divider({inset = 0}: {inset?: number}) {
   const s = useStyles();
   return <View style={[s.divider, {marginLeft: inset}]} />;
@@ -81,6 +107,8 @@ const useStyles = makeStyles(t => ({
     ...t.shadow.card,
   },
   padded: {padding: t.space.md},
+  // Keeps row press highlights inside the rounded corners (Android keeps the shadow).
+  clip: {overflow: 'hidden'},
   section: {marginBottom: t.space.lg},
   sectionHead: {
     flexDirection: 'row',

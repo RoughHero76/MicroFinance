@@ -130,7 +130,7 @@ export default function ProfileScreen() {
             />
           </Card>
           {can('security.changePassword') ? (
-            <Card padded={false} style={s.gap}>
+            <Card padded={false} dividers style={s.gap}>
               <OptionRow icon="account-edit-outline" title={t('profile.edit')} onPress={openEdit} />
             </Card>
           ) : null}

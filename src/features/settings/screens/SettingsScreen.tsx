@@ -74,7 +74,7 @@ export default function SettingsScreen() {
       </Section>
 
       <Section title={t('settings.account')}>
-        <Card padded={false}>
+        <Card padded={false} dividers>
           <OptionRow
             icon="shield-lock-outline"
             title={t('settings.security')}
@@ -91,7 +91,7 @@ export default function SettingsScreen() {
       </Section>
 
       <Section title={t('settings.about')}>
-        <Card padded={false}>
+        <Card padded={false} dividers>
           <OptionRow
             icon="information-outline"
             title={t('settings.about')}

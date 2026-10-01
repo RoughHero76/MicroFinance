@@ -45,6 +45,7 @@ export interface OptionRowProps {
 }
 
 export function OptionRow({title, hint, icon, toggle, value, badge, onPress, destructive}: OptionRowProps) {
+  const t = useTheme();
   const s = useStyles();
   const press = toggle ? () => toggle.onChange(!toggle.value) : onPress;
   return (
@@ -53,6 +54,7 @@ export function OptionRow({title, hint, icon, toggle, value, badge, onPress, des
       disabled={!press || toggle?.disabled}
       accessibilityRole={toggle ? 'switch' : onPress ? 'button' : undefined}
       accessibilityState={toggle ? {checked: toggle.value} : undefined}
+      android_ripple={{color: t.colors.primarySoft}}
       style={({pressed}) => [s.row, pressed && s.pressed]}>
       {icon ? (
         <View style={[s.icon, destructive && s.iconDanger]}>

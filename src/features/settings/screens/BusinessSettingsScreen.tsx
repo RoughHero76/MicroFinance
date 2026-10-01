@@ -125,7 +125,7 @@ export default function BusinessSettingsScreen() {
         </Card>
       </Section>
       <Section title={t('business.modules')}>
-        <Card padded={false}>
+        <Card padded={false} dividers>
           <OptionRow
             title={t('business.moduleLeads')}
             toggle={{value: modules.leads, onChange: v => setModules({...modules, leads: v})}}

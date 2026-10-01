@@ -41,7 +41,7 @@ export default function MoreScreen({work}: {work: MoreItem[]}) {
         accessibilityLabel={t('more.viewProfile')}>
         <Avatar name={name} uri={user?.profilePic} size={52} />
         <View style={s.profileText}>
-          <Text variant="title" numberOfLines={1}>
+          <Text variant="bodyLg" weight="bold" numberOfLines={1}>
             {name || user?.userName}
           </Text>
           <Text variant="small" color="muted" numberOfLines={1}>
@@ -52,7 +52,7 @@ export default function MoreScreen({work}: {work: MoreItem[]}) {
 
       {items.length ? (
         <Section title={can('employee.manage') ? t('more.manage') : t('more.work')}>
-          <Card padded={false}>
+          <Card padded={false} dividers>
             {items.map(item => (
               <OptionRow
                 key={item.key}
@@ -67,7 +67,7 @@ export default function MoreScreen({work}: {work: MoreItem[]}) {
       ) : null}
 
       <Section title={t('more.app')}>
-        <Card padded={false}>
+        <Card padded={false} dividers>
           <OptionRow icon="cog-outline" title={t('more.settings')} onPress={() => navigation.navigate('Settings')} />
           <OptionRow icon="lifebuoy" title={t('more.support')} onPress={() => navigation.navigate('Support')} />
           <OptionRow
