@@ -8,18 +8,18 @@ import {Pressable, RefreshControl, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
-import LinearGradient from 'react-native-linear-gradient';
 import {brand} from '@/brand';
 import {formatMoney, formatMoneyShort} from '@/lib/format';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
 import {NotificationBell} from '@/features/notifications/Bell';
-import {makeStyles, useTheme} from '@/theme';
+import {makeStyles} from '@/theme';
 import {
   Avatar,
   Button,
   Card,
   ErrorState,
+  HeroCard,
   Icon,
   IconButton,
   ListRow,
@@ -33,7 +33,6 @@ import {
 
 export default function AdminHomeScreen() {
   const s = useStyles();
-  const theme = useTheme();
   const {t} = useTranslation();
   const navigation = useNavigation();
   const can = useCan();
@@ -69,6 +68,7 @@ export default function AdminHomeScreen() {
     <Screen
       header={{
         title: brand.name,
+        logo: true,
         large: true,
         right: (
           <View style={s.headerActions}>
@@ -90,11 +90,7 @@ export default function AdminHomeScreen() {
             </Text>
           ) : null}
 
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.primary2]}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-            style={s.hero}>
+          <HeroCard>
             <Text variant="overline" color="onPrimary" style={s.heroMuted}>
               {t('adminHome.market')}
             </Text>
@@ -136,7 +132,7 @@ export default function AdminHomeScreen() {
                 </Text>
               </View>
             </View>
-          </LinearGradient>
+          </HeroCard>
 
           {d && d.pendingLoans > 0 ? (
             <Card onPress={() => go('Loans')} style={s.notice}>
@@ -174,7 +170,7 @@ export default function AdminHomeScreen() {
           <Section
             title={t('adminHome.recent')}
             action={<Button title={t('adminHome.viewAll')} variant="text" onPress={() => go('Customers')} />}>
-            <Card padded={false}>
+            <Card padded={false} dividers>
               {(d?.recentCustomers ?? []).map(c => {
                 const name = `${c.fname} ${c.lname}`;
                 const loan = c.loans[0];
@@ -203,7 +199,6 @@ export default function AdminHomeScreen() {
 const useStyles = makeStyles(t => ({
   headerActions: {flexDirection: 'row', alignItems: 'center'},
   greeting: {marginBottom: t.space.sm},
-  hero: {padding: t.space.lg, gap: t.space.xs, borderRadius: t.radius.lg},
   heroMuted: {opacity: 0.85},
   heroFacts: {flexDirection: 'row', gap: 10, marginTop: t.space.md},
   fact: {flex: 1, gap: 2},
@@ -218,10 +213,11 @@ const useStyles = makeStyles(t => ({
   quickRow: {flexDirection: 'row', marginVertical: t.space.md},
   quickItem: {flex: 1, alignItems: 'center', gap: t.space.xs, paddingVertical: t.space.sm},
   quickItemPressed: {opacity: 0.6},
+  // Mock A1: rounded-square tiles.
   shortcutIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 15,
     backgroundColor: t.colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',

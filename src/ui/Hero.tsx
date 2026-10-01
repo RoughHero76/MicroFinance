@@ -102,7 +102,7 @@ export function CountUp({
 
 const useStyles = makeStyles(t => ({
   shell: {borderRadius: t.radius.xl, ...t.shadow.primary, backgroundColor: t.colors.primary},
-  gradient: {borderRadius: t.radius.xl, padding: t.space.lg, overflow: 'hidden'},
+  gradient: {borderRadius: t.radius.xl, padding: t.space.lg, gap: t.space.xs, overflow: 'hidden'},
   circle: {
     position: 'absolute',
     right: -44,
