@@ -1,5 +1,11 @@
 #!/usr/bin/env node
-// npm run release -- [patch|minor|major] [options]
+// npm run release [patch|minor|major] [options]
+//
+// Options are plain words so they pass through npm in every shell
+// (PowerShell drops the `--` that npm needs for --flags):
+//   npm run release patch upload notes="Faster lists; Fix rounding"
+//   npm run release upload-only
+// `node scripts/release.js --upload --notes "…"` works too.
 //
 // Works on Windows, macOS and Linux, from any developer machine:
 //
@@ -11,15 +17,15 @@
 // 5. with --upload, sends it to the brand's server, which offers it to
 //    phones on their next update check (POST /api/shared/app/release)
 //
-// Options:
-//   --brand <id>       brand to release (default: the current one)
-//   --dry-run          only print the next version
-//   --upload           upload after building
-//   --upload-only      upload dist/app-<brand>-<version>.apk for the current
-//                      version without building (e.g. a retry)
-//   --mandatory        phones on older versions must update
-//   --notes "a; b"     "what's new", items separated by ; or new lines
-//   --replace          overwrite a release with the same version
+// Options (each also works as --name or --name value):
+//   brand=<id>         brand to release (default: the current one)
+//   dry-run            only print the next version
+//   upload             upload after building
+//   upload-only        upload dist/app-<brand>-<version>.apk without building
+//                      (e.g. a retry); version=<x.y.z> picks another build
+//   mandatory          phones on older versions must update
+//   notes="a; b"       "what's new", items separated by ; or new lines
+//   replace            overwrite a release with the same version
 //
 // The upload key (the server's RELEASE_UPLOAD_KEY) comes from the
 // RELEASE_UPLOAD_KEY environment variable or release.local.json (not in
@@ -29,29 +35,67 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const {spawnSync} = require('child_process');
+const {spawn} = require('child_process');
 
 const root = path.resolve(__dirname, '..');
-const args = process.argv.slice(2);
-const has = flag => args.includes(flag);
-const value = flag => {
-  const i = args.indexOf(flag);
-  return i !== -1 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : undefined;
+
+// Accepts `upload`, `--upload`, `notes=x`, `--notes x` and `--notes=x`. Older
+// npm versions keep unknown --flags to themselves as npm_config_* settings,
+// so those are read too.
+const VALUE_OPTIONS = ['brand', 'notes', 'version'];
+const options = {};
+const words = [];
+const raw = process.argv.slice(2);
+for (let i = 0; i < raw.length; i++) {
+  const token = raw[i].replace(/^--?/, '');
+  const eq = token.indexOf('=');
+  if (eq > 0) {
+    options[token.slice(0, eq)] = token.slice(eq + 1);
+  } else if (raw[i].startsWith('-') && VALUE_OPTIONS.includes(token) && raw[i + 1] && !raw[i + 1].startsWith('-')) {
+    options[token] = raw[++i];
+  } else if (raw[i].startsWith('-')) {
+    options[token] = true;
+  } else {
+    words.push(token);
+  }
+}
+const npmSetting = name => {
+  const v = process.env[`npm_config_${name.replace(/-/g, '_')}`];
+  return v === undefined || v === '' || v === 'false' ? undefined : v;
+};
+const has = name => !!options[name] || words.includes(name) || !!npmSetting(name);
+const value = name => {
+  const v = typeof options[name] === 'string' ? options[name] : npmSetting(name);
+  return v && v !== 'true' ? v : undefined;
 };
 
-const dryRun = has('--dry-run');
-const uploadOnly = has('--upload-only');
-const upload = has('--upload') || uploadOnly;
-const bump = args.find(a => ['patch', 'minor', 'major'].includes(a)) || 'patch';
+const dryRun = has('dry-run');
+const uploadOnly = has('upload-only');
+const upload = has('upload') || uploadOnly;
+const bump = words.find(a => ['patch', 'minor', 'major'].includes(a)) || 'patch';
+
+const known = new Set(['patch', 'minor', 'major', 'dry-run', 'upload', 'upload-only', 'mandatory', 'replace']);
+const unknown = [
+  ...words.filter(w => !known.has(w)),
+  ...Object.keys(options).filter(k => !known.has(k) && !VALUE_OPTIONS.includes(k)),
+];
+if (unknown.length) {
+  console.error(`✖ Unknown option: ${unknown.join(', ')}. See the top of scripts/release.js.`);
+  process.exit(1);
+}
 
 function fail(message) {
   console.error(`\n✖ ${message}`);
   process.exit(1);
 }
 
+// Asynchronous so Ctrl+C can still put the version back (see main).
 function run(command, commandArgs, cwd, {shell = false} = {}) {
-  const result = spawnSync(command, commandArgs, {cwd, stdio: 'inherit', shell});
-  return result.status === 0;
+  return new Promise(resolve => {
+    const child = spawn(command, commandArgs, {cwd, stdio: 'inherit', shell});
+    child.on('error', () => resolve(false));
+    child.on('exit', code => resolve(code === 0));
+  });
 }
 
 function currentBrand() {
@@ -102,7 +146,7 @@ async function uploadApk({file, version, brandId, brand}) {
   }
   const {key, url} = uploadConfig(brandId, brand);
   const checksum = sha256(file);
-  const notes = (value('--notes') || '')
+  const notes = (value('notes') || '')
     .split(/;|\n/)
     .map(n => n.trim())
     .filter(Boolean)
@@ -117,8 +161,8 @@ async function uploadApk({file, version, brandId, brand}) {
   form.append('brand', brandId);
   form.append('sha256', checksum);
   if (notes) form.append('notes', notes);
-  if (has('--mandatory')) form.append('mandatory', 'true');
-  if (has('--replace')) form.append('replace', 'true');
+  if (has('mandatory')) form.append('mandatory', 'true');
+  if (has('replace')) form.append('replace', 'true');
   form.append('apk', blob, path.basename(file));
 
   const sizeMb = (fs.statSync(file).size / (1024 * 1024)).toFixed(1);
@@ -140,7 +184,7 @@ async function uploadApk({file, version, brandId, brand}) {
 }
 
 async function main() {
-  const brandId = value('--brand') || currentBrand();
+  const brandId = value('brand') || currentBrand();
   if (!brandId) fail('No brand chosen. Run `npm run brand <id>` or pass --brand <id>.');
   const brandPath = path.join(root, 'brands', brandId, 'brand.json');
   if (!fs.existsSync(brandPath)) fail(`Unknown brand "${brandId}"`);
@@ -154,9 +198,16 @@ async function main() {
   const distDir = path.join(root, 'dist');
 
   if (uploadOnly) {
-    const out = path.join(distDir, `app-${brandId}-${pkg.version}.apk`);
-    if (!fs.existsSync(out)) fail(`${path.relative(root, out)} not found. Build it first (without --upload-only).`);
-    await uploadApk({file: out, version: pkg.version, brandId, brand});
+    const version = value('version') || pkg.version;
+    const out = path.join(distDir, `app-${brandId}-${version}.apk`);
+    if (!fs.existsSync(out)) {
+      const built = fs.existsSync(distDir) ? fs.readdirSync(distDir).filter(f => f.startsWith(`app-${brandId}-`)) : [];
+      fail(
+        `${path.relative(root, out)} not found.` +
+          (built.length ? ` Built: ${built.join(', ')}. Pick one with version=<x.y.z>.` : ' Build it first.'),
+      );
+    }
+    await uploadApk({file: out, version, brandId, brand});
     return;
   }
 
@@ -172,9 +223,22 @@ async function main() {
   if (upload) uploadConfig(brandId, brand); // fail early, before a long build
 
   // The JS bundle must carry the same brand as the flavor.
-  if (currentBrand() !== brandId && !run(process.execPath, [path.join(__dirname, 'brand.js'), brandId], root)) {
+  if (currentBrand() !== brandId && !(await run(process.execPath, [path.join(__dirname, 'brand.js'), brandId], root))) {
     fail(`Could not switch to brand ${brandId}`);
   }
+
+  const restore = () => {
+    fs.writeFileSync(pkgPath, pkgText);
+    fs.writeFileSync(gradlePath, gradleText);
+  };
+  // Ctrl+C during the build puts the version back too.
+  const onInterrupt = () => {
+    restore();
+    console.error('\n✖ Stopped; the version was put back.');
+    process.exit(130);
+  };
+  process.on('SIGINT', onInterrupt);
+  process.on('SIGTERM', onInterrupt);
 
   pkg.version = version;
   fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
@@ -188,14 +252,28 @@ async function main() {
   const flavor = brandId.charAt(0).toUpperCase() + brandId.slice(1);
   const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
   // Windows runs gradlew.bat through the shell; the path has no spaces to quote.
-  if (!run(gradlew, [`assemble${flavor}Release`], path.join(root, 'android'), {shell: process.platform === 'win32'})) {
+  const built = await run(gradlew, [`assemble${flavor}Release`], path.join(root, 'android'), {
+    shell: process.platform === 'win32',
+  });
+  process.off('SIGINT', onInterrupt);
+  process.off('SIGTERM', onInterrupt);
+  if (!built) {
     // Put the version back, so a failed build doesn't skip a number.
-    fs.writeFileSync(pkgPath, pkgText);
-    fs.writeFileSync(gradlePath, gradleText);
+    restore();
     fail('The build failed; the version was put back.');
   }
 
-  const apk = path.join(root, 'android', 'app', 'build', 'outputs', 'apk', brandId, 'release', `app-${brandId}-release.apk`);
+  const apk = path.join(
+    root,
+    'android',
+    'app',
+    'build',
+    'outputs',
+    'apk',
+    brandId,
+    'release',
+    `app-${brandId}-release.apk`,
+  );
   if (!fs.existsSync(apk)) fail(`Build finished but ${path.relative(root, apk)} is missing`);
   fs.mkdirSync(distDir, {recursive: true});
   const out = path.join(distDir, `app-${brandId}-${version}.apk`);
@@ -203,7 +281,7 @@ async function main() {
   console.log(`\n${path.relative(root, out)}\nsha256 ${sha256(out)}`);
 
   if (upload) await uploadApk({file: out, version, brandId, brand});
-  else console.log('Upload it with: npm run release -- --upload-only');
+  else console.log('Upload it with: npm run release upload-only');
 }
 
 main().catch(error => fail(error.message));

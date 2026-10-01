@@ -55,10 +55,13 @@ What gets pushed: every in-app notification except "nightly update failed", in t
 ## Releasing an update (from any machine)
 
 ```
-npm run release -- patch --brand evi --upload --notes "Faster lists; Fix rounding"
-npm run release -- --upload-only            # retry the upload of the last build
-npm run release -- minor --upload --mandatory   # phones on older versions must update
+npm run release patch brand=evi upload notes="Faster lists; Fix rounding"
+npm run release upload-only                  # retry the upload of the last build
+npm run release upload-only version=1.0.5    # upload a specific build from dist/
+npm run release minor upload mandatory       # phones on older versions must update
 ```
+
+Options are plain words (no `--`), because PowerShell drops the `--` that npm needs before `--flags`. `node scripts/release.js --upload --notes "…"` also works.
 
 The script bumps the version, builds the signed APK, and uploads it to the brand's server over HTTPS. Phones see it on their next update check. If the build fails, the version number is put back.
 
