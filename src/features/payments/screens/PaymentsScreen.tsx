@@ -33,7 +33,7 @@ import {
   StatusBadge,
   Text,
   TextField,
-  UnderlineTabs,
+  SegmentedControl,
   toast,
   useConfirm,
   type SheetHandle,
@@ -190,7 +190,7 @@ export default function PaymentsScreen() {
       }}
       padded={false}
       banner={<OfflineBanner savedAt={list.dataUpdatedAt} />}>
-      <UnderlineTabs<Tab>
+      <SegmentedControl<Tab>
         options={[
           {value: 'Pending', label: t('approvals.pending')},
           {value: 'Approved', label: t('approvals.approved')},
@@ -198,6 +198,7 @@ export default function PaymentsScreen() {
         ]}
         value={tab}
         onChange={setTab}
+        style={s.tabs}
       />
       {list.isLoading ? (
         <SkeletonRows count={6} />
@@ -269,10 +270,10 @@ export default function PaymentsScreen() {
                 accessibilityRole="link"
                 accessibilityLabel={`${borrower(item)}, ${formatMoney(item.amount)}`}
                 style={s.line}>
-                <Text variant="bodyLg" weight="semibold" numberOfLines={1} style={s.flex}>
+                <Text variant="bodyLg" weight="bold" numberOfLines={1} style={s.flex}>
                   {borrower(item)}
                 </Text>
-                <Text variant="bodyLg" weight="semibold" tabular>
+                <Text variant="title" weight="bold" tabular>
                   {formatMoney(item.amount)}
                 </Text>
               </Pressable>
@@ -356,6 +357,7 @@ const useStyles = makeStyles(t => ({
   groupHead: {marginTop: t.space.md, marginBottom: t.space.sm},
   groupTop: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
   approveAll: {alignSelf: 'flex-end'},
+  tabs: {marginHorizontal: t.space.lg, marginBottom: t.space.sm},
   flex: {flex: 1, minWidth: 0},
   card: {
     backgroundColor: t.colors.surface,
