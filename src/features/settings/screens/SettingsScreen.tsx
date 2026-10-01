@@ -3,7 +3,8 @@
 // third (Marathi) it becomes a dropdown.
 
 import React from 'react';
-import {Pressable, View} from 'react-native';
+import {View} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
@@ -12,7 +13,7 @@ import {LANGUAGES, setLanguage, useI18n} from '@/i18n';
 import {useUpdates} from '@/features/app/updates';
 import {useCan} from '@/features/auth/SessionProvider';
 import {makeStyles, palettes, useThemeSettings, type ModeSetting, type PaletteId} from '@/theme';
-import {Card, Icon, OptionRow, Screen, Section, SegmentedControl, SelectField, Text} from '@/ui';
+import {Card, Icon, OptionRow, PressableScale, Screen, Section, SegmentedControl, SelectField, Text} from '@/ui';
 import type {AppStackParamList} from '@/navigation/types';
 
 export default function SettingsScreen() {
@@ -120,45 +121,25 @@ function Swatch({
   const {theme} = useThemeSettings();
   const accent = palettes[id][theme.mode];
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.9}
       accessibilityRole="radio"
       accessibilityState={{selected}}
       accessibilityLabel={label}
       style={[s.swatch, selected && {borderColor: accent.primary}]}>
-      <View style={[s.dot, {backgroundColor: accent.primary}]}>
+      {/* Mock X2: a gradient dot per palette, ringed when chosen. */}
+      <LinearGradient colors={[accent.primary, accent.primary2]} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={s.dot}>
         {selected ? <Icon name="check" size={16} color={accent.onPrimary} /> : null}
-      </View>
-      <View style={[s.dot2, {backgroundColor: accent.primary2}]} />
-      <Text variant="caption" numberOfLines={1}>
-        {label}
-      </Text>
-    </Pressable>
+      </LinearGradient>
+    </PressableScale>
   );
 }
 
 const useStyles = makeStyles(t => ({
   label: {marginBottom: t.space.sm},
   gap: {marginTop: t.space.lg},
-  swatches: {flexDirection: 'row', gap: t.space.sm, flexWrap: 'wrap'},
-  swatch: {
-    width: 72,
-    alignItems: 'center',
-    paddingVertical: t.space.sm,
-    borderRadius: t.radius.md,
-    borderWidth: 2,
-    borderColor: t.colors.border,
-    gap: t.space.xs,
-  },
-  dot: {width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center'},
-  dot2: {
-    position: 'absolute',
-    top: 26,
-    right: 18,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: t.colors.surface,
-  },
+  swatches: {flexDirection: 'row', gap: 10, flexWrap: 'wrap'},
+  swatch: {padding: 3, borderRadius: 22, borderWidth: 2, borderColor: 'transparent'},
+  dot: {width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center'},
 }));
