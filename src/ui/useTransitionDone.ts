@@ -6,7 +6,7 @@
 import {useContext, useEffect, useState} from 'react';
 import {NavigationContext} from '@react-navigation/native';
 
-const FALLBACK_MS = 300;
+const FALLBACK_MS = 200;
 
 export function useTransitionDone(skip = false): boolean {
   // Not useNavigation(): it throws on screens shown before the navigator

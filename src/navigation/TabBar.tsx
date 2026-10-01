@@ -11,7 +11,9 @@ import {haptics} from '@/lib/haptics';
 import {makeStyles, useTheme} from '@/theme';
 import {Text} from '@/ui';
 
-const SPRING = {damping: 18, stiffness: 220, mass: 0.7};
+// A fresh object per animation: Reanimated adds `reduceMotion` to the config
+// it's given, which warns if the same (already shared) object is reused.
+const spring = () => ({damping: 18, stiffness: 220, mass: 0.7});
 
 export function FloatingTabBar({state, descriptors, navigation}: BottomTabBarProps) {
   const t = useTheme();
@@ -24,7 +26,7 @@ export function FloatingTabBar({state, descriptors, navigation}: BottomTabBarPro
 
   useEffect(() => {
     if (tabWidth) {
-      x.value = withSpring(state.index * tabWidth, SPRING);
+      x.value = withSpring(state.index * tabWidth, spring());
     }
   }, [state.index, tabWidth, x]);
 
@@ -111,7 +113,7 @@ function TabItem({
   const s = useStyles();
   const lift = useSharedValue(focused ? 1 : 0);
   useEffect(() => {
-    lift.value = focused ? withSpring(1, SPRING) : withTiming(0, {duration: 160});
+    lift.value = focused ? withSpring(1, spring()) : withTiming(0, {duration: 160});
   }, [focused, lift]);
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{translateY: -1.5 * lift.value}, {scale: 1 + 0.08 * lift.value}],

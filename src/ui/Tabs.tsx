@@ -8,7 +8,9 @@ import {haptics} from '@/lib/haptics';
 import {makeStyles} from '@/theme';
 import {Text} from './Text';
 
-const SPRING = {damping: 20, stiffness: 240, mass: 0.7};
+// A fresh object per animation: Reanimated adds `reduceMotion` to the config
+// it's given, which warns if the same (already shared) object is reused.
+const spring = () => ({damping: 20, stiffness: 240, mass: 0.7});
 
 // W7: the selected marker slides between options instead of jumping.
 function useSlider(index: number, count: number) {
@@ -21,7 +23,7 @@ function useSlider(index: number, count: number) {
       return;
     }
     // Place it without animating the first time, then slide.
-    x.value = first.current ? index * segment : withSpring(index * segment, SPRING);
+    x.value = first.current ? index * segment : withSpring(index * segment, spring());
     first.current = false;
   }, [index, segment, x]);
   const style = useAnimatedStyle(() => ({transform: [{translateX: x.value}]}));
