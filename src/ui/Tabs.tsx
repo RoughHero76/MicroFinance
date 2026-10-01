@@ -4,6 +4,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Pressable, View, type LayoutChangeEvent, type StyleProp, type ViewStyle} from 'react-native';
 import Animated, {useAnimatedStyle, useSharedValue, withSpring} from 'react-native-reanimated';
+import {haptics} from '@/lib/haptics';
 import {makeStyles} from '@/theme';
 import {Text} from './Text';
 
@@ -82,7 +83,12 @@ export function UnderlineTabs<T extends string>({options, value, onChange, style
         return (
           <Pressable
             key={option.value}
-            onPress={() => onChange(option.value)}
+            onPress={() => {
+              if (!selected) {
+                haptics.tap();
+              }
+              onChange(option.value);
+            }}
             accessibilityRole="tab"
             accessibilityState={{selected}}
             style={s.tab}>
@@ -124,7 +130,12 @@ export function SegmentedControl<T extends string>({options, value, onChange, st
         return (
           <Pressable
             key={option.value}
-            onPress={() => onChange(option.value)}
+            onPress={() => {
+              if (!selected) {
+                haptics.tap();
+              }
+              onChange(option.value);
+            }}
             accessibilityRole="radio"
             accessibilityState={{selected}}
             style={s.segment}>

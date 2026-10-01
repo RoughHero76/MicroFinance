@@ -66,3 +66,8 @@ jest.mock('react-native-biometrics', () =>
   })),
 );
 jest.mock('@react-native-clipboard/clipboard', () => require('@react-native-clipboard/clipboard/jest/clipboard-mock'));
+jest.mock('react-native-haptic-feedback', () => ({
+  __esModule: true,
+  default: {trigger: jest.fn()},
+  HapticFeedbackTypes: {},
+}));
