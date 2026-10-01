@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (948 strings)
+## App (951 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -956,6 +956,9 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `settings.pushHint` | Payments, loans, leads and follow-ups, even when the app is closed | भुगतान, लोन, लीड और फ़ॉलो-अप, ऐप बंद होने पर भी |
 | `android: notification_channel_name` | Updates | अपडेट |
 | `android: notification_channel_description` | Payments, loans, leads and follow-ups | भुगतान, लोन, लीड और फ़ॉलो-अप |
+| `ui.cameraBlocked` | Camera is turned off for this app | इस ऐप के लिए कैमरा बंद है |
+| `ui.cameraBlockedHint` | Allow it in the app settings to take photos. | फ़ोटो लेने के लिए ऐप सेटिंग में इसकी अनुमति दें। |
+| `ui.openSettings` | Open settings | सेटिंग खोलें |
 
 ## Server (48 strings)
 

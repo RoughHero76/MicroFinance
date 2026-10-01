@@ -176,7 +176,10 @@
     "finishing": "पूरा हो रहा है…",
     "uploading": "अपलोड हो रहा है",
     "downloading": "डाउनलोड हो रहा है…",
-    "longPressToCopy": "कॉपी करने के लिए देर तक दबाएं"
+    "longPressToCopy": "कॉपी करने के लिए देर तक दबाएं",
+    "cameraBlocked": "इस ऐप के लिए कैमरा बंद है",
+    "cameraBlockedHint": "फ़ोटो लेने के लिए ऐप सेटिंग में इसकी अनुमति दें।",
+    "openSettings": "सेटिंग खोलें"
   },
   "auth": {
     "welcome": "फिर से स्वागत है",

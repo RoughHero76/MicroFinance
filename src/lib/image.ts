@@ -2,6 +2,9 @@
 // before upload; the original full-size photo is never sent.
 
 import ImagePicker, {type Image} from 'react-native-image-crop-picker';
+import i18n from '@/i18n';
+import {toast} from '@/ui/Toast';
+import {ensurePermission, openAppSettings} from './permissions';
 
 export type ImageKind = 'profile' | 'document';
 export type ImageSource = 'camera' | 'gallery';
@@ -54,6 +57,20 @@ function isCancel(error: unknown) {
 /** Returns null when the user cancels. */
 export async function pickImage(kind: ImageKind, source: ImageSource): Promise<PickedImage | null> {
   const options = {...OPTIONS[kind], mediaType: 'photo' as const, forceJpg: true, includeExif: false};
+  // Asked the first time the camera is used. After "Don't allow" twice
+  // Android stops asking, so point to the app's settings instead.
+  if (source === 'camera') {
+    const status = await ensurePermission('camera');
+    if (status !== 'granted') {
+      if (status === 'blocked') {
+        toast.error(i18n.t('ui.cameraBlocked'), {
+          message: i18n.t('ui.cameraBlockedHint'),
+          action: {label: i18n.t('ui.openSettings'), onPress: () => openAppSettings()},
+        });
+      }
+      return null;
+    }
+  }
   try {
     const image = source === 'camera' ? await ImagePicker.openCamera(options) : await ImagePicker.openPicker(options);
     return toPicked(image, kind);
