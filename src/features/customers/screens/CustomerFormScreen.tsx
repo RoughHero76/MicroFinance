@@ -5,6 +5,7 @@
 // loan pre-filled from the lead, or "Customer only" opens the profile.
 
 import React, {useEffect, useRef, useState} from 'react';
+import {View} from 'react-native';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -212,8 +213,15 @@ export default function CustomerFormScreen() {
         </Text>
       ) : null}
       <Section title={t('customerForm.personal')}>
-        {field('fname', t('customerForm.firstName'), {required: true, autoCapitalize: 'words'})}
-        {field('lname', t('customerForm.lastName'), {required: true, autoCapitalize: 'words'})}
+        {/* Mock A4: short fields side by side. */}
+        <View style={s.pair}>
+          <View style={s.half}>
+            {field('fname', t('customerForm.firstName'), {required: true, autoCapitalize: 'words'})}
+          </View>
+          <View style={s.half}>
+            {field('lname', t('customerForm.lastName'), {required: true, autoCapitalize: 'words'})}
+          </View>
+        </View>
         <Text variant="label" weight="semibold" style={s.label}>
           {t('customerForm.gender')}
           <Text color="danger"> *</Text>
@@ -232,15 +240,25 @@ export default function CustomerFormScreen() {
       </Section>
       <Section title={t('customerForm.contact')}>
         {field('phoneNumber', t('customerForm.phone'), {required: true, keyboardType: 'phone-pad', maxLength: 14})}
-        {field('email', t('customerForm.email'), {keyboardType: 'email-address', autoCapitalize: 'none'})}
-        {field('userName', t('customerForm.userName'), {autoCapitalize: 'none'})}
+        <View style={s.pair}>
+          <View style={s.half}>
+            {field('email', t('customerForm.email'), {keyboardType: 'email-address', autoCapitalize: 'none'})}
+          </View>
+          <View style={s.half}>{field('userName', t('customerForm.userName'), {autoCapitalize: 'none'})}</View>
+        </View>
       </Section>
       <Section title={t('customerForm.address')}>
         {field('address', t('customerForm.street'), {multiline: true})}
-        {field('city', t('customerForm.city'))}
-        {field('state', t('customerForm.state'))}
-        {field('country', t('customerForm.country'))}
-        {field('pincode', t('customerForm.pincode'), {keyboardType: 'number-pad', maxLength: 6})}
+        <View style={s.pair}>
+          <View style={s.half}>{field('city', t('customerForm.city'))}</View>
+          <View style={s.half}>{field('state', t('customerForm.state'))}</View>
+        </View>
+        <View style={s.pair}>
+          <View style={s.half}>{field('country', t('customerForm.country'))}</View>
+          <View style={s.half}>
+            {field('pincode', t('customerForm.pincode'), {keyboardType: 'number-pad', maxLength: 6})}
+          </View>
+        </View>
       </Section>
 
       <BottomSheet ref={nextRef} title={t('customerForm.nextStep')} dismissible={false}>
@@ -293,4 +311,6 @@ const useStyles = makeStyles(t => ({
   note: {marginBottom: t.space.md},
   label: {marginBottom: t.space.sm},
   error: {marginTop: t.space.xs},
+  pair: {flexDirection: 'row', gap: t.space.sm},
+  half: {flex: 1, minWidth: 0},
 }));
