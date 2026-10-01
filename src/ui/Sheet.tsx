@@ -5,7 +5,7 @@
 //   <Button onPress={sheet.open} />
 //   <BottomSheet ref={sheet.ref} title="Record payment">…</BottomSheet>
 
-import React, {forwardRef, useCallback, useImperativeHandle, useRef} from 'react';
+import React, {forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef} from 'react';
 import {View} from 'react-native';
 import {
   BottomSheetBackdrop,
@@ -14,9 +14,11 @@ import {
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
+import {NavigationContext} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {makeStyles, useTheme} from '@/theme';
 import {IconButton} from './IconButton';
+import {InSheet} from './sheetContext';
 import {Text} from './Text';
 
 export interface SheetHandle {
@@ -44,11 +46,28 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
   const s = useStyles();
   const insets = useSafeAreaInsets();
   const modal = useRef<BottomSheetModal>(null);
+  const navigation = useContext(NavigationContext);
 
   useImperativeHandle(ref, () => ({
-    open: () => modal.current?.present(),
+    // A tap that lands while the screen is already going back must not open
+    // a sheet: it would outlive its screen and block every touch.
+    open: () => {
+      if (navigation && !navigation.isFocused()) return;
+      modal.current?.present();
+    },
     close: () => modal.current?.dismiss(),
   }));
+
+  // Close with the screen: when it loses focus (back, or another screen on
+  // top) and when it unmounts mid-animation.
+  useEffect(() => {
+    const sheet = modal.current;
+    const off = navigation?.addListener('blur', () => modal.current?.dismiss());
+    return () => {
+      off?.();
+      sheet?.dismiss();
+    };
+  }, [navigation]);
 
   // W7: sheets settle with a soft spring instead of a linear slide.
   const animationConfigs = useBottomSheetSpringConfigs({
@@ -84,29 +103,31 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
       android_keyboardInputMode="adjustResize"
       backgroundStyle={[s.background, {backgroundColor: t.colors.surface}]}
       handleIndicatorStyle={[s.handle, {backgroundColor: t.colors.border}]}>
-      <BottomSheetScrollView
-        contentContainerStyle={[s.content, {paddingBottom: insets.bottom + 16}]}
-        keyboardShouldPersistTaps="handled">
-        {title ? (
-          <View style={s.head}>
-            <View style={s.titles}>
-              <Text variant="title" accessibilityRole="header">
-                {title}
-              </Text>
-              {subtitle ? (
-                <Text variant="small" color="muted">
-                  {subtitle}
+      <InSheet.Provider value={true}>
+        <BottomSheetScrollView
+          contentContainerStyle={[s.content, {paddingBottom: insets.bottom + 16}]}
+          keyboardShouldPersistTaps="handled">
+          {title ? (
+            <View style={s.head}>
+              <View style={s.titles}>
+                <Text variant="title" accessibilityRole="header">
+                  {title}
                 </Text>
+                {subtitle ? (
+                  <Text variant="small" color="muted">
+                    {subtitle}
+                  </Text>
+                ) : null}
+              </View>
+              {dismissible ? (
+                <IconButton icon="close" label="Close" variant="plain" onPress={() => modal.current?.dismiss()} />
               ) : null}
             </View>
-            {dismissible ? (
-              <IconButton icon="close" label="Close" variant="plain" onPress={() => modal.current?.dismiss()} />
-            ) : null}
-          </View>
-        ) : null}
-        {children}
-        {footer ? <View style={s.footer}>{footer}</View> : null}
-      </BottomSheetScrollView>
+          ) : null}
+          {children}
+          {footer ? <View style={s.footer}>{footer}</View> : null}
+        </BottomSheetScrollView>
+      </InSheet.Provider>
     </BottomSheetModal>
   );
 });

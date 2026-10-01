@@ -1,9 +1,11 @@
 // U-07: label above the field, the right keyboard, errors under the field.
 
-import React, {forwardRef, useState} from 'react';
+import React, {forwardRef, useContext, useState} from 'react';
+import {BottomSheetTextInput} from '@gorhom/bottom-sheet';
 import {Pressable, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle} from 'react-native';
 import {fontFamily, makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
+import {InSheet} from './sheetContext';
 import {MAX_FONT_SCALE, Text} from './Text';
 
 export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
@@ -47,6 +49,9 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   const t = useTheme();
   const s = useStyles();
   const [focused, setFocused] = useState(false);
+  // In a sheet, the sheet's own input keeps the sheet open with the keyboard.
+  // (Same TextInput at runtime; the library's types just don't say so.)
+  const Input = (useContext(InSheet) ? BottomSheetTextInput : TextInput) as typeof TextInput;
   const [hidden, setHidden] = useState(true);
 
   return (
@@ -68,7 +73,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
               {prefix}
             </Text>
           ) : null}
-          <TextInput
+          <Input
             ref={ref}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             style={[s.input, large && s.inputLarge]}
