@@ -11,13 +11,13 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {errorMessage} from '@/lib/api';
-import {formatDateTime, formatMoney, formatMoneyShort} from '@/lib/format';
+import {formatDateTime, formatMoney} from '@/lib/format';
 import {makeStyles} from '@/theme';
 import {
   Card,
   ConfirmSheet,
   ErrorState,
-  FactTiles,
+  StatGrid,
   Icon,
   IconButton,
   ListRow,
@@ -114,26 +114,23 @@ export default function RiskScreen() {
         <ErrorState error={query.error} what={t('risk.title')} onRetry={query.refetch} />
       ) : (
         <>
-          <FactTiles
-            facts={[
-              {label: t('risk.activeLoans'), value: String(d.activeLoans)},
+          {/* Mock A18: the four overview figures as white cards. */}
+          <StatGrid
+            stats={[
+              {label: t('risk.activeLoans'), value: d.activeLoans},
               {
                 label: t('risk.npaPercent'),
-                value: `${pct(d.buckets.npa.count, d.activeLoans)} (${d.buckets.npa.count})`,
+                value: d.buckets.npa.count,
+                format: n => `${pct(n, d.activeLoans)} (${n})`,
                 color: d.buckets.npa.count ? 'danger' : undefined,
               },
-            ]}
-          />
-          <FactTiles
-            style={s.block}
-            facts={[
-              {label: t('risk.totalOverdue'), value: formatMoneyShort(d.totalOverdue)},
-              {label: t('risk.averageOverdue'), value: formatMoneyShort(d.averageOverdue)},
+              {label: t('risk.totalOverdue'), value: d.totalOverdue, format: formatMoney},
+              {label: t('risk.averageOverdue'), value: d.averageOverdue, format: formatMoney},
             ]}
           />
 
           <Section title={t('risk.levels')}>
-            <Card padded={false}>
+            <Card padded={false} dividers>
               {levels.map(level => {
                 const b = d.buckets[level.key];
                 return (
@@ -144,7 +141,7 @@ export default function RiskScreen() {
                     meta={t('risk.overdueLine', {percent: pct(b.count, d.activeLoans), amount: formatMoney(b.overdue)})}
                     badge={<StatusBadge tone={level.tone} label={level.label} />}
                     chevron
-                    style={s.row}
+                    style={[s.row, level.key === 'npa' && b.count > 0 && s.npaRow]}
                     onPress={() => navigation.navigate('Overdue' as never, {bucket: level.key} as never)}
                   />
                 );
@@ -176,6 +173,7 @@ export default function RiskScreen() {
 const useStyles = makeStyles(t => ({
   block: {marginTop: t.space.md},
   row: {paddingHorizontal: t.space.lg},
+  npaRow: {backgroundColor: t.colors.dangerSoft},
   lastRun: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs, marginTop: t.space.lg},
   lastRunText: {flex: 1},
 }));
