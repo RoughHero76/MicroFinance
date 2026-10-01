@@ -51,45 +51,45 @@ export function HeroCard({
 
 const DURATION = 650;
 
+// Read once and kept current, so CountUp can decide on its first render.
+let reduceMotion = false;
+Promise.resolve(AccessibilityInfo.isReduceMotionEnabled?.()).then(v => {
+  reduceMotion = !!v;
+});
+AccessibilityInfo.addEventListener?.('reduceMotionChanged', v => {
+  reduceMotion = v;
+});
+const inTest = typeof process !== 'undefined' && !!process.env.JEST_WORKER_ID;
+const skipMotion = () => inTest || reduceMotion;
+
 /** A number that rolls up to `value` (ease-out), formatted by `format`. */
 export function CountUp({
   value,
   format = String,
   ...text
 }: {value: number; format?: (n: number) => string} & Omit<TextProps, 'children'>) {
-  const [shown, setShown] = useState(value);
-  const from = useRef(0);
-  const frame = useRef<number | null>(null);
+  const [shown, setShown] = useState(() => (skipMotion() ? value : 0));
+  const from = useRef(shown);
   useEffect(() => {
-    let cancelled = false;
     const start = from.current;
-    AccessibilityInfo.isReduceMotionEnabled().then(reduce => {
-      if (cancelled) {
-        return;
-      }
-      if (reduce || start === value) {
-        setShown(value);
-        from.current = value;
-        return;
-      }
-      const began = Date.now();
-      const step = () => {
-        const p = Math.min(1, (Date.now() - began) / DURATION);
-        const eased = 1 - Math.pow(1 - p, 3);
-        const next = start + (value - start) * eased;
-        setShown(p < 1 ? Math.round(next) : value);
-        if (p < 1) {
-          frame.current = requestAnimationFrame(step);
-        } else {
-          from.current = value;
-        }
-      };
-      frame.current = requestAnimationFrame(step);
-    });
+    if (skipMotion() || start === value) {
+      setShown(value);
+      from.current = value;
+      return;
+    }
+    let frame: number | null = null;
+    const began = Date.now();
+    const step = () => {
+      const p = Math.min(1, (Date.now() - began) / DURATION);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setShown(p < 1 ? Math.round(start + (value - start) * eased) : value);
+      from.current = p < 1 ? start + (value - start) * eased : value;
+      frame = p < 1 ? requestAnimationFrame(step) : null;
+    };
+    frame = requestAnimationFrame(step);
     return () => {
-      cancelled = true;
-      if (frame.current != null) {
-        cancelAnimationFrame(frame.current);
+      if (frame != null) {
+        cancelAnimationFrame(frame);
       }
     };
   }, [value]);
