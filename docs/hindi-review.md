@@ -961,7 +961,7 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `ui.openSettings` | Open settings | सेटिंग खोलें |
 | `settings.pushTest` | Send me a test notification | मुझे टेस्ट सूचना भेजें |
 | `settings.pushTestSent` | Test sent | टेस्ट भेजा गया |
-| `settings.pushTestSentHint` | It should appear in your notification bar in a few seconds. | कुछ सेकंड में यह सूचना-पट्टी में दिखनी चाहिए। |
+| `settings.pushTestSentHint` | It arrives in {{seconds}} seconds. Go to your home screen now to see it in the notification bar. | यह {{seconds}} सेकंड में आएगी। सूचना-पट्टी में देखने के लिए अभी होम स्क्रीन पर जाएँ। |
 | `settings.pushTestOff` | Phone notifications aren't set up on the server yet. | सर्वर पर फ़ोन सूचनाएँ अभी चालू नहीं हैं। |
 | `settings.pushTestNoPhone` | This phone isn't registered. Turn Phone notifications off and on again, then retry. | यह फ़ोन जुड़ा नहीं है। फ़ोन सूचनाएँ बंद करके फिर चालू करें, फिर दोबारा कोशिश करें। |
 | `settings.pushTestFailed` | The server couldn't deliver it to this phone. | सर्वर इस फ़ोन तक सूचना नहीं पहुँचा सका। |

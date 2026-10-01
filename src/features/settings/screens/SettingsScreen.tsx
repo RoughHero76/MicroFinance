@@ -19,6 +19,8 @@ import {makeStyles, palettes, useThemeSettings, type ModeSetting, type PaletteId
 import {Card, Icon, OptionRow, PressableScale, Screen, Section, SegmentedControl, SelectField, Text, toast} from '@/ui';
 import type {AppStackParamList} from '@/navigation/types';
 
+const TEST_DELAY_S = 5;
+
 export default function SettingsScreen() {
   const s = useStyles();
   const {t} = useTranslation();
@@ -43,11 +45,15 @@ export default function SettingsScreen() {
     setTesting(true);
     try {
       await registerPush(lang);
-      const r = await sendTestNotification();
+      // 5 s, so there's time to leave the app: Android shows pushes in the
+      // notification bar only while the app is in the background.
+      const r = await sendTestNotification(TEST_DELAY_S);
       if (!r.configured) toast.error(t('settings.pushTestOff'));
       else if (!r.devices) toast.error(t('settings.pushTestNoPhone'));
-      else if (!r.sent) toast.error(t('settings.pushTestFailed'), {message: r.errors[0]});
-      else toast.success(t('settings.pushTestSent'), {message: t('settings.pushTestSentHint')});
+      else if (r.scheduledIn) {
+        toast.success(t('settings.pushTestSent'), {message: t('settings.pushTestSentHint', {seconds: r.scheduledIn})});
+      } else if (!r.sent) toast.error(t('settings.pushTestFailed'), {message: r.errors?.[0]});
+      else toast.success(t('settings.pushTestSent'));
     } catch (error) {
       toast.error(errorMessage(error, t));
     } finally {

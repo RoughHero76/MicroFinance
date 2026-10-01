@@ -42,13 +42,19 @@ export interface PushTestResult {
   configured: boolean;
   /** Phones registered for this person. */
   devices: number;
-  sent: number;
-  failed: number;
-  errors: string[];
+  sent?: number;
+  failed?: number;
+  errors?: string[];
+  /** Seconds until the server sends it (when a delay was asked for). */
+  scheduledIn?: number;
 }
 
-/** Sends the signed-in person a test notification and says what happened. */
-export async function sendTestNotification(): Promise<PushTestResult> {
-  const res = await api.post<{data: PushTestResult}>('/shared/notifications/test');
+/**
+ * Sends the signed-in person a test notification. With a delay the server
+ * answers at once and sends it later, so it can be seen in the notification
+ * bar (Android shows pushes there only while the app is in the background).
+ */
+export async function sendTestNotification(delaySeconds = 0): Promise<PushTestResult> {
+  const res = await api.post<{data: PushTestResult}>('/shared/notifications/test', {delaySeconds});
   return res.data;
 }

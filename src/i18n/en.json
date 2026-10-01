@@ -300,7 +300,7 @@
     "pushHint": "Payments, loans, leads and follow-ups, even when the app is closed",
     "pushTest": "Send me a test notification",
     "pushTestSent": "Test sent",
-    "pushTestSentHint": "It should appear in your notification bar in a few seconds.",
+    "pushTestSentHint": "It arrives in {{seconds}} seconds. Go to your home screen now to see it in the notification bar.",
     "pushTestOff": "Phone notifications aren't set up on the server yet.",
     "pushTestNoPhone": "This phone isn't registered. Turn Phone notifications off and on again, then retry.",
     "pushTestFailed": "The server couldn't deliver it to this phone."
