@@ -15,13 +15,14 @@ import {callPhone, openEmail, openMaps} from '@/lib/messaging';
 import {ContactActions} from '@/features/customers/components/CustomerParts';
 import {makeStyles} from '@/theme';
 import {
+  Appear,
   Avatar,
   BottomSheet,
   Button,
   Card,
   ConfirmSheet,
   ErrorState,
-  FactTiles,
+  StatGrid,
   IconButton,
   KeyValueRows,
   OptionRow,
@@ -136,38 +137,45 @@ export default function EmployeeProfileScreen() {
         <ErrorState error={query.error} what={t('staff.profileTitle')} onRetry={query.refetch} />
       ) : (
         <>
-          <Card style={s.head}>
-            <Avatar
-              name={name}
-              uri={e.profilePic}
-              size={80}
-              onPress={e.profilePic ? () => setPhotoOpen(true) : undefined}
-            />
-            <Text variant="h2" align="center" style={s.name}>
-              {name}
-            </Text>
-            <Text variant="small" color="muted" align="center">
-              {[
-                e.userName ? `@${e.userName}` : null,
-                e.createdAt ? t('staff.memberSince', {date: formatDate(e.createdAt, lang)}) : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </Text>
-            {e.accountStatus === false ? <StatusBadge tone="neutral" label={t('staff.inactive')} /> : null}
-            <View style={s.contacts}>
-              <ContactActions phone={e.phoneNumber} address={e.address} name={name} />
-            </View>
-          </Card>
+          {/* Mock A16: photo beside the name, counts as white cards. */}
+          <Appear>
+            <Card style={s.head}>
+              <View style={s.who}>
+                <Avatar
+                  name={name}
+                  uri={e.profilePic}
+                  size={64}
+                  onPress={e.profilePic ? () => setPhotoOpen(true) : undefined}
+                />
+                <View style={s.whoText}>
+                  <Text variant="h2" weight="bold" numberOfLines={2}>
+                    {name}
+                  </Text>
+                  <Text variant="small" color="muted" numberOfLines={1}>
+                    {[
+                      e.userName ? `@${e.userName}` : null,
+                      e.createdAt ? t('staff.memberSince', {date: formatDate(e.createdAt, lang)}) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                  {e.accountStatus === false ? <StatusBadge tone="neutral" label={t('staff.inactive')} /> : null}
+                </View>
+              </View>
+              <ContactActions phone={e.phoneNumber} address={e.address} name={name} variant="ring" align="start" />
+            </Card>
+          </Appear>
 
-          <FactTiles
-            style={s.facts}
-            facts={[
-              {label: t('staff.assignedLoans'), value: String(e.stats.assignedLoans)},
-              {label: t('staff.activeLoans'), value: String(e.stats.activeLoans)},
-              {label: t('staff.collected'), value: String(e.stats.repaymentsCollected)},
-            ]}
-          />
+          <Appear index={1}>
+            <StatGrid
+              style={s.facts}
+              stats={[
+                {label: t('staff.assignedLoans'), value: e.stats.assignedLoans},
+                {label: t('staff.activeLoans'), value: e.stats.activeLoans},
+                {label: t('staff.collected'), value: e.stats.repaymentsCollected},
+              ]}
+            />
+          </Appear>
 
           <Card style={s.details}>
             <KeyValueRows
@@ -261,9 +269,9 @@ export default function EmployeeProfileScreen() {
 }
 
 const useStyles = makeStyles(t => ({
-  head: {alignItems: 'center', paddingVertical: t.space.xl, gap: t.space.xs},
-  name: {marginTop: t.space.sm},
-  contacts: {marginTop: t.space.md},
+  head: {padding: t.space.lg, gap: t.space.md},
+  who: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
+  whoText: {flex: 1, minWidth: 0, gap: 2},
   facts: {marginTop: t.space.md},
   details: {marginTop: t.space.md},
 }));

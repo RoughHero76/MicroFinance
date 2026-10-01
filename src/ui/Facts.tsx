@@ -121,10 +121,12 @@ export function StatGrid({
   style?: StyleProp<ViewStyle>;
 }) {
   const s = useStyles();
+  // Three figures share one row; two or four go two per row.
+  const basis = stats.length === 3 ? '30%' : '47%';
   return (
     <View style={[s.grid, style]}>
       {stats.map(stat => (
-        <Card key={stat.label} style={s.stat}>
+        <Card key={stat.label} style={[s.stat, {flexBasis: basis}]}>
           <Text variant="small" color="muted" numberOfLines={1}>
             {stat.label}
           </Text>
@@ -196,7 +198,7 @@ const useStyles = makeStyles(t => ({
   warning: {backgroundColor: t.colors.warning},
   danger: {backgroundColor: t.colors.danger},
   grid: {flexDirection: 'row', flexWrap: 'wrap', gap: 10},
-  stat: {flexBasis: '47%', flexGrow: 1, gap: t.space.xs, padding: t.space.md},
+  stat: {flexGrow: 1, gap: t.space.xs, padding: t.space.md, minWidth: 0},
   heroTrack: {backgroundColor: withAlpha(t.colors.white, 0.25)},
   heroFill: {backgroundColor: t.colors.white},
 }));
