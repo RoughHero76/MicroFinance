@@ -34,6 +34,7 @@ jest.mock('react-native-keychain', () => {
 jest.mock('react-native-image-crop-picker', () => ({
   openPicker: jest.fn(),
   openCamera: jest.fn(),
+  openCropper: jest.fn(),
   clean: jest.fn(() => Promise.resolve()),
 }));
 jest.mock('react-native-device-info', () => ({

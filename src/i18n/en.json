@@ -179,7 +179,8 @@
     "longPressToCopy": "Long-press to copy",
     "cameraBlocked": "Camera is turned off for this app",
     "cameraBlockedHint": "Allow it in the app settings to take photos.",
-    "openSettings": "Open settings"
+    "openSettings": "Open settings",
+    "photoDownloadFailed": "Couldn't load the photo. Check the connection and try again."
   },
   "auth": {
     "welcome": "Welcome back",
@@ -1132,5 +1133,10 @@
     "noCrashes": "No crash reports",
     "loanCheck": "Loan status check",
     "runCheck": "Run the check"
+  },
+  "photo": {
+    "view": "View photo",
+    "recrop": "Re-crop current photo",
+    "recropHint": "Fix the framing without taking a new one"
   }
 }

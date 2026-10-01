@@ -4,6 +4,7 @@
 import ImagePicker, {type Image} from 'react-native-image-crop-picker';
 import i18n from '@/i18n';
 import {toast} from '@/ui/Toast';
+import {cachedImage} from './imageCache';
 import {ensurePermission, openAppSettings} from './permissions';
 
 export type ImageKind = 'profile' | 'document';
@@ -73,6 +74,26 @@ export async function pickImage(kind: ImageKind, source: ImageSource): Promise<P
   }
   try {
     const image = source === 'camera' ? await ImagePicker.openCamera(options) : await ImagePicker.openPicker(options);
+    return toPicked(image, kind);
+  } catch (error) {
+    if (isCancel(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Opens a photo that's already uploaded in the cropper again (to fix a bad
+ * crop without retaking it). Returns null when the user cancels.
+ */
+export async function recropImage(kind: ImageKind, url: string): Promise<PickedImage | null> {
+  const local = await cachedImage(url);
+  if (!local) {
+    throw new Error(i18n.t('ui.photoDownloadFailed'));
+  }
+  try {
+    const image = await ImagePicker.openCropper({...OPTIONS[kind], path: local, mediaType: 'photo', forceJpg: true});
     return toPicked(image, kind);
   } catch (error) {
     if (isCancel(error)) {

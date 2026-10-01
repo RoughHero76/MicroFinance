@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (962 strings)
+## App (966 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -970,6 +970,10 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `statement.delete` | Delete statement | विवरण हटाएँ |
 | `statement.deleteConfirm` | Delete? | हटाएँ? |
 | `statement.deleted` | Statement deleted | विवरण हटा दिया गया |
+| `photo.view` | View photo | फ़ोटो देखें |
+| `photo.recrop` | Re-crop current photo | मौजूदा फ़ोटो फिर से क्रॉप करें |
+| `photo.recropHint` | Fix the framing without taking a new one | नई फ़ोटो लिए बिना फ़्रेम ठीक करें |
+| `ui.photoDownloadFailed` | Couldn't load the photo. Check the connection and try again. | फ़ोटो लोड नहीं हो सकी। कनेक्शन देखकर फिर कोशिश करें। |
 
 ## Server (48 strings)
 

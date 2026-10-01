@@ -10,7 +10,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {errorMessage} from '@/lib/api';
-import {pickImage, type ImageSource} from '@/lib/image';
+import {pickImage, recropImage, type ImageSource} from '@/lib/image';
 import {formatDate, formatMoneyShort} from '@/lib/format';
 import {callPhone, openEmail, openMaps} from '@/lib/messaging';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
@@ -30,6 +30,7 @@ import {
   IconButton,
   KeyValueRows,
   OptionRow,
+  PhotoViewer,
   Screen,
   SkeletonRows,
   Text,
@@ -75,6 +76,7 @@ export default function CustomerProfileScreen() {
   const menuRef = useRef<SheetHandle>(null);
   const photoRef = useRef<SheetHandle>(null);
   const [tab, setTab] = useState<'loans' | 'details'>('loans');
+  const [viewing, setViewing] = useState(false);
   const id = route.params?.id ?? route.params?.customerId;
   const uid = route.params?.uid;
 
@@ -97,8 +99,9 @@ export default function CustomerProfileScreen() {
   const openLoan = (loanId: string) => navigation.navigate('Loan' as never, {loanId} as never);
 
   const photo = useMutation({
-    mutationFn: async (source: ImageSource) => {
-      const image = await pickImage('profile', source);
+    mutationFn: async (source: ImageSource | 'recrop') => {
+      const image =
+        source === 'recrop' ? await recropImage('profile', c!.profilePic!) : await pickImage('profile', source);
       if (!image) return false;
       await uploadCustomerPhoto(c!.uid!, image, p => toast.progress('photo', t('ui.uploading'), p));
       return true;
@@ -185,6 +188,14 @@ export default function CustomerProfileScreen() {
                   uri={c.profilePic}
                   size={64}
                   onEditPhoto={can('customer.photo') ? () => photoRef.current?.open() : undefined}
+                  // Tap the photo: admins get View / Change / Re-crop, others see it full screen.
+                  onPress={
+                    can('customer.photo')
+                      ? () => photoRef.current?.open()
+                      : c.profilePic
+                      ? () => setViewing(true)
+                      : undefined
+                  }
                 />
                 <View style={s.whoText}>
                   <Text variant="h2" weight="bold" numberOfLines={2}>
@@ -288,6 +299,9 @@ export default function CustomerProfileScreen() {
         </>
       )}
       {collect.sheets}
+      {c?.profilePic ? (
+        <PhotoViewer photos={[{uri: c.profilePic, title: name}]} visible={viewing} onClose={() => setViewing(false)} />
+      ) : null}
       {admin && c ? (
         <>
           <BottomSheet ref={menuRef} title={name}>
@@ -304,6 +318,16 @@ export default function CustomerProfileScreen() {
             ) : null}
           </BottomSheet>
           <BottomSheet ref={photoRef} title={t('leads.photo')}>
+            {c.profilePic ? (
+              <OptionRow
+                icon="eye-outline"
+                title={t('photo.view')}
+                onPress={() => {
+                  photoRef.current?.close();
+                  setViewing(true);
+                }}
+              />
+            ) : null}
             {(['camera', 'gallery'] as const).map(source => (
               <OptionRow
                 key={source}
@@ -315,6 +339,17 @@ export default function CustomerProfileScreen() {
                 }}
               />
             ))}
+            {c.profilePic ? (
+              <OptionRow
+                icon="crop"
+                title={t('photo.recrop')}
+                hint={t('photo.recropHint')}
+                onPress={() => {
+                  photoRef.current?.close();
+                  photo.mutate('recrop');
+                }}
+              />
+            ) : null}
           </BottomSheet>
           <ConfirmSheet ref={confirm.ref} />
         </>
