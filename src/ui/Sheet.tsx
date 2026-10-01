@@ -9,6 +9,7 @@ import React, {forwardRef, useCallback, useImperativeHandle, useRef} from 'react
 import {View} from 'react-native';
 import {
   BottomSheetBackdrop,
+  useBottomSheetSpringConfigs,
   BottomSheetModal,
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
@@ -49,6 +50,14 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
     close: () => modal.current?.dismiss(),
   }));
 
+  // W7: sheets settle with a soft spring instead of a linear slide.
+  const animationConfigs = useBottomSheetSpringConfigs({
+    damping: 80,
+    stiffness: 500,
+    mass: 1,
+    overshootClamping: true,
+  });
+
   const backdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -69,11 +78,12 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
       enablePanDownToClose={dismissible}
       onDismiss={onClose}
       backdropComponent={backdrop}
+      animationConfigs={animationConfigs}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
-      backgroundStyle={{backgroundColor: t.colors.surface}}
-      handleIndicatorStyle={{backgroundColor: t.colors.border, width: 40}}>
+      backgroundStyle={[s.background, {backgroundColor: t.colors.surface}]}
+      handleIndicatorStyle={[s.handle, {backgroundColor: t.colors.border}]}>
       <BottomSheetScrollView
         contentContainerStyle={[s.content, {paddingBottom: insets.bottom + 16}]}
         keyboardShouldPersistTaps="handled">
@@ -109,6 +119,8 @@ export function useSheet() {
 }
 
 const useStyles = makeStyles(t => ({
+  background: {borderTopLeftRadius: 24, borderTopRightRadius: 24},
+  handle: {width: 36, height: 4},
   content: {paddingHorizontal: t.space.lg, paddingTop: t.space.xs},
   head: {flexDirection: 'row', alignItems: 'flex-start', marginBottom: t.space.md},
   titles: {flex: 1, gap: 2},
