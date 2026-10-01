@@ -20,6 +20,7 @@ import {
   SegmentedControl,
   SkeletonRows,
   Text,
+  listProps,
 } from '@/ui';
 import {getPerformance, reportKeys, type PerformanceRow} from '../api';
 
@@ -81,6 +82,7 @@ export default function PerformanceScreen() {
         <ErrorState error={query.error} what={t('performance.title')} onRetry={query.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={rows}
           keyExtractor={r => r.employee._id}
           contentContainerStyle={s.list}

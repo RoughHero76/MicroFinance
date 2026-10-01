@@ -3,7 +3,7 @@
 
 import React from 'react';
 import {Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
-import {makeStyles} from '@/theme';
+import {makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
 import {Text} from './Text';
 
@@ -23,7 +23,7 @@ export interface ListRowProps {
   accessibilityLabel?: string;
 }
 
-export function ListRow({
+export const ListRow = React.memo(function ListRow({
   title,
   subtitle,
   meta,
@@ -37,6 +37,7 @@ export function ListRow({
   style,
   accessibilityLabel,
 }: ListRowProps) {
+  const t = useTheme();
   const s = useStyles();
   return (
     <Pressable
@@ -44,6 +45,7 @@ export function ListRow({
       onLongPress={onLongPress}
       disabled={!onPress && !onLongPress}
       accessibilityRole={onPress ? 'button' : undefined}
+      android_ripple={onPress || onLongPress ? {color: t.colors.primarySoft} : undefined}
       accessibilityLabel={accessibilityLabel ?? [title, value, subtitle].filter(Boolean).join(', ')}
       style={({pressed}) => [s.row, pressed && s.pressed, style]}>
       {left}
@@ -80,7 +82,7 @@ export function ListRow({
       {chevron ? <Icon name="chevron-right" size={20} color="muted" /> : null}
     </Pressable>
   );
-}
+});
 
 const useStyles = makeStyles(t => ({
   row: {
@@ -92,6 +94,7 @@ const useStyles = makeStyles(t => ({
     minHeight: 64,
     backgroundColor: t.colors.surface,
   },
+  // iOS has no ripple; Android shows both, which reads as one highlight.
   pressed: {backgroundColor: t.colors.surface2},
   body: {flex: 1, gap: 3, minWidth: 0},
   line: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},

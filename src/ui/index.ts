@@ -34,3 +34,7 @@ export {OptionRow, Switch} from './OptionRow';
 export {PhotoViewer} from './PhotoViewer';
 export type {Photo} from './PhotoViewer';
 export {Thumbnail} from './Thumbnail';
+export {PressableScale} from './PressableScale';
+export {Appear} from './Appear';
+export {listProps} from './listProps';
+export {useTransitionDone} from './useTransitionDone';

@@ -3,9 +3,10 @@
 // it. Text: less important actions. Danger: destructive confirmations.
 
 import React from 'react';
-import {ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle} from 'react-native';
+import {ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle} from 'react-native';
 import {makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
+import {PressableScale} from './PressableScale';
 import {Text} from './Text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger';
@@ -50,22 +51,16 @@ export function Button({
       : t.colors.primary;
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.95}
       disabled={inactive}
       hitSlop={6}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{disabled: !!inactive, busy: !!loading}}
       testID={testID}
-      style={({pressed}) => [
-        s.base,
-        s[variant],
-        block && s.block,
-        pressed && !inactive && s.pressed,
-        inactive && s.disabled,
-        style,
-      ]}>
+      style={[s.base, s[variant], block && s.block, inactive && s.disabled, style]}>
       <View style={s.content}>
         {loading ? (
           <ActivityIndicator size="small" color={fg} />
@@ -76,7 +71,7 @@ export function Button({
           {title}
         </Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -90,7 +85,7 @@ const useStyles = makeStyles(t => ({
     alignSelf: 'flex-start',
   },
   content: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
-  primary: {backgroundColor: t.colors.primary},
+  primary: {backgroundColor: t.colors.primary, ...t.shadow.primary, shadowOpacity: 0.25, elevation: 3},
   danger: {backgroundColor: t.colors.danger},
   secondary: {
     borderWidth: StyleSheet.hairlineWidth * 2,
@@ -99,6 +94,5 @@ const useStyles = makeStyles(t => ({
   },
   text: {paddingHorizontal: t.space.sm, backgroundColor: 'transparent'},
   block: {alignSelf: 'stretch'},
-  pressed: {opacity: 0.85},
   disabled: {opacity: 0.45},
 }));

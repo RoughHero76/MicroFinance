@@ -1,7 +1,8 @@
 import React from 'react';
-import {Pressable, View, type StyleProp, type ViewStyle} from 'react-native';
+import {View, type StyleProp, type ViewStyle} from 'react-native';
 import {makeStyles, useTheme} from '@/theme';
 import {Icon} from './Icon';
+import {PressableScale} from './PressableScale';
 import {Text} from './Text';
 
 export interface IconButtonProps {
@@ -36,19 +37,19 @@ export function IconButton({
   const fg =
     color ?? (variant === 'filled' ? t.colors.onPrimary : variant === 'tonal' ? t.colors.primary : t.colors.text);
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.9}
       disabled={disabled}
       hitSlop={(48 - size) / 2}
       accessibilityRole="button"
       accessibilityLabel={label}
       testID={testID}
-      style={({pressed}) => [
+      style={[
         s.base,
         {width: size, height: size, borderRadius: size / 2},
         variant === 'tonal' && s.tonal,
         variant === 'filled' && s.filled,
-        pressed && s.pressed,
         disabled && s.disabled,
         style,
       ]}>
@@ -60,7 +61,7 @@ export function IconButton({
           </Text>
         </View>
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -68,7 +69,6 @@ const useStyles = makeStyles(t => ({
   base: {alignItems: 'center', justifyContent: 'center'},
   tonal: {backgroundColor: t.colors.primarySoft},
   filled: {backgroundColor: t.colors.primary},
-  pressed: {opacity: 0.7},
   disabled: {opacity: 0.4},
   badge: {
     position: 'absolute',

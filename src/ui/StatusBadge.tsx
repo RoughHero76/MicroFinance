@@ -32,7 +32,7 @@ export interface StatusBadgeProps {
   tone?: Tone;
 }
 
-export function StatusBadge({set, status, label, tone}: StatusBadgeProps) {
+export const StatusBadge = React.memo(function StatusBadge({set, status, label, tone}: StatusBadgeProps) {
   const t = useTheme();
   const s = useStyles();
   const {t: tr} = useTranslation();
@@ -50,7 +50,7 @@ export function StatusBadge({set, status, label, tone}: StatusBadgeProps) {
       </Text>
     </View>
   );
-}
+});
 
 const useStyles = makeStyles(t => ({
   badge: {

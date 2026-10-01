@@ -47,6 +47,7 @@ import {
   toast,
   useConfirm,
   type SheetHandle,
+  listProps,
 } from '@/ui';
 import {downloadReport, getReport, REPORTS_FOLDER, reportKeys} from '../api';
 import {Bars, rangeLabel} from '../components/Bars';
@@ -293,6 +294,7 @@ export default function ReportsScreen() {
           history.data?.length ? <Button title={t('reports.clearAll')} variant="text" onPress={askClear} /> : undefined
         }>
         <FlatList
+          {...listProps}
           data={history.data ?? []}
           keyExtractor={f => f.path}
           scrollEnabled={false}

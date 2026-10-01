@@ -19,6 +19,7 @@ import {
   Screen,
   SkeletonRows,
   StatusBadge,
+  listProps,
 } from '@/ui';
 import {getEmployeesPage, staffKeys} from '../api';
 
@@ -44,6 +45,7 @@ export default function EmployeesScreen() {
         <ErrorState error={list.error} what={t('staff.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           renderItem={({item}) => {

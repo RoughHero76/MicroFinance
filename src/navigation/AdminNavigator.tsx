@@ -41,6 +41,7 @@ import EmployeeFormScreen from '@/features/staff/screens/EmployeeFormScreen';
 import EmployeeProfileScreen from '@/features/staff/screens/EmployeeProfileScreen';
 import EmployeesScreen from '@/features/staff/screens/EmployeesScreen';
 import {useTheme} from '@/theme';
+import {FloatingTabBar} from './TabBar';
 import {stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
 import type {AdminTabParamList, AppStackParamList} from './types';
 
@@ -145,7 +146,7 @@ function AdminTabs() {
     },
   ];
   return (
-    <Tab.Navigator screenOptions={tabScreenOptions(theme)}>
+    <Tab.Navigator screenOptions={tabScreenOptions(theme)} tabBar={props => <FloatingTabBar {...props} />}>
       {tabs
         .filter(tab => tab.visible !== false)
         .map(tab => (

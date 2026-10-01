@@ -2,9 +2,10 @@
 // screens never overflow. Counts live in the chip label ("Pending 12").
 
 import React from 'react';
-import {Pressable, ScrollView, View, type StyleProp, type ViewStyle} from 'react-native';
+import {ScrollView, View, type StyleProp, type ViewStyle} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {makeStyles, useTheme, withAlpha} from '@/theme';
+import {PressableScale} from './PressableScale';
 import {Text} from './Text';
 
 export interface ChipOption<T extends string> {
@@ -32,8 +33,9 @@ export function Chips<T extends string>({options, value, onChange, wrap, style, 
   const chips = options.map(option => {
     const selected = option.value === value;
     return (
-      <Pressable
+      <PressableScale
         key={option.value}
+        scaleTo={0.94}
         onPress={() => onChange(option.value)}
         hitSlop={{top: 6, bottom: 6}}
         accessibilityRole="button"
@@ -42,14 +44,14 @@ export function Chips<T extends string>({options, value, onChange, wrap, style, 
         <Text
           variant="small"
           weight={selected ? 'semibold' : 'medium'}
-          color={selected ? 'onPrimary' : 'text'}
+          color={selected ? 'primary' : 'text'}
           numberOfLines={1}>
           {option.label}
           {option.count != null ? (
-            <Text variant="small" color={selected ? 'onPrimary' : 'muted'}>{`  ${option.count}`}</Text>
+            <Text variant="small" color={selected ? 'primary' : 'muted'}>{`  ${option.count}`}</Text>
           ) : null}
         </Text>
-      </Pressable>
+      </PressableScale>
     );
   });
 
@@ -95,6 +97,7 @@ const useStyles = makeStyles(t => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selected: {backgroundColor: t.colors.primary, borderColor: t.colors.primary},
+  // The mock's selected chip is tinted, not solid.
+  selected: {backgroundColor: t.colors.primarySoft, borderColor: t.colors.primary},
   fade: {position: 'absolute', right: 0, top: 0, bottom: 0, width: 24},
 }));

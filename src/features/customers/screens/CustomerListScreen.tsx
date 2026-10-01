@@ -10,7 +10,17 @@ import {callPhone} from '@/lib/messaging';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {makeStyles} from '@/theme';
-import {EmptyState, ErrorState, Fab, IconButton, OfflineBanner, Screen, SearchField, SkeletonRows} from '@/ui';
+import {
+  EmptyState,
+  ErrorState,
+  Fab,
+  IconButton,
+  OfflineBanner,
+  Screen,
+  SearchField,
+  SkeletonRows,
+  listProps,
+} from '@/ui';
 import {customerKeys, getCustomersPage, type CustomerListItem} from '../api';
 import {CustomerRow} from '../components/CustomerParts';
 
@@ -63,6 +73,7 @@ export default function CustomerListScreen() {
         <ErrorState error={list.error} what={t('customers.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           renderItem={({item}) => (

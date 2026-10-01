@@ -1,13 +1,22 @@
 // S6: every list has loading (placeholder rows), empty (with one next step)
 // and error (plain words and Retry) states. S7: the offline banner.
 
-import React, {useEffect, useRef} from 'react';
-import {Animated, View, type StyleProp, type ViewStyle} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, type StyleProp, type ViewStyle} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import {useNetInfo} from '@react-native-community/netinfo';
 import {useTranslation} from 'react-i18next';
 import {errorMessage} from '@/lib/api';
 import {formatTime} from '@/lib/format';
-import {makeStyles} from '@/theme';
+import {makeStyles, useTheme, withAlpha} from '@/theme';
 import {Button} from './Button';
 import {Icon} from './Icon';
 import {Text} from './Text';
@@ -80,7 +89,7 @@ export function ErrorState({
   );
 }
 
-/** A pulsing placeholder block. */
+/** A placeholder block with a soft light sweeping across it (W7). */
 export function Skeleton({
   width = '100%',
   height = 14,
@@ -93,18 +102,31 @@ export function Skeleton({
   style?: StyleProp<ViewStyle>;
 }) {
   const s = useStyles();
-  const opacity = useRef(new Animated.Value(0.5)).current;
+  const t = useTheme();
+  const [w, setW] = useState(0);
+  const progress = useSharedValue(0);
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {toValue: 1, duration: 700, useNativeDriver: true}),
-        Animated.timing(opacity, {toValue: 0.5, duration: 700, useNativeDriver: true}),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [opacity]);
-  return <Animated.View style={[s.skeleton, {width, height, borderRadius: radius, opacity}, style]} />;
+    progress.value = withRepeat(withTiming(1, {duration: 1100, easing: Easing.inOut(Easing.ease)}), -1, false);
+    return () => cancelAnimation(progress);
+  }, [progress]);
+  const sweep = useAnimatedStyle(() => ({transform: [{translateX: -w + progress.value * w * 2}]}));
+  const shine = withAlpha(t.colors.white, t.dark ? 0.06 : 0.55);
+  return (
+    <View
+      onLayout={e => setW(e.nativeEvent.layout.width)}
+      style={[s.skeleton, {width, height, borderRadius: radius}, style]}>
+      {w ? (
+        <Animated.View style={[s.sweep, {width: w}, sweep]}>
+          <LinearGradient
+            colors={[withAlpha(t.colors.white, 0), shine, withAlpha(t.colors.white, 0)]}
+            start={{x: 0, y: 0.5}}
+            end={{x: 1, y: 0.5}}
+            style={s.fill}
+          />
+        </Animated.View>
+      ) : null}
+    </View>
+  );
 }
 
 /** Placeholder list rows shown while a list loads (instead of a spinner). */
@@ -163,7 +185,9 @@ const useStyles = makeStyles(t => ({
   },
   errorCircle: {backgroundColor: t.colors.dangerSoft},
   action: {marginTop: t.space.md, alignSelf: 'center'},
-  skeleton: {backgroundColor: t.colors.skeleton},
+  skeleton: {backgroundColor: t.colors.skeleton, overflow: 'hidden'},
+  sweep: {position: 'absolute', top: 0, bottom: 0, left: 0},
+  fill: {flex: 1},
   skelRow: {
     flexDirection: 'row',
     alignItems: 'center',

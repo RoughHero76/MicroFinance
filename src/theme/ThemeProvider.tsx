@@ -1,5 +1,5 @@
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react';
-import {useColorScheme} from 'react-native';
+import {useColorScheme, type ViewStyle} from 'react-native';
 import {brand} from '@/brand';
 import {readJson, StorageKeys, writeJson} from '@/lib/storage';
 import {modes, type ModeColors} from './modes';
@@ -27,6 +27,36 @@ export interface Theme {
   font: typeof font;
   weight: typeof weight;
   size: typeof size;
+  /** Soft depth (W7): cards, raised controls, floating bars and the FAB. */
+  shadow: {card: ViewStyle; raised: ViewStyle; float: ViewStyle; primary: ViewStyle};
+}
+
+// Android draws `elevation`; API 28+ tints it with shadowColor, so a
+// translucent colour keeps the shadow soft like the mock's layered box-shadow.
+// Dark mode relies on borders and lighter surfaces instead (as in the mock).
+function buildShadows(mode: ModeId, primary: string): Theme['shadow'] {
+  const ink = mode === 'dark' ? '#000000' : '#0F172A';
+  const make = (elevation: number, opacity: number, radius: number, y: number, color = ink): ViewStyle => ({
+    elevation,
+    shadowColor: color,
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    shadowOffset: {width: 0, height: y},
+  });
+  if (mode === 'dark') {
+    return {
+      card: {},
+      raised: make(4, 0.4, 10, 4),
+      float: make(12, 0.5, 24, 8),
+      primary: make(8, 0.45, 16, 6, primary),
+    };
+  }
+  return {
+    card: make(2, 0.07, 14, 4, withAlpha(ink, 0.55)),
+    raised: make(4, 0.1, 12, 4, withAlpha(ink, 0.6)),
+    float: make(14, 0.14, 26, 8, withAlpha(ink, 0.7)),
+    primary: make(10, 0.4, 18, 8, primary),
+  };
 }
 
 export function buildTheme(palette: PaletteId, mode: ModeId): Theme {
@@ -52,6 +82,7 @@ export function buildTheme(palette: PaletteId, mode: ModeId): Theme {
     font,
     weight,
     size,
+    shadow: buildShadows(mode, accent.primary),
   };
 }
 

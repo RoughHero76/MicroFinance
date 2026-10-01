@@ -13,7 +13,7 @@ import {readJson, StorageKeys, writeJson} from '@/lib/storage';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import type {Role} from '@/lib/session';
 import {makeStyles} from '@/theme';
-import {Chips, EmptyState, ErrorState, Icon, SegmentedControl, SkeletonRows, StatusBadge, Text} from '@/ui';
+import {Chips, EmptyState, ErrorState, Icon, SegmentedControl, SkeletonRows, StatusBadge, Text, listProps} from '@/ui';
 import {getSchedulePage, loanKeys} from '../api';
 import {amountPaidSoFar, groupRuns, installmentTotal, penaltyAmount, type InstallmentRun} from '../schedule';
 import type {Installment} from '../types';
@@ -120,6 +120,7 @@ export function ScheduleView({
 
   return (
     <FlatList<InstallmentRun | {key: string; item: Installment}>
+      {...listProps}
       data={mode === 'grouped' ? runs : list.items.map(item => ({key: item._id, item}))}
       keyExtractor={entry => entry.key}
       renderItem={({item: entry}) =>

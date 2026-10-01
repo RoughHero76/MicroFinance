@@ -36,7 +36,7 @@ function isPhotoUri(uri?: string | null): uri is string {
   return typeof uri === 'string' && /^https?:\/\//i.test(uri);
 }
 
-export function Avatar({name, uri, size = 40, style, onEditPhoto, onPress}: AvatarProps) {
+export const Avatar = React.memo(function Avatar({name, uri, size = 40, style, onEditPhoto, onPress}: AvatarProps) {
   const t = useTheme();
   const s = useStyles();
   const [source, setSource] = useState<string | null>(isPhotoUri(uri) ? cachedPathSync(uri) : null);
@@ -104,7 +104,7 @@ export function Avatar({name, uri, size = 40, style, onEditPhoto, onPress}: Avat
       ) : null}
     </Pressable>
   );
-}
+});
 
 const useStyles = makeStyles(t => ({
   image: {backgroundColor: t.colors.surface2},

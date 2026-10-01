@@ -24,6 +24,7 @@ import {
   StatusBadge,
   Text,
   useIsOffline,
+  listProps,
 } from '@/ui';
 import {collectKeys, getTodaysCollections, type CollectionItem} from '../api';
 
@@ -138,6 +139,8 @@ export default function CollectScreen() {
         <ErrorState error={query.error} what={t('collect.title')} onRetry={query.refetch} />
       ) : (
         <SectionList
+          {...listProps}
+          removeClippedSubviews={false}
           sections={sections}
           keyExtractor={item => item._id}
           renderItem={renderItem}

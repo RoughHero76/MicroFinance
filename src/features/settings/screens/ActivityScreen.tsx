@@ -10,7 +10,7 @@ import {formatDateTime, formatMoney} from '@/lib/format';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {adminLoanKeys, getActivityPage, type ActivityEntry} from '@/features/loans/adminApi';
 import {makeStyles} from '@/theme';
-import {EmptyState, ErrorState, Screen, SkeletonRows, Timeline} from '@/ui';
+import {EmptyState, ErrorState, Screen, SkeletonRows, Timeline, listProps} from '@/ui';
 
 function describeChange(entry: ActivityEntry): string | undefined {
   const keys = Object.keys(entry.after ?? {});
@@ -61,6 +61,7 @@ export default function ActivityScreen() {
         <ErrorState error={list.error} what={t('activity.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={[items]}
           keyExtractor={() => 'timeline'}
           renderItem={({item}) => <Timeline items={item} />}

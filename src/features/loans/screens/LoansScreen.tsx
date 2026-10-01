@@ -26,6 +26,7 @@ import {
   StatusBadge,
   Chips,
   type SheetHandle,
+  listProps,
 } from '@/ui';
 import {adminLoanKeys, getLoansPage, type LoanSort} from '../adminApi';
 import type {CustomerRef, Loan, PersonRef} from '../types';
@@ -104,6 +105,7 @@ export default function LoansScreen() {
         <ErrorState error={list.error} what={t('loans.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           renderItem={renderItem}

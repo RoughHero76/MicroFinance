@@ -51,41 +51,43 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           {required ? <Text color="danger"> *</Text> : null}
         </Text>
       ) : null}
-      <View style={[s.field, focused && s.focused, !!error && s.errored, !editable && s.readonly]}>
-        {icon ? <Icon name={icon} size={18} color="muted" /> : null}
-        {prefix ? (
-          <Text variant="bodyLg" color="muted">
-            {prefix}
-          </Text>
-        ) : null}
-        <TextInput
-          ref={ref}
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
-          style={s.input}
-          placeholderTextColor={t.colors.muted}
-          editable={editable}
-          secureTextEntry={secureToggle ? hidden : secureTextEntry}
-          accessibilityLabel={label}
-          onFocus={e => {
-            setFocused(true);
-            onFocus?.(e);
-          }}
-          onBlur={e => {
-            setFocused(false);
-            onBlur?.(e);
-          }}
-          {...rest}
-        />
-        {secureToggle ? (
-          <Pressable
-            onPress={() => setHidden(h => !h)}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel={hidden ? 'Show' : 'Hide'}>
-            <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color="muted" />
-          </Pressable>
-        ) : null}
-        {right}
+      <View style={[s.ring, focused && s.ringOn, !!error && focused && s.ringError]}>
+        <View style={[s.field, focused && s.focused, !!error && s.errored, !editable && s.readonly]}>
+          {icon ? <Icon name={icon} size={18} color="muted" /> : null}
+          {prefix ? (
+            <Text variant="bodyLg" color="muted">
+              {prefix}
+            </Text>
+          ) : null}
+          <TextInput
+            ref={ref}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            style={s.input}
+            placeholderTextColor={t.colors.muted}
+            editable={editable}
+            secureTextEntry={secureToggle ? hidden : secureTextEntry}
+            accessibilityLabel={label}
+            onFocus={e => {
+              setFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={e => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
+            {...rest}
+          />
+          {secureToggle ? (
+            <Pressable
+              onPress={() => setHidden(h => !h)}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={hidden ? 'Show' : 'Hide'}>
+              <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color="muted" />
+            </Pressable>
+          ) : null}
+          {right}
+        </View>
       </View>
       {error ? (
         <Text variant="caption" color="danger" style={s.below}>
@@ -103,13 +105,17 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 const useStyles = makeStyles(t => ({
   container: {marginBottom: t.space.md},
   label: {marginBottom: t.space.xs},
+  // The mock's focus ring: a soft 4dp halo in the brand colour around the field.
+  ring: {margin: -4, padding: 3, borderRadius: t.radius.md + 4, borderWidth: 1, borderColor: 'transparent'},
+  ringOn: {backgroundColor: t.colors.primarySoft},
+  ringError: {backgroundColor: t.colors.dangerSoft},
   field: {
     minHeight: t.size.input,
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.space.sm,
     paddingHorizontal: t.space.md,
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.md + 2,
     borderWidth: 1,
     borderColor: t.colors.border,
     backgroundColor: t.colors.surface,

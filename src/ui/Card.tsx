@@ -1,6 +1,7 @@
 import React from 'react';
-import {Pressable, View, type StyleProp, type ViewProps, type ViewStyle} from 'react-native';
-import {makeStyles} from '@/theme';
+import {View, type StyleProp, type ViewProps, type ViewStyle} from 'react-native';
+import {makeStyles, withAlpha} from '@/theme';
+import {PressableScale} from './PressableScale';
 import {Text} from './Text';
 
 export interface CardProps extends ViewProps {
@@ -15,15 +16,16 @@ export function Card({onPress, onLongPress, padded = true, style, children, acce
   const s = useStyles();
   if (onPress || onLongPress) {
     return (
-      <Pressable
+      <PressableScale
         onPress={onPress}
         onLongPress={onLongPress}
+        scaleTo={0.98}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        style={({pressed}) => [s.card, padded && s.padded, pressed && s.pressed, style]}
+        style={[s.card, padded && s.padded, style]}
         {...rest}>
         {children}
-      </Pressable>
+      </PressableScale>
     );
   }
   return (
@@ -75,10 +77,10 @@ const useStyles = makeStyles(t => ({
     backgroundColor: t.colors.surface,
     borderRadius: t.radius.lg,
     borderWidth: 1,
-    borderColor: t.colors.border,
+    borderColor: t.dark ? t.colors.border : withAlpha(t.colors.border, 0.7),
+    ...t.shadow.card,
   },
   padded: {padding: t.space.md},
-  pressed: {opacity: 0.9},
   section: {marginBottom: t.space.lg},
   sectionHead: {
     flexDirection: 'row',

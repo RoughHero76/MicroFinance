@@ -37,6 +37,7 @@ import {
   toast,
   useConfirm,
   type SheetHandle,
+  listProps,
 } from '@/ui';
 import {
   adminLoanKeys,
@@ -204,6 +205,8 @@ export default function PaymentsScreen() {
         <ErrorState error={list.error} what={t('approvals.title')} onRetry={list.refetch} />
       ) : (
         <SectionList
+          {...listProps}
+          removeClippedSubviews={false}
           sections={sections}
           keyExtractor={item => item._id}
           stickySectionHeadersEnabled={false}

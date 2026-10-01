@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StatusBar,
   View,
@@ -15,10 +14,15 @@ import {
   type ViewStyle,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {FadeIn} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {makeStyles, statusBarStyle, useTheme} from '@/theme';
+import {makeStyles, statusBarStyle, useTheme, withAlpha} from '@/theme';
 import {Icon} from './Icon';
 import {IconButton} from './IconButton';
+import {PressableScale} from './PressableScale';
+import {Skeleton} from './States';
+import {useTransitionDone} from './useTransitionDone';
 import {Text} from './Text';
 
 export interface HeaderProps {
@@ -41,7 +45,7 @@ export function Header({title, subtitle, large, back = !large, onBack, right, ba
   const insets = useSafeAreaInsets();
   const canBack = back && (onBack || navigation.canGoBack());
   return (
-    <View style={[s.header, band && s.band, {paddingTop: insets.top + (large ? 12 : 4)}]}>
+    <View style={[s.header, large && s.headerClear, band && s.band, {paddingTop: insets.top + (large ? 12 : 4)}]}>
       <View style={s.headerRow}>
         {canBack ? (
           <IconButton
@@ -91,6 +95,11 @@ export interface ScreenProps {
   contentStyle?: StyleProp<ViewStyle>;
   refreshControl?: React.ComponentProps<typeof ScrollView>['refreshControl'];
   keyboard?: boolean;
+  /**
+   * Heavy detail screens: show placeholders until the push animation ends,
+   * then build the content, so the slide-in never stutters (W7).
+   */
+  defer?: boolean;
 }
 
 export function Screen({
@@ -103,20 +112,30 @@ export function Screen({
   contentStyle,
   refreshControl,
   keyboard,
+  defer,
 }: ScreenProps) {
   const t = useTheme();
   const s = useStyles();
   const insets = useSafeAreaInsets();
-  const body = scroll ? (
+  const ready = useTransitionDone(!defer);
+  const content = ready ? children : <DeferredPlaceholder />;
+  const inner = scroll ? (
     <ScrollView
       contentContainerStyle={[padded && s.padded, {paddingBottom: (fab ? 96 : 24) + insets.bottom}, contentStyle]}
       keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl}>
-      {children}
+      {content}
     </ScrollView>
   ) : (
-    <View style={[s.flex, padded && s.padded, contentStyle]}>{children}</View>
+    <View style={[s.flex, padded && s.padded, contentStyle]}>{content}</View>
   );
+  // A quick fade as the content arrives, instead of popping in.
+  const body = (
+    <Animated.View key={ready ? 'ready' : 'wait'} entering={FadeIn.duration(180)} style={s.flex}>
+      {inner}
+    </Animated.View>
+  );
+  const glow = header && header.large && !header.band;
 
   return (
     <View style={s.screen}>
@@ -125,6 +144,13 @@ export function Screen({
         backgroundColor="transparent"
         translucent
       />
+      {glow ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[withAlpha(t.colors.primary, t.dark ? 0.16 : 0.1), withAlpha(t.colors.primary, 0)]}
+          style={[s.glow, {height: 220 + insets.top}]}
+        />
+      ) : null}
       {header ? <Header {...header} /> : <View style={{height: insets.top}} />}
       {banner}
       {keyboard ? (
@@ -138,6 +164,19 @@ export function Screen({
           {fab ? <View style={[s.fab, {bottom: 16 + insets.bottom}]}>{fab}</View> : null}
         </>
       )}
+    </View>
+  );
+}
+
+/** Stand-in cards while a deferred screen waits for its push animation. */
+function DeferredPlaceholder() {
+  const s = useStyles();
+  return (
+    <View style={s.placeholder} accessibilityLabel="Loading" accessibilityRole="progressbar">
+      <Skeleton height={120} radius={20} />
+      <Skeleton width="55%" height={16} />
+      <Skeleton height={72} radius={16} />
+      <Skeleton height={72} radius={16} />
     </View>
   );
 }
@@ -159,17 +198,13 @@ export function Fab({
   const t = useTheme();
   const s = useStyles();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={disabled || loading}
+      scaleTo={0.92}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({pressed}) => [
-        s.fabButton,
-        !label && s.fabRound,
-        pressed && s.fabPressed,
-        (disabled || loading) && s.fabDisabled,
-      ]}>
+      style={[s.fabButton, !label && s.fabRound, (disabled || loading) && s.fabDisabled]}>
       {loading ? (
         <ActivityIndicator size="small" color={t.colors.onPrimary} />
       ) : (
@@ -180,7 +215,7 @@ export function Fab({
           {label}
         </Text>
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -195,6 +230,9 @@ const useStyles = makeStyles(t => ({
   flex: {flex: 1},
   padded: {padding: t.space.lg},
   header: {backgroundColor: t.colors.bg, paddingHorizontal: t.space.sm, paddingBottom: t.space.sm},
+  headerClear: {backgroundColor: 'transparent'},
+  glow: {position: 'absolute', top: 0, left: 0, right: 0},
+  placeholder: {gap: t.space.md},
   band: {backgroundColor: t.colors.primary},
   headerRow: {flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingHorizontal: t.space.sm},
   back: {marginRight: t.space.xs},
@@ -211,14 +249,10 @@ const useStyles = makeStyles(t => ({
     paddingHorizontal: t.space.lg + 2,
     borderRadius: t.radius.pill,
     backgroundColor: t.colors.primary,
-    elevation: 4,
-    shadowColor: t.colors.text,
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: {width: 0, height: 3},
+    ...t.shadow.primary,
   },
-  fabRound: {width: 52, height: 52, paddingHorizontal: 0, justifyContent: 'center'},
-  fabPressed: {opacity: 0.9},
+  // The mock's FAB is a rounded square (18 radius), not a circle.
+  fabRound: {width: 52, height: 52, paddingHorizontal: 0, justifyContent: 'center', borderRadius: 18},
   fabDisabled: {opacity: 0.5},
   actionRow: {
     flexDirection: 'row',

@@ -22,6 +22,7 @@ import {
   Section,
   SkeletonRows,
   Text,
+  listProps,
 } from '@/ui';
 import {rememberSearch, useRecent} from '../recent';
 import {searchCustomers, type SearchResult} from '../searchApi';
@@ -83,6 +84,7 @@ export default function SearchScreen() {
       <SearchField value={q} onSearch={setQ} placeholder={t('search.placeholder')} autoFocus style={s.search} />
       {!searching ? (
         <FlatList
+          {...listProps}
           data={recent.customers}
           keyExtractor={c => c._id}
           contentContainerStyle={s.list}
@@ -123,6 +125,7 @@ export default function SearchScreen() {
         <ErrorState error={query.error} what={t('search.title')} onRetry={query.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={query.data}
           keyExtractor={r => r._id}
           contentContainerStyle={s.list}

@@ -24,6 +24,7 @@ import {
   SkeletonRows,
   StatusBadge,
   Text,
+  listProps,
 } from '@/ui';
 
 type Range = 'today' | 'week' | 'month';
@@ -115,6 +116,7 @@ export default function MyPaymentsScreen() {
         <ErrorState error={list.error} what={t('myPayments.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           renderItem={renderItem}

@@ -27,6 +27,7 @@ import {
   UnderlineTabs,
   toast,
   type SheetHandle,
+  listProps,
 } from '@/ui';
 import {cashKeys, confirmHandover, getHandoversPage, type CashHandover} from '../api';
 import {handoverTone} from './HandOverScreen';
@@ -105,6 +106,7 @@ export default function CashHandoversScreen() {
         <ErrorState error={list.error} what={t('cash.adminTitle')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           contentContainerStyle={s.list}

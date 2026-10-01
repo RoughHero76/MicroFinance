@@ -11,7 +11,7 @@ import {useI18n} from '@/i18n';
 import {formatDate, formatTime, isSameDay} from '@/lib/format';
 import {useInfiniteList} from '@/lib/useInfiniteList';
 import {makeStyles} from '@/theme';
-import {Button, EmptyState, ErrorState, Icon, Screen, SkeletonRows, Text} from '@/ui';
+import {Button, EmptyState, ErrorState, Icon, Screen, SkeletonRows, Text, listProps} from '@/ui';
 import {getNotificationsPage, markAllRead, markRead, notificationKeys, type AppNotification} from '../api';
 import {notificationTarget, notificationText} from '../text';
 
@@ -77,6 +77,8 @@ export default function NotificationsScreen() {
         <ErrorState error={list.error} what={t('notifications.title')} onRetry={list.refetch} />
       ) : (
         <SectionList
+          {...listProps}
+          removeClippedSubviews={false}
           sections={sections}
           keyExtractor={n => n._id}
           renderSectionHeader={({section}) => (

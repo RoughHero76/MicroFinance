@@ -31,6 +31,7 @@ import {
   StatusBadge,
   Text,
   type SheetHandle,
+  listProps,
 } from '@/ui';
 import {collectKeys, getOverduePage, type OverdueBucket, type OverdueLoan} from '../api';
 
@@ -130,6 +131,7 @@ export default function OverdueListScreen() {
         <ErrorState error={list.error} what={t('overdue.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           renderItem={renderItem}

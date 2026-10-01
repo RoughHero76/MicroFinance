@@ -27,6 +27,7 @@ import {
   Text,
   toast,
   useConfirm,
+  listProps,
 } from '@/ui';
 import {cashKeys, getHandoversPage, getHolding, handOverCash, type CashHandover} from '../api';
 
@@ -137,6 +138,7 @@ export default function HandOverScreen() {
         ) : undefined
       }>
       <FlatList
+        {...listProps}
         data={history.items}
         keyExtractor={item => item._id}
         ListHeaderComponent={header}

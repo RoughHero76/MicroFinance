@@ -37,6 +37,7 @@ import {
   StatusBadge,
   type ChipOption,
   type SheetHandle,
+  listProps,
 } from '@/ui';
 import {getLeadsPage, leadKeys, type Lead, type LeadFilter, type LeadStats} from '../api';
 
@@ -144,6 +145,7 @@ export default function LeadListScreen() {
         <ErrorState error={list.error} what={t('leads.title')} onRetry={list.refetch} />
       ) : (
         <FlatList
+          {...listProps}
           data={list.items}
           keyExtractor={item => item._id}
           renderItem={renderItem}

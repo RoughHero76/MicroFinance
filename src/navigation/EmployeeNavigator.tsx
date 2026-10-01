@@ -29,6 +29,7 @@ import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import SettingsScreen from '@/features/settings/screens/SettingsScreen';
 import SupportScreen from '@/features/settings/screens/SupportScreen';
 import {useTheme} from '@/theme';
+import {FloatingTabBar} from './TabBar';
 import {stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
 import type {AppStackParamList, EmployeeTabParamList} from './types';
 
@@ -107,7 +108,7 @@ function EmployeeTabs() {
     },
   ];
   return (
-    <Tab.Navigator screenOptions={tabScreenOptions(theme)}>
+    <Tab.Navigator screenOptions={tabScreenOptions(theme)} tabBar={props => <FloatingTabBar {...props} />}>
       {tabs
         .filter(tab => tab.visible !== false)
         .map(tab => (
