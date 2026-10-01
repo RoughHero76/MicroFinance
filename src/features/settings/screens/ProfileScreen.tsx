@@ -16,12 +16,13 @@ import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {authKeys, getProfile, updateAdminProfile, uploadProfilePhoto} from '@/features/auth/api';
 import {makeStyles} from '@/theme';
 import {
+  Appear,
   Avatar,
   BottomSheet,
   Button,
   Card,
   ErrorState,
-  KeyValueRows,
+  Icon,
   OptionRow,
   Screen,
   SkeletonRows,
@@ -107,29 +108,55 @@ export default function ProfileScreen() {
         <ErrorState error={query.error} what={t('profile.title')} onRetry={query.refetch} />
       ) : profile ? (
         <>
-          <Card style={s.head}>
+          {/* Mock X1: photo, name and badges on the page, details as icon rows. */}
+          <Appear style={s.head}>
             <Avatar name={name} uri={profile.profilePic} size={88} onEditPhoto={photoSheet.open} />
-            <Text variant="h2" align="center" style={s.name}>
+            <Text variant="h2" weight="bold" align="center" style={s.name}>
               {name}
             </Text>
             <View style={s.badges}>
               <StatusBadge label={t(role === 'admin' ? 'common.admin' : 'common.employee')} tone="primary" />
               <StatusBadge set="account" status={active ? 'active' : 'inactive'} />
             </View>
-          </Card>
-          <Card>
-            <KeyValueRows
-              rows={[
-                {label: t('profile.username'), value: profile.userName ? `@${profile.userName}` : ''},
-                {label: t('profile.phone'), value: profile.phoneNumber},
-                {label: t('profile.email'), value: profile.email},
-                {label: t('profile.address'), value: profile.address},
-                {label: t('profile.emergency'), value: profile.emergencyContact},
-                {label: t('profile.lastLogin'), value: lastLogin ? formatDateTime(lastLogin, lang) : ''},
-                {label: t('profile.memberSince'), value: profile.createdAt ? formatDate(profile.createdAt, lang) : ''},
-              ]}
-            />
-          </Card>
+          </Appear>
+          <Appear index={1}>
+            <Card padded={false} dividers>
+              {[
+                {
+                  icon: 'account-outline',
+                  label: t('profile.username'),
+                  text: profile.userName ? `@${profile.userName}` : '',
+                },
+                {icon: 'phone-outline', label: t('profile.phone'), text: profile.phoneNumber},
+                {icon: 'email-outline', label: t('profile.email'), text: profile.email},
+                {icon: 'map-marker-outline', label: t('profile.address'), text: profile.address},
+                {
+                  icon: 'alert-outline',
+                  label: t('profile.emergency'),
+                  text: profile.emergencyContact ? `${t('profile.emergency')} · ${profile.emergencyContact}` : '',
+                },
+                {
+                  icon: 'history',
+                  label: t('profile.lastLogin'),
+                  text: lastLogin ? `${t('profile.lastLogin')} · ${formatDateTime(lastLogin, lang)}` : '',
+                },
+                {
+                  icon: 'calendar-outline',
+                  label: t('profile.memberSince'),
+                  text: profile.createdAt ? `${t('profile.memberSince')} · ${formatDate(profile.createdAt, lang)}` : '',
+                },
+              ]
+                .filter(row => !!row.text)
+                .map(row => (
+                  <View key={row.icon} style={s.info} accessible accessibilityLabel={`${row.label}: ${row.text}`}>
+                    <Icon name={row.icon} size={20} color="muted" />
+                    <Text style={s.flex} numberOfLines={2}>
+                      {row.text}
+                    </Text>
+                  </View>
+                ))}
+            </Card>
+          </Appear>
           {can('security.changePassword') ? (
             <Card padded={false} dividers style={s.gap}>
               <OptionRow icon="account-edit-outline" title={t('profile.edit')} onPress={openEdit} />
@@ -195,7 +222,16 @@ export default function ProfileScreen() {
 }
 
 const useStyles = makeStyles(t => ({
-  head: {alignItems: 'center', paddingVertical: t.space.xl, marginBottom: t.space.md},
+  head: {alignItems: 'center', paddingTop: t.space.sm, paddingBottom: t.space.lg},
+  info: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.md,
+    minHeight: 48,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.sm,
+  },
+  flex: {flex: 1},
   name: {marginTop: t.space.md},
   badges: {flexDirection: 'row', gap: t.space.sm, marginTop: t.space.sm},
   gap: {marginTop: t.space.md},
