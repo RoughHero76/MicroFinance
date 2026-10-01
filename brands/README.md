@@ -42,6 +42,10 @@ Release notes: an optional `app-<id>-1.2.0.txt` next to the APK, with one line p
 
 Then set the brand's `apiUrl` in `brand.json` to this deployment's URL and build the app.
 
+## Notification icon
+
+The small icon in the status bar and notification header is `brands/<id>/android/res/drawable-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_notification.png`. It must be a **white shape on a transparent background** (24, 36, 48, 72 and 96 px): Android ignores its colours and tints it (`@color/notification`, in `android/res/values/colors.xml`). For EviFinance it's the EVI mark with the leaf, cut from `logo.png`. A brand without one gets a plain bell. The build copies `brands/<id>/android/res` into the flavor, so nothing needs copying by hand.
+
 ## Push notifications (Firebase)
 
 Phone notifications go through Firebase Cloud Messaging. Each brand needs its own Firebase Android app:

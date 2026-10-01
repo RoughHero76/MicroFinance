@@ -115,6 +115,16 @@ android {
                         into file("src/${brand.id}")
                     }
                 }
+                // The brand's Android resources (launcher icons, notification
+                // icon and colour) go into the flavor's res folder on every
+                // build, so a fresh clone needs no `npm run brand` first.
+                def brandRes = new File(dir, "android/res")
+                if (brandRes.exists()) {
+                    copy {
+                        from brandRes
+                        into file("src/${brand.id}/res")
+                    }
+                }
             }
         }
     }
