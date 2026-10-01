@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (959 strings)
+## App (962 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -967,6 +967,9 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `settings.pushTestFailed` | The server couldn't deliver it to this phone. | सर्वर इस फ़ोन तक सूचना नहीं पहुँचा सका। |
 | `notifications.types.test.push.title` | Test notification | टेस्ट सूचना |
 | `notifications.types.test.push.body` | Notifications reach this phone. | सूचनाएँ इस फ़ोन पर ठीक से आ रही हैं। |
+| `statement.delete` | Delete statement | विवरण हटाएँ |
+| `statement.deleteConfirm` | Delete? | हटाएँ? |
+| `statement.deleted` | Statement deleted | विवरण हटा दिया गया |
 
 ## Server (48 strings)
 

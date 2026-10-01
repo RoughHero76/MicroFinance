@@ -943,7 +943,10 @@
     "language": "भाषा",
     "makeAndShare": "बनाएं और भेजें",
     "history": "पहले बनाए गए",
-    "none": "अभी कोई विवरण नहीं"
+    "none": "अभी कोई विवरण नहीं",
+    "delete": "विवरण हटाएँ",
+    "deleteConfirm": "हटाएँ?",
+    "deleted": "विवरण हटा दिया गया"
   },
   "notifications": {
     "title": "सूचनाएं",

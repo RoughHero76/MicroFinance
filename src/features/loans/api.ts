@@ -124,6 +124,8 @@ export interface LoanStatement {
   createdByName?: string;
   createdByRole?: 'admin' | 'employee';
   size?: number;
+  /** Admins may delete any statement, employees the ones they made. */
+  canDelete?: boolean;
 }
 
 export async function getStatements(loanId: string): Promise<LoanStatement[]> {
@@ -137,3 +139,5 @@ export async function createStatement(loanId: string, lang: 'en' | 'hi'): Promis
 }
 
 export const statementPdfPath = (loanId: string, id: string) => `/shared/loan/${loanId}/statements/${id}/pdf`;
+
+export const deleteStatement = (loanId: string, id: string) => api.delete(`/shared/loan/${loanId}/statements/${id}`);

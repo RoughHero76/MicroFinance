@@ -943,7 +943,10 @@
     "language": "Language",
     "makeAndShare": "Make and share",
     "history": "Made before",
-    "none": "No statements yet"
+    "none": "No statements yet",
+    "delete": "Delete statement",
+    "deleteConfirm": "Delete?",
+    "deleted": "Statement deleted"
   },
   "notifications": {
     "title": "Notifications",

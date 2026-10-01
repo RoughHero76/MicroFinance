@@ -8,9 +8,9 @@ import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {errorMessage} from '@/lib/api';
-import {appFileExists, downloadToApp, MIME, openAppFile, shareAppFile, type AppFile} from '@/lib/files';
+import {appFileExists, deleteAppFile, downloadToApp, MIME, openAppFile, shareAppFile, type AppFile} from '@/lib/files';
 import {formatDateTime} from '@/lib/format';
-import {makeStyles} from '@/theme';
+import {makeStyles, useTheme} from '@/theme';
 import {
   BottomSheet,
   Button,
@@ -22,7 +22,7 @@ import {
   toast,
   type SheetHandle,
 } from '@/ui';
-import {createStatement, getStatements, statementPdfPath, type LoanStatement} from '../api';
+import {createStatement, deleteStatement, getStatements, statementPdfPath, type LoanStatement} from '../api';
 
 const FOLDER = 'statements';
 
@@ -33,6 +33,7 @@ export interface StatementSheetHandle {
 export const StatementSheet = forwardRef<StatementSheetHandle, {loanId: string; loanNumber: string}>(
   function StatementSheet({loanId, loanNumber}, ref) {
     const s = useStyles();
+    const theme = useTheme();
     const {t} = useTranslation();
     const {lang: appLang} = useI18n();
     const queryClient = useQueryClient();
@@ -40,6 +41,8 @@ export const StatementSheet = forwardRef<StatementSheetHandle, {loanId: string; 
     const [open, setOpen] = useState(false);
     const [lang, setLang] = useState<'en' | 'hi'>(appLang === 'hi' ? 'hi' : 'en');
     const [busy, setBusy] = useState<string | null>(null);
+    // First tap on the bin arms it ("Delete?"), the second deletes.
+    const [arming, setArming] = useState<string | null>(null);
     const key = ['loans', 'statements', loanId];
     const history = useQuery({queryKey: key, queryFn: () => getStatements(loanId), enabled: open});
 
@@ -50,8 +53,29 @@ export const StatementSheet = forwardRef<StatementSheetHandle, {loanId: string; 
       },
     }));
 
+    const fileName = (st: LoanStatement) =>
+      `statement_${loanNumber}_${st.createdAt.slice(0, 10)}_${st.lang}_${st._id.slice(-6)}.pdf`;
+
+    const remove = async (st: LoanStatement) => {
+      setArming(null);
+      setBusy(st._id);
+      try {
+        await deleteStatement(loanId, st._id);
+        const local = await appFileExists(FOLDER, fileName(st));
+        if (local) await deleteAppFile(local.path).catch(() => undefined);
+        queryClient.setQueryData<LoanStatement[]>(key, (list?: LoanStatement[]) =>
+          (list ?? []).filter((x: LoanStatement) => x._id !== st._id),
+        );
+        toast.success(t('statement.deleted'));
+      } catch (error) {
+        toast.error(errorMessage(error, t));
+      } finally {
+        setBusy(null);
+      }
+    };
+
     const fileOf = async (st: LoanStatement): Promise<AppFile> => {
-      const name = `statement_${loanNumber}_${st.createdAt.slice(0, 10)}_${st.lang}_${st._id.slice(-6)}.pdf`;
+      const name = fileName(st);
       return (await appFileExists(FOLDER, name)) ?? downloadToApp(statementPdfPath(loanId, st._id), FOLDER, name);
     };
 
@@ -122,13 +146,37 @@ export const StatementSheet = forwardRef<StatementSheetHandle, {loanId: string; 
               onPress={() => withFile(st, 'open')}
               right={
                 <View style={s.actions}>
-                  <IconButton
-                    icon="share-variant-outline"
-                    label={t('common.share')}
-                    variant="plain"
-                    disabled={!!busy}
-                    onPress={() => withFile(st, 'share')}
-                  />
+                  {arming === st._id ? (
+                    <>
+                      <Button title={t('common.cancel')} variant="text" onPress={() => setArming(null)} />
+                      <Button
+                        title={t('statement.deleteConfirm')}
+                        variant="danger"
+                        loading={busy === st._id}
+                        onPress={() => remove(st)}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <IconButton
+                        icon="share-variant-outline"
+                        label={t('common.share')}
+                        variant="plain"
+                        disabled={!!busy}
+                        onPress={() => withFile(st, 'share')}
+                      />
+                      {st.canDelete ? (
+                        <IconButton
+                          icon="trash-can-outline"
+                          label={t('statement.delete')}
+                          variant="plain"
+                          color={theme.colors.danger}
+                          disabled={!!busy}
+                          onPress={() => setArming(st._id)}
+                        />
+                      ) : null}
+                    </>
+                  )}
                 </View>
               }
             />
@@ -145,5 +193,5 @@ const useStyles = makeStyles(t => ({
   label: {marginBottom: t.space.sm},
   make: {marginTop: t.space.md, alignSelf: 'flex-start'},
   history: {marginTop: t.space.xl, marginBottom: t.space.xs},
-  actions: {flexDirection: 'row'},
+  actions: {flexDirection: 'row', alignItems: 'center', gap: t.space.xs},
 }));
