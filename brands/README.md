@@ -55,15 +55,22 @@ What gets pushed: every in-app notification except "nightly update failed", in t
 ## Releasing an update (from any machine)
 
 ```
-npm run release patch brand=evi upload notes="Faster lists; Fix rounding"
-npm run release upload-only                  # retry the upload of the last build
-npm run release upload-only version=1.0.5    # upload a specific build from dist/
-npm run release minor upload mandatory       # phones on older versions must update
+npm run release:build              # build the next version (1.0.4 → 1.0.5) into dist/
+npm run release:build 1.0.7        # build a specific (newer) version
+npm run release:publish            # build and upload
+npm run release:upload             # upload the current version's build
+npm run release:upload 1.0.5       # upload that build; stops if dist/ doesn't have it
 ```
 
-Options are plain words (no `--`), because PowerShell drops the `--` that npm needs before `--flags`. `node scripts/release.js --upload --notes "…"` also works.
+Optional extra words, in any order:
+- `mandatory`: phones on older versions must update.
+- `notes="Faster lists; Fix rounding"`: "what's new".
+- `replace`: overwrite the same version on the server.
+- `brand=<id>`: release another brand than the current one.
 
-The script bumps the version, builds the signed APK, and uploads it to the brand's server over HTTPS. Phones see it on their next update check. If the build fails, the version number is put back.
+Example: `npm run release:publish mandatory notes="Security fix"`.
+
+The build bumps the version and puts it back if the build fails or is stopped with Ctrl+C. Works the same in PowerShell, cmd and bash.
 
 One-time setup:
 

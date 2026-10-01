@@ -1,8 +1,9 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {CrashBoundary} from '@/features/app/crash';
 import {UpdateProvider} from '@/features/app/updates';
 import {SessionProvider} from '@/features/auth/SessionProvider';
 import {loadSavedLanguage} from '@/i18n';
@@ -12,6 +13,7 @@ import {ThemeProvider} from '@/theme';
 import {ToastHost} from '@/ui';
 
 const App = () => {
+  const [epoch, setEpoch] = useState(0);
   useEffect(() => {
     loadSavedLanguage();
   }, []);
@@ -24,7 +26,11 @@ const App = () => {
             <SessionProvider>
               <UpdateProvider>
                 <BottomSheetModalProvider>
-                  <RootNavigator />
+                  {/* Catches errors on screens shown before the navigator
+                      (login, lock, permissions) too; "Go to Home" restarts them. */}
+                  <CrashBoundary onReset={() => setEpoch(e => e + 1)}>
+                    <RootNavigator key={epoch} />
+                  </CrashBoundary>
                   {/* The one toast host, above navigation and sheets. */}
                   <ToastHost />
                 </BottomSheetModalProvider>

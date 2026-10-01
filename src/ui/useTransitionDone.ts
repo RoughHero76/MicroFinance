@@ -3,16 +3,18 @@
 // frames from the slide-in. Falls back to a short timer for screens shown
 // without a transition.
 
-import {useEffect, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import {useContext, useEffect, useState} from 'react';
+import {NavigationContext} from '@react-navigation/native';
 
 const FALLBACK_MS = 450;
 
 export function useTransitionDone(skip = false): boolean {
-  const navigation = useNavigation();
-  const [done, setDone] = useState(skip);
+  // Not useNavigation(): it throws on screens shown before the navigator
+  // exists (permissions, lock), which have no transition to wait for.
+  const navigation = useContext(NavigationContext);
+  const [done, setDone] = useState(skip || !navigation);
   useEffect(() => {
-    if (skip || done) {
+    if (skip || done || !navigation) {
       return;
     }
     const finish = () => setDone(true);
