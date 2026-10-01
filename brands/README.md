@@ -36,4 +36,8 @@ One deployment of `MicroFinance-backend` per brand, with its own environment:
 
 App updates: put that brand's signed APK in the deployment's `storage/apk/` folder, named with its version (for example `app-<id>-1.2.0.apk`). The app's update check (`/api/shared/app/update/check`) offers the highest version found there, so each brand only ever gets its own APK.
 
+Optional or mandatory: by default an update is **optional**. The app shows a "new version is ready" sheet, and "Later" asks again after 3 days. To make an update **mandatory**, put a `min-version.txt` file in the same folder containing the oldest version still allowed (for example `1.2.0`). Any app older than that shows a full "Update required" screen that can't be closed. Raise the number only for releases that must be installed, such as security fixes or server changes that old apps can't handle. Remove the file, or leave it at an old number, to keep updates optional. This only affects apps from this version onward: apps released before it don't know about mandatory updates and still show their old prompt.
+
+Release notes: an optional `app-<id>-1.2.0.txt` next to the APK, with one line per item, is shown as "what's new".
+
 Then set the brand's `apiUrl` in `brand.json` to this deployment's URL and build the app.

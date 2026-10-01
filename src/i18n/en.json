@@ -209,7 +209,7 @@
     "poweredBy": "Powered by {{name}}"
   },
   "app": {
-    "updateTitle": "Update available",
+    "updateTitle": "A new version is ready",
     "updateVersions": "v{{from}} → v{{to}}",
     "updateSize": "{{size}} MB",
     "downloading": "Downloading… {{percent}}%",
@@ -224,7 +224,11 @@
     "crashMessage": "This screen hit an error. Your data is safe.",
     "crashSent": "Report sent to the team",
     "crashQueued": "The report will be sent when you're back online",
-    "goHome": "Go to Home"
+    "goHome": "Go to Home",
+    "optionalMessage": "Please update when you get a moment — it brings the latest fixes and improvements.",
+    "requiredTitle": "Update required",
+    "requiredMessage": "This version of the app is no longer supported. Please update to keep working.",
+    "updateNow": "Update now"
   },
   "nav": {
     "home": "Home",

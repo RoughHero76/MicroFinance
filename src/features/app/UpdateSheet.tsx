@@ -12,15 +12,16 @@ export default function UpdateSheet() {
   const s = useStyles();
   const {t} = useTranslation();
   const sheet = useSheet();
-  const {update, currentVersion, download, install, dismissed, dismiss} = useUpdates();
-  const visible = !!update && !dismissed;
+  const {update, currentVersion, download, install, dismissed, dismiss, required} = useUpdates();
+  // Mandatory updates use the full-screen UpdateGate instead.
+  const visible = !!update && !dismissed && !required;
 
   useEffect(() => {
     if (visible) sheet.open();
     else sheet.close();
   }, [visible, sheet]);
 
-  if (!update) return null;
+  if (!update || required) return null;
   const downloading = download.status === 'downloading';
   const sizeMb = update.size ? (update.size / (1024 * 1024)).toFixed(0) : null;
 
@@ -47,6 +48,9 @@ export default function UpdateSheet() {
           />
         </>
       }>
+      <Text color="muted" style={s.message}>
+        {t('app.optionalMessage')}
+      </Text>
       {update.notes?.length ? (
         <View style={s.notes}>
           {update.notes.map(note => (
@@ -77,6 +81,7 @@ export default function UpdateSheet() {
 }
 
 const useStyles = makeStyles(t => ({
+  message: {marginBottom: t.space.md},
   notes: {gap: t.space.sm, marginBottom: t.space.md},
   note: {flexDirection: 'row', alignItems: 'flex-start', gap: t.space.sm},
   noteText: {flex: 1},

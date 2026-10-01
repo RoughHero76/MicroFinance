@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (939 strings)
+## App (943 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -172,11 +172,15 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `auth.permFilesHint` | Save reports and documents to Downloads | रिपोर्ट और दस्तावेज़ Downloads में सेव करें |
 | `auth.continue` | Continue | आगे बढ़ें |
 | `auth.poweredBy` | Powered by {{name}} | {{name}} द्वारा |
-| `app.updateTitle` | Update available | अपडेट उपलब्ध है |
+| `app.updateTitle` | A new version is ready | नया संस्करण तैयार है |
 | `app.updateVersions` | v{{from}} → v{{to}} | v{{from}} → v{{to}} |
 | `app.updateSize` | {{size}} MB | {{size}} MB |
 | `app.downloading` | Downloading… {{percent}}% | डाउनलोड हो रहा है… {{percent}}% |
 | `app.later` | Later | बाद में |
+| `app.optionalMessage` | Please update when you get a moment — it brings the latest fixes and improvements. | कृपया समय मिलने पर अपडेट करें — इसमें नए सुधार और बेहतर सुविधाएँ हैं। |
+| `app.requiredTitle` | Update required | अपडेट ज़रूरी है |
+| `app.requiredMessage` | This version of the app is no longer supported. Please update to keep working. | ऐप का यह संस्करण अब समर्थित नहीं है। काम जारी रखने के लिए कृपया अपडेट करें। |
+| `app.updateNow` | Update now | अभी अपडेट करें |
 | `app.install` | Install | इंस्टॉल करें |
 | `app.updateFailed` | Couldn't download the update | अपडेट डाउनलोड नहीं हो सका |
 | `app.installFailed` | Couldn't open the installer | इंस्टॉलर नहीं खुल सका |

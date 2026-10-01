@@ -11,6 +11,7 @@ import LoginScreen from '@/features/auth/screens/LoginScreen';
 import PermissionsScreen from '@/features/auth/screens/PermissionsScreen';
 import SplashScreen from '@/features/auth/screens/SplashScreen';
 import {CrashBoundary, flushPendingReports, setCurrentScreen} from '@/features/app/crash';
+import UpdateGate from '@/features/app/UpdateGate';
 import UpdateSheet from '@/features/app/UpdateSheet';
 import {readJson, writeJson} from '@/lib/storage';
 import {navigationTheme, useTheme} from '@/theme';
@@ -61,6 +62,7 @@ export default function RootNavigator() {
       </NavigationContainer>
       <OfflineBanner />
       <UpdateSheet />
+      <UpdateGate />
     </View>
   );
 }
