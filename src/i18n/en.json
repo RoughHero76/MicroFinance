@@ -545,7 +545,10 @@
     "recent": "Recent customers",
     "viewAll": "View all",
     "pendingLoans": "{{count}} loans waiting for approval",
-    "loanCount": "{{count}} loan"
+    "loanCount": "{{count}} loan",
+    "showAmounts": "Show amounts",
+    "hideAmounts": "Hide amounts",
+    "amountHidden": "Amount hidden"
   },
   "loans": {
     "title": "Loans",

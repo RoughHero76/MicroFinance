@@ -243,7 +243,7 @@ Added 2026-10-01 after device testing. The screens matched the mocks' layout but
 
 Plan and mocks: `.lavish/employee-account.html`. Decisions: E-03 (forced password change, Share login) and E-06 (My month card) dropped. Removing an employee moves their leads with the loans and warns about cash not handed over, but still allows removal. The Home eye hides the market amount, collected today and repaid.
 
-- [ ] **A-01 · Market amount hidden on admin Home**: shows `₹ • • • • • •` by default; the eye shows market, collected today and repaid; hides again when the app is reopened or unlocked. App only.
+- [x] **A-01 · Market amount hidden on admin Home**: shows `₹ • • • • • •` by default; the eye shows market, collected today and repaid; hides again when the app is reopened or unlocked. App only.
 - [ ] **E-01 · Move loans**: "Move loans to…" in the A16 ⋯ menu (all active, or chosen loans; optionally open leads). Removing an employee with active loans requires choosing who takes them (leads move too, cash warning). Backend: one bulk reassign route, audited per loan.
 - [ ] **E-02 · Employees change their own password**: "My account" group in Security, current + new + confirm, server password rules.
 - [ ] **E-04 · Today on the employee profile**: collected of due today, overdue loans, cash held (when the module is on).

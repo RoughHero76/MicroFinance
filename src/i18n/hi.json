@@ -545,7 +545,10 @@
     "recent": "हाल के ग्राहक",
     "viewAll": "सभी देखें",
     "pendingLoans": "{{count}} ऋण मंज़ूरी के इंतज़ार में",
-    "loanCount": "{{count}} ऋण"
+    "loanCount": "{{count}} ऋण",
+    "showAmounts": "राशि दिखाएँ",
+    "hideAmounts": "राशि छिपाएँ",
+    "amountHidden": "राशि छिपी है"
   },
   "loans": {
     "title": "ऋण",

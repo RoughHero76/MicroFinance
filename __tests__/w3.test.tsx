@@ -152,8 +152,13 @@ function renderScreen(Component: React.ComponentType) {
 describe('A1 admin Home', () => {
   it('shows market amount, counts and the pending-loans notice', async () => {
     renderScreen(AdminHomeScreen);
-    await waitFor(() => expect(screen.getByText('₹18,40,000')).toBeTruthy());
-    expect(screen.getByText('128')).toBeTruthy();
+    // A-01: the money starts hidden; the counts don't.
+    await waitFor(() => expect(screen.getByText('128')).toBeTruthy());
+    expect(screen.getByText('₹ • • • • • •')).toBeTruthy();
+    expect(screen.queryByText('₹18,40,000')).toBeNull();
+    fireEvent.press(screen.getByLabelText('Show amounts'));
+    expect(screen.getByText('₹18,40,000')).toBeTruthy();
+    expect(screen.getByLabelText('Hide amounts')).toBeTruthy();
     expect(screen.getByText('342')).toBeTruthy();
     expect(screen.getByText('2 loans waiting for approval')).toBeTruthy();
     expect(screen.getByText('Sunita Devi')).toBeTruthy();

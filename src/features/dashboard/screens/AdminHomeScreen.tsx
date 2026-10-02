@@ -1,10 +1,11 @@
 // A1 admin Home. A branded gradient hero (market amount, repaid, active
 // loans and customers in one row), a personal greeting, a compact
 // quick-action row (Payments, Risk, Leads, Reports - badges from BE-3), and
-// 5 recent customers.
+// 5 recent customers. The money figures start hidden behind an eye (A-01)
+// and hide again whenever the app leaves the foreground.
 
-import React from 'react';
-import {Pressable, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {AppState, Pressable, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -13,7 +14,7 @@ import {formatMoney, formatMoneyShort} from '@/lib/format';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
 import {NotificationBell} from '@/features/notifications/Bell';
-import {makeStyles} from '@/theme';
+import {makeStyles, useTheme, withAlpha} from '@/theme';
 import {
   Avatar,
   Button,
@@ -32,6 +33,9 @@ import {
   RefreshControl,
 } from '@/ui';
 
+const HIDDEN = '₹ • • • • • •';
+const HIDDEN_SHORT = '• • •';
+
 export default function AdminHomeScreen() {
   const s = useStyles();
   const {t} = useTranslation();
@@ -41,6 +45,15 @@ export default function AdminHomeScreen() {
   const query = useQuery({queryKey: adminLoanKeys.dashboard, queryFn: getAdminDashboard, meta: {persist: true}});
   const d = query.data;
   const go = (route: string, params?: object) => navigation.navigate(route as never, params as never);
+  const theme = useTheme();
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state !== 'active') setShown(false);
+    });
+    return () => sub.remove();
+  }, []);
 
   const shortcuts = [
     {
@@ -92,17 +105,33 @@ export default function AdminHomeScreen() {
           ) : null}
 
           <HeroCard>
-            <Text variant="overline" color="onPrimary" style={s.heroMuted}>
-              {t('adminHome.market')}
-            </Text>
+            <View style={s.heroHead}>
+              <Text variant="overline" color="onPrimary" style={[s.heroMuted, s.flex]}>
+                {t('adminHome.market')}
+              </Text>
+              <IconButton
+                icon={shown ? 'eye-outline' : 'eye-off-outline'}
+                label={shown ? t('adminHome.hideAmounts') : t('adminHome.showAmounts')}
+                variant="plain"
+                size={30}
+                color={theme.colors.onPrimary}
+                style={s.eye}
+                onPress={() => setShown(v => !v)}
+                testID="market-eye"
+              />
+            </View>
             {d ? (
-              <Text variant="display" color="onPrimary" tabular>
-                {formatMoney(d.marketDetails.totalMarketAmount)}
+              <Text
+                variant="display"
+                color="onPrimary"
+                tabular
+                accessibilityLabel={shown ? undefined : t('adminHome.amountHidden')}>
+                {shown ? formatMoney(d.marketDetails.totalMarketAmount) : HIDDEN}
               </Text>
             ) : (
               <Skeleton width={180} height={34} />
             )}
-            {d?.collectedToday.amount ? (
+            {shown && d?.collectedToday.amount ? (
               <Text color="onPrimary" style={s.heroMuted}>
                 {t('adminHome.collectedToday', {amount: formatMoneyShort(d.collectedToday.amount)})}
               </Text>
@@ -113,7 +142,7 @@ export default function AdminHomeScreen() {
                   {t('adminHome.repaidLabel')}
                 </Text>
                 <Text variant="h2" color="onPrimary" tabular>
-                  {d ? formatMoneyShort(d.marketDetails.totalMarketAmountRepaid) : '–'}
+                  {d ? (shown ? formatMoneyShort(d.marketDetails.totalMarketAmountRepaid) : HIDDEN_SHORT) : '–'}
                 </Text>
               </View>
               <View style={s.fact}>
@@ -201,6 +230,8 @@ const useStyles = makeStyles(t => ({
   headerActions: {flexDirection: 'row', alignItems: 'center'},
   greeting: {marginBottom: t.space.sm},
   heroMuted: {opacity: 0.85},
+  heroHead: {flexDirection: 'row', alignItems: 'center', gap: t.space.sm},
+  eye: {backgroundColor: withAlpha(t.colors.white, 0.18)},
   heroFacts: {flexDirection: 'row', gap: 10, marginTop: t.space.md},
   fact: {flex: 1, gap: 2},
   notice: {
