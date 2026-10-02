@@ -117,6 +117,7 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
     outstanding: loan!.outstandingAmount,
     customerName,
     phone: customer?.phoneNumber,
+    assignedTo: loan!.assignedTo,
   });
 
   const collectNext = () => {
@@ -132,6 +133,7 @@ export default function LoanScreen({extras}: {extras?: LoanScreenExtras}) {
       outstanding: loan.outstandingAmount,
       customerName,
       phone: customer?.phoneNumber,
+      assignedTo: loan.assignedTo,
     });
   };
 

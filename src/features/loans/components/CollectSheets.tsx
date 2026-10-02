@@ -56,6 +56,8 @@ export interface CollectTarget {
   outstanding?: number;
   customerName: string;
   phone?: string;
+  /** The employee the loan is assigned to (id or populated), marked in "Collected by". */
+  assignedTo?: {_id: string} | string | null;
 }
 
 interface ReceiptState {
@@ -159,6 +161,7 @@ function PaymentSheet({
   }, [target]);
 
   const minPayment = settings?.minPayment ?? 100;
+  const assignedId = typeof target?.assignedTo === 'object' ? target?.assignedTo?._id : target?.assignedTo;
   const min = target && target.dueAmount > 0 ? Math.min(minPayment, target.dueAmount) : minPayment;
 
   const mutation = useMutation({
@@ -270,9 +273,15 @@ function PaymentSheet({
             onChange={setCollector}
             options={[
               {value: 'me', label: t('pay.collectedByMe')},
+              // The loan's own employee comes first, marked.
               ...(employees.data ?? [])
                 .filter(e => e.accountStatus !== false)
-                .map(e => ({value: e._id, label: `${e.fname} ${e.lname}`.trim()})),
+                .map(e => ({
+                  value: e._id,
+                  label: `${e.fname} ${e.lname}`.trim(),
+                  description: e._id === assignedId ? t('pay.assignedToLoan') : undefined,
+                }))
+                .sort((a, b) => Number(b.value === assignedId) - Number(a.value === assignedId)),
             ]}
             hint={collector === 'me' ? undefined : t('pay.collectedByHint')}
           />

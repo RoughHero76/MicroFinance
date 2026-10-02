@@ -378,7 +378,8 @@
     "installmentShort": "किस्त {{number}}",
     "collectedBy": "किसने वसूला",
     "collectedByMe": "मैं (एडमिन)",
-    "collectedByHint": "यह इस कर्मचारी की वसूली में गिना जाएगा (हाथ में नकद, रिपोर्ट)।"
+    "collectedByHint": "यह इस कर्मचारी की वसूली में गिना जाएगा (हाथ में नकद, रिपोर्ट)।",
+    "assignedToLoan": "इस लोन का कर्मचारी"
   },
   "penalty": {
     "title": "जुर्माना लगाएँ",

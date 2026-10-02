@@ -977,6 +977,7 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `pay.collectedBy` | Collected by | किसने वसूला |
 | `pay.collectedByMe` | Me (admin) | मैं (एडमिन) |
 | `pay.collectedByHint` | Counts as this employee's collection (cash in hand, reports). | यह इस कर्मचारी की वसूली में गिना जाएगा (हाथ में नकद, रिपोर्ट)। |
+| `pay.assignedToLoan` | Assigned to this loan | इस लोन का कर्मचारी |
 | `send.title` | Send notification | सूचना भेजें |
 | `send.who` | To | किसे |
 | `send.to.employees` | All employees | सभी कर्मचारी |

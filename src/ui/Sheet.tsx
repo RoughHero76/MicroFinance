@@ -98,6 +98,10 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
       onDismiss={onClose}
       backdropComponent={backdrop}
       animationConfigs={animationConfigs}
+      // A sheet opened from a sheet (a picker in the payment sheet) goes on
+      // top. The default ('replace') slid the first one away and back when the
+      // picker closed, which looked like it closed and reopened.
+      stackBehavior="push"
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"

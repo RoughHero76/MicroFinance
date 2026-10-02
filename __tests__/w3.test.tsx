@@ -14,13 +14,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SessionProvider} from '@/features/auth/SessionProvider';
 import AdminHomeScreen from '@/features/dashboard/screens/AdminHomeScreen';
 import {fieldsFor} from '@/features/loans/components/EditInstallmentSheet';
+import {useCollect} from '@/features/loans/components/CollectSheets';
 import {paymentBounds} from '@/features/loans/screens/CloseLoanScreen';
 import type {Loan} from '@/features/loans/types';
 import PaymentsScreen from '@/features/payments/screens/PaymentsScreen';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
 import {ThemeProvider} from '@/theme';
-import {ToastHost} from '@/ui';
+import {Text, ToastHost} from '@/ui';
 
 describe('close-loan bounds', () => {
   const loan = {outstandingAmount: 20000, totalPenaltyAmount: 600, advanceBalance: 200} as Loan;
@@ -86,6 +87,13 @@ beforeEach(async () => {
       return {
         data: approvals.filter(a => !approvedIds.has(a._id)),
         pagination: {page: 1, pages: 1, total: 3},
+      } as never;
+    if (url === '/admin/employee')
+      return {
+        data: [
+          {_id: 'e1', fname: 'Meena', lname: 'S.'},
+          {_id: 'e2', fname: 'Arjun', lname: 'P.'},
+        ],
       } as never;
     if (url === '/shared/settings') return {data: {minPayment: 100, modules: {leads: true}}} as never;
     if (url === '/admin/dashboard') {
@@ -218,5 +226,38 @@ describe('A12 Payments', () => {
       fireEvent.press(approve[approve.length - 1]);
     });
     expect(postSpy).toHaveBeenCalledWith('/admin/loan/repayment/history/approve-many', {repaymentIds: ['r1', 'r2']});
+  });
+});
+
+describe('admin records a payment', () => {
+  function Pay() {
+    const collect = useCollect();
+    return (
+      <>
+        <Text
+          onPress={() =>
+            collect.pay({
+              loanId: 'l1',
+              loanNumber: '1039',
+              installmentId: 'i1',
+              installmentAmount: 1065,
+              dueAmount: 1065,
+              customerName: 'Sunita Devi',
+              assignedTo: {_id: 'e2'},
+            })
+          }>
+          Collect
+        </Text>
+        {collect.sheets}
+      </>
+    );
+  }
+
+  it("lists the loan's own employee first in Collected by, marked", async () => {
+    renderScreen(Pay);
+    fireEvent.press(await screen.findByText('Collect'));
+    await waitFor(() => expect(screen.getByText('Assigned to this loan')).toBeTruthy());
+    const names = screen.getAllByText(/^(Meena S\.|Arjun P\.)$/).map(n => n.props.children);
+    expect(names).toEqual(['Arjun P.', 'Meena S.']);
   });
 });

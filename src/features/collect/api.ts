@@ -73,6 +73,7 @@ export interface OverdueLoan {
     totalPaid?: number;
     businessAddress?: string;
     installmentFrequency?: string;
+    assignedTo?: string | null;
     customer?: {
       _id: string;
       fname: string;

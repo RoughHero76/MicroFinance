@@ -262,6 +262,7 @@ export default function CustomerProfileScreen() {
                             outstanding: loan.outstandingAmount,
                             customerName: name,
                             phone: c.phoneNumber,
+                            assignedTo: loan.assignedTo,
                           })
                         }
                       />

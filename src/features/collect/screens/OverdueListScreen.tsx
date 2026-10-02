@@ -69,6 +69,7 @@ export default function OverdueListScreen() {
     dueAmount: amountStillDue(installment) || installmentTotal(installment),
     customerName: nameOf(row),
     phone: row.loan.customer?.phoneNumber,
+    assignedTo: row.loan.assignedTo,
   });
 
   const openCollect = (row: OverdueLoan) => {
