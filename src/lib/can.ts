@@ -23,6 +23,7 @@ export type Permission =
   | 'customer.photo'
   | 'employee.manage'
   | 'profile.edit'
+  | 'profile.editName'
   | 'lead.create'
   | 'lead.followup'
   | 'lead.requestConversion'
@@ -60,7 +61,7 @@ const ADMIN_ONLY: Permission[] = [
   'reports.view',
   'risk.runSettlement',
   'settings.business',
-  'profile.edit',
+  'profile.editName',
   'security.backup',
   'calculator.useForLoan',
   'diagnostics.view',
@@ -71,8 +72,9 @@ const ADMIN_ONLY: Permission[] = [
 const EMPLOYEE_ONLY: Permission[] = ['lead.create', 'lead.followup', 'lead.requestConversion', 'cash.handover'];
 
 // Both roles: recording payments (BE-10 lets admins too), applying a
-// penalty on an installment, and changing one's own password (E-02).
-const BOTH: Permission[] = ['payment.record', 'penalty.apply', 'security.changePassword'];
+// penalty on an installment, changing one's own password (E-02) and own
+// details (E-08; the name only for admins).
+const BOTH: Permission[] = ['payment.record', 'penalty.apply', 'security.changePassword', 'profile.edit'];
 
 /** Server-side module switches (M-11); a disabled module hides its actions. */
 export interface Modules {

@@ -81,10 +81,12 @@ describe('permissions', () => {
     expect(can(employee, 'payment.record')).toBe(true);
   });
 
-  it('lets both roles change their own password, but only admins edit their name (E-02)', () => {
+  it('lets both roles change their own password, and details, but only admins edit their name (E-02, E-08)', () => {
     expect(can(employee, 'security.changePassword')).toBe(true);
     expect(can(admin, 'security.changePassword')).toBe(true);
-    expect(can(employee, 'profile.edit')).toBe(false);
+    expect(can(employee, 'profile.edit')).toBe(true);
+    expect(can(employee, 'profile.editName')).toBe(false);
+    expect(can(admin, 'profile.editName')).toBe(true);
   });
 
   it('hides actions of a switched-off module (M-11)', () => {

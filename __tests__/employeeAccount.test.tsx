@@ -13,6 +13,7 @@ import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SessionProvider} from '@/features/auth/SessionProvider';
+import ProfileScreen from '@/features/settings/screens/ProfileScreen';
 import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
@@ -99,6 +100,43 @@ describe('E-02 employee changes their own password', () => {
     await act(async () => {
       fireEvent.press(screen.getByText('Save'));
     });
+    expect(putSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('E-08 employee edits their own contact details', () => {
+  it('edits phone, email, address and emergency contact, but not the name', async () => {
+    await signIn('employee');
+    gets['/employee/profile'] = {
+      data: {uid: 'u1', fname: 'Meena', lname: 'Shah', userName: 'meena.s', phoneNumber: '9000033333', accountStatus: true},
+    };
+    renderScreen(ProfileScreen);
+    await waitFor(() => expect(screen.getAllByText('Edit my details').length).toBeGreaterThan(0));
+    fireEvent.press(screen.getAllByText('Edit my details')[0]);
+    expect(screen.queryByLabelText('First name')).toBeNull();
+    fireEvent.changeText(screen.getByLabelText('Address'), 'Gangapur Rd');
+    fireEvent.changeText(screen.getByLabelText('Emergency contact'), '9000044444');
+    await act(async () => {
+      fireEvent.press(screen.getByText('Save'));
+    });
+    expect(putSpy).toHaveBeenCalledWith('/employee/profile', {
+      email: '',
+      phoneNumber: '9000033333',
+      address: 'Gangapur Rd',
+      emergencyContact: '9000044444',
+    });
+  });
+
+  it('checks the phone number before sending', async () => {
+    await signIn('employee');
+    gets['/employee/profile'] = {data: {uid: 'u1', fname: 'Meena', lname: 'Shah', phoneNumber: '12345'}};
+    renderScreen(ProfileScreen);
+    await waitFor(() => expect(screen.getAllByText('Edit my details').length).toBeGreaterThan(0));
+    fireEvent.press(screen.getAllByText('Edit my details')[0]);
+    await act(async () => {
+      fireEvent.press(screen.getByText('Save'));
+    });
+    expect(screen.getByText('Enter a 10-digit mobile number')).toBeTruthy();
     expect(putSpy).not.toHaveBeenCalled();
   });
 });

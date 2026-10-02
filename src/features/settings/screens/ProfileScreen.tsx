@@ -13,7 +13,7 @@ import {formatDate, formatDateTime} from '@/lib/format';
 import {pickImage, type ImageSource} from '@/lib/image';
 import {forgetImage} from '@/lib/imageCache';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
-import {authKeys, getProfile, updateAdminProfile, uploadProfilePhoto} from '@/features/auth/api';
+import {authKeys, getProfile, updateMyProfile, uploadProfilePhoto, type ProfilePatch} from '@/features/auth/api';
 import {makeStyles} from '@/theme';
 import {
   Appear,
@@ -48,7 +48,18 @@ export default function ProfileScreen() {
   const profile = query.data;
   const name = profile ? `${profile.fname ?? ''} ${profile.lname ?? ''}`.trim() : '';
 
-  const [form, setForm] = useState({fname: '', lname: '', email: '', phoneNumber: ''});
+  // Admins edit their name, email and phone; employees their contact
+  // details (E-08). Name and username stay with the admin.
+  const editName = can('profile.editName');
+  const [form, setForm] = useState({
+    fname: '',
+    lname: '',
+    email: '',
+    phoneNumber: '',
+    address: '',
+    emergencyContact: '',
+  });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const upload = useMutation({
     mutationFn: async (source: ImageSource) => {
@@ -74,10 +85,16 @@ export default function ProfileScreen() {
   });
 
   const save = useMutation({
-    mutationFn: () => updateAdminProfile(form),
+    mutationFn: () => {
+      const {fname, lname, email, phoneNumber, address, emergencyContact} = form;
+      const patch: ProfilePatch = editName
+        ? {fname, lname, email, phoneNumber}
+        : {email: email.trim(), phoneNumber: phoneNumber.replace(/\D/g, ''), address, emergencyContact};
+      return updateMyProfile(role!, patch);
+    },
     onSuccess: () => {
       editSheet.close();
-      updateUser({fname: form.fname, lname: form.lname, email: form.email});
+      updateUser(editName ? {fname: form.fname, lname: form.lname, email: form.email} : {email: form.email});
       queryClient.invalidateQueries({queryKey: authKeys.profile(role)});
       toast.success(t('profile.saved'));
     },
@@ -90,8 +107,20 @@ export default function ProfileScreen() {
       lname: profile?.lname ?? '',
       email: profile?.email ?? '',
       phoneNumber: profile?.phoneNumber ?? '',
+      address: profile?.address ?? '',
+      emergencyContact: profile?.emergencyContact ?? '',
     });
+    setFormError(null);
     editSheet.open();
+  };
+
+  const submit = () => {
+    if (!editName) {
+      if (form.phoneNumber.replace(/\D/g, '').length !== 10) return setFormError(t('errors.invalidPhone'));
+      if (form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email.trim())) return setFormError(t('errors.invalidEmail'));
+    }
+    setFormError(null);
+    save.mutate();
   };
 
   const lastLogin = profile?.lastLogin || profile?.loginHistory?.date;
@@ -159,7 +188,11 @@ export default function ProfileScreen() {
           </Appear>
           {can('profile.edit') ? (
             <Card padded={false} dividers style={s.gap}>
-              <OptionRow icon="account-edit-outline" title={t('profile.edit')} onPress={openEdit} />
+              <OptionRow
+                icon="account-edit-outline"
+                title={editName ? t('profile.edit') : t('profile.editMine')}
+                onPress={openEdit}
+              />
             </Card>
           ) : null}
         </>
@@ -186,22 +219,32 @@ export default function ProfileScreen() {
 
       <BottomSheet
         ref={editSheet.ref}
-        title={t('profile.edit')}
+        title={editName ? t('profile.edit') : t('profile.editMine')}
         footer={
           <>
             <Button title={t('common.cancel')} variant="text" onPress={editSheet.close} />
-            <Button title={t('common.save')} onPress={() => save.mutate()} loading={save.isPending} />
+            <Button title={t('common.save')} onPress={submit} loading={save.isPending} />
           </>
         }>
+        {editName ? (
+          <>
+            <TextField
+              label={t('profile.firstName')}
+              value={form.fname}
+              onChangeText={v => setForm(f => ({...f, fname: v}))}
+            />
+            <TextField
+              label={t('profile.lastName')}
+              value={form.lname}
+              onChangeText={v => setForm(f => ({...f, lname: v}))}
+            />
+          </>
+        ) : null}
         <TextField
-          label={t('profile.firstName')}
-          value={form.fname}
-          onChangeText={v => setForm(f => ({...f, fname: v}))}
-        />
-        <TextField
-          label={t('profile.lastName')}
-          value={form.lname}
-          onChangeText={v => setForm(f => ({...f, lname: v}))}
+          label={t('profile.phone')}
+          value={form.phoneNumber}
+          onChangeText={v => setForm(f => ({...f, phoneNumber: v}))}
+          keyboardType="phone-pad"
         />
         <TextField
           label={t('profile.email')}
@@ -210,12 +253,30 @@ export default function ProfileScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <TextField
-          label={t('profile.phone')}
-          value={form.phoneNumber}
-          onChangeText={v => setForm(f => ({...f, phoneNumber: v}))}
-          keyboardType="phone-pad"
-        />
+        {editName ? null : (
+          <>
+            <TextField
+              label={t('profile.address')}
+              value={form.address}
+              onChangeText={v => setForm(f => ({...f, address: v}))}
+              multiline
+            />
+            <TextField
+              label={t('profile.emergency')}
+              value={form.emergencyContact}
+              onChangeText={v => setForm(f => ({...f, emergencyContact: v}))}
+              keyboardType="phone-pad"
+            />
+            <Text variant="small" color="muted">
+              {t('profile.nameByAdmin')}
+            </Text>
+          </>
+        )}
+        {formError ? (
+          <Text variant="small" color="danger">
+            {formError}
+          </Text>
+        ) : null}
       </BottomSheet>
     </Screen>
   );

@@ -249,7 +249,7 @@ Plan and mocks: `.lavish/employee-account.html`. Decisions: E-03 (forced passwor
 - [ ] **E-04 · Today on the employee profile**: collected of due today, overdue loans, cash held (when the module is on).
 - [ ] **E-05 · Employee profile links + last active**: Loans, Payments, Overdue filtered to the employee; "Active … ago" from `lastSeen`.
 - [ ] **E-07 · Employees list**: search, All/Active/Inactive chips, today's collected and % per row.
-- [ ] **E-08 · Employees edit their own contact details**: phone, email, address, emergency contact (photo already editable).
+- [x] **E-08 · Employees edit their own contact details**: phone, email, address, emergency contact (photo already editable).
 - [ ] **E-12 · Record payments offline**: saved on the phone with an idempotency key, sent when online; "Not sent yet" on Collect and My payments; rejected ones shown in red. Penalties stay online-only.
 - [ ] **E-13 · Login history**: keep 90 days with phone model, app version and IP; "Recent logins" on A16 (with a "New phone" badge) and "My recent logins" in Security.
 

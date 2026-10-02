@@ -276,7 +276,9 @@
     "edit": "Edit profile",
     "firstName": "First name",
     "lastName": "Last name",
-    "saved": "Profile saved"
+    "saved": "Profile saved",
+    "editMine": "Edit my details",
+    "nameByAdmin": "Ask your admin to change your name or username."
   },
   "settings": {
     "title": "Settings",

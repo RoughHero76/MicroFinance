@@ -76,9 +76,21 @@ export async function updateBusinessSettings(patch: Partial<BusinessSettings>): 
   return res.data;
 }
 
-/** Admins edit their own name, email and phone (PUT /admin/profile). */
-export function updateAdminProfile(patch: {fname?: string; lname?: string; email?: string; phoneNumber?: string}) {
-  return api.put<{status: string}>('/admin/profile', patch);
+export interface ProfilePatch {
+  fname?: string;
+  lname?: string;
+  email?: string;
+  phoneNumber?: string;
+  address?: string;
+  emergencyContact?: string;
+}
+
+/**
+ * The signed-in user's own details. Admins: name, email and phone
+ * (PUT /admin/profile). Employees: contact details only (E-08).
+ */
+export function updateMyProfile(role: Role, patch: ProfilePatch) {
+  return api.put<{status: string}>(role === 'admin' ? '/admin/profile' : '/employee/profile', patch);
 }
 
 export const authKeys = {
