@@ -15,6 +15,15 @@ export interface EmployeeSummary {
   phoneNumber?: string;
   accountStatus?: boolean;
   profilePic?: string | null;
+  /** E-07: today's collection, when the list asks for it. */
+  today?: {collected: number; due: number; percent: number | null};
+}
+
+export type EmployeeStatusFilter = 'all' | 'active' | 'inactive';
+export interface EmployeeCounts {
+  all: number;
+  active: number;
+  inactive: number;
 }
 
 export interface EmployeeProfile extends EmployeeSummary {
@@ -40,7 +49,7 @@ export interface EmployeeProfile extends EmployeeSummary {
 export const staffKeys = {
   all: ['employees'] as const,
   list: () => ['employees', 'list'] as const,
-  page: () => ['employees', 'page'] as const,
+  page: (q = '', status: EmployeeStatusFilter = 'all') => ['employees', 'page', q, status] as const,
   profile: (uid: string) => ['employees', 'profile', uid] as const,
   logins: (uid: string) => ['employees', 'logins', uid] as const,
 };
@@ -51,13 +60,26 @@ export async function listEmployees(): Promise<EmployeeSummary[]> {
   return res.data ?? [];
 }
 
-export async function getEmployeesPage(page: number): Promise<Page<EmployeeSummary>> {
+/** A15 (E-07): one page of the list, with today's numbers and the chip counts. */
+export async function getEmployeesPage(
+  page: number,
+  filter: {q?: string; status?: EmployeeStatusFilter} = {},
+): Promise<Page<EmployeeSummary> & {counts?: EmployeeCounts}> {
   const limit = 30;
-  const res = await api.get<{data: EmployeeSummary[]; meta?: {totalPages: number}; total: number}>('/admin/employee', {
+  const res = await api.get<{data: EmployeeSummary[]; total: number; counts?: EmployeeCounts}>('/admin/employee', {
     page,
     limit,
+    q: filter.q || undefined,
+    accountStatus: filter.status === 'active' ? 'true' : filter.status === 'inactive' ? 'false' : undefined,
+    includeToday: 'true',
   });
-  return {items: res.data ?? [], page, totalPages: Math.ceil((res.total ?? 0) / limit) || 1, total: res.total};
+  return {
+    items: res.data ?? [],
+    page,
+    totalPages: Math.ceil((res.total ?? 0) / limit) || 1,
+    total: res.total,
+    counts: res.counts,
+  };
 }
 
 export async function getEmployeeProfile(uid: string): Promise<EmployeeProfile> {

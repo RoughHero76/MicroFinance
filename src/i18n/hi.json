@@ -853,7 +853,12 @@
     "overdue": "बकाया",
     "activeMinutes": "{{count}} मिनट पहले सक्रिय",
     "activeHours": "{{count}} घंटे पहले सक्रिय",
-    "overdueLoans": "{{count}} बकाया"
+    "overdueLoans": "{{count}} बकाया",
+    "search": "नाम, @यूज़रनेम या फ़ोन",
+    "activeChip": "सक्रिय",
+    "percentOfToday": "आज का {{percent}}%",
+    "nothingDue": "आज कुछ बकाया नहीं",
+    "noneHere": "यहाँ कोई कर्मचारी नहीं"
   },
   "leads": {
     "title": "लीड",

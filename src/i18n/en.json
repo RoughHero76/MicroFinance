@@ -853,7 +853,12 @@
     "overdue": "Overdue",
     "activeMinutes": "Active {{count}} min ago",
     "activeHours": "Active {{count}} h ago",
-    "overdueLoans": "{{count}} overdue"
+    "overdueLoans": "{{count}} overdue",
+    "search": "Name, @username or phone",
+    "activeChip": "Active",
+    "percentOfToday": "{{percent}}% of today",
+    "nothingDue": "Nothing due today",
+    "noneHere": "No employees here"
   },
   "leads": {
     "title": "Leads",

@@ -18,6 +18,7 @@ import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import LoginsScreen, {byDay, dayTitle} from '@/features/staff/screens/LoginsScreen';
 import EmployeeProfileScreen, {activeAgo} from '@/features/staff/screens/EmployeeProfileScreen';
 import LoansScreen from '@/features/loans/screens/LoansScreen';
+import EmployeesScreen from '@/features/staff/screens/EmployeesScreen';
 import {deviceName} from '@/lib/api';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
@@ -240,5 +241,29 @@ describe('E-04 + E-05 employee profile', () => {
     renderScreen(LoansScreen, {employee: {id: 'e1', name: 'Meena Shah'}});
     await waitFor(() => expect(getSpy).toHaveBeenCalledWith('/admin/loan', expect.objectContaining({assignedTo: 'e1'})));
     expect(screen.getByText(/Meena Shah/)).toBeTruthy();
+  });
+});
+
+describe('E-07 employees list', () => {
+  it("shows today's collection per row, chip counts, and keeps the call button", async () => {
+    await signIn('admin');
+    gets['/admin/employee'] = {
+      data: [
+        {...meena, today: {collected: 21300, due: 17100, percent: 55}},
+        {_id: 'e3', uid: 'u3', fname: 'Rahul', lname: 'Joshi', accountStatus: false, phoneNumber: '9000055555'},
+      ],
+      total: 2,
+      counts: {all: 2, active: 1, inactive: 1},
+    };
+    renderScreen(EmployeesScreen);
+    await waitFor(() => expect(screen.getByText('₹21,300')).toBeTruthy());
+    expect(screen.getByText('55% of today')).toBeTruthy();
+    expect(screen.getByText('All 2')).toBeTruthy();
+    expect(screen.getByText('Inactive 1')).toBeTruthy();
+    expect(screen.getAllByLabelText('Call').length).toBe(2);
+    fireEvent.press(screen.getByText('Inactive 1'));
+    await waitFor(() =>
+      expect(getSpy).toHaveBeenCalledWith('/admin/employee', expect.objectContaining({accountStatus: 'false'})),
+    );
   });
 });
