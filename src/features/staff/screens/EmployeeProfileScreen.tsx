@@ -3,7 +3,8 @@
 // (email, phone, address, emergency contact, member since); last login
 // opens Recent logins (E-13). Round E adds "Active … ago" (E-05), a Today card
 // (collected of due, overdue loans, cash held: E-04) and links to the
-// employee's loans, payments and overdue (E-05). ⋯ menu: edit,
+// employee's loans, payments and overdue (E-05). ⋯ menu: edit, move loans
+// (E-01),
 // reset password, remove (with Undo, BE-19d).
 
 import React, {useRef, useState} from 'react';
@@ -42,6 +43,7 @@ import {
   RefreshControl,
 } from '@/ui';
 import {getEmployeeProfile, removeEmployee, resetEmployeePassword, restoreEmployee, staffKeys} from '../api';
+import {MoveLoansSheet, type MoveLoansHandle} from '../components/MoveLoansSheet';
 import {passwordOk} from './EmployeeFormScreen';
 
 type Params = {Employee: {uid: string}};
@@ -71,6 +73,7 @@ export default function EmployeeProfileScreen() {
   const confirm = useConfirm();
   const menuRef = useRef<SheetHandle>(null);
   const passwordRef = useRef<SheetHandle>(null);
+  const moveRef = useRef<MoveLoansHandle>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [pw, setPw] = useState({next: '', confirm: ''});
   const [pwError, setPwError] = useState<string | null>(null);
@@ -102,8 +105,34 @@ export default function EmployeeProfileScreen() {
     reset.mutate();
   };
 
+  // After a remove: back to the list with an Undo that restores them (the
+  // loans stay with whoever took them).
+  const removed = () => {
+    queryClient.invalidateQueries({queryKey: staffKeys.all});
+    navigation.goBack();
+    toast.success(t('staff.removed', {name}), {
+      action: {
+        label: t('common.undo'),
+        onPress: async () => {
+          try {
+            await restoreEmployee(uid);
+            queryClient.invalidateQueries({queryKey: staffKeys.all});
+            toast.info(t('staff.restored'));
+          } catch (error) {
+            toast.error(errorMessage(error, t));
+          }
+        },
+      },
+    });
+  };
+
   const askRemove = () => {
     menuRef.current?.close();
+    // E-01: with open loans, someone has to take them first.
+    if (e?.work?.openLoans) {
+      moveRef.current?.open('remove');
+      return;
+    }
     confirm.ask({
       title: t('staff.removeConfirm', {name}),
       message: t('staff.removeHint'),
@@ -116,22 +145,7 @@ export default function EmployeeProfileScreen() {
           toast.error(errorMessage(error, t));
           throw error;
         }
-        queryClient.invalidateQueries({queryKey: staffKeys.all});
-        navigation.goBack();
-        toast.success(t('staff.removed', {name}), {
-          action: {
-            label: t('common.undo'),
-            onPress: async () => {
-              try {
-                await restoreEmployee(uid);
-                queryClient.invalidateQueries({queryKey: staffKeys.all});
-                toast.info(t('staff.restored'));
-              } catch (error) {
-                toast.error(errorMessage(error, t));
-              }
-            },
-          },
-        });
+        removed();
       },
     });
   };
@@ -306,6 +320,17 @@ export default function EmployeeProfileScreen() {
                 passwordRef.current?.open();
               }}
             />
+            {e.work?.openLoans ? (
+              <OptionRow
+                icon="swap-horizontal"
+                title={t('staff.moveLoans')}
+                hint={t('staff.openLoans', {count: e.work.openLoans})}
+                onPress={() => {
+                  menuRef.current?.close();
+                  moveRef.current?.open('move');
+                }}
+              />
+            ) : null}
             <OptionRow icon="account-remove-outline" title={t('staff.remove')} destructive onPress={askRemove} />
           </BottomSheet>
 
@@ -336,6 +361,16 @@ export default function EmployeeProfileScreen() {
               error={pwError}
             />
           </BottomSheet>
+
+          <MoveLoansSheet
+            ref={moveRef}
+            employee={e}
+            onMoved={() => queryClient.invalidateQueries({queryKey: staffKeys.all})}
+            onRemove={async moveTo => {
+              await removeEmployee(uid, moveTo);
+              removed();
+            }}
+          />
 
           {e.profilePic ? (
             <PhotoViewer

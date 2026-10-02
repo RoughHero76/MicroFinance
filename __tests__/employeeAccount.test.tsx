@@ -267,3 +267,69 @@ describe('E-07 employees list', () => {
     );
   });
 });
+
+describe('E-01 move loans', () => {
+  const profile = {
+    ...meena,
+    today: {collected: 0, due: 0, percent: null, overdueLoans: 0, cashHeld: 14200},
+    work: {openLoans: 31, openLeads: 3},
+  };
+  const staff = {
+    data: [
+      {_id: 'e1', uid: 'u-meena', fname: 'Meena', lname: 'Shah'},
+      {_id: 'e2', uid: 'u-arif', fname: 'Arif', lname: 'Khan'},
+      {_id: 'e3', uid: 'u-rahul', fname: 'Rahul', lname: 'Joshi', accountStatus: false},
+    ],
+    total: 3,
+  };
+
+  it('moves all open loans and leads to the chosen employee', async () => {
+    await signIn('admin');
+    gets['/admin/employee/profile'] = {data: profile};
+    gets['/admin/employee'] = staff;
+    postSpy.mockImplementation(async () => ({message: 'Moved 31 loans to Arif Khan', data: {loans: 31, leads: 3}}) as never);
+    renderScreen(EmployeeProfileScreen, {uid: 'u-meena'});
+    await waitFor(() => expect(screen.getAllByText('Meena Shah').length).toBeGreaterThan(0));
+    fireEvent.press(screen.getByLabelText('More'));
+    fireEvent.press(await screen.findByText('Move loans to…'));
+    expect(screen.getByText('31 open loans')).toBeTruthy();
+    // Removed and inactive employees, and Meena herself, aren't offered.
+    await waitFor(() => expect(screen.getByText('Arif Khan')).toBeTruthy());
+    expect(screen.queryByText('Rahul Joshi')).toBeNull();
+    fireEvent.press(screen.getByText('Arif Khan'));
+    await act(async () => {
+      fireEvent.press(screen.getByText('Move 31 loans'));
+    });
+    expect(postSpy).toHaveBeenCalledWith('/admin/employee/move-loans', {
+      uid: 'u-meena',
+      toUid: 'u-arif',
+      loanIds: undefined,
+      includeLeads: true,
+    });
+  });
+
+  it('removing someone with open loans asks who takes them, and warns about cash', async () => {
+    await signIn('admin');
+    gets['/admin/employee/profile'] = {data: profile};
+    gets['/admin/employee'] = staff;
+    const deleteSpy = jest.spyOn(api, 'delete').mockImplementation(async () => ({status: 'success'}) as never);
+    renderScreen(EmployeeProfileScreen, {uid: 'u-meena'});
+    await waitFor(() => expect(screen.getAllByText('Meena Shah').length).toBeGreaterThan(0));
+    fireEvent.press(screen.getByLabelText('More'));
+    fireEvent.press(await screen.findByText('Remove employee'));
+    await waitFor(() => expect(screen.getByText('They have 31 open loans. Someone has to collect them.')).toBeTruthy());
+    expect(screen.getByText('₹14,200 cash not handed over yet')).toBeTruthy();
+    expect(screen.getByText('Their 3 open leads move too.')).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText('Move & remove'));
+    });
+    expect(deleteSpy).not.toHaveBeenCalled();
+    expect(screen.getAllByText('Choose who takes them').length).toBeGreaterThan(0);
+    fireEvent.press(screen.getByText('Arif Khan'));
+    await act(async () => {
+      fireEvent.press(screen.getByText('Move & remove'));
+    });
+    expect(deleteSpy).toHaveBeenCalledWith('/admin/employee', {uid: 'u-meena', moveTo: 'u-arif'});
+    await waitFor(() => expect(screen.getByText('Undo')).toBeTruthy());
+  });
+});

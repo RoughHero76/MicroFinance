@@ -3,6 +3,7 @@
 
 import {api} from '@/lib/api';
 import type {LoginEntry} from '@/features/auth/api';
+import type {Loan} from '@/features/loans/types';
 import type {Page} from '@/lib/useInfiniteList';
 
 export interface EmployeeSummary {
@@ -44,6 +45,8 @@ export interface EmployeeProfile extends EmployeeSummary {
     overdueLoans: number;
     cashHeld: number | null;
   };
+  /** E-01: what someone would have to take over. */
+  work?: {openLoans: number; openLeads: number};
 }
 
 export const staffKeys = {
@@ -52,6 +55,7 @@ export const staffKeys = {
   page: (q = '', status: EmployeeStatusFilter = 'all') => ['employees', 'page', q, status] as const,
   profile: (uid: string) => ['employees', 'profile', uid] as const,
   logins: (uid: string) => ['employees', 'logins', uid] as const,
+  openLoans: (id: string) => ['employees', 'openLoans', id] as const,
 };
 
 /** Every employee, for pickers (one cached list). */
@@ -110,5 +114,27 @@ export const updateEmployee = (uid: string, input: Partial<EmployeeInput>) =>
   api.put(`/admin/employee?uid=${encodeURIComponent(uid)}`, input);
 export const resetEmployeePassword = (uid: string, newPassword: string) =>
   api.put(`/admin/employee/password?uid=${encodeURIComponent(uid)}`, {newPassword});
-export const removeEmployee = (uid: string) => api.delete('/admin/employee', {uid});
+/** Remove; with open loans the server needs `moveTo` (who takes them, E-01). */
+export const removeEmployee = (uid: string, moveTo?: string) =>
+  api.delete('/admin/employee', moveTo ? {uid, moveTo} : {uid});
+
+/** E-01: the employee's open loans (Pending, Approved, Active) for "Choose…". */
+export async function getOpenLoansOf(employeeId: string): Promise<Loan[]> {
+  const res = await api.get<{data: Loan[]}>('/admin/loan', {
+    assignedTo: employeeId,
+    limit: 300,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    includeCustomerProfile: 'true',
+  });
+  return (res.data ?? []).filter(l => ['Pending', 'Approved', 'Active'].includes(l.status));
+}
+
+/** E-01: hand open loans (all, or chosen) and optionally open leads to someone else. */
+export const moveEmployeeLoans = (uid: string, toUid: string, opts: {loanIds?: string[]; includeLeads?: boolean} = {}) =>
+  api.post<{message: string; data: {loans: number; leads: number}}>('/admin/employee/move-loans', {
+    uid,
+    toUid,
+    ...opts,
+  });
 export const restoreEmployee = (uid: string) => api.post('/admin/employee/restore', {uid});
