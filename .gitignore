@@ -72,3 +72,12 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+# Upload key for npm run release -- --upload (never commit)
+release.local.json
+# Release APKs (npm run release)
+dist/
+
+# Brand flavor folders are copied from brands/<id>/ by android/app/build.gradle
+android/app/src/*/
+!android/app/src/main/
+!android/app/src/debug/

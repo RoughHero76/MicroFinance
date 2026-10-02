@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Push notifications (Firebase). Every brand needs brands/<id>/google-services.json.
+apply plugin: "com.google.gms.google-services"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -79,11 +81,52 @@ android {
 
     namespace "com.microfinance"
     defaultConfig {
-        applicationId "com.microfinance"
+        // Each brand flavor below adds its own suffix (R-02). The Kotlin
+        // package and namespace stay com.microfinance, so no files move.
+        applicationId "com.softwares76.microfinance"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.0.4"
+        versionCode 7
+        versionName "1.0.6"
+        // Needed by react-native-image-crop-picker.
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    // One flavor per brands/<id>/brand.json (white-label). `npm run brand <id>`
+    // points the JS at the same brand; build with assemble<Id>Release.
+    flavorDimensions "brand"
+    productFlavors {
+        def brandsDir = file("../../brands")
+        brandsDir.eachDir { dir ->
+            def config = new File(dir, "brand.json")
+            if (config.exists()) {
+                def brand = new groovy.json.JsonSlurper().parse(config)
+                create(brand.id) {
+                    dimension "brand"
+                    applicationId brand.android.applicationId
+                    resValue "string", "app_name", brand.android.appName
+                }
+                // The brand's Firebase config goes where the Google services
+                // plugin looks for this flavor (src/<id>/).
+                def services = new File(dir, "google-services.json")
+                if (services.exists()) {
+                    copy {
+                        from services
+                        into file("src/${brand.id}")
+                    }
+                }
+                // The brand's Android resources (launcher icons, notification
+                // icon and colour) go into the flavor's res folder on every
+                // build, so a fresh clone needs no `npm run brand` first.
+                def brandRes = new File(dir, "android/res")
+                if (brandRes.exists()) {
+                    copy {
+                        from brandRes
+                        into file("src/${brand.id}/res")
+                    }
+                }
+            }
+        }
     }
     signingConfigs {
         debug {

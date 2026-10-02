@@ -1,16 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
   <uses-permission android:name="android.permission.INTERNET" />
-  <uses-permission android:name="android.permission.READ_SMS" />
-  <uses-permission android:name="android.permission.SEND_SMS" />
-  <uses-permission android:name="android.permission.WRITE_SMS" />
-  <uses-permission android:name="android.permission.RECEIVE_SMS" />
-  <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+  <!-- In-app updates install the downloaded APK. -->
   <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+  <!-- Photos of customers, leads and documents (asked when first used). -->
+  <uses-permission android:name="android.permission.CAMERA" />
+  <!-- P-04: haptics on success/error/tap (Vibration API). -->
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <!-- Quick unlock / app lock with the phone's fingerprint or PIN. -->
+  <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+  <!-- Android 13+: notifications (download progress, updates). -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- Android 10 and older only: saving reports and backups to Downloads.
+       Newer versions use media storage, which needs no permission. -->
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
 
 
   <application
@@ -24,6 +27,12 @@
     android:largeHeap="true"
     android:usesCleartextTraffic="true"
     android:supportsRtl="true">
+
+    <!-- Push notifications (Firebase): the small status-bar icon. The channel
+         and its colour come from firebase.json. -->
+    <meta-data
+      android:name="com.google.firebase.messaging.default_notification_icon"
+      android:resource="@drawable/ic_notification" />
 
    
        <activity

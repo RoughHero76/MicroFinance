@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/home/roughhero76/projects/MicroFinance/logs/.6e70a1048cd5514f7ad3fac7bcb44940aec8ff2c-audit.json",
+    "files": [
+        {
+            "date": 1790852306065,
+            "name": "/home/roughhero76/projects/MicroFinance/logs/application-2026-10-01.log",
+            "hash": "078701dcf2931f261f31729f10d6268584ea1171a3849143c310a8661acf7d05"
+        }
+    ],
+    "hashType": "sha256"
+}

@@ -1,0 +1,150 @@
+// U-07: label above the field, the right keyboard, errors under the field.
+
+import React, {forwardRef, useContext, useState} from 'react';
+import {BottomSheetTextInput} from '@gorhom/bottom-sheet';
+import {Pressable, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle} from 'react-native';
+import {fontFamily, makeStyles, useTheme} from '@/theme';
+import {Icon} from './Icon';
+import {InSheet} from './sheetContext';
+import {MAX_FONT_SCALE, Text} from './Text';
+
+export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
+  label?: string;
+  hint?: string;
+  error?: string | null;
+  required?: boolean;
+  icon?: string;
+  prefix?: string;
+  /** Show/hide toggle for passwords. */
+  secureToggle?: boolean;
+  right?: React.ReactNode;
+  containerStyle?: StyleProp<ViewStyle>;
+  /** Big bold input (the amount on payment sheets, mock E3). */
+  large?: boolean;
+  /** A line under the field, above the hint (amount in words). */
+  below?: React.ReactNode;
+}
+
+export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+  {
+    label,
+    hint,
+    error,
+    required,
+    icon,
+    prefix,
+    secureToggle,
+    right,
+    containerStyle,
+    large,
+    below,
+    editable = true,
+    secureTextEntry,
+    onFocus,
+    onBlur,
+    ...rest
+  },
+  ref,
+) {
+  const t = useTheme();
+  const s = useStyles();
+  const [focused, setFocused] = useState(false);
+  // In a sheet, the sheet's own input keeps the sheet open with the keyboard.
+  // (Same TextInput at runtime; the library's types just don't say so.)
+  const Input = (useContext(InSheet) ? BottomSheetTextInput : TextInput) as typeof TextInput;
+  const [hidden, setHidden] = useState(true);
+
+  return (
+    <View style={[s.container, containerStyle]}>
+      {label ? (
+        <Text variant="label" weight="semibold" style={s.label}>
+          {label}
+          {required ? <Text color="danger"> *</Text> : null}
+        </Text>
+      ) : null}
+      <View style={[s.ring, focused && s.ringOn, !!error && focused && s.ringError]}>
+        <View style={[s.field, focused && s.focused, !!error && s.errored, !editable && s.readonly]}>
+          {icon ? <Icon name={icon} size={18} color="muted" /> : null}
+          {prefix ? (
+            <Text
+              variant={large ? 'h2' : 'bodyLg'}
+              weight={large ? 'bold' : undefined}
+              color={large ? 'text' : 'muted'}>
+              {prefix}
+            </Text>
+          ) : null}
+          <Input
+            ref={ref}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            style={[s.input, large && s.inputLarge]}
+            placeholderTextColor={t.colors.muted}
+            editable={editable}
+            secureTextEntry={secureToggle ? hidden : secureTextEntry}
+            accessibilityLabel={label}
+            onFocus={e => {
+              setFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={e => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
+            {...rest}
+          />
+          {secureToggle ? (
+            <Pressable
+              onPress={() => setHidden(h => !h)}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={hidden ? 'Show' : 'Hide'}>
+              <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color="muted" />
+            </Pressable>
+          ) : null}
+          {right}
+        </View>
+      </View>
+      {below ? <View style={s.below}>{below}</View> : null}
+      {error ? (
+        <Text variant="caption" color="danger" style={s.below}>
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text variant="caption" color="muted" style={s.below}>
+          {hint}
+        </Text>
+      ) : null}
+    </View>
+  );
+});
+
+const useStyles = makeStyles(t => ({
+  container: {marginBottom: t.space.md},
+  label: {marginBottom: t.space.xs},
+  // The mock's focus ring: a soft 4dp halo in the brand colour around the field.
+  ring: {margin: -4, padding: 3, borderRadius: t.radius.md + 4, borderWidth: 1, borderColor: 'transparent'},
+  ringOn: {backgroundColor: t.colors.primarySoft},
+  ringError: {backgroundColor: t.colors.dangerSoft},
+  field: {
+    minHeight: t.size.input,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.sm,
+    paddingHorizontal: t.space.md,
+    borderRadius: t.radius.md + 2,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
+  },
+  focused: {borderColor: t.colors.primary},
+  errored: {borderColor: t.colors.danger},
+  readonly: {backgroundColor: t.colors.surface2},
+  input: {
+    flex: 1,
+    fontSize: t.font.bodyLg,
+    fontFamily: fontFamily.regular,
+    color: t.colors.text,
+    paddingVertical: t.space.sm,
+  },
+  inputLarge: {fontSize: t.font.h2, fontFamily: fontFamily.bold, paddingVertical: t.space.md},
+  below: {marginTop: t.space.xs},
+}));
