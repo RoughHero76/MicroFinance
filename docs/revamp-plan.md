@@ -243,15 +243,15 @@ Added 2026-10-01 after device testing. The screens matched the mocks' layout but
 
 Plan and mocks: `.lavish/employee-account.html`. Decisions: E-03 (forced password change, Share login) and E-06 (My month card) dropped. Removing an employee moves their leads with the loans and warns about cash not handed over, but still allows removal. The Home eye hides the market amount, collected today and repaid.
 
-- [x] **A-01 · Market amount hidden on admin Home**: shows `₹ • • • • • •` by default; the eye shows market, collected today and repaid; hides again when the app is reopened or unlocked. App only.
-- [x] **E-01 · Move loans**: "Move loans to…" in the A16 ⋯ menu (all active, or chosen loans; optionally open leads). Removing an employee with active loans requires choosing who takes them (leads move too, cash warning). Backend: one bulk reassign route, audited per loan.
-- [x] **E-02 · Employees change their own password**: "My account" group in Security, current + new + confirm, server password rules.
-- [x] **E-04 · Today on the employee profile**: collected of due today, overdue loans, cash held (when the module is on).
-- [x] **E-05 · Employee profile links + last active**: Loans, Payments, Overdue filtered to the employee; "Active … ago" from `lastSeen`.
-- [x] **E-07 · Employees list**: search, All/Active/Inactive chips, today's collected and % per row.
-- [x] **E-08 · Employees edit their own contact details**: phone, email, address, emergency contact (photo already editable).
-- [x] **E-12 · Record payments offline**: saved on the phone with an idempotency key, sent when online; "Not sent yet" on Collect and My payments; rejected ones shown in red. Penalties stay online-only.
-- [x] **E-13 · Login history**: keep 90 days with phone model, app version and IP; "Recent logins" on A16 (with a "New phone" badge) and "My recent logins" in Security.
+- [x] **A-01 · Market amount hidden on admin Home**: shows `₹ • • • • • •` by default; the eye shows market, collected today and repaid; hides again when the app is reopened or unlocked. App only. _(app 7861516)_
+- [x] **E-01 · Move loans**: "Move loans to…" in the A16 ⋯ menu (all active, or chosen loans; optionally open leads). Removing an employee with active loans requires choosing who takes them (leads move too, cash warning). Backend: one bulk reassign route, audited per loan. _(backend 34de36a · app 6008bcf)_
+- [x] **E-02 · Employees change their own password**: "My account" group in Security, current + new + confirm, server password rules. _(backend 151c727 · app 34c0f44)_
+- [x] **E-04 · Today on the employee profile**: collected of due today, overdue loans, cash held (when the module is on). _(backend 1b3140d · app 4d349b3)_
+- [x] **E-05 · Employee profile links + last active**: Loans, Payments, Overdue filtered to the employee; "Active … ago" from `lastSeen`. _(backend 1b3140d · app 4d349b3)_
+- [x] **E-07 · Employees list**: search, All/Active/Inactive chips, today's collected and % per row. _(backend 384e20c · app 7cadd4f)_
+- [x] **E-08 · Employees edit their own contact details**: phone, email, address, emergency contact (photo already editable). _(backend 93d7ee4 · app 6c862ee)_
+- [x] **E-12 · Record payments offline**: saved on the phone with an idempotency key, sent when online; "Not sent yet" on Collect and My payments; rejected ones shown in red. Penalties stay online-only. _(backend 4217611 · app 6aa4291)_
+- [x] **E-13 · Login history**: keep 90 days with phone model, app version and IP; "Recent logins" on A16 (with a "New phone" badge) and "My recent logins" in Security. _(backend d714835 · app ab140cf)_
 
 ## Shared screens (one implementation, role config)
 

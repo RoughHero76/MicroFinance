@@ -4,7 +4,7 @@ For a native speaker: check each Hindi string reads naturally for field staff an
 
 Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as they are.
 
-## App (989 strings)
+## App (1055 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -329,7 +329,7 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `collect.allCollected` | All collected for today 🎉 | आज की पूरी वसूली हो गई 🎉 |
 | `collect.allCollectedHint` | Nice work. Anything new shows up here. | बढ़िया। नया कुछ आएगा तो यहाँ दिखेगा। |
 | `collect.nothingDue` | Nothing due today | आज कुछ देय नहीं |
-| `collect.offlinePay` | Recording payments needs a connection. Collect cash and record it when you're back online. | भुगतान दर्ज करने के लिए इंटरनेट चाहिए। नकद ले लें और ऑनलाइन होने पर दर्ज करें। |
+| `collect.offlinePay` | You're offline. The payment is saved on the phone and sent when you're back online. | आप ऑफ़लाइन हैं। भुगतान फ़ोन में सेव होगा और इंटरनेट आने पर भेजा जाएगा। |
 | `home.welcome` | Welcome, {{name}} | स्वागत है, {{name}} |
 | `home.todaysCollections` | Today's collections | आज की वसूली |
 | `home.dueCount` | {{count}} due | {{count}} बाकी |
@@ -998,8 +998,73 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `send.sent_plural` | Sent to {{count}} people | {{count}} लोगों को भेजा गया |
 | `send.phones` | {{count}} phone notified | {{count}} फ़ोन पर सूचना गई |
 | `send.phones_plural` | {{count}} phones notified | {{count}} फ़ोन पर सूचना गई |
+| `ui.longPressToCopy` | Long-press to copy | कॉपी करने के लिए देर तक दबाएं |
+| `profile.editMine` | Edit my details | मेरी जानकारी बदलें |
+| `profile.nameByAdmin` | Ask your admin to change your name or username. | नाम या यूज़रनेम बदलने के लिए अपने एडमिन से कहें। |
+| `security.myAccount` | My account | मेरा खाता |
+| `collect.dueLabel` | Due | बाकी |
+| `adminHome.welcome` | Welcome, {{name}} | नमस्ते, {{name}} |
+| `adminHome.repaidLabel` | Repaid | वापस मिला |
+| `adminHome.loanCount` | {{count}} loan | {{count}} ऋण |
+| `adminHome.showAmounts` | Show amounts | राशि दिखाएँ |
+| `adminHome.hideAmounts` | Hide amounts | राशि छिपाएँ |
+| `adminHome.amountHidden` | Amount hidden | राशि छिपी है |
+| `staff.activeNow` | Active just now | अभी सक्रिय |
+| `staff.activeOn` | Last active {{date}} | आख़िरी बार सक्रिय {{date}} |
+| `staff.todayLabel` | Today's collection | आज की वसूली |
+| `staff.ofDue` | of {{amount}} due | {{amount}} बकाया में से |
+| `staff.cashHeld` | {{amount}} cash held | {{amount}} नकद पास में |
+| `staff.loans` | Loans | लोन |
+| `staff.payments` | Payments | भुगतान |
+| `staff.overdue` | Overdue | बकाया |
+| `staff.activeMinutes` | Active {{count}} min ago | {{count}} मिनट पहले सक्रिय |
+| `staff.activeHours` | Active {{count}} h ago | {{count}} घंटे पहले सक्रिय |
+| `staff.overdueLoans` | {{count}} overdue | {{count}} बकाया |
+| `staff.search` | Name, @username or phone | नाम, @यूज़रनेम या फ़ोन |
+| `staff.activeChip` | Active | सक्रिय |
+| `staff.percentOfToday` | {{percent}}% of today | आज का {{percent}}% |
+| `staff.nothingDue` | Nothing due today | आज कुछ बकाया नहीं |
+| `staff.noneHere` | No employees here | यहाँ कोई कर्मचारी नहीं |
+| `staff.moveLoans` | Move loans to… | लोन किसी और को दें… |
+| `staff.openLoans` | {{count}} open loans | {{count}} खुले लोन |
+| `staff.moveTitle` | Move {{name}}'s loans | {{name}} के लोन सौंपें |
+| `staff.moveHint` | Past payments stay under {{name}}'s name. | पुराने भुगतान {{name}} के नाम पर ही रहेंगे। |
+| `staff.removeWithLoans` | They have {{count}} open loans. Someone has to collect them. | इनके पास {{count}} खुले लोन हैं। किसी को इनकी वसूली करनी होगी। |
+| `staff.moveTo` | Move to | किसे दें |
+| `staff.moveTheirLoansTo` | Move their loans to | इनके लोन किसे दें |
+| `staff.chooseWho` | Choose who takes them | चुनें कि कौन लेगा |
+| `staff.whichLoans` | Which loans | कौन से लोन |
+| `staff.allOpen` | All open · {{count}} | सभी खुले · {{count}} |
+| `staff.chooseEllipsis` | Choose… | चुनें… |
+| `staff.chooseLoans` | Choose at least one loan | कम से कम एक लोन चुनें |
+| `staff.alsoLeads` | Also move {{count}} open leads | {{count}} खुली लीड भी दें |
+| `staff.leadsMoveToo` | Their {{count}} open leads move too. | इनकी {{count}} खुली लीड भी चली जाएँगी। |
+| `staff.cashNotHanded` | {{amount}} cash not handed over yet | {{amount}} नकद अभी जमा नहीं हुआ |
+| `staff.moveCount` | Move {{count}} loans | {{count}} लोन दें |
+| `staff.moveAndRemove` | Move & remove | सौंपें और हटाएँ |
+| `staff.moved` | Moved {{count}} loans to {{name}} | {{count}} लोन {{name}} को सौंपे गए |
+| `logins.title` | Recent logins | हाल के लॉगिन |
+| `logins.mine` | My recent logins | मेरे हाल के लॉगिन |
+| `logins.kept` | last 90 days | पिछले 90 दिन |
+| `logins.unknownPhone` | Unknown phone | अज्ञात फ़ोन |
+| `logins.app` | app {{version}} | ऐप {{version}} |
+| `logins.newPhone` | New phone | नया फ़ोन |
+| `logins.empty` | No logins in the last 90 days | पिछले 90 दिनों में कोई लॉगिन नहीं |
+| `payQueue.saved` | {{amount}} saved on the phone | {{amount}} फ़ोन में सेव हुआ |
+| `payQueue.savedHint` | It will be sent when you're online. | इंटरनेट आने पर भेजा जाएगा। |
+| `payQueue.sent` | {{count}} saved payments sent | {{count}} सेव किए भुगतान भेजे गए |
+| `payQueue.notSent` | Not sent yet | अभी नहीं भेजा |
+| `payQueue.notSentCount` | {{count}} not sent yet | {{count}} अभी नहीं भेजे |
+| `payQueue.refusedTitle` | {{count}} payment couldn't be sent | {{count}} भुगतान नहीं भेजा जा सका |
+| `payQueue.refusedTitle_plural` | {{count}} payments couldn't be sent | {{count}} भुगतान नहीं भेजे जा सके |
+| `payQueue.refusedHint` | Tell your admin about this money. | इस राशि के बारे में अपने एडमिन को बताएँ। |
+| `payQueue.retry` | Try again | फिर कोशिश करें |
+| `payQueue.remove` | Remove | हटाएँ |
+| `payQueue.removeTitle` | Remove this saved payment? | यह सेव किया भुगतान हटाएँ? |
+| `payQueue.removeHint` | {{amount}} for #{{loan}} will not be recorded. Only do this if it was recorded another way. | #{{loan}} के {{amount}} दर्ज नहीं होंगे। ऐसा तभी करें जब यह किसी और तरह दर्ज हो चुका हो। |
+| `payQueue.logoutUnsent` | {{count}} saved payments aren't sent yet. They stay on this phone and are sent when you sign in again. | {{count}} सेव किए भुगतान अभी नहीं भेजे गए। ये इसी फ़ोन में रहेंगे और दोबारा साइन इन करने पर भेजे जाएँगे। |
 
-## Server (48 strings)
+## Server (56 strings)
 
 | Key | English | Hindi |
 |---|---|---|
@@ -1051,7 +1116,14 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 | `NOTHING_TO_HAND_OVER` | No cash to hand over | जमा करने को नकद नहीं है |
 | `ALREADY_CONFIRMED` | Already confirmed | पहले ही पुष्टि हो चुकी है |
 | `STATEMENT_CREATED` | Statement ready | विवरण तैयार है |
-
+| `WRONG_PASSWORD` | Current password is incorrect | मौजूदा पासवर्ड गलत है |
+| `WEAK_PASSWORD` | Use at least 8 characters with upper and lower case letters, a number and one of @$!%*?& | कम से कम 8 अक्षर रखें: बड़ा और छोटा अक्षर, एक अंक और @$!%*?& में से एक |
+| `PASSWORD_CHANGED` | Password changed | पासवर्ड बदल गया |
+| `PROFILE_SAVED` | Profile updated | प्रोफ़ाइल अपडेट हो गई |
+| `LOANS_MOVED` | Moved {count} loans to {name} | {count} लोन {name} को सौंपे गए |
+| `EMPLOYEE_HAS_LOANS` | This employee still has {count} open loans. Choose who takes them first. | इस कर्मचारी के पास अभी {count} खुले लोन हैं। पहले चुनें कि उन्हें कौन लेगा। |
+| `MOVE_TARGET_INVALID` | Choose a different, active employee to take the loans | लोन लेने के लिए कोई दूसरा, सक्रिय कर्मचारी चुनें |
+| `PAYMENT_ALREADY_RECORDED` | This payment was already recorded | यह भुगतान पहले ही दर्ज हो चुका है |
 
 ## Push notifications (server, `src/helpers/pushText.js`)
 
