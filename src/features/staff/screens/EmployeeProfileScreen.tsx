@@ -1,7 +1,9 @@
 // A16 Employee profile: photo, contact buttons, 3 numbers (assigned, active,
 // payments collected), last login (BE-23), every detail the old screen had
 // (email, phone, address, emergency contact, member since); last login
-// opens Recent logins (E-13). ⋯ menu: edit,
+// opens Recent logins (E-13). Round E adds "Active … ago" (E-05), a Today card
+// (collected of due, overdue loans, cash held: E-04) and links to the
+// employee's loans, payments and overdue (E-05). ⋯ menu: edit,
 // reset password, remove (with Undo, BE-19d).
 
 import React, {useRef, useState} from 'react';
@@ -11,7 +13,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
 import {errorMessage} from '@/lib/api';
-import {formatDate, formatDateTime} from '@/lib/format';
+import {formatDate, formatDateTime, formatMoney} from '@/lib/format';
 import {callPhone, openEmail, openMaps} from '@/lib/messaging';
 import {ContactActions} from '@/features/customers/components/CustomerParts';
 import {makeStyles} from '@/theme';
@@ -28,6 +30,7 @@ import {
   KeyValueRows,
   OptionRow,
   PhotoViewer,
+  ProgressBar,
   Screen,
   SkeletonRows,
   StatusBadge,
@@ -42,6 +45,21 @@ import {getEmployeeProfile, removeEmployee, resetEmployeePassword, restoreEmploy
 import {passwordOk} from './EmployeeFormScreen';
 
 type Params = {Employee: {uid: string}};
+
+/** "Active just now", "Active 12 min ago", "Active 3 h ago", else the date. */
+export function activeAgo(
+  at: string | null | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  lang: 'en' | 'hi',
+  now = Date.now(),
+): string | null {
+  if (!at) return null;
+  const minutes = Math.floor((now - new Date(at).getTime()) / 60000);
+  if (minutes < 2) return t('staff.activeNow');
+  if (minutes < 60) return t('staff.activeMinutes', {count: minutes});
+  if (minutes < 24 * 60) return t('staff.activeHours', {count: Math.floor(minutes / 60)});
+  return t('staff.activeOn', {date: formatDateTime(at, lang)});
+}
 
 export default function EmployeeProfileScreen() {
   const s = useStyles();
@@ -65,6 +83,7 @@ export default function EmployeeProfileScreen() {
   });
   const e = query.data;
   const name = e ? `${e.fname} ${e.lname}`.trim() : '';
+  const filterOf = () => ({id: e!._id, name});
 
   const reset = useMutation({
     mutationFn: () => resetEmployeePassword(uid, pw.next),
@@ -160,12 +179,52 @@ export default function EmployeeProfileScreen() {
                       .filter(Boolean)
                       .join(' · ')}
                   </Text>
+                  {activeAgo(e.lastActiveAt, t, lang) ? (
+                    <Text variant="small" color="muted" numberOfLines={1}>
+                      {activeAgo(e.lastActiveAt, t, lang)}
+                    </Text>
+                  ) : null}
                   {e.accountStatus === false ? <StatusBadge tone="neutral" label={t('staff.inactive')} /> : null}
                 </View>
               </View>
               <ContactActions phone={e.phoneNumber} address={e.address} name={name} variant="ring" align="start" />
             </Card>
           </Appear>
+
+          {e.today ? (
+            <Appear index={1}>
+              <Card style={s.today} accessibilityLabel={t('staff.todayLabel')}>
+                <View style={s.todayHead}>
+                  <Text variant="small" color="muted">
+                    {t('common.today')}
+                  </Text>
+                  <Text variant="small" weight="bold" tabular>
+                    {e.today.percent != null ? `${e.today.percent}%` : '–'}
+                  </Text>
+                </View>
+                <Text variant="bodyLg" tabular>
+                  <Text variant="title" weight="bold" tabular>
+                    {formatMoney(e.today.collected)}
+                  </Text>
+                  <Text color="muted" tabular>
+                    {' '}
+                    {t('staff.ofDue', {amount: formatMoney(e.today.collected + e.today.due)})}
+                  </Text>
+                </Text>
+                <ProgressBar value={(e.today.percent ?? 0) / 100} />
+                {e.today.overdueLoans || e.today.cashHeld ? (
+                  <View style={s.todayBadges}>
+                    {e.today.overdueLoans ? (
+                      <StatusBadge tone="danger" label={t('staff.overdueLoans', {count: e.today.overdueLoans})} />
+                    ) : null}
+                    {e.today.cashHeld ? (
+                      <StatusBadge tone="warning" label={t('staff.cashHeld', {amount: formatMoney(e.today.cashHeld)})} />
+                    ) : null}
+                  </View>
+                ) : null}
+              </Card>
+            </Appear>
+          ) : null}
 
           <Appear index={1}>
             <StatGrid
@@ -180,6 +239,23 @@ export default function EmployeeProfileScreen() {
 
           {/* Mock A16 (round E): the employee's work and logins. */}
           <Card padded={false} dividers style={s.details}>
+            <OptionRow
+              icon="file-document-outline"
+              title={t('staff.loans')}
+              value={String(e.stats.activeLoans)}
+              onPress={() => navigation.navigate('EmployeeLoans' as never, {employee: filterOf()} as never)}
+            />
+            <OptionRow
+              icon="cash-check"
+              title={t('staff.payments')}
+              onPress={() => navigation.navigate('Payments' as never, {employee: filterOf()} as never)}
+            />
+            <OptionRow
+              icon="alert-decagram-outline"
+              title={t('staff.overdue')}
+              value={e.today ? String(e.today.overdueLoans) : undefined}
+              onPress={() => navigation.navigate('Overdue' as never, {bucket: 'all', employee: filterOf()} as never)}
+            />
             <OptionRow
               icon="history"
               title={t('logins.title')}
@@ -280,5 +356,8 @@ const useStyles = makeStyles(t => ({
   who: {flexDirection: 'row', alignItems: 'center', gap: t.space.md},
   whoText: {flex: 1, minWidth: 0, gap: 2},
   facts: {marginTop: t.space.md},
+  today: {marginTop: t.space.md, gap: t.space.sm},
+  todayHead: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
+  todayBadges: {flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm},
   details: {marginTop: t.space.md},
 }));

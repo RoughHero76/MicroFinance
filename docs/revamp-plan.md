@@ -246,8 +246,8 @@ Plan and mocks: `.lavish/employee-account.html`. Decisions: E-03 (forced passwor
 - [x] **A-01 · Market amount hidden on admin Home**: shows `₹ • • • • • •` by default; the eye shows market, collected today and repaid; hides again when the app is reopened or unlocked. App only.
 - [ ] **E-01 · Move loans**: "Move loans to…" in the A16 ⋯ menu (all active, or chosen loans; optionally open leads). Removing an employee with active loans requires choosing who takes them (leads move too, cash warning). Backend: one bulk reassign route, audited per loan.
 - [x] **E-02 · Employees change their own password**: "My account" group in Security, current + new + confirm, server password rules.
-- [ ] **E-04 · Today on the employee profile**: collected of due today, overdue loans, cash held (when the module is on).
-- [ ] **E-05 · Employee profile links + last active**: Loans, Payments, Overdue filtered to the employee; "Active … ago" from `lastSeen`.
+- [x] **E-04 · Today on the employee profile**: collected of due today, overdue loans, cash held (when the module is on).
+- [x] **E-05 · Employee profile links + last active**: Loans, Payments, Overdue filtered to the employee; "Active … ago" from `lastSeen`.
 - [ ] **E-07 · Employees list**: search, All/Active/Inactive chips, today's collected and % per row.
 - [x] **E-08 · Employees edit their own contact details**: phone, email, address, emergency contact (photo already editable).
 - [ ] **E-12 · Record payments offline**: saved on the phone with an idempotency key, sent when online; "Not sent yet" on Collect and My payments; rejected ones shown in red. Penalties stay online-only.

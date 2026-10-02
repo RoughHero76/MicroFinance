@@ -6,7 +6,7 @@
 
 import React, {useMemo, useRef, useState} from 'react';
 import {Pressable, SectionList, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
@@ -15,6 +15,7 @@ import {formatDate, formatDateTime, formatMoney, toISODate} from '@/lib/format';
 import {haptics} from '@/lib/haptics';
 import {useRemembered} from '@/lib/useRemembered';
 import {useInfiniteList} from '@/lib/useInfiniteList';
+import type {AppStackParamList} from '@/navigation/types';
 import {makeStyles} from '@/theme';
 import {
   Avatar,
@@ -69,17 +70,23 @@ export default function PaymentsScreen() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const filterRef = useRef<SheetHandle>(null);
+  // E-05: opened from an employee's profile, only what they collected.
+  const employee = useRoute<RouteProp<AppStackParamList, 'Payments'>>().params?.employee;
   const [tab, setTab, tabReady] = useRemembered<Tab>('payments.tab', 'Pending');
   const [loanNumber, setLoanNumber] = useState('');
   const [date, setDate] = useState<Date | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const filter = {loanNumber: loanNumber.trim() || undefined, date: date ? toISODate(date) : undefined};
+  const filter = {
+    loanNumber: loanNumber.trim() || undefined,
+    date: date ? toISODate(date) : undefined,
+    collectedBy: employee?.id,
+  };
 
   const list = useInfiniteList({
     queryKey: adminLoanKeys.approvals(tab, JSON.stringify(filter)),
     fetchPage: page => getApprovalsPage(tab, filter, page),
     enabled: tabReady,
-    persist: tab === 'Pending' && !filter.loanNumber && !filter.date,
+    persist: tab === 'Pending' && !filter.loanNumber && !filter.date && !employee,
   });
 
   const groups = useMemo<Group[]>(() => {
@@ -190,6 +197,7 @@ export default function PaymentsScreen() {
     <Screen
       header={{
         title: t('approvals.title'),
+        subtitle: employee?.name,
         right: (
           <IconButton
             icon={filter.loanNumber || filter.date ? 'filter' : 'filter-outline'}

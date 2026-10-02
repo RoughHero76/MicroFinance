@@ -8,7 +8,7 @@ import type {Installment, Repayment} from '@/features/loans/types';
 export const collectKeys = {
   today: ['collect', 'today'] as const,
   dashboard: ['dashboard', 'employee'] as const,
-  overdue: (bucket: string) => ['overdue', bucket] as const,
+  overdue: (bucket: string, assignedTo = '') => ['overdue', bucket, assignedTo] as const,
   mine: (range: string) => ['payments', 'mine', range] as const,
 };
 
@@ -88,7 +88,12 @@ export interface OverdueLoan {
 }
 
 /** Loans with something overdue; employees only get their own (B-11). */
-export async function getOverduePage(bucket: OverdueBucket, page: number): Promise<Page<OverdueLoan>> {
+export async function getOverduePage(
+  bucket: OverdueBucket,
+  page: number,
+  /** E-05: admins can narrow to one employee's loans (their _id). */
+  assignedTo?: string,
+): Promise<Page<OverdueLoan>> {
   const res = await api.get<{
     data: OverdueLoan[];
     pagination: {currentPage: number; totalPages: number; totalResults: number};
@@ -104,6 +109,7 @@ export async function getOverduePage(bucket: OverdueBucket, page: number): Promi
     smaLevel: bucket === 'sma0' ? 0 : bucket === 'sma1' ? 1 : bucket === 'sma2' ? 2 : undefined,
     // A loan counts once, NPA first (as in the dashboard and risk counts).
     npa: bucket === 'npa' ? 'true' : bucket === 'all' ? undefined : 'false',
+    assignedTo: assignedTo || undefined,
   });
   return {
     items: res.data ?? [],

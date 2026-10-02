@@ -16,6 +16,7 @@ import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {useCollect, type CollectTarget} from '@/features/loans/components/CollectSheets';
 import {amountStillDue, installmentTotal} from '@/features/loans/schedule';
 import type {Installment} from '@/features/loans/types';
+import type {AppStackParamList} from '@/navigation/types';
 import {makeStyles} from '@/theme';
 import {
   BottomSheet,
@@ -46,16 +47,18 @@ export default function OverdueListScreen() {
   const {lang} = useI18n();
   const {role} = useSession();
   const can = useCan();
-  const route = useRoute<RouteProp<{Overdue: {bucket?: OverdueBucket}}, 'Overdue'>>();
+  const route = useRoute<RouteProp<AppStackParamList, 'Overdue'>>();
+  // E-05: opened from an employee's profile, only their loans.
+  const employee = route.params?.employee;
   const [bucket, setBucket] = useState<OverdueBucket>(route.params?.bucket ?? 'all');
   const collect = useCollect();
   const pickRef = useRef<SheetHandle>(null);
   const [picking, setPicking] = useState<OverdueLoan | null>(null);
 
   const list = useInfiniteList({
-    queryKey: collectKeys.overdue(bucket),
-    fetchPage: page => getOverduePage(bucket, page),
-    persist: true,
+    queryKey: collectKeys.overdue(bucket, employee?.id),
+    fetchPage: page => getOverduePage(bucket, page, employee?.id),
+    persist: !employee,
   });
 
   const nameOf = (row: OverdueLoan) => `${row.loan.customer?.fname ?? ''} ${row.loan.customer?.lname ?? ''}`.trim();
@@ -134,7 +137,10 @@ export default function OverdueListScreen() {
 
   return (
     <Screen
-      header={{title: role === 'admin' ? t('overdue.titleAll') : t('overdue.title')}}
+      header={{
+        title: employee ? t('overdue.title') : role === 'admin' ? t('overdue.titleAll') : t('overdue.title'),
+        subtitle: employee?.name,
+      }}
       padded={false}
       banner={<OfflineBanner savedAt={list.dataUpdatedAt} />}>
       <Chips options={chips} value={bucket} onChange={setBucket} style={s.chips} />

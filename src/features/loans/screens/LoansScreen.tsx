@@ -1,10 +1,11 @@
 // A5 Loans (admin tab). Status chips scroll sideways; sort is the ⇅ icon;
 // each row has 2 lines: customer and amount, then loan number, collector
-// and status. Search covers loan number, name and phone (BE-8).
+// and status. Search covers loan number, name and phone (BE-8). Opened from
+// an employee's profile (EmployeeLoans) it lists only their loans (E-05).
 
 import React, {useRef, useState} from 'react';
 import {FlatList} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import {LOAN_STATUSES, type LoanStatus} from '@/lib/enums';
@@ -33,6 +34,7 @@ import {
 } from '@/ui';
 import {adminLoanKeys, getLoansPage, type LoanSort} from '../adminApi';
 import type {CustomerRef, Loan, PersonRef} from '../types';
+import type {EmployeeFilter} from '@/navigation/types';
 
 type Filter = 'all' | LoanStatus;
 
@@ -41,16 +43,18 @@ export default function LoansScreen() {
   const entering = useListEntrance();
   const {t} = useTranslation();
   const navigation = useNavigation();
+  const route = useRoute<RouteProp<{EmployeeLoans: {employee?: EmployeeFilter} | undefined}, 'EmployeeLoans'>>();
+  const employee = route.params?.employee;
   const [status, setStatus, statusReady] = useRemembered<Filter>('loans.status', 'all');
   const [q, setQ] = useState('');
   const [sort, setSort, sortReady] = useRemembered<LoanSort>('loans.sort', 'createdAt');
   const sortRef = useRef<SheetHandle>(null);
 
   const list = useInfiniteList({
-    queryKey: adminLoanKeys.list(status, q, sort),
-    fetchPage: page => getLoansPage(status, q, sort, page),
+    queryKey: adminLoanKeys.list(status, q, sort, employee?.id),
+    fetchPage: page => getLoansPage(status, q, sort, page, employee?.id),
     enabled: statusReady && sortReady,
-    persist: status === 'all' && !q,
+    persist: status === 'all' && !q && !employee,
   });
 
   const renderItem = ({item}: {item: Loan}) => {
@@ -85,8 +89,12 @@ export default function LoansScreen() {
     <Screen
       header={{
         title: t('loans.title'),
-        large: true,
-        subtitle: list.total != null ? String(list.total) : undefined,
+        large: !employee,
+        subtitle: employee
+          ? [employee.name, list.total != null ? String(list.total) : null].filter(Boolean).join(' · ')
+          : list.total != null
+          ? String(list.total)
+          : undefined,
         right: (
           <IconButton icon="sort" label={t('loans.sort')} variant="plain" onPress={() => sortRef.current?.open()} />
         ),

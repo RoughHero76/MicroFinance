@@ -842,7 +842,18 @@
     "inactive": "Inactive",
     "never": "Never",
     "newPassword": "New password",
-    "resetHint": "Tell {{name}} the new password in person."
+    "resetHint": "Tell {{name}} the new password in person.",
+    "activeNow": "Active just now",
+    "activeOn": "Last active {{date}}",
+    "todayLabel": "Today's collection",
+    "ofDue": "of {{amount}} due",
+    "cashHeld": "{{amount}} cash held",
+    "loans": "Loans",
+    "payments": "Payments",
+    "overdue": "Overdue",
+    "activeMinutes": "Active {{count}} min ago",
+    "activeHours": "Active {{count}} h ago",
+    "overdueLoans": "{{count}} overdue"
   },
   "leads": {
     "title": "Leads",

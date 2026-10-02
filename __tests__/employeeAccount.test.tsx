@@ -16,6 +16,8 @@ import {SessionProvider} from '@/features/auth/SessionProvider';
 import ProfileScreen from '@/features/settings/screens/ProfileScreen';
 import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import LoginsScreen, {byDay, dayTitle} from '@/features/staff/screens/LoginsScreen';
+import EmployeeProfileScreen, {activeAgo} from '@/features/staff/screens/EmployeeProfileScreen';
+import LoansScreen from '@/features/loans/screens/LoansScreen';
 import {deviceName} from '@/lib/api';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
@@ -25,6 +27,7 @@ import {ToastHost} from '@/ui';
 type Replies = Record<string, unknown>;
 let gets: Replies = {};
 let putSpy: jest.SpiedFunction<typeof api.put>;
+let getSpy: jest.SpiedFunction<typeof api.get>;
 let postSpy: jest.SpiedFunction<typeof api.post>;
 
 async function signIn(role: 'admin' | 'employee') {
@@ -40,7 +43,7 @@ beforeEach(async () => {
   gets = {'/shared/settings': {data: {minPayment: 100, modules: {leads: true, cashHandover: true}}}};
   await i18n.changeLanguage('en');
   await AsyncStorage.clear();
-  jest.spyOn(api, 'get').mockImplementation(async (url: string) => {
+  getSpy = jest.spyOn(api, 'get').mockImplementation(async (url: string) => {
     if (url in gets) return gets[url] as never;
     throw new Error(`unexpected GET ${url}`);
   });
@@ -186,5 +189,56 @@ describe('E-13 login history', () => {
     await signIn('employee');
     renderScreen(SecurityScreen);
     await waitFor(() => expect(screen.getByText('My recent logins')).toBeTruthy());
+  });
+});
+
+const meena = {
+  _id: 'e1',
+  uid: 'u-meena',
+  fname: 'Meena',
+  lname: 'Shah',
+  userName: 'meena.s',
+  phoneNumber: '9000033333',
+  accountStatus: true,
+  createdAt: '2025-01-10T00:00:00Z',
+  lastLogin: '2026-10-02T03:22:00Z',
+  stats: {assignedLoans: 42, activeLoans: 31, repaymentsCollected: 412},
+};
+
+describe('E-04 + E-05 employee profile', () => {
+  it('says how long ago an employee was active', () => {
+    const t = (k: string, o?: Record<string, unknown>) => `${k}:${o?.count ?? ''}`;
+    const now = Date.parse('2026-10-02T12:00:00Z');
+    expect(activeAgo('2026-10-02T11:59:30Z', t, 'en', now)).toBe('staff.activeNow:');
+    expect(activeAgo('2026-10-02T11:48:00Z', t, 'en', now)).toBe('staff.activeMinutes:12');
+    expect(activeAgo('2026-10-02T09:00:00Z', t, 'en', now)).toBe('staff.activeHours:3');
+    expect(activeAgo(null, t, 'en', now)).toBeNull();
+  });
+
+  it("shows today's collection, overdue and cash held, and links to their work", async () => {
+    await signIn('admin');
+    gets['/admin/employee/profile'] = {
+      data: {
+        ...meena,
+        lastActiveAt: new Date(Date.now() - 12 * 60000).toISOString(),
+        today: {collected: 21300, due: 17100, percent: 55, overdueLoans: 6, cashHeld: 14200},
+      },
+    };
+    renderScreen(EmployeeProfileScreen, {uid: 'u-meena'});
+    await waitFor(() => expect(screen.getByText('₹21,300')).toBeTruthy());
+    expect(screen.getByText('55%')).toBeTruthy();
+    expect(screen.getByText(/of ₹38,400 due/)).toBeTruthy();
+    expect(screen.getByText('6 overdue')).toBeTruthy();
+    expect(screen.getByText('₹14,200 cash held')).toBeTruthy();
+    expect(screen.getByText('Active 12 min ago')).toBeTruthy();
+    for (const label of ['Loans', 'Payments', 'Overdue', 'Recent logins']) expect(screen.getByText(label)).toBeTruthy();
+  });
+
+  it("lists only the employee's loans when opened from their profile", async () => {
+    await signIn('admin');
+    gets['/admin/loan'] = {data: [], pagination: {currentPage: 1, totalPages: 1, totalItems: 0}};
+    renderScreen(LoansScreen, {employee: {id: 'e1', name: 'Meena Shah'}});
+    await waitFor(() => expect(getSpy).toHaveBeenCalledWith('/admin/loan', expect.objectContaining({assignedTo: 'e1'})));
+    expect(screen.getByText(/Meena Shah/)).toBeTruthy();
   });
 });

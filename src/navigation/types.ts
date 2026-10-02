@@ -1,6 +1,9 @@
 // Route names for both roles. Tab routes keep the old screen names for now,
 // and each wave renames what it replaces.
 
+/** E-05: a list narrowed to one employee (from their profile). */
+export type EmployeeFilter = {id: string; name: string};
+
 export type AdminTabParamList = {
   Home: undefined;
   Customers: undefined;
@@ -31,10 +34,10 @@ export type AppStackParamList = {
   // New shared screens (W2)
   Customer: {id?: string; uid?: string} | undefined;
   Loan: {loanId: string; tab?: 'overview' | 'schedule' | 'documents'};
-  Overdue: {bucket?: 'all' | 'sma0' | 'sma1' | 'sma2' | 'npa'} | undefined;
+  Overdue: {bucket?: 'all' | 'sma0' | 'sma1' | 'sma2' | 'npa'; employee?: EmployeeFilter} | undefined;
   MyPayments: undefined;
   // New admin screens (W3)
-  Payments: undefined;
+  Payments: {employee?: EmployeeFilter} | undefined;
   Activity: {loanId?: string; loanNumber?: string} | undefined;
   BusinessSettings: undefined;
   // New screens (W4)
@@ -47,6 +50,7 @@ export type AppStackParamList = {
   EmployeeForm: Record<string, unknown> | undefined;
   // Employee accounts (round E)
   Logins: {uid?: string; name?: string} | undefined;
+  EmployeeLoans: {employee: EmployeeFilter};
   // New screens (W5)
   Notifications: undefined;
   SendNotification: undefined;

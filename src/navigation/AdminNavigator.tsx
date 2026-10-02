@@ -177,6 +177,7 @@ export default function AdminNavigator() {
       <Stack.Screen name="Employees" component={EmployeesScreen} />
       <Stack.Screen name="Employee" component={EmployeeProfileScreen} />
       <Stack.Screen name="Logins" component={LoginsScreen} />
+      <Stack.Screen name="EmployeeLoans" component={LoansScreen} />
       <Stack.Screen name="EmployeeForm" component={EmployeeFormScreen} />
       <Stack.Screen name="Loan" component={AdminLoanScreen} />
       <Stack.Screen name="CreateLoan" component={CreateLoanScreen} />

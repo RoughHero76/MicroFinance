@@ -9,7 +9,7 @@ import type {Page} from '@/lib/useInfiniteList';
 import type {Loan, Repayment} from './types';
 
 export const adminLoanKeys = {
-  list: (status: string, q: string, sort: string) => ['loans', 'list', status, q, sort] as const,
+  list: (status: string, q: string, sort: string, assignedTo = '') => ['loans', 'list', status, q, sort, assignedTo] as const,
   approvals: (status: string, filter: string) => ['payments', 'approvals', status, filter] as const,
   deletePreview: (id: string) => ['loans', 'deletePreview', id] as const,
   activity: (filter: string) => ['activity', filter] as const,
@@ -23,6 +23,8 @@ export async function getLoansPage(
   q: string,
   sort: LoanSort,
   page: number,
+  /** E-05: one employee's loans (their _id). */
+  assignedTo?: string,
 ): Promise<Page<Loan>> {
   const res = await api.get<{data: Loan[]; pagination: {currentPage: number; totalPages: number; totalItems: number}}>(
     '/admin/loan',
@@ -35,6 +37,7 @@ export async function getLoansPage(
       sortOrder: sort === 'loanNumber' ? 'asc' : 'desc',
       includeCustomerProfile: 'true',
       includeAssignedTo: 'true',
+      assignedTo: assignedTo || undefined,
     },
   );
   return {
@@ -232,7 +235,7 @@ export interface ApprovalItem extends Omit<Repayment, 'collectedBy' | 'loan'> {
 
 export async function getApprovalsPage(
   status: 'Pending' | 'Approved' | 'Rejected' | 'all',
-  filter: {loanNumber?: string; date?: string},
+  filter: {loanNumber?: string; date?: string; collectedBy?: string},
   page: number,
 ): Promise<Page<ApprovalItem>> {
   const res = await api.get<{data: ApprovalItem[]; pagination?: {page: number; pages: number; total: number}}>(
@@ -244,6 +247,7 @@ export async function getApprovalsPage(
       loanNumber: filter.loanNumber || undefined,
       defaultDate: filter.date ? 'false' : undefined,
       date: filter.date || undefined,
+      collectedBy: filter.collectedBy || undefined,
     },
   );
   return {

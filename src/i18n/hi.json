@@ -842,7 +842,18 @@
     "inactive": "निष्क्रिय",
     "never": "कभी नहीं",
     "newPassword": "नया पासवर्ड",
-    "resetHint": "{{name}} को नया पासवर्ड खुद बताएं।"
+    "resetHint": "{{name}} को नया पासवर्ड खुद बताएं।",
+    "activeNow": "अभी सक्रिय",
+    "activeOn": "आख़िरी बार सक्रिय {{date}}",
+    "todayLabel": "आज की वसूली",
+    "ofDue": "{{amount}} बकाया में से",
+    "cashHeld": "{{amount}} नकद पास में",
+    "loans": "लोन",
+    "payments": "भुगतान",
+    "overdue": "बकाया",
+    "activeMinutes": "{{count}} मिनट पहले सक्रिय",
+    "activeHours": "{{count}} घंटे पहले सक्रिय",
+    "overdueLoans": "{{count}} बकाया"
   },
   "leads": {
     "title": "लीड",

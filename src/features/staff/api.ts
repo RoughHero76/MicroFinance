@@ -25,6 +25,16 @@ export interface EmployeeProfile extends EmployeeSummary {
   lastLogin?: string | null;
   lastSeen?: string | null;
   stats: {assignedLoans: number; activeLoans: number; repaymentsCollected: number};
+  /** E-05: the last time their app called the server. */
+  lastActiveAt?: string | null;
+  /** E-04: today, as on the employee's own Home; cashHeld only with the module on. */
+  today?: {
+    collected: number;
+    due: number;
+    percent: number | null;
+    overdueLoans: number;
+    cashHeld: number | null;
+  };
 }
 
 export const staffKeys = {
