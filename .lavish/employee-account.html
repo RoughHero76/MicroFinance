@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en" data-theme="luxury">
+<head>
+<script type="application/json" data-lavish-revisions>[{"id":"r2","label":"Round 2","timestamp":"2026-10-02T12:00:00Z","summary":"Feedback applied; mocks rebuilt on the plan's mock kit; E-13 added"},{"id":"r3","label":"Round 3","timestamp":"2026-10-02T13:00:00Z","summary":"A-01: market amount hidden by default on admin Home"}]</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee Account Ideas</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, h4, li, .badge) { overflow-wrap: anywhere; }
+  body { background: var(--color-base-100); color: var(--color-base-content); }
+  code { font-size: .85em; }
+
+  /* ===== Doc tables: fixed min width + scroll, never letter-by-letter wrapping ===== */
+  .doc-table { min-width: 980px; }
+  .doc-table th { white-space: nowrap; }
+  .doc-table td { vertical-align: top; overflow-wrap: normal; word-break: normal; }
+  .doc-table td:first-child { white-space: nowrap; }
+  .wave { display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:12px; white-space:nowrap; }
+  .wave::before { content:""; width:8px; height:8px; border-radius:50%; background:currentColor; }
+  .role { display:inline-block; padding:1px 8px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+  .role-a { background:#3b82f633; color:#93c5fd; } .role-e { background:#22c55e33; color:#86efac; } .role-s { background:#a3a3a333; color:#e5e5e5; }
+
+  /* =========================================================
+     APP THEME = palette x mode. Mirrors src/theme/palettes.js.
+     Every mock class below is prefixed or unique so it cannot
+     collide with DaisyUI component classes (hero, card, list…).
+     ========================================================= */
+  .app { --on-p:#fff; font-family: Inter, system-ui, sans-serif; }
+  .app[data-mode="light"] { --bg:#F5F6FA; --surface:#FFFFFF; --surface2:#EEF0F6; --text:#0F172A; --muted:#64748B; --border:#E6E8EF;
+                            --success:#16A34A; --warning:#D97706; --danger:#DC2626; --info:#2563EB; --shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px rgba(15,23,42,.06); --scrim:rgba(15,23,42,.42); }
+  .app[data-mode="dark"]  { --bg:#0B0F17; --surface:#151B26; --surface2:#1E2635; --text:#E7EBF2; --muted:#8B95A7; --border:#263042;
+                            --success:#4ADE80; --warning:#FBBF24; --danger:#F87171; --info:#60A5FA; --shadow:0 0 0 1px rgba(255,255,255,.02); --scrim:rgba(0,0,0,.6); }
+  .app[data-mode="light"][data-t="indigo"]  { --p:#4F46E5; --p2:#8B5CF6; }
+  .app[data-mode="light"][data-t="emerald"] { --p:#059669; --p2:#0EA5E9; }
+  .app[data-mode="light"][data-t="evi"]     { --p:#2C3E50; --p2:#5FA83F; }
+  .app[data-mode="light"][data-t="saffron"] { --p:#C2410C; --p2:#DB2777; }
+  .app[data-mode="dark"][data-t="indigo"]   { --p:#818CF8; --p2:#C084FC; --on-p:#0B0F17; }
+  .app[data-mode="dark"][data-t="emerald"]  { --p:#34D399; --p2:#38BDF8; --on-p:#0B0F17; }
+  .app[data-mode="dark"][data-t="evi"]      { --p:#8FB8DE; --p2:#7CC35A; --on-p:#0B0F17; }
+  .app[data-mode="dark"][data-t="saffron"]  { --p:#FB923C; --p2:#F472B6; --on-p:#0B0F17; }
+
+  .phone { width:100%; max-width:374px; margin:0 auto; border-radius:34px; padding:7px; background:#0a0a0a; box-shadow:0 20px 40px rgba(0,0,0,.45); }
+  .scr { position:relative; height:700px; border-radius:28px; overflow:hidden; background:var(--bg); color:var(--text); font-size:13px; transition: background .25s, color .25s; }
+  .sb { display:flex; justify-content:space-between; padding:10px 20px 4px; font-size:11px; font-weight:600; }
+  .px { padding-left:16px; padding-right:16px; }
+  .ico { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .ico.sm { width:14px; height:14px; }
+  .muted { color:var(--muted); }
+  .num { font-variant-numeric: tabular-nums; letter-spacing:-.01em; }
+  .m-card { display:block; background:var(--surface); border-radius:16px; box-shadow:var(--shadow); border:1px solid var(--border); }
+  .m-hero { display:block; border-radius:20px; padding:16px; color:var(--on-p); background: linear-gradient(135deg, var(--p), var(--p2)); position:relative; overflow:hidden; }
+  .m-hero > * { position:relative; z-index:1; }
+  .m-hero::after { content:""; position:absolute; right:-40px; top:-40px; width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,.12); z-index:0; }
+  .m-hero .hstats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; font-size:10.5px; }
+  .m-hero .hstats b { display:block; font-size:14px; font-weight:700; margin-top:2px; }
+  .m-av { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:12px; flex:none; color:var(--p); background:color-mix(in srgb, var(--p) 14%, var(--surface)); }
+  .iconbtn { width:36px; height:36px; border-radius:12px; display:grid; place-items:center; background:var(--surface); border:1px solid var(--border); color:var(--text); flex:none; }
+  .ghostbtn { width:36px; height:36px; flex:none; }
+  .qa { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; text-align:center; font-size:10.5px; font-weight:500; }
+  .qa .t { width:46px; height:46px; margin:0 auto 6px; border-radius:15px; display:grid; place-items:center; color:var(--p); background:color-mix(in srgb, var(--p) 11%, var(--surface)); position:relative; }
+  .qa .t em { position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px; border-radius:99px; background:var(--danger); color:#fff; font-size:10px; font-style:normal; font-weight:700; display:grid; place-items:center; }
+  .pill { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:600; white-space:nowrap; }
+  .pill::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .s-success{ color:var(--success); background:color-mix(in srgb, var(--success) 13%, transparent) }
+  .s-warning{ color:var(--warning); background:color-mix(in srgb, var(--warning) 14%, transparent) }
+  .s-danger { color:var(--danger);  background:color-mix(in srgb, var(--danger) 12%, transparent) }
+  .s-info   { color:var(--info);    background:color-mix(in srgb, var(--info) 12%, transparent) }
+  .s-neutral{ color:var(--muted);   background:var(--surface2) }
+  .row { display:flex; align-items:center; gap:10px; }
+  .between { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .m-list > * + * { border-top:1px solid var(--border); }
+  .li { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; }
+  .tabbar { position:absolute; left:10px; right:10px; bottom:10px; z-index:2; height:58px; border-radius:20px; background:var(--surface); box-shadow:0 8px 30px rgba(0,0,0,.14); border:1px solid var(--border);
+            display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); align-items:center; text-align:center; font-size:9px; font-weight:600; color:var(--muted); }
+  .tabbar .on { color:var(--p); }
+  .tabbar .ico { margin:0 auto 3px; }
+  .seg { display:flex; gap:6px; overflow:hidden; }
+  .seg span { padding:7px 12px; border-radius:999px; font-size:11.5px; font-weight:600; background:var(--surface); border:1px solid var(--border); white-space:nowrap; }
+  .seg .on { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .seg b { opacity:.55; font-weight:600; margin-left:3px; }
+  .bar { height:6px; border-radius:99px; background:var(--surface2); overflow:hidden; }
+  .bar > i { display:block; height:100%; border-radius:99px; background:var(--p); }
+  .m-fab { position:absolute; right:18px; bottom:80px; width:52px; height:52px; border-radius:18px; display:grid; place-items:center; background:var(--p); color:var(--on-p); box-shadow:0 10px 24px color-mix(in srgb, var(--p) 45%, transparent); }
+  .m-fab.low { bottom:18px; }
+  .btn-p, .btn-t, .btn-o, .btn-d, .btn-dd { border-radius:12px; padding:10px 14px; text-align:center; font-weight:600; font-size:13px; }
+  .btn-p { background:var(--p); color:var(--on-p); }
+  .btn-t { background:color-mix(in srgb, var(--p) 12%, var(--surface)); color:var(--p); }
+  .btn-o { border:1px solid var(--border); background:var(--surface); color:var(--text); padding:9px 14px; }
+  .btn-d { background:color-mix(in srgb, var(--danger) 12%, var(--surface)); color:var(--danger); }
+  .btn-dd { background:var(--danger); color:#fff; }
+  .sm-btn { padding:8px 12px !important; font-size:12px !important; border-radius:11px !important; }
+  .field { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; gap:10px; align-items:center; color:var(--muted); }
+  .field.focus { border-color:var(--p); box-shadow:0 0 0 4px color-mix(in srgb, var(--p) 16%, transparent); color:var(--text); }
+  .field.err { border-color:var(--danger); color:var(--text); }
+  .field.val { color:var(--text); }
+  .lbl { font-size:11.5px; font-weight:600; margin:0 0 6px 2px; }
+  .kv { font-size:10.5px; color:var(--muted); } .kv b { display:block; color:var(--text); font-size:13px; font-weight:600; margin-top:2px; }
+  .glow { position:absolute; inset:-80px -40px auto -40px; height:260px; background: radial-gradient(closest-side, color-mix(in srgb, var(--p) 22%, transparent), transparent); }
+  .scrim { position:absolute; inset:0; background:var(--scrim); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; padding:10px 16px 18px; background:var(--surface); border-radius:24px 24px 0 0; box-shadow:0 -10px 30px rgba(0,0,0,.18); }
+  .handle { width:36px; height:4px; border-radius:9px; background:var(--border); margin:0 auto 10px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chips.nowrap { flex-wrap:nowrap; overflow:hidden; }
+  .chip { padding:6px 11px; border-radius:999px; font-size:11.5px; font-weight:600; background:var(--surface); border:1px solid var(--border); color:var(--text); white-space:nowrap; }
+  .chip.on { background:color-mix(in srgb, var(--p) 14%, var(--surface)); border-color:var(--p); color:var(--p); }
+  .segtab { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); padding:3px; border-radius:12px; background:var(--surface2); text-align:center; font-size:11.5px; font-weight:600; color:var(--muted); }
+  .segtab span { padding:7px 0; border-radius:10px; white-space:nowrap; }
+  .segtab .on { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+  .stepper { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; font-size:10.5px; font-weight:600; color:var(--muted); }
+  .stepper > div { display:flex; align-items:center; gap:6px; padding-top:8px; border-top:3px solid var(--surface2); }
+  .stepper i { font-style:normal; width:18px; height:18px; border-radius:50%; display:grid; place-items:center; font-size:10px; background:var(--surface2); flex:none; }
+  .stepper .on { color:var(--p); border-color:var(--p); } .stepper .on i { background:var(--p); color:var(--on-p); }
+  .stepper .done { color:var(--success); border-color:var(--success); } .stepper .done i { background:var(--success); color:#fff; }
+  /* Floating compact actions (round-6 feedback: no full-width bottom bars) */
+  .pinned { position:absolute; right:14px; bottom:14px; display:flex; gap:8px; align-items:center; z-index:3; }
+  .pinned > * { border-radius:999px !important; padding:10px 16px !important; font-size:13px !important; box-shadow:0 8px 20px rgba(0,0,0,.18); white-space:nowrap; }
+  .pinned > .btn-o { box-shadow:0 6px 16px rgba(0,0,0,.10); }
+  .pinned.two, .pinned.call { }
+  .tag-new { display:inline-block; font-size:8.5px; font-weight:800; letter-spacing:.06em; padding:1px 5px; border-radius:5px; background:color-mix(in srgb,var(--info) 16%,transparent); color:var(--info); vertical-align:1px; }
+  .tag-api { display:inline-block; font-size:8.5px; font-weight:800; letter-spacing:.06em; padding:1px 5px; border-radius:5px; background:color-mix(in srgb,var(--warning) 18%,transparent); color:var(--warning); vertical-align:1px; }
+  .runrow { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 12px; }
+  .runrow .rl { display:flex; flex-direction:column; min-width:0; }
+  .audit summary { cursor:pointer; }
+  .audit td, .audit th { font-size:12px; }
+  .tl > div { position:relative; padding:0 0 12px 22px; display:flex; flex-direction:column; font-size:12px; }
+  .tl > div::before { content:""; position:absolute; left:4px; top:4px; width:10px; height:10px; border-radius:50%; border:2px solid var(--border); background:var(--surface); }
+  .tl > div::after { content:""; position:absolute; left:9px; top:16px; bottom:0; width:2px; background:var(--border); }
+  .tl > div:last-child::after { display:none; }
+  .tl .done::before { background:var(--success); border-color:var(--success); }
+  .tl .cur::before { background:var(--p); border-color:var(--p); box-shadow:0 0 0 4px color-mix(in srgb, var(--p) 20%, transparent); }
+  .tl span { font-size:11px; }
+  .bars { display:flex; align-items:flex-end; gap:8px; height:78px; }
+  .bars i { flex:1; border-radius:6px 6px 2px 2px; background:linear-gradient(180deg, var(--p), var(--p2)); }
+  .grp { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:12px 0 6px; }
+  .mi { display:flex; align-items:center; gap:12px; padding:10px 12px; font-weight:500; }
+  .mi .end { margin-left:auto; font-size:11px; }
+  .sw { width:34px; height:20px; border-radius:99px; background:var(--surface2); border:1px solid var(--border); position:relative; flex:none; margin-left:auto; }
+  .sw::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:var(--muted); }
+  .sw.on { background:var(--p); border-color:var(--p); } .sw.on::after { left:16px; background:var(--on-p); }
+  .hdr { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 16px 12px; }
+  .hdr .tt { font-weight:700; font-size:15px; text-align:center; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .big { font-size:24px; font-weight:800; letter-spacing:-.02em; }
+  .docs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .doc { aspect-ratio: 3/4; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; flex-direction:column; justify-content:flex-end; padding:6px; font-size:9.5px; font-weight:600; position:relative; overflow:hidden; }
+  .doc::before { content:""; position:absolute; inset:8px 8px 26px; border-radius:6px; background:linear-gradient(135deg, color-mix(in srgb,var(--p) 25%,var(--surface)), color-mix(in srgb,var(--p2) 20%,var(--surface))); }
+  .doc.add { justify-content:center; align-items:center; color:var(--p); border-style:dashed; background:transparent; }
+  .doc.add::before { display:none; }
+  .monthh { position:sticky; top:0; background:var(--bg); font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); padding:8px 0 6px; }
+  .skel { background:linear-gradient(90deg,var(--surface2),color-mix(in srgb,var(--surface2) 50%,var(--surface)),var(--surface2)); border-radius:8px; }
+  .banner { display:flex; gap:8px; align-items:center; padding:8px 12px; font-size:11.5px; font-weight:600; }
+  .toastm { position:absolute; left:12px; right:12px; top:34px; border-radius:14px; background:var(--text); color:var(--bg); padding:10px 12px; display:flex; gap:10px; align-items:center; font-size:12px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+  .brandmark { display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:-.02em; }
+  .brandmark .bm { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; color:var(--on-p); background:linear-gradient(135deg,var(--p),var(--p2)); font-size:14px; }
+  .brandlogo img { display:block; }
+  /* ===== Round-7 density rules ===== */
+  .ph { width:44px; height:44px; border-radius:50%; flex:none; position:relative; overflow:hidden; background:linear-gradient(160deg,#d9c3a8,#b08d6c); }
+  .ph::before { content:""; position:absolute; left:50%; top:22%; width:38%; height:38%; transform:translateX(-50%); border-radius:50%; background:#6b4f3a; opacity:.85; }
+  .ph::after { content:""; position:absolute; left:50%; bottom:-18%; width:78%; height:52%; transform:translateX(-50%); border-radius:50% 50% 0 0; background:#3f5a7a; }
+  .ph.b { background:linear-gradient(160deg,#c9d6e3,#90a4ba); } .ph.b::after { background:#7a3f4f; }
+  .ph.c { background:linear-gradient(160deg,#e3d9c9,#baa690); } .ph.c::after { background:#3f7a5a; }
+  .ph.sm { width:34px; height:34px; } .ph.lg { width:64px; height:64px; }
+  .utabs { display:flex; gap:18px; border-bottom:1px solid var(--border); font-size:12.5px; font-weight:600; color:var(--muted); }
+  .utabs span { padding:8px 0 9px; white-space:nowrap; }
+  .utabs .on { color:var(--p); box-shadow:inset 0 -2px 0 var(--p); }
+  .hscroll { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; -webkit-mask-image:linear-gradient(90deg,#000 85%,transparent); mask-image:linear-gradient(90deg,#000 85%,transparent); }
+  .hscroll::-webkit-scrollbar { display:none; }
+  .fact { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); margin-top:3px; }
+  .fact .ico { width:13px; height:13px; }
+  .kvr { display:flex; justify-content:space-between; gap:10px; font-size:11.5px; padding:3px 0; }
+  .kvr span:first-child { color:var(--muted); }
+  .kvr span:last-child { text-align:right; }
+  .loanchip { border:1px solid var(--border); border-radius:12px; padding:8px 10px; margin-top:8px; }
+  .txtbtn { font-size:12px; font-weight:600; color:var(--p); padding:6px 4px; }
+  .txtbtn.d { color:var(--danger); }
+  .roomy > * + * { margin-top:10px; }
+  /* ===== Round-8 button system: one size, four variants ===== */
+  .app .btn-p, .app .btn-t, .app .btn-o, .app .btn-d, .app .btn-dd, .app .sm-btn { display:inline-flex !important; align-items:center; justify-content:center; gap:6px; height:36px; padding:0 16px !important; border-radius:999px !important; font-size:13px !important; font-weight:600; line-height:1; white-space:nowrap; box-sizing:border-box; }
+  .app .btn-o, .app .btn-d { background:transparent; }
+  .app .txtbtn { height:36px; display:inline-flex; align-items:center; gap:6px; padding:0 6px; font-size:13px; }
+  .app .icbtn { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; border:1px solid var(--border); background:var(--surface); color:var(--text); flex:none; }
+  .app .actions { display:flex; justify-content:flex-end; align-items:center; gap:8px; }
+  .optrow { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:14px; font-weight:600; }
+  .optrow + .optrow { margin-top:8px; }
+  /* ===== Round-10: photo badge + toasts ===== */
+  .avwrap { position:relative; display:inline-block; flex:none; }
+  .avbadge { position:absolute; right:-2px; bottom:-2px; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--p); color:var(--on-p); border:2px solid var(--surface); }
+  .avbadge .ico { width:13px; height:13px; }
+  .tst { display:flex; align-items:flex-start; gap:10px; padding:11px 12px; border-radius:14px; background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:0 10px 28px rgba(0,0,0,.18); font-size:12px; position:relative; overflow:hidden; }
+  .tst::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--tc); }
+  .tst .ti { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; flex:none; color:var(--tc); background:color-mix(in srgb,var(--tc) 15%,transparent); }
+  .tst .ti .ico { width:14px; height:14px; }
+  .tst b { display:block; font-size:12.5px; }
+  .tst .tb { color:var(--muted); font-size:11.5px; margin-top:1px; }
+  .tst .ta { margin-left:auto; font-weight:700; color:var(--p); font-size:12px; align-self:center; white-space:nowrap; }
+  .tst .tp { position:absolute; left:4px; bottom:0; height:2px; background:var(--tc); opacity:.5; }
+  .tst.ok { --tc:var(--success); } .tst.err { --tc:var(--danger); } .tst.inf { --tc:var(--info); } .tst.warn { --tc:var(--warning); } .tst.load { --tc:var(--p); }
+  .spin { width:14px; height:14px; border-radius:50%; border:2px solid color-mix(in srgb,var(--tc) 30%,transparent); border-top-color:var(--tc); }
+  /* ===== Round-11 modern toasts: 3 styles ===== */
+  .tg { display:flex; align-items:center; gap:10px; padding:8px 8px 8px 8px; border-radius:999px; font-size:12.5px; font-weight:600; width:fit-content; max-width:100%; margin:0 auto;
+        background:rgba(18,20,26,.86); color:#fff; backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%); box-shadow:0 12px 32px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.08); }
+  .tg .gi { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--tc); color:#fff; flex:none; }
+  .tg .gi .ico { width:14px; height:14px; stroke-width:2.4; }
+  .tg .gs { font-weight:500; opacity:.7; margin-left:2px; }
+  .tg .ga { margin-left:4px; padding:5px 11px; border-radius:999px; background:rgba(255,255,255,.14); font-weight:700; }
+  .tg > span:last-child:not(.ga) { padding-right:8px; }
+  .tb2 { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:18px; font-size:12.5px; width:100%;
+         background:color-mix(in srgb, var(--tc) 12%, color-mix(in srgb, var(--surface) 82%, transparent)); color:var(--text);
+         backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid color-mix(in srgb,var(--tc) 28%, transparent); box-shadow:0 10px 30px color-mix(in srgb,var(--tc) 18%, rgba(0,0,0,.12)); }
+  .tb2 .gi { width:30px; height:30px; border-radius:10px; display:grid; place-items:center; background:var(--tc); color:#fff; flex:none; }
+  .tb2 .gi .ico { width:15px; height:15px; stroke-width:2.3; }
+  .tb2 b { display:block; } .tb2 small { color:var(--muted); font-size:11.5px; }
+  .tb2 .ga { margin-left:auto; font-weight:700; color:var(--tc); }
+  .tc3 { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:16px; font-size:12.5px; font-weight:600; width:100%; color:#fff;
+         background:linear-gradient(135deg, var(--tc), color-mix(in srgb, var(--tc) 70%, #000)); box-shadow:0 12px 28px color-mix(in srgb, var(--tc) 40%, transparent); }
+  .tc3 .ico { width:18px; height:18px; stroke-width:2.3; flex:none; }
+  .tc3 small { display:block; font-weight:500; opacity:.85; font-size:11.5px; }
+  .tc3 .ga { margin-left:auto; padding:5px 11px; border-radius:999px; background:rgba(255,255,255,.2); font-weight:700; }
+  .tg.ok,.tb2.ok,.tc3.ok{--tc:var(--success)} .tg.err,.tb2.err,.tc3.err{--tc:var(--danger)} .tg.inf,.tb2.inf,.tc3.inf{--tc:var(--info)} .tg.load,.tb2.load,.tc3.load{--tc:var(--p)}
+  .spinw { width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; }
+  /* ===== Round-13 lead screens ===== */
+  .lstep { display:flex; align-items:center; gap:0; font-size:9.5px; font-weight:700; color:var(--muted); }
+  .lstep i { width:18px; height:18px; border-radius:50%; display:grid; place-items:center; font-style:normal; background:var(--surface2); border:2px solid var(--border); flex:none; }
+  .lstep .d i { background:var(--success); border-color:var(--success); color:#fff; }
+  .lstep .c i { background:var(--p); border-color:var(--p); color:var(--on-p); box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 22%,transparent); }
+  .lstep .ln { flex:1; height:2px; background:var(--border); margin:0 2px; }
+  .lstep .ln.d { background:var(--success); }
+  .lstep > div { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .bub { padding:8px 10px; border-radius:12px; font-size:11.5px; max-width:86%; }
+  .bub.me { background:color-mix(in srgb,var(--p) 12%,var(--surface)); margin-left:auto; border-bottom-right-radius:4px; }
+  .bub.them { background:var(--surface2); border-bottom-left-radius:4px; }
+  .bub small { display:block; color:var(--muted); font-size:10px; margin-top:2px; }
+  /* ===== Round-14: aligned 5-step tracker + roomy fact tiles ===== */
+  .st5 { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); margin-top:14px; }
+  .st5 .s { position:relative; display:flex; flex-direction:column; align-items:center; gap:5px; font-size:9.5px; font-weight:600; color:var(--muted); text-align:center; }
+  .st5 .s i { position:relative; z-index:1; width:20px; height:20px; box-sizing:border-box; border-radius:50%; display:grid; place-items:center; font-style:normal; font-size:10px; font-weight:700; line-height:1; background:var(--surface); border:2px solid var(--border); color:var(--muted); }
+  .st5 .s::before { content:""; position:absolute; top:9px; right:50%; width:100%; height:2px; background:var(--border); z-index:0; }
+  .st5 .s:first-child::before { display:none; }
+  .st5 .s.d i { background:var(--success); border-color:var(--success); color:#fff; }
+  .st5 .s.d::before, .st5 .s.c::before { background:var(--success); }
+  .st5 .s.c i { background:var(--p); border-color:var(--p); color:var(--on-p); box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 22%,transparent); }
+  .st5 .s.d, .st5 .s.c { color:var(--text); }
+  .f3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .f3 > div { padding:12px 12px 11px; display:flex; flex-direction:column; gap:4px; }
+  .f3 span { font-size:10px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .f3 b { font-size:14px; line-height:1.2; }
+  .st5 .s { font-size:0; gap:0; }
+  .st5cap { margin-top:8px; font-size:11.5px; color:var(--muted); text-align:center; }
+  .st5cap b { color:var(--text); }
+  .frow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); text-align:center; padding:12px 6px; }
+  .frow > div + div { border-left:1px solid var(--border); }
+  .frow > div { padding:0 8px; min-width:0; }
+  .frow b { display:block; font-size:13px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .frow span { display:block; font-size:10px; color:var(--muted); margin-top:3px; }
+  .sugphones { display:flex; flex-wrap:wrap; gap:24px; }
+  .sugphones > figure { width:374px; max-width:100%; flex:none; display:block !important; }
+  .tswatch { width:16px; height:16px; border-radius:50%; display:inline-block; flex:none; }
+  .ctlbar { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(8px); }
+  .rtab[aria-selected="true"] { background: var(--color-primary); color: var(--color-primary-content); }
+  .flowbox { font-size:12px; }
+  figure.mock figcaption b { color: var(--color-base-content); }
+</style>
+</head><body class="min-h-screen">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-6 7-6s7 2.1 7 6"/><path d="M16 4.2a4 4 0 0 1 0 7.6M18.5 15.3c2 .7 3.5 2.4 3.5 5.7"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M7 6V4.5A1.5 1.5 0 0 1 8.5 3H17"/><circle cx="16.5" cy="15" r="1.2"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V11M10 20V5M16 20v-7M21 20H3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 3 8 3 8H3s3-1.5 3-8"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-rupee" viewBox="0 0 24 24"><path d="M6 4h12M6 9h12M9 4c4 0 6 2 6 5s-2 5-6 5H7l8 7"/></symbol>
+  <symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M19 8v6M16 11h6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 8v5l-4 2v-7z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 20V9m-5 5 5-5 5 5M5 4h14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14M12 17h.01"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/><path d="M3 3l18 18"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1.2-1-1.4-1-2.4 0-.9.7-1.5 1.6-1.5H17a4 4 0 0 0 4-4c0-4.7-4-8.5-9-8.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></symbol>
+  <symbol id="i-finger" viewBox="0 0 24 24"><path d="M12 11v4M8.5 7.5A5 5 0 0 1 17 11v2M7 11a5 5 0 0 1 .5-2.2M7 14v1a8 8 0 0 0 1 4M17 16a14 14 0 0 1-1 4M12 19v2M10 11a2 2 0 0 1 4 0v3"/></symbol>
+  <symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+</svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.1 4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-cloudoff" viewBox="0 0 24 24"><path d="M3 3l18 18M7 18h10a4 4 0 0 0 1.5-.3M20.5 15A4 4 0 0 0 17 9h-.5A6 6 0 0 0 9 5.5M6.2 8A5 5 0 0 0 7 18"/></symbol>
+  <symbol id="i-device" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+</svg>
+
+<main class="max-w-7xl mx-auto px-4 py-8 space-y-12">
+
+<header class="space-y-3">
+  <div class="text-xs uppercase tracking-widest opacity-60">MicroFinance · employee accounts · round 2</div>
+  <h1 class="text-3xl md:text-4xl font-extrabold">Employee account: mocks before building</h1>
+  <p class="max-w-3xl opacity-80">This round includes your feedback. There are 10 mocks covering every item you picked, plus <b>E-13 login history</b>. Two questions are left at the bottom. Once you're happy with the mocks, press <b>Start building</b> and I'll implement the items on <code>feat/revamp</code>.</p>
+</header>
+
+<section data-lavish-revision="r2" class="space-y-3">
+  <h2 class="text-2xl font-bold">What changed from your feedback</h2>
+  <div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-200">
+  <table class="table table-sm" style="min-width:760px">
+    <thead><tr><th>You said</th><th>Change</th></tr></thead>
+    <tbody>
+      <tr><td>E-03 "we do not want this"</td><td>Dropped: no forced password change and no Share login button.</td></tr>
+      <tr><td>"Do these screens align with our current design and UX?"</td><td><b>The first mocks didn't, closely enough.</b> They were hand-drawn. These are built from the same mock kit (CSS and icons) as the main plan, which the app screens were built from, and every screen was checked against today's code. For example, A16 has the ⋯ menu, call/WhatsApp/map ring buttons and 3 stat cards, as the app does now, not the old Edit button. Buttons stay compact and actions go in sheets.</td></tr>
+      <tr><td>E-04 "just show today's, not the whole month"</td><td>The profile card now shows <b>today</b>: collected of due, overdue loans and cash held.</td></tr>
+      <tr><td>E-08 "profile picture too?"</td><td><b>Already there.</b> Employees can change their own photo today (camera badge on Profile, then take or choose). E-08 adds editing phone, email, address and emergency contact next to it.</td></tr>
+      <tr><td>"We should be recording their last logins"</td><td>New <b>E-13</b>. Every login is saved already, but <code>LoginHistory</code> deletes entries after <b>15 days</b> (<code>expires: '15d'</code>), stores no device, and the employee record points only at the latest one. Plan: keep 90 days, save the phone model, app version and IP, and show a "Recent logins" list on A16.</td></tr>
+      <tr><td>E-06 "My month" card</td><td>The "today only" note may apply here too, so it's a question at the bottom.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================== ADMIN ===================== -->
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold"><span class="role role-a">ADMIN</span> Managing employees</h2>
+  <div class="app sugphones" data-t="evi" data-mode="light">
+
+    <!-- A15 list -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Employees<div class="muted" style="font-size:10.5px;font-weight:500">8 employees</div></div><div class="ghostbtn"></div></div>
+        <div class="px" style="display:grid;gap:8px">
+          <div class="field"><svg class="ico sm"><use href="#i-search"/></svg>Search name, @username or phone</div>
+          <div class="chips"><span class="chip on">All 8</span><span class="chip">Active 7</span><span class="chip">Inactive 1</span></div>
+        </div>
+        <div class="px" style="margin-top:10px"><div class="m-card m-list">
+          <div class="li"><div class="row"><div class="m-av">MS</div><div><div style="font-weight:600">Meena Shah</div><div class="muted" style="font-size:10.5px">@meena.s · 90000 33333</div></div></div><div style="text-align:right"><div class="num" style="font-weight:700;font-size:12px">₹21,300</div><div class="muted num" style="font-size:10px">55% of today</div></div></div>
+          <div class="li"><div class="row"><div class="m-av">AK</div><div><div style="font-weight:600">Arif Khan</div><div class="muted" style="font-size:10.5px">@arif · 90000 11111</div></div></div><div style="text-align:right"><div class="num" style="font-weight:700;font-size:12px">₹18,900</div><div class="muted num" style="font-size:10px">92% of today</div></div></div>
+          <div class="li"><div class="row"><div class="m-av">SP</div><div><div style="font-weight:600">Sunita Patil</div><div class="muted" style="font-size:10.5px">@sunita · 90000 77777</div></div></div><div style="text-align:right"><div class="num" style="font-weight:700;font-size:12px">₹0</div><div class="muted num" style="font-size:10px">nothing due</div></div></div>
+          <div class="li"><div class="row"><div class="m-av">RJ</div><div><div style="font-weight:600">Rahul Joshi</div><div class="muted" style="font-size:10.5px">@rahul · 90000 55555</div></div></div><span class="pill s-neutral">Inactive</span></div>
+        </div></div>
+        <div class="m-fab low"><svg class="ico" style="width:22px;height:22px"><use href="#i-userplus"/></svg></div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-07 · A15 Employees.</b> Search and Active/Inactive chips are new. Each row's right side shows <b>today's</b> amount collected and the % of what was due. Inactive rows keep the badge as today. The email moves to the profile so rows stay one line.</figcaption>
+    </figure>
+
+    <!-- A16 profile -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr" style="overflow:hidden">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Employee</div><div class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></div></div>
+        <div class="px" style="display:grid;gap:10px">
+          <div class="m-card" style="padding:14px">
+            <div class="row"><div class="ph lg b" style="width:56px;height:56px"></div><div style="min-width:0"><div style="font-weight:800;font-size:16px">Meena Shah</div><div class="muted" style="font-size:10.5px">@meena.s · member since Jan 2025</div><div class="muted" style="font-size:10.5px;margin-top:2px"><span style="color:var(--success)">●</span> Active 12 min ago <span class="tag-new">NEW</span></div></div></div>
+            <div class="row" style="gap:8px;margin-top:12px"><div class="iconbtn" style="border-radius:50%"><svg class="ico sm"><use href="#i-phone"/></svg></div><div class="iconbtn" style="border-radius:50%"><svg class="ico sm"><use href="#i-whatsapp"/></svg></div><div class="iconbtn" style="border-radius:50%"><svg class="ico sm"><use href="#i-map"/></svg></div></div>
+          </div>
+          <div class="m-card" style="padding:12px 14px">
+            <div class="between" style="font-size:11px"><span class="muted">Today <span class="tag-new">NEW</span></span><b class="num">55%</b></div>
+            <div class="num" style="margin:4px 0 6px"><b style="font-size:17px">₹21,300</b> <span class="muted">of ₹38,400 due</span></div>
+            <div class="bar"><i style="width:55%"></i></div>
+            <div class="row" style="gap:6px;margin-top:8px"><span class="pill s-danger">6 overdue</span><span class="pill s-warning">₹14,200 cash held</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+            <div class="m-card" style="padding:9px 10px"><div class="muted" style="font-size:10px">Assigned</div><div class="num" style="font-weight:800;font-size:15px">42</div></div>
+            <div class="m-card" style="padding:9px 10px"><div class="muted" style="font-size:10px">Active</div><div class="num" style="font-weight:800;font-size:15px">31</div></div>
+            <div class="m-card" style="padding:9px 10px"><div class="muted" style="font-size:10px">Collected</div><div class="num" style="font-weight:800;font-size:15px">412</div></div>
+          </div>
+          <div class="m-card m-list">
+            <div class="mi"><svg class="ico"><use href="#i-file"/></svg>Loans<span class="end muted">31 ›</span></div>
+            <div class="mi"><svg class="ico"><use href="#i-rupee"/></svg>Payments<span class="end muted">›</span></div>
+            <div class="mi"><svg class="ico"><use href="#i-alert"/></svg>Overdue<span class="end muted">6 ›</span></div>
+            <div class="mi"><svg class="ico"><use href="#i-history"/></svg>Recent logins<span class="end muted">Today 08:52 ›</span></div>
+          </div>
+          <div class="m-card" style="padding:10px 14px">
+            <div class="kvr"><span>Phone</span><span>+91 90000 33333</span></div>
+            <div class="kvr"><span>Email</span><span>meena@example.in</span></div>
+            <div class="kvr"><span>Emergency</span><span>90000 44444</span></div>
+          </div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-04 + E-05 + E-13 · A16 Employee profile.</b> Same header card, ring buttons, 3 counts and details as today. New: "Active 12 min ago" (<code>lastSeen</code> is already returned), a <b>Today</b> card (cash held only when the module is on), and a list that opens the existing Loans, Payments and Overdue screens filtered to this employee, plus Recent logins. Address sits further down, unchanged.</figcaption>
+    </figure>
+
+    <!-- A16 menu -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Employee</div><div class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></div></div>
+        <div class="px"><div class="m-card" style="padding:14px;height:110px"></div></div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:10px">Meena Shah</div>
+          <div class="optrow"><svg class="ico"><use href="#i-edit"/></svg>Edit</div>
+          <div class="optrow"><svg class="ico"><use href="#i-lock"/></svg>Reset password</div>
+          <div class="optrow"><svg class="ico"><use href="#i-swap"/></svg><div>Move loans to… <span class="tag-new">NEW</span><div class="muted" style="font-size:10.5px;font-weight:500">31 active loans</div></div></div>
+          <div class="optrow" style="color:var(--danger)"><svg class="ico"><use href="#i-x"/></svg>Remove</div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-01 · A16 ⋯ menu.</b> Today's three options stay. <b>Move loans to…</b> is new, for leave, a change of area or splitting a big book, without removing anyone.</figcaption>
+    </figure>
+
+    <!-- Move loans sheet -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Employee</div><div class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></div></div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div style="font-weight:700;font-size:15px">Move Meena's loans</div>
+          <div class="muted" style="font-size:11.5px;margin:2px 0 12px">Past payments stay under Meena's name.</div>
+          <div class="lbl">Move to</div>
+          <div class="field val" style="justify-content:space-between"><span class="row"><span class="m-av" style="width:24px;height:24px;font-size:10px">AK</span>Arif Khan</span><svg class="ico sm"><use href="#i-chev"/></svg></div>
+          <div class="lbl" style="margin-top:12px">Which loans</div>
+          <div class="segtab"><span class="on">All active · 31</span><span>Choose…</span></div>
+          <div class="mi" style="padding:12px 2px 0;font-size:12px"><span class="sw on" style="margin-left:0"></span>Also move 3 open leads</div>
+          <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px"><span class="btn-t sm-btn" style="background:transparent">Cancel</span><span class="btn-p sm-btn">Move 31 loans</span></div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-01 · Move loans.</b> Uses the same employee picker as Record payment's "Collected by". "Choose…" opens the employee's loan list with checkboxes. One backend call updates <code>assignedTo</code> and records one audit entry per loan.</figcaption>
+    </figure>
+
+    <!-- Remove -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Employee</div><div class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></div></div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div style="font-weight:700;font-size:15px">Remove Meena Shah?</div>
+          <div class="muted" style="font-size:11.5px;margin:2px 0 12px">She has <b style="color:var(--text)">31 active loans</b>. Someone has to collect them.</div>
+          <div class="lbl">Move her loans to</div>
+          <div class="field val" style="justify-content:space-between"><span class="row"><span class="m-av" style="width:24px;height:24px;font-size:10px">AK</span>Arif Khan</span><svg class="ico sm"><use href="#i-chev"/></svg></div>
+          <div class="banner s-warning" style="border-radius:12px;margin-top:12px"><svg class="ico sm"><use href="#i-alert"/></svg>₹14,200 cash not handed over yet</div>
+          <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px"><span class="btn-t sm-btn" style="background:transparent">Cancel</span><span class="btn-d sm-btn" style="background:var(--danger);color:#fff">Move & remove</span></div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-01 · Remove.</b> With no active loans this stays today's plain confirm with Undo. With active loans the picker is required, so no loan is left without a collector. Undo restores the employee but leaves the loans where they were moved. The cash line is open question Q1.</figcaption>
+    </figure>
+
+    <!-- Recent logins -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Recent logins<div class="muted" style="font-size:10.5px;font-weight:500">Meena Shah · last 90 days</div></div><div class="ghostbtn"></div></div>
+        <div class="px"><div class="grp">Today</div><div class="m-card m-list">
+          <div class="li"><div class="row"><svg class="ico"><use href="#i-device"/></svg><div><div style="font-weight:600">08:52</div><div class="muted" style="font-size:10.5px">Redmi Note 12 · app 1.0.6 · 49.36.x.x</div></div></div></div>
+        </div>
+        <div class="grp">Yesterday</div><div class="m-card m-list">
+          <div class="li"><div class="row"><svg class="ico"><use href="#i-device"/></svg><div><div style="font-weight:600">18:10</div><div class="muted" style="font-size:10.5px">Redmi Note 12 · app 1.0.6 · 49.36.x.x</div></div></div></div>
+          <div class="li"><div class="row"><svg class="ico" style="color:var(--warning)"><use href="#i-device"/></svg><div><div style="font-weight:600">08:40</div><div class="muted" style="font-size:10.5px">Samsung A14 · app 1.0.5 · 106.21.x.x</div></div></div><span class="pill s-warning">New phone</span></div>
+        </div>
+        <div class="grp">28 Sep</div><div class="m-card m-list">
+          <div class="li"><div class="row"><svg class="ico"><use href="#i-device"/></svg><div><div style="font-weight:600">09:02</div><div class="muted" style="font-size:10.5px">Redmi Note 12 · app 1.0.5 · 49.36.x.x</div></div></div></div>
+        </div></div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-13 · Recent logins.</b> Grouped by day like other lists. A phone not seen before for this employee gets a "New phone" badge, a hint that someone else may be using their login. The same list appears for the employee under Security → "My recent logins".</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================== EMPLOYEE ===================== -->
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold"><span class="role role-e">EMPLOYEE</span> The employee's own account</h2>
+  <div class="app sugphones" data-t="evi" data-mode="light">
+
+    <!-- X1 profile + edit -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Profile</div><div class="ghostbtn"></div></div>
+        <div class="px" style="text-align:center">
+          <div class="avwrap" style="margin:0 auto 8px;display:block;width:76px"><div class="ph lg" style="width:76px;height:76px"></div><span class="avbadge"><svg class="ico"><use href="#i-camera"/></svg></span></div>
+          <div style="font-weight:800;font-size:18px">Meena Shah</div>
+          <div class="row" style="justify-content:center;gap:6px;margin-top:4px"><span class="pill s-info">Employee</span><span class="pill s-success">Active</span></div>
+        </div>
+        <div class="px" style="margin-top:12px"><div class="m-card m-list">
+          <div class="mi"><svg class="ico"><use href="#i-user"/></svg>@meena.s</div>
+          <div class="mi"><svg class="ico"><use href="#i-phone"/></svg>+91 90000 33333</div>
+          <div class="mi"><svg class="ico"><use href="#i-mail"/></svg>meena@example.in</div>
+          <div class="mi"><svg class="ico"><use href="#i-history"/></svg>Last login · today 08:52</div>
+        </div>
+        <div class="m-card m-list" style="margin-top:10px"><div class="mi"><svg class="ico"><use href="#i-edit"/></svg>Edit my details <span class="tag-new">NEW</span><span class="end muted">›</span></div></div></div>
+        <div class="scrim" style="top:52%"></div>
+        <div class="sheet" style="padding-bottom:14px">
+          <div class="handle"></div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px">Edit my details</div>
+          <div style="display:grid;gap:6px">
+            <div class="field val" style="padding:9px 12px">+91 90000 33333</div>
+            <div class="field val" style="padding:9px 12px">meena@example.in</div>
+            <div class="field val" style="padding:9px 12px">Gangapur Rd, Nashik</div>
+            <div class="field val" style="padding:9px 12px">Emergency · 90000 44444</div>
+          </div>
+          <div class="muted" style="font-size:10.5px;margin-top:6px">Ask your admin to change your name or username.</div>
+          <div class="row" style="justify-content:flex-end;gap:8px;margin-top:8px"><span class="btn-t sm-btn" style="background:transparent">Cancel</span><span class="btn-p sm-btn">Save</span></div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-08 · X1 Profile.</b> The page stays as today. <b>The photo is already editable</b> with the camera badge (take or choose). New: "Edit my details" opens the same sheet admins use, limited to phone, email, address and emergency contact.</figcaption>
+    </figure>
+
+    <!-- X3 security -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">Security</div><div class="ghostbtn"></div></div>
+        <div class="px">
+          <div class="grp">App lock</div>
+          <div class="m-card m-list"><div class="mi"><svg class="ico"><use href="#i-finger"/></svg>Lock with fingerprint or PIN<span class="sw on"></span></div><div class="mi"><svg class="ico"><use href="#i-clock"/></svg>Lock after<span class="end muted">1 minute</span></div></div>
+          <div class="grp">My account <span class="tag-new">NEW</span></div>
+          <div class="m-card m-list"><div class="mi"><svg class="ico"><use href="#i-key"/></svg>Change password<span class="end muted">›</span></div><div class="mi"><svg class="ico"><use href="#i-history"/></svg>My recent logins<span class="end muted">›</span></div></div>
+        </div>
+        <div class="scrim" style="top:56%"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px">Change password</div>
+          <div style="display:grid;gap:6px">
+            <div class="field" style="padding:9px 12px">Current password</div>
+            <div class="field" style="padding:9px 12px">New password</div>
+            <div class="field" style="padding:9px 12px">Confirm new password</div>
+          </div>
+          <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><span class="btn-t sm-btn" style="background:transparent">Cancel</span><span class="btn-p sm-btn">Save</span></div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-02 + E-13 · X3 Security.</b> The Change password sheet already exists for admins (under "Admins only"). Employees get the same sheet in a "My account" group, with the server's password rules, and a link to their own recent logins. Backup stays admin-only.</figcaption>
+    </figure>
+
+    <!-- Collect offline -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="banner s-warning"><svg class="ico sm"><use href="#i-cloudoff"/></svg>Offline · payments are saved on the phone</div>
+        <div class="hdr" style="padding-top:8px"><div style="font-weight:800;font-size:20px">Collect<div class="muted" style="font-size:11px;font-weight:500">9 due today</div></div></div>
+        <div class="px">
+          <div class="grp">Overdue · 2</div>
+          <div class="m-card" style="padding:12px">
+            <div class="row"><div class="ph sm"></div><div style="flex:1;min-width:0"><div class="between"><b>Ravi Patil</b><span class="pill s-danger">Overdue</span></div><div class="muted" style="font-size:10.5px">#L-0142 · installment 7</div></div></div>
+            <div class="row" style="margin-top:8px"><div style="flex:1"><span class="muted" style="font-size:11px">Due </span><b class="num" style="font-size:15px">₹1,250</b></div><span class="btn-t sm-btn" style="background:transparent">Penalty</span><span class="btn-p sm-btn">Pay</span></div>
+          </div>
+          <div class="grp">Done · 3</div>
+          <div class="m-card" style="padding:12px;opacity:.85">
+            <div class="row"><div class="ph sm c"></div><div style="flex:1;min-width:0"><div class="between"><b>Kavita Rao</b><span class="pill s-warning">Not sent yet</span></div><div class="muted" style="font-size:10.5px">#L-0118 · ₹800 cash · 10:14</div></div></div>
+          </div>
+        </div>
+        <div class="toastm" style="top:auto;bottom:16px"><svg class="ico sm"><use href="#i-check"/></svg>₹800 saved on the phone. It will be sent when you're online.</div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-12 · Collect while offline.</b> Today Pay is disabled offline. With this change Pay works offline: the payment is saved on the phone with a unique key, moves to Done with a "Not sent yet" badge, and is sent automatically when the phone is back online. <b>Penalties stay online-only.</b> The receipt SMS or WhatsApp goes out after the payment is sent.</figcaption>
+    </figure>
+
+    <!-- My payments sync -->
+    <figure class="mock space-y-2">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="iconbtn"><svg class="ico"><use href="#i-back"/></svg></div><div class="tt">My payments</div><div class="ghostbtn"></div></div>
+        <div class="px" style="display:grid;gap:10px">
+          <div class="segtab"><span class="on">Today</span><span>This week</span><span>This month</span></div>
+          <div class="m-card" style="padding:12px 14px"><div class="num" style="font-weight:800;font-size:20px">₹21,300</div><div class="muted num" style="font-size:11px">Cash ₹14,200 · Other ₹7,100</div><div style="font-size:11px;color:var(--warning)">2 not sent yet · 5 pending approval</div></div>
+          <div class="m-card" style="padding:10px 12px;border-color:var(--danger)">
+            <div class="row"><svg class="ico" style="color:var(--danger)"><use href="#i-alert"/></svg><div style="flex:1"><b style="font-size:12px">1 payment couldn't be sent</b><div class="muted" style="font-size:10.5px">#L-0118 was closed by the admin. Tell your admin about this ₹800.</div></div></div>
+          </div>
+          <div class="m-card m-list">
+            <div class="li"><div class="row"><div class="ph sm c"></div><div><div style="font-weight:600">Kavita Rao</div><div class="muted" style="font-size:10.5px">#L-0118 · Cash · 10:14</div></div></div><div style="text-align:right"><b class="num">₹800</b><div><span class="pill s-warning">Not sent</span></div></div></div>
+            <div class="li"><div class="row"><div class="ph sm b"></div><div><div style="font-weight:600">Suresh M.</div><div class="muted" style="font-size:10.5px">#L-0131 · UPI · 09:40</div></div></div><div style="text-align:right"><b class="num">₹1,500</b><div><span class="pill s-info">Pending</span></div></div></div>
+          </div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>E-12 · My payments.</b> The summary counts unsent payments, so the cash in hand still matches the app. If the server rejects one (the loan was closed, or the installment was already paid), it shows here in red. The admin also sees it in Activity. It is never silently dropped.</figcaption>
+    </figure>
+  </div>
+</section>
+
+
+<section data-lavish-revision="r3" class="space-y-4">
+  <h2 class="text-2xl font-bold"><span class="role role-a">ADMIN</span> A-01 · Hide the market amount on Home</h2>
+  <div class="app sugphones" data-t="evi" data-mode="light">
+    <figure class="mock space-y-2"><div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="brandmark" style="font-weight:800;color:var(--p)">EVI</div><div class="row" style="gap:6px"><div class="iconbtn"><svg class="ico"><use href="#i-search"/></svg></div><div class="iconbtn"><svg class="ico"><use href="#i-bell"/></svg></div></div></div>
+        <div class="px"><div style="font-weight:800;font-size:18px;margin-bottom:10px">Welcome, Saif</div><div class="m-hero">
+            <div class="between"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;opacity:.85">MARKET AMOUNT (ACTIVE + APPROVED)</span><span style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18)"><svg class="ico sm"><use href="#i-eyeoff"/></svg></span></div>
+            <div class="num" style="font-size:26px;font-weight:800;margin-top:4px"><span style="letter-spacing:3px">₹ • • • • • •</span></div>
+            <div class="hstats" style="margin-top:12px"><div style="opacity:.9">Repaid<b>• • •</b></div><div style="opacity:.9">Active loans<b>124</b></div><div style="opacity:.9">Customers<b>310</b></div></div>
+          </div>
+          <div class="qa" style="margin-top:14px"><div><div class="t"><svg class="ico"><use href="#i-rupee"/></svg><em>5</em></div>Payments</div><div><div class="t"><svg class="ico"><use href="#i-alert"/></svg></div>Risk</div><div><div class="t"><svg class="ico"><use href="#i-users"/></svg><em>2</em></div>Leads</div><div><div class="t"><svg class="ico"><use href="#i-chart"/></svg></div>Reports</div></div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>Default: hidden.</b> The amount shows as <b>₹ • • • • • •</b> with an eye button in the hero's corner. "Collected today" and Repaid are hidden too, so the total can't be worked out from them (Q3). The loan and customer counts stay visible.</figcaption>
+    </figure>
+    <figure class="mock space-y-2"><div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+        <div class="hdr"><div class="brandmark" style="font-weight:800;color:var(--p)">EVI</div><div class="row" style="gap:6px"><div class="iconbtn"><svg class="ico"><use href="#i-search"/></svg></div><div class="iconbtn"><svg class="ico"><use href="#i-bell"/></svg></div></div></div>
+        <div class="px"><div style="font-weight:800;font-size:18px;margin-bottom:10px">Welcome, Saif</div><div class="m-hero">
+            <div class="between"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;opacity:.85">MARKET AMOUNT (ACTIVE + APPROVED)</span><span style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18)"><svg class="ico sm"><use href="#i-eye"/></svg></span></div>
+            <div class="num" style="font-size:26px;font-weight:800;margin-top:4px">₹48,62,500</div><div style="font-size:12px;opacity:.85;margin-top:2px">₹38.4K collected today</div>
+            <div class="hstats" style="margin-top:12px"><div style="opacity:.9">Repaid<b>₹31.4L</b></div><div style="opacity:.9">Active loans<b>124</b></div><div style="opacity:.9">Customers<b>310</b></div></div>
+          </div>
+          <div class="qa" style="margin-top:14px"><div><div class="t"><svg class="ico"><use href="#i-rupee"/></svg><em>5</em></div>Payments</div><div><div class="t"><svg class="ico"><use href="#i-alert"/></svg></div>Risk</div><div><div class="t"><svg class="ico"><use href="#i-users"/></svg><em>2</em></div>Leads</div><div><div class="t"><svg class="ico"><use href="#i-chart"/></svg></div>Reports</div></div>
+        </div>
+      </div></div>
+      <figcaption class="text-xs text-base-content/60 text-center"><b>After tapping the eye.</b> The hero as it is today. It goes back to hidden whenever the app is reopened or unlocked, so a phone left on a desk never shows it. It doesn't need a PIN, because the app lock already protects the app.</figcaption>
+    </figure>
+  </div>
+  <p class="text-sm opacity-70">Small (S): app only, no backend change. The eye is a 30px round button in the hero's top-right corner, sized like the other hero controls. The hidden or shown state is kept in memory only.</p>
+</section>
+
+<!-- ===================== QUESTIONS ===================== -->
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold">Three questions, then build</h2>
+  <form data-lavish-question="round2" class="space-y-4" onsubmit="event.preventDefault(); const f=new FormData(event.currentTarget); const q1=f.get('q1'), q2=f.get('q2'), q3=f.get('q3'), note=f.get('note')||''; window.lavish.queuePrompt('Mocks approved. Q1 (removed employee cash/leads): '+q1+'. Q2 (E-06): '+q2+'. Q3 (A-01 eye hides): '+q3+'. Build A-01, E-01, E-02, E-04, E-05, E-07, E-08, E-12, E-13'+(q2.startsWith('Keep')?', E-06':'')+' on feat/revamp in both repos as mocked, committing per item and ticking docs/revamp-plan.md. Account for every ID.'+(note?' Notes: '+note:''), {tag:'choice', text:'Start building (Q1: '+q1+' · Q2: '+q2+' · Q3: '+q3+')', element:event.currentTarget, data:{q1,q2,q3,note}});">
+    <div class="card card-border bg-base-200"><div class="card-body gap-2 text-sm">
+      <b>Q1 · A removed employee's cash and leads</b>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q1" value="Move leads with the loans; warn about unhanded cash but allow removal" checked> <span><b>Move leads with the loans, warn about cash but allow removal</b> (recommended). The cash stays visible under their name in Cash handovers, so the admin can still settle it.</span></label>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q1" value="Move leads; block removal until cash is handed over or marked Short"> <span>Move leads, and <b>block removal</b> until the cash is handed over or marked Short.</span></label>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q1" value="Leave leads where they are; warn about cash"> <span>Leave the leads where they are (the admin manages them in Leads). Warn about cash.</span></label>
+    </div></div>
+    <div class="card card-border bg-base-200"><div class="card-body gap-2 text-sm">
+      <b>Q2 · E-06, the "My month" card for employees</b>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q2" value="Drop E-06 (Home already shows today)" checked> <span><b>Drop it</b> (recommended, given your "today only" note). E1 Home already shows today's collected vs due.</span></label>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q2" value="Keep E-06 as a month card on the employee's Profile"> <span>Keep a month card on the employee's own Profile.</span></label>
+    </div></div>
+    <div class="card card-border bg-base-200" data-lavish-revision="r3"><div class="card-body gap-2 text-sm">
+      <b>Q3 · A-01, what the eye hides</b>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q3" value="Hide market amount, collected today and repaid" checked> <span><b>Market amount, collected today and repaid</b> (recommended). One eye controls all three, and the counts stay visible.</span></label>
+      <label class="flex gap-2 items-start"><input type="radio" class="radio radio-sm" name="q3" value="Hide only the market amount"> <span>Only the market amount.</span></label>
+    </div></div>
+    <textarea name="note" class="textarea textarea-bordered w-full" rows="2" placeholder="Anything else to change in the mocks before I build?"></textarea>
+    <button type="submit" class="btn btn-primary">Start building</button>
+  </form>
+  <p class="text-xs opacity-60">Building order: A-01, E-02 and E-08 (small), E-13 (backend first), E-04, E-05 and E-07, E-01, then E-12 last (biggest; needs idempotency keys on the payment routes and tests for duplicates). Verification stays light on this machine: <code>tsc</code>, <code>eslint</code> and <code>jest -w 1</code>. Checking on a phone is up to you.</p>
+</section>
+
+</main>
+</body></html>
