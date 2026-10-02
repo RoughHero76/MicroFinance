@@ -328,7 +328,8 @@
     "backupConfirm": "Download a full backup?",
     "backupMessage": "This can take a minute. The file is saved to Download/{{folder}}/Backups.",
     "backupSaved": "Backup saved to Downloads",
-    "backupFailed": "Backup failed"
+    "backupFailed": "Backup failed",
+    "myAccount": "My account"
   },
   "support": {
     "title": "Help & support",

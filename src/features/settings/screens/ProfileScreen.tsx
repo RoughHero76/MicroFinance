@@ -157,7 +157,7 @@ export default function ProfileScreen() {
                 ))}
             </Card>
           </Appear>
-          {can('security.changePassword') ? (
+          {can('profile.edit') ? (
             <Card padded={false} dividers style={s.gap}>
               <OptionRow icon="account-edit-outline" title={t('profile.edit')} onPress={openEdit} />
             </Card>

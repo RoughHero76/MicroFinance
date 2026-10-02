@@ -1,6 +1,6 @@
 // X3: app lock (the phone's fingerprint or PIN when the app opens, with a
-// lock timer). Admins only: change my password (PUT /admin/password) and a
-// full data backup (GET /admin/database/backup) saved to Downloads.
+// lock timer). My account: change my password (both roles, E-02). Admins
+// only: a full data backup (GET /admin/database/backup) saved to Downloads.
 
 import React, {useState} from 'react';
 import {useMutation} from '@tanstack/react-query';
@@ -8,9 +8,10 @@ import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
 import {errorMessage} from '@/lib/api';
 import {downloadToDownloads} from '@/lib/files';
-import {BACKUP_PATH, changeAdminPassword} from '@/features/auth/api';
+import {BACKUP_PATH, changeMyPassword} from '@/features/auth/api';
 import {LOCK_AFTER_OPTIONS} from '@/features/auth/lock';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
+import {passwordOk} from '@/features/staff/screens/EmployeeFormScreen';
 import {makeStyles} from '@/theme';
 import {
   BottomSheet,
@@ -32,7 +33,7 @@ export default function SecurityScreen() {
   const s = useStyles();
   const {t} = useTranslation();
   const can = useCan();
-  const {lockSettings, setLockSettings, deviceLockAvailable} = useSession();
+  const {role, lockSettings, setLockSettings, deviceLockAvailable} = useSession();
   const passwordSheet = useSheet();
   const confirm = useConfirm();
   const [pw, setPw] = useState({current: '', next: '', confirm: ''});
@@ -44,7 +45,7 @@ export default function SecurityScreen() {
   }));
 
   const changePassword = useMutation({
-    mutationFn: () => changeAdminPassword(pw.current, pw.next),
+    mutationFn: () => changeMyPassword(role!, pw.current, pw.next),
     onSuccess: () => {
       passwordSheet.close();
       setPw({current: '', next: '', confirm: ''});
@@ -54,7 +55,7 @@ export default function SecurityScreen() {
   });
 
   const submitPassword = () => {
-    if (pw.next.length < 8) return setPwError(t('security.passwordHint'));
+    if (!passwordOk(pw.next)) return setPwError(t('staff.passwordRules'));
     if (pw.next !== pw.confirm) return setPwError(t('security.passwordsDontMatch'));
     setPwError(null);
     changePassword.mutate();
@@ -104,12 +105,17 @@ export default function SecurityScreen() {
         ) : null}
       </Section>
 
-      {can('security.changePassword') || can('security.backup') ? (
+      {can('security.changePassword') ? (
+        <Section title={t('security.myAccount')}>
+          <Card padded={false} dividers>
+            <OptionRow icon="key-outline" title={t('security.changePassword')} onPress={passwordSheet.open} />
+          </Card>
+        </Section>
+      ) : null}
+
+      {can('security.backup') ? (
         <Section title={t('security.adminsOnly')}>
           <Card padded={false} dividers>
-            {can('security.changePassword') ? (
-              <OptionRow icon="key-outline" title={t('security.changePassword')} onPress={passwordSheet.open} />
-            ) : null}
             {can('security.backup') ? (
               <OptionRow
                 icon="database-arrow-down-outline"
@@ -147,7 +153,7 @@ export default function SecurityScreen() {
         />
         <TextField
           label={t('security.newPassword')}
-          hint={t('security.passwordHint')}
+          hint={t('staff.passwordRules')}
           secureToggle
           value={pw.next}
           onChangeText={v => setPw(p => ({...p, next: v}))}

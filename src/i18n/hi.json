@@ -328,7 +328,8 @@
     "backupConfirm": "पूरा बैकअप डाउनलोड करें?",
     "backupMessage": "इसमें एक मिनट लग सकता है। फ़ाइल Download/{{folder}}/Backups में सेव होगी।",
     "backupSaved": "बैकअप Downloads में सेव हुआ",
-    "backupFailed": "बैकअप नहीं हो सका"
+    "backupFailed": "बैकअप नहीं हो सका",
+    "myAccount": "मेरा खाता"
   },
   "support": {
     "title": "मदद और सहायता",

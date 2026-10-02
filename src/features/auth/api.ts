@@ -45,9 +45,10 @@ export function uploadProfilePhoto(image: PickedImage, onProgress?: (fraction: n
   return api.upload<{status: string}>('/shared/profile/add/profilePicture', form, onProgress);
 }
 
-/** Admins only (the endpoint is admin-only on the server). */
-export function changeAdminPassword(currentPassword: string, newPassword: string) {
-  return api.put<{status: string; message: string}>('/admin/password', {currentPassword, newPassword});
+/** The signed-in user's own password (E-02: employees too). */
+export function changeMyPassword(role: Role, currentPassword: string, newPassword: string) {
+  const path = role === 'admin' ? '/admin/password' : '/employee/password';
+  return api.put<{status: string; message: string}>(path, {currentPassword, newPassword});
 }
 
 /** Admins only: the full database backup as a zip. */
