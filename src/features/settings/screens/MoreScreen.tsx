@@ -9,6 +9,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
+import {usePayQueue} from '@/features/collect/payQueue';
 import {makeStyles} from '@/theme';
 import {Avatar, Card, ConfirmSheet, OptionRow, Screen, Section, Text, useConfirm} from '@/ui';
 import type {AppStackParamList} from '@/navigation/types';
@@ -29,6 +30,8 @@ export default function MoreScreen({work}: {work: MoreItem[]}) {
   const {user, signOut} = useSession();
   const can = useCan();
   const confirm = useConfirm();
+  // E-12: saved payments stay on the phone after logout; say so.
+  const unsent = usePayQueue();
   const name = [user?.fname, user?.lname].filter(Boolean).join(' ');
 
   const items = work.filter(item => item.visible !== false);
@@ -77,7 +80,9 @@ export default function MoreScreen({work}: {work: MoreItem[]}) {
             onPress={() =>
               confirm.ask({
                 title: t('more.logoutConfirm', {brand: brand.name}),
-                message: t('more.logoutHint'),
+                message: unsent.length
+                  ? `${t('more.logoutHint')} ${t('payQueue.logoutUnsent', {count: unsent.length})}`
+                  : t('more.logoutHint'),
                 confirmLabel: t('common.logout'),
                 destructive: true,
                 onConfirm: () => signOut(),

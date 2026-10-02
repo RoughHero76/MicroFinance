@@ -6,6 +6,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {View} from 'react-native';
 import {NavigationContainer, type NavigationContainerRef} from '@react-navigation/native';
 import {useSession} from '@/features/auth/SessionProvider';
+import {PayQueueSync} from '@/features/collect/PayQueueSync';
 import LockScreen from '@/features/auth/screens/LockScreen';
 import LoginScreen from '@/features/auth/screens/LoginScreen';
 import PermissionsScreen from '@/features/auth/screens/PermissionsScreen';
@@ -65,6 +66,7 @@ export default function RootNavigator() {
       <UpdateSheet />
       <UpdateGate />
       <PushBridge navRef={navRef} />
+      <PayQueueSync />
     </View>
   );
 }

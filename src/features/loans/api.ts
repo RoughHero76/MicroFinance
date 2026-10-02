@@ -94,9 +94,17 @@ export interface PayInput {
   transactionId?: string;
   /** Admins only: record on behalf of this employee (else as the admin). */
   collectedBy?: string;
+  /** E-12: the phone's key for this payment; the server records a key once. */
+  clientRef?: string;
+  /** E-12: sent from the offline queue, collected at this time. */
+  offline?: boolean;
+  collectedAt?: string;
 }
 
-/** Both roles record through /pay (BE-10). Never retried automatically. */
+/**
+ * Both roles record through /pay (BE-10). Not retried by the HTTP layer; a
+ * payment that can't be sent goes to the offline queue (E-12) with its key.
+ */
 export async function recordPayment(input: PayInput): Promise<PayResult> {
   const res = await api.post<{data: PayResult}>('/employee/loan/pay', {
     loanId: input.loanId,
@@ -105,6 +113,9 @@ export async function recordPayment(input: PayInput): Promise<PayResult> {
     paymentMethod: input.paymentMethod,
     transactionId: input.transactionId?.trim() || undefined,
     collectedBy: input.collectedBy || undefined,
+    clientRef: input.clientRef,
+    offline: input.offline || undefined,
+    collectedAt: input.collectedAt,
   });
   return res.data;
 }

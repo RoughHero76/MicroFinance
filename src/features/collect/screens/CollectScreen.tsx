@@ -1,7 +1,9 @@
 // E2 Collect: today's installments for the employee's loans. Overdue first,
 // then due today, then partly paid; collected rows move to "Done" at the
 // bottom, so the list shrinks through the day (P-16). Search by name, phone
-// or loan number. Pay and Penalty open the shared sheets (E3, E3b).
+// or loan number. Pay and Penalty open the shared sheets (E3, E3b). E-12: Pay
+// works offline; a payment saved on the phone moves its row to Done with
+// "Not sent yet" until it's sent.
 
 import React, {useMemo, useState} from 'react';
 import {SectionList, View} from 'react-native';
@@ -24,18 +26,18 @@ import {
   SkeletonRows,
   StatusBadge,
   Text,
-  useIsOffline,
   useListEntrance,
   listProps,
   RefreshControl,
 } from '@/ui';
 import {collectKeys, getTodaysCollections, type CollectionItem} from '../api';
+import {usePayQueue} from '../payQueue';
 
 type GroupKey = 'overdue' | 'due' | 'partial' | 'done';
 const ORDER: GroupKey[] = ['overdue', 'due', 'partial', 'done'];
 
-function groupOf(item: CollectionItem): GroupKey {
-  if (item.done) return 'done';
+function groupOf(item: CollectionItem, unsent: Set<string>): GroupKey {
+  if (item.done || unsent.has(item._id)) return 'done';
   if (item.status === 'Overdue') return 'overdue';
   if (item.status === 'PartiallyPaid') return 'partial';
   return 'due';
@@ -49,13 +51,14 @@ export default function CollectScreen() {
   const s = useStyles();
   const {t} = useTranslation();
   const navigation = useNavigation();
-  const offline = useIsOffline();
   const collect = useCollect();
   const [q, setQ] = useState('');
   const entering = useListEntrance();
 
   const query = useQuery({queryKey: collectKeys.today, queryFn: getTodaysCollections, meta: {persist: true}});
   const items = useMemo(() => query.data ?? [], [query.data]);
+  const queue = usePayQueue();
+  const unsent = useMemo(() => new Set(queue.map(p => p.installmentId)), [queue]);
 
   const sections = useMemo(() => {
     const needle = q.toLowerCase();
@@ -75,12 +78,14 @@ export default function CollectScreen() {
       partial: t('collect.groupPartial'),
       done: t('collect.groupDone'),
     };
-    return ORDER.map(key => ({key, title: titles[key], data: filtered.filter(item => groupOf(item) === key)})).filter(
-      section => section.data.length > 0,
-    );
-  }, [items, q, t]);
+    return ORDER.map(key => ({
+      key,
+      title: titles[key],
+      data: filtered.filter(item => groupOf(item, unsent) === key),
+    })).filter(section => section.data.length > 0);
+  }, [items, q, t, unsent]);
 
-  const dueCount = items.filter(i => !i.done).length;
+  const dueCount = items.filter(i => !i.done && !unsent.has(i._id)).length;
 
   const targetOf = (item: CollectionItem) => ({
     loanId: item.loan._id,
@@ -96,8 +101,10 @@ export default function CollectScreen() {
   const renderItem = ({item, index}: {item: CollectionItem; index: number}) => {
     const name = customerName(item);
     const due = amountStillDue(item);
+    const waiting = unsent.has(item._id);
+    const done = item.done || waiting;
     return (
-      <Animated.View entering={entering(index)} style={[s.row, item.done && s.rowDone]}>
+      <Animated.View entering={entering(index)} style={[s.row, done && s.rowDone]}>
         <View style={s.rowTop}>
           <Avatar name={name} uri={item.loan.customer.profilePic} size={44} />
           <View style={s.rowText}>
@@ -105,14 +112,18 @@ export default function CollectScreen() {
               <Text variant="bodyLg" weight="semibold" numberOfLines={1} style={s.flex}>
                 {name}
               </Text>
-              <StatusBadge set="schedule" status={item.status} />
+              {waiting ? (
+                <StatusBadge tone="warning" label={t('payQueue.notSent')} />
+              ) : (
+                <StatusBadge set="schedule" status={item.status} />
+              )}
             </View>
             <Text variant="small" color="muted" numberOfLines={1}>
               {t('collect.installmentLine', {loan: item.loan.loanNumber, number: item.loanInstallmentNumber ?? '-'})}
             </Text>
           </View>
         </View>
-        {!item.done ? (
+        {!done ? (
           <View style={s.actions}>
             <View style={s.due} accessibilityLabel={t('collect.due', {amount: formatMoney(due)})}>
               <Text variant="small" color="muted">
@@ -123,7 +134,7 @@ export default function CollectScreen() {
               </Text>
             </View>
             <Button title={t('collect.penalty')} variant="text" onPress={() => collect.penalty(targetOf(item))} />
-            <Button title={t('collect.pay')} onPress={() => collect.pay(targetOf(item))} disabled={offline} />
+            <Button title={t('collect.pay')} onPress={() => collect.pay(targetOf(item))} />
           </View>
         ) : null}
       </Animated.View>

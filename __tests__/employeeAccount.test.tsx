@@ -19,6 +19,9 @@ import LoginsScreen, {byDay, dayTitle} from '@/features/staff/screens/LoginsScre
 import EmployeeProfileScreen, {activeAgo} from '@/features/staff/screens/EmployeeProfileScreen';
 import LoansScreen from '@/features/loans/screens/LoansScreen';
 import EmployeesScreen from '@/features/staff/screens/EmployeesScreen';
+import MyPaymentsScreen from '@/features/payments/screens/MyPaymentsScreen';
+import {enqueue, flushQueue, getQueue, loadQueue} from '@/features/collect/payQueue';
+import {ApiError} from '@/lib/api';
 import {deviceName} from '@/lib/api';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
@@ -331,5 +334,38 @@ describe('E-01 move loans', () => {
     });
     expect(deleteSpy).toHaveBeenCalledWith('/admin/employee', {uid: 'u-meena', moveTo: 'u-arif'});
     await waitFor(() => expect(screen.getByText('Undo')).toBeTruthy());
+  });
+});
+
+describe('E-12 My payments', () => {
+  afterEach(async () => {
+    await loadQueue(null);
+  });
+
+  it('counts unsent payments and shows a refused one in red with Try again and Remove', async () => {
+    await signIn('employee');
+    gets['/employee/loan/repayment/history'] = {
+      data: [],
+      summary: {total: 21300, cash: 14200, other: 7100, pending: 5},
+      meta: {page: 1, totalPages: 1, total: 0},
+    };
+    await loadQueue(null);
+    const base = {loanId: 'l1', installmentId: 's1', paymentMethod: 'Cash' as const, collectedAt: new Date().toISOString()};
+    enqueue({...base, clientRef: 'pBBBBBBBB1', amount: 800, customerName: 'Kavita Rao', loanNumber: '0118'});
+    enqueue({...base, clientRef: 'pBBBBBBBB2', amount: 1500, customerName: 'Suresh M', loanNumber: '0131'});
+    await flushQueue(async () => {
+      throw new ApiError('http', {status: 400, serverMessage: 'Loan is closed'});
+    });
+    // The first was refused; the second stays waiting until the next try.
+    expect(getQueue().map(p => p.state)).toEqual(['refused', 'refused']);
+    const {retryQueued} = require('@/features/collect/payQueue');
+    retryQueued('pBBBBBBBB2');
+    renderScreen(MyPaymentsScreen);
+    await waitFor(() => expect(screen.getByText("1 payment couldn't be sent")).toBeTruthy());
+    expect(screen.getByText('Loan is closed')).toBeTruthy();
+    expect(screen.getByText('1 not sent yet')).toBeTruthy();
+    expect(screen.getByText('Try again')).toBeTruthy();
+    fireEvent.press(screen.getByText('Remove'));
+    await waitFor(() => expect(screen.getByText('Remove this saved payment?')).toBeTruthy());
   });
 });

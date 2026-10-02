@@ -408,7 +408,7 @@
     "allCollected": "All collected for today 🎉",
     "allCollectedHint": "Nice work. Anything new shows up here.",
     "nothingDue": "Nothing due today",
-    "offlinePay": "Recording payments needs a connection. Collect cash and record it when you're back online."
+    "offlinePay": "You're offline. The payment is saved on the phone and sent when you're back online."
   },
   "home": {
     "welcome": "Welcome, {{name}}",
@@ -1215,5 +1215,20 @@
     "app": "app {{version}}",
     "newPhone": "New phone",
     "empty": "No logins in the last 90 days"
+  },
+  "payQueue": {
+    "saved": "{{amount}} saved on the phone",
+    "savedHint": "It will be sent when you're online.",
+    "sent": "{{count}} saved payments sent",
+    "notSent": "Not sent yet",
+    "notSentCount": "{{count}} not sent yet",
+    "refusedTitle": "{{count}} payment couldn't be sent",
+    "refusedTitle_plural": "{{count}} payments couldn't be sent",
+    "refusedHint": "Tell your admin about this money.",
+    "retry": "Try again",
+    "remove": "Remove",
+    "removeTitle": "Remove this saved payment?",
+    "removeHint": "{{amount}} for #{{loan}} will not be recorded. Only do this if it was recorded another way.",
+    "logoutUnsent": "{{count}} saved payments aren't sent yet. They stay on this phone and are sent when you sign in again."
   }
 }

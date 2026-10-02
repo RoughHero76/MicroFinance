@@ -13,7 +13,10 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {Linking} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SessionProvider} from '@/features/auth/SessionProvider';
+import {useNetInfo} from '@react-native-community/netinfo';
+import {flushQueue, getQueue, loadQueue} from '@/features/collect/payQueue';
 import CollectScreen from '@/features/collect/screens/CollectScreen';
+import {ApiError} from '@/lib/api';
 import EmployeeHomeScreen from '@/features/collect/screens/EmployeeHomeScreen';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
@@ -237,5 +240,67 @@ describe('E2 Collect', () => {
     expect(decodeURIComponent((Linking.openURL as jest.Mock).mock.calls.at(-1)![0] as string)).toContain(
       'Late fee Rs300 on loan #1039',
     );
+  });
+});
+
+describe('E-12 payments offline', () => {
+  const online = {isConnected: true, isInternetReachable: true};
+
+  afterEach(async () => {
+    (useNetInfo as jest.Mock).mockReturnValue(online);
+    await loadQueue(null);
+  });
+
+  it('saves a payment on the phone when offline, and marks the row Not sent yet', async () => {
+    (useNetInfo as jest.Mock).mockReturnValue({isConnected: false, isInternetReachable: false});
+    renderScreen(CollectScreen);
+    await waitFor(() => expect(screen.getByText('Sunita Devi')).toBeTruthy());
+    fireEvent.press(screen.getAllByText('Pay')[1]);
+    await waitFor(() => expect(screen.getByText('Confirm ₹1,065')).toBeTruthy());
+    fireEvent.press(screen.getByText('Confirm ₹1,065'));
+    await waitFor(() => expect(screen.getByText('Not sent yet')).toBeTruthy());
+    expect(postSpy).not.toHaveBeenCalledWith('/employee/loan/pay', expect.anything());
+    const [saved] = getQueue();
+    expect(saved).toMatchObject({amount: 1065, installmentId: 's-due', loanNumber: '1039', state: 'waiting'});
+    expect(saved.clientRef).toMatch(/^[A-Za-z0-9_-]{8,64}$/);
+  });
+
+  it('queues a payment whose send got no answer, with the same key', async () => {
+    postSpy.mockImplementation(async () => {
+      throw new ApiError('timeout');
+    });
+    renderScreen(CollectScreen);
+    await waitFor(() => expect(screen.getByText('Sunita Devi')).toBeTruthy());
+    fireEvent.press(screen.getAllByText('Pay')[1]);
+    await waitFor(() => expect(screen.getByText('Confirm ₹1,065')).toBeTruthy());
+    await act(async () => {
+      fireEvent.press(screen.getByText('Confirm ₹1,065'));
+    });
+    await waitFor(() => expect(getQueue().length).toBe(1));
+    const sentRef = (postSpy.mock.calls[0][1] as {clientRef: string}).clientRef;
+    expect(getQueue()[0].clientRef).toBe(sentRef);
+  });
+
+  it('sends waiting payments in order; stops when offline; marks a refusal', async () => {
+    await loadQueue(null);
+    const {enqueue} = require('@/features/collect/payQueue');
+    const base = {loanId: 'l1', installmentId: 's1', paymentMethod: 'Cash', customerName: 'A', loanNumber: '1', collectedAt: ''};
+    enqueue({...base, clientRef: 'pAAAAAAAA1', amount: 100});
+    enqueue({...base, clientRef: 'pAAAAAAAA2', amount: 200});
+    enqueue({...base, clientRef: 'pAAAAAAAA3', amount: 300});
+    const sent: string[] = [];
+    let n = 0;
+    const send = async (p: {clientRef: string}) => {
+      n += 1;
+      if (n === 2) throw new ApiError('http', {status: 400, serverMessage: 'Loan is closed'});
+      if (n === 3) throw new ApiError('offline');
+      sent.push(p.clientRef);
+    };
+    expect(await flushQueue(send as never)).toBe(1);
+    expect(sent).toEqual(['pAAAAAAAA1']);
+    expect(getQueue().map(p => [p.clientRef, p.state, p.error])).toEqual([
+      ['pAAAAAAAA2', 'refused', 'Loan is closed'],
+      ['pAAAAAAAA3', 'waiting', undefined],
+    ]);
   });
 });

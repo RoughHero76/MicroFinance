@@ -16,6 +16,9 @@ export const StorageKeys = {
   lastPaymentMethod: 'prefs.lastPaymentMethod',
   scheduleView: 'prefs.scheduleView',
   pendingCrash: 'crash.pending',
+  // E-12: payments saved on the phone, per person (payQueue.<uid>). Not
+  // cleared at logout: it's money someone collected.
+  payQueuePrefix: 'payQueue.',
 } as const;
 
 // Keys that belong to the signed-in person and are removed at logout, so a

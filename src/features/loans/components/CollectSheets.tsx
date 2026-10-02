@@ -1,5 +1,7 @@
 // E3 Record payment, E3b Apply penalty and E11 receipt, used by Collect, the
-// overdue list and the loan screen (all through /pay).
+// overdue list and the loan screen (all through /pay). E-12: offline, or
+// when a send gets no answer, the payment is saved on the phone and sent
+// later (collect/payQueue); penalties still need a connection.
 //
 //   const collect = useCollect();
 //   collect.pay(target) / collect.penalty(target)
@@ -20,6 +22,7 @@ import {buildPenaltyNotice, buildReceipt} from '@/lib/receipt';
 import {readJson, StorageKeys, writeJson} from '@/lib/storage';
 import {useSession} from '@/features/auth/SessionProvider';
 import {collectKeys, type CollectionItem} from '@/features/collect/api';
+import {enqueue, newClientRef, shouldQueue} from '@/features/collect/payQueue';
 import {animateNextLayout} from '@/lib/motion';
 import {customerKeys} from '@/features/customers/api';
 import {listEmployees, staffKeys} from '@/features/staff/api';
@@ -141,6 +144,8 @@ function PaymentSheet({
   const [errors, setErrors] = useState<{amount?: string; txn?: string}>({});
   // Admins: record as themselves ('me') or on behalf of an employee.
   const [collector, setCollector] = useState('me');
+  // E-12: one key per payment, kept across retries of the same one.
+  const clientRef = useRef(newClientRef());
   const employees = useQuery({
     queryKey: staffKeys.list(),
     queryFn: listEmployees,
@@ -155,6 +160,7 @@ function PaymentSheet({
     setTxn('');
     setErrors({});
     setCollector('me');
+    clientRef.current = newClientRef();
     readJson<PaymentMethod>(StorageKeys.lastPaymentMethod, 'Cash').then(m =>
       setMethod(PAYMENT_METHODS.includes(m) ? m : 'Cash'),
     );
@@ -173,6 +179,7 @@ function PaymentSheet({
         paymentMethod: method,
         transactionId: txn,
         collectedBy: admin && collector !== 'me' ? collector : undefined,
+        clientRef: clientRef.current,
       }),
     onSuccess: result => {
       writeJson(StorageKeys.lastPaymentMethod, method);
@@ -194,6 +201,12 @@ function PaymentSheet({
       onPaid({target: target!, result, amount: amount!, method});
     },
     onError: error => {
+      // No answer from the server: keep it on the phone; the key makes sure
+      // it's recorded once even if this send did get through.
+      if (shouldQueue(error)) {
+        saveOffline();
+        return;
+      }
       if (isApiError(error) && error.code === 'PAY_DUPLICATE_TXN') {
         setErrors({txn: errorMessage(error, t)});
       } else if (isApiError(error) && error.code === 'PAY_MIN_AMOUNT') {
@@ -203,6 +216,29 @@ function PaymentSheet({
       }
     },
   });
+
+  // E-12: saved on the phone; the row moves to Done with "Not sent yet".
+  const saveOffline = () => {
+    if (!target) return;
+    enqueue({
+      clientRef: clientRef.current,
+      loanId: target.loanId,
+      installmentId: target.installmentId,
+      amount: amount!,
+      paymentMethod: method,
+      transactionId: txn.trim() || undefined,
+      collectedBy: admin && collector !== 'me' ? collector : undefined,
+      collectedAt: new Date().toISOString(),
+      customerName: target.customerName,
+      loanNumber: target.loanNumber,
+      installmentNumber: target.installmentNumber,
+    });
+    writeJson(StorageKeys.lastPaymentMethod, method);
+    haptics.success();
+    toast.success(t('payQueue.saved', {amount: formatMoney(amount!)}), {message: t('payQueue.savedHint')});
+    sheetRef.current?.close();
+  };
+  const send = () => (offline ? saveOffline() : mutation.mutate());
 
   const submit = () => {
     if (!target) return;
@@ -220,12 +256,12 @@ function PaymentSheet({
           : t('pay.bigMultiple', {amount: formatMoney(amount), times: Math.round(times)}),
         confirmLabel: t('pay.continue'),
         onConfirm: () => {
-          mutation.mutate();
+          send();
         },
       });
       return;
     }
-    mutation.mutate();
+    send();
   };
 
   return (
@@ -257,7 +293,7 @@ function PaymentSheet({
               title={t('pay.confirm', {amount: formatMoney(amount ?? 0)})}
               onPress={submit}
               loading={mutation.isPending}
-              disabled={offline || !amount}
+              disabled={!amount}
             />
           </>
         }>
