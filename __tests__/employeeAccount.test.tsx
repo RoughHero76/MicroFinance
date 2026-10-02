@@ -15,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SessionProvider} from '@/features/auth/SessionProvider';
 import ProfileScreen from '@/features/settings/screens/ProfileScreen';
 import SecurityScreen from '@/features/settings/screens/SecurityScreen';
+import LoginsScreen, {byDay, dayTitle} from '@/features/staff/screens/LoginsScreen';
+import {deviceName} from '@/lib/api';
 import i18n from '@/i18n';
 import {api} from '@/lib/api';
 import {ThemeProvider} from '@/theme';
@@ -138,5 +140,51 @@ describe('E-08 employee edits their own contact details', () => {
     });
     expect(screen.getByText('Enter a 10-digit mobile number')).toBeTruthy();
     expect(putSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('E-13 login history', () => {
+  const now = new Date(2026, 9, 2, 12, 0);
+  const at = (d: number, h: number) => new Date(2026, 9, d, h, 30).toISOString();
+
+  it('groups logins as Today, Yesterday, then dates', () => {
+    const t = (k: string) => (k === 'common.today' ? 'Today' : 'Yesterday');
+    const entries = [at(2, 8), at(1, 18), at(1, 8), at(28, 9)].map((date, i) => ({
+      _id: String(i),
+      date: i === 3 ? new Date(2026, 8, 28, 9).toISOString() : date,
+      device: null,
+      appVersion: null,
+      ip: null,
+      newDevice: false,
+    }));
+    const sections = byDay(entries, d => dayTitle(d, 'en', t, now));
+    expect(sections.map(sec => [sec.title, sec.data.length])).toEqual([
+      ['Today', 1],
+      ['Yesterday', 2],
+      ['28 Sep', 1],
+    ]);
+  });
+
+  it('names the phone once ("Jest", not "Jest Jest")', () => {
+    expect(deviceName()).toBe('Jest');
+  });
+
+  it("shows an employee's logins with a New phone badge", async () => {
+    await signIn('admin');
+    gets['/admin/employee/logins'] = {
+      data: [
+        {_id: 'l1', date: new Date().toISOString(), device: 'samsung SM-A145F', appVersion: '1.0.6', ip: '49.36.x.x', newDevice: true},
+      ],
+    };
+    renderScreen(LoginsScreen, {uid: 'e1', name: 'Meena Shah'});
+    await waitFor(() => expect(screen.getByText('New phone')).toBeTruthy());
+    expect(screen.getByText('samsung SM-A145F · app 1.0.6 · 49.36.x.x')).toBeTruthy();
+    expect(screen.getByText('Today')).toBeTruthy();
+  });
+
+  it('lets an employee open their own logins from Security', async () => {
+    await signIn('employee');
+    renderScreen(SecurityScreen);
+    await waitFor(() => expect(screen.getByText('My recent logins')).toBeTruthy());
   });
 });

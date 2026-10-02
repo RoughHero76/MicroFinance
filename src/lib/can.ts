@@ -38,6 +38,7 @@ export type Permission =
   | 'diagnostics.view'
   | 'activity.view'
   | 'cash.handover'
+  | 'security.myLogins'
   | 'cash.confirm';
 
 const ADMIN_ONLY: Permission[] = [
@@ -69,7 +70,13 @@ const ADMIN_ONLY: Permission[] = [
   'cash.confirm',
 ];
 
-const EMPLOYEE_ONLY: Permission[] = ['lead.create', 'lead.followup', 'lead.requestConversion', 'cash.handover'];
+const EMPLOYEE_ONLY: Permission[] = [
+  'lead.create',
+  'lead.followup',
+  'lead.requestConversion',
+  'cash.handover',
+  'security.myLogins',
+];
 
 // Both roles: recording payments (BE-10 lets admins too), applying a
 // penalty on an installment, changing one's own password (E-02) and own

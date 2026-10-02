@@ -18,6 +18,7 @@ import LeadDetailScreen from '@/features/leads/screens/LeadDetailScreen';
 import LeadListScreen from '@/features/leads/screens/LeadListScreen';
 import NewLeadScreen from '@/features/leads/screens/NewLeadScreen';
 import HandOverScreen from '@/features/cash/screens/HandOverScreen';
+import LoginsScreen from '@/features/staff/screens/LoginsScreen';
 import CalculatorScreen from '@/features/loans/screens/CalculatorScreen';
 import LoanScreen from '@/features/loans/screens/LoanScreen';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
@@ -139,6 +140,7 @@ export default function EmployeeNavigator() {
       <Stack.Screen name="Calculator" component={CalculatorScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="CashHandover" component={HandOverScreen} />
+      <Stack.Screen name="Logins" component={LoginsScreen} />
     </Stack.Navigator>
   );
 }

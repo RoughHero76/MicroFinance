@@ -1172,5 +1172,14 @@
     "sent_plural": "Sent to {{count}} people",
     "phones": "{{count}} phone notified",
     "phones_plural": "{{count}} phones notified"
+  },
+  "logins": {
+    "title": "Recent logins",
+    "mine": "My recent logins",
+    "kept": "last 90 days",
+    "unknownPhone": "Unknown phone",
+    "app": "app {{version}}",
+    "newPhone": "New phone",
+    "empty": "No logins in the last 90 days"
   }
 }

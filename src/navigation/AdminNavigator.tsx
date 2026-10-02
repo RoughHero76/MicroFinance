@@ -40,6 +40,7 @@ import SettingsScreen from '@/features/settings/screens/SettingsScreen';
 import SupportScreen from '@/features/settings/screens/SupportScreen';
 import EmployeeFormScreen from '@/features/staff/screens/EmployeeFormScreen';
 import EmployeeProfileScreen from '@/features/staff/screens/EmployeeProfileScreen';
+import LoginsScreen from '@/features/staff/screens/LoginsScreen';
 import EmployeesScreen from '@/features/staff/screens/EmployeesScreen';
 import {useTheme} from '@/theme';
 import {FloatingTabBar} from './TabBar';
@@ -175,6 +176,7 @@ export default function AdminNavigator() {
       <Stack.Screen name="Lead" component={LeadDetailScreen} />
       <Stack.Screen name="Employees" component={EmployeesScreen} />
       <Stack.Screen name="Employee" component={EmployeeProfileScreen} />
+      <Stack.Screen name="Logins" component={LoginsScreen} />
       <Stack.Screen name="EmployeeForm" component={EmployeeFormScreen} />
       <Stack.Screen name="Loan" component={AdminLoanScreen} />
       <Stack.Screen name="CreateLoan" component={CreateLoanScreen} />

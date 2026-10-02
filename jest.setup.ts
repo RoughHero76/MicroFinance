@@ -41,6 +41,7 @@ jest.mock('react-native-device-info', () => ({
   getVersion: () => '1.0.4',
   getBuildNumber: () => '4',
   getModel: () => 'Jest',
+  getBrand: () => 'Jest',
   getSystemVersion: () => '14',
   getUniqueIdSync: () => 'jest-device',
 }));

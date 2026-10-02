@@ -3,6 +3,7 @@
 // only: a full data backup (GET /admin/database/backup) saved to Downloads.
 
 import React, {useState} from 'react';
+import {useNavigation} from '@react-navigation/native';
 import {useMutation} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
@@ -33,6 +34,7 @@ export default function SecurityScreen() {
   const s = useStyles();
   const {t} = useTranslation();
   const can = useCan();
+  const navigation = useNavigation();
   const {role, lockSettings, setLockSettings, deviceLockAvailable} = useSession();
   const passwordSheet = useSheet();
   const confirm = useConfirm();
@@ -109,6 +111,13 @@ export default function SecurityScreen() {
         <Section title={t('security.myAccount')}>
           <Card padded={false} dividers>
             <OptionRow icon="key-outline" title={t('security.changePassword')} onPress={passwordSheet.open} />
+            {can('security.myLogins') ? (
+              <OptionRow
+                icon="history"
+                title={t('logins.mine')}
+                onPress={() => navigation.navigate('Logins' as never)}
+              />
+            ) : null}
           </Card>
         </Section>
       ) : null}

@@ -45,6 +45,8 @@ export type AppStackParamList = {
   Employees: undefined;
   Employee: {uid: string};
   EmployeeForm: Record<string, unknown> | undefined;
+  // Employee accounts (round E)
+  Logins: {uid?: string; name?: string} | undefined;
   // New screens (W5)
   Notifications: undefined;
   SendNotification: undefined;

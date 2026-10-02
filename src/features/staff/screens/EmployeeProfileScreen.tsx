@@ -1,6 +1,7 @@
 // A16 Employee profile: photo, contact buttons, 3 numbers (assigned, active,
 // payments collected), last login (BE-23), every detail the old screen had
-// (email, phone, address, emergency contact, member since). ⋯ menu: edit,
+// (email, phone, address, emergency contact, member since); last login
+// opens Recent logins (E-13). ⋯ menu: edit,
 // reset password, remove (with Undo, BE-19d).
 
 import React, {useRef, useState} from 'react';
@@ -177,13 +178,19 @@ export default function EmployeeProfileScreen() {
             />
           </Appear>
 
+          {/* Mock A16 (round E): the employee's work and logins. */}
+          <Card padded={false} dividers style={s.details}>
+            <OptionRow
+              icon="history"
+              title={t('logins.title')}
+              value={e.lastLogin ? formatDateTime(e.lastLogin, lang) : t('staff.never')}
+              onPress={() => navigation.navigate('Logins' as never, {uid, name} as never)}
+            />
+          </Card>
+
           <Card style={s.details}>
             <KeyValueRows
               rows={[
-                {
-                  label: t('staff.lastLogin'),
-                  value: e.lastLogin ? formatDateTime(e.lastLogin, lang) : t('staff.never'),
-                },
                 {
                   label: t('staff.phone'),
                   copy: true,

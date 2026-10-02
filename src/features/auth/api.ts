@@ -93,6 +93,23 @@ export function updateMyProfile(role: Role, patch: ProfilePatch) {
   return api.put<{status: string}>(role === 'admin' ? '/admin/profile' : '/employee/profile', patch);
 }
 
+/** One sign-in (E-13). The IP comes partly hidden ("49.36.x.x"). */
+export interface LoginEntry {
+  _id: string;
+  date: string;
+  device: string | null;
+  appVersion: string | null;
+  ip: string | null;
+  newDevice: boolean;
+}
+
+/** The last 90 days of the signed-in employee's logins. */
+export async function getMyLogins(): Promise<LoginEntry[]> {
+  const res = await api.get<{data: LoginEntry[]}>('/employee/logins');
+  return res.data ?? [];
+}
+
 export const authKeys = {
   profile: (role: Role | null) => ['profile', role] as const,
+  logins: ['profile', 'logins'] as const,
 };

@@ -2,6 +2,7 @@
 // switch), password reset, remove and restore (Undo, BE-19d).
 
 import {api} from '@/lib/api';
+import type {LoginEntry} from '@/features/auth/api';
 import type {Page} from '@/lib/useInfiniteList';
 
 export interface EmployeeSummary {
@@ -31,6 +32,7 @@ export const staffKeys = {
   list: () => ['employees', 'list'] as const,
   page: () => ['employees', 'page'] as const,
   profile: (uid: string) => ['employees', 'profile', uid] as const,
+  logins: (uid: string) => ['employees', 'logins', uid] as const,
 };
 
 /** Every employee, for pickers (one cached list). */
@@ -51,6 +53,12 @@ export async function getEmployeesPage(page: number): Promise<Page<EmployeeSumma
 export async function getEmployeeProfile(uid: string): Promise<EmployeeProfile> {
   const res = await api.get<{data: EmployeeProfile}>('/admin/employee/profile', {uid});
   return res.data;
+}
+
+/** E-13: an employee's logins for the last 90 days (admin). */
+export async function getEmployeeLogins(uid: string): Promise<LoginEntry[]> {
+  const res = await api.get<{data: LoginEntry[]}>('/admin/employee/logins', {uid});
+  return res.data ?? [];
 }
 
 export interface EmployeeInput {

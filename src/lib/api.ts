@@ -2,6 +2,7 @@
 // never build URLs themselves.
 
 import axios, {AxiosError, type AxiosRequestConfig} from 'axios';
+import {getBrand, getModel, getVersion} from 'react-native-device-info';
 import {brand} from '@/brand';
 import {currentLang} from '@/i18n';
 import {getToken} from './session';
@@ -56,6 +57,13 @@ export function onSessionEnded(handler: ((reason: SessionEndReason) => void) | n
   sessionEndedHandler = handler;
 }
 
+/** "samsung SM-A145F", "Redmi Note 12": the phone, for login history (E-13). */
+export function deviceName(): string {
+  const make = getBrand() || '';
+  const model = getModel() || '';
+  return model.toLowerCase().startsWith(make.toLowerCase()) ? model : `${make} ${model}`.trim();
+}
+
 export const http = axios.create({
   baseURL: `${brand.apiUrl}/api`,
   timeout: 15000, // U-10
@@ -67,6 +75,8 @@ http.interceptors.request.use(async config => {
     config.headers.set('Authorization', `Bearer ${token}`);
   }
   config.headers.set('Accept-Language', currentLang());
+  config.headers.set('X-Device', deviceName());
+  config.headers.set('X-App-Version', getVersion());
   return config;
 });
 
