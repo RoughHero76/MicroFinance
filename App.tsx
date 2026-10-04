@@ -1,29 +1,48 @@
-import React from "react";
-import { HomeProvider } from "./src/components/context/HomeContext";
-import { UpdateProvider } from "./src/components/context/UpdateContext";
-import RootNavigator from "./src/components/navigation/RootNavigator";
-import { PaperProvider } from 'react-native-paper';
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import UpdateNotification from "./src/components/UpdateNotification";
-import { CustomToast } from "./src/components/toast/CustomToast";
-import ErrorBoundary from "./src/components/ErrorBoundary";
+import React, {useEffect, useState} from 'react';
+import {StyleSheet} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {CrashBoundary} from '@/features/app/crash';
+import {UpdateProvider} from '@/features/app/updates';
+import {SessionProvider} from '@/features/auth/SessionProvider';
+import {loadSavedLanguage} from '@/i18n';
+import {QueryProvider} from '@/lib/query';
+import RootNavigator from '@/navigation/RootNavigator';
+import {ThemeProvider} from '@/theme';
+import {ToastHost} from '@/ui';
 
 const App = () => {
+  const [epoch, setEpoch] = useState(0);
+  useEffect(() => {
+    loadSavedLanguage();
+  }, []);
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider>
-        <HomeProvider>
-          <UpdateProvider>
-            <ErrorBoundary>
-              <RootNavigator />
-            </ErrorBoundary>
-            <UpdateNotification />
-            <CustomToast />
-          </UpdateProvider>
-        </HomeProvider>
-      </PaperProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <SessionProvider>
+              <UpdateProvider>
+                <BottomSheetModalProvider>
+                  {/* Catches errors on screens shown before the navigator
+                      (login, lock, permissions) too; "Go to Home" restarts them. */}
+                  <CrashBoundary onReset={() => setEpoch(e => e + 1)}>
+                    <RootNavigator key={epoch} />
+                  </CrashBoundary>
+                  {/* The one toast host, above navigation and sheets. */}
+                  <ToastHost />
+                </BottomSheetModalProvider>
+              </UpdateProvider>
+            </SessionProvider>
+          </QueryProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
-}
+};
+
+const styles = StyleSheet.create({root: {flex: 1}});
 
 export default App;

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Tint of the small notification icon. A brand can override it in
+       brands/<id>/android/res/values/colors.xml. -->
+  <color name="notification">#2C3E50</color>
+</resources>
