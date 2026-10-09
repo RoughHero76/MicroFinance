@@ -3,7 +3,7 @@
 // third (Marathi) it becomes a dropdown.
 
 import React, {useEffect, useState} from 'react';
-import {View} from 'react-native';
+import {Platform, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -112,13 +112,17 @@ export default function SettingsScreen() {
 
       <Section title={t('settings.account')}>
         <Card padded={false} dividers>
-          <OptionRow
-            icon="bell-ring-outline"
-            title={t('settings.push')}
-            hint={t('settings.pushHint')}
-            toggle={{value: push, onChange: togglePush}}
-          />
-          {push ? <OptionRow icon="bell-check-outline" title={t('settings.pushTest')} onPress={testPush} /> : null}
+          {Platform.OS !== 'web' ? (
+            <OptionRow
+              icon="bell-ring-outline"
+              title={t('settings.push')}
+              hint={t('settings.pushHint')}
+              toggle={{value: push, onChange: togglePush}}
+            />
+          ) : null}
+          {push && Platform.OS !== 'web' ? (
+            <OptionRow icon="bell-check-outline" title={t('settings.pushTest')} onPress={testPush} />
+          ) : null}
           <OptionRow
             icon="shield-lock-outline"
             title={t('settings.security')}

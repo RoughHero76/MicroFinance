@@ -4,9 +4,6 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {useTranslation} from 'react-i18next';
-import {brand} from '@/brand';
-import {useCan, useSession} from '@/features/auth/SessionProvider';
 import KitGallery from '@/dev/KitGallery';
 import CollectScreen from '@/features/collect/screens/CollectScreen';
 import EmployeeHomeScreen from '@/features/collect/screens/EmployeeHomeScreen';
@@ -24,96 +21,46 @@ import LoanScreen from '@/features/loans/screens/LoanScreen';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import MyPaymentsScreen from '@/features/payments/screens/MyPaymentsScreen';
 import AboutScreen from '@/features/settings/screens/AboutScreen';
-import MoreScreen, {type MoreItem} from '@/features/settings/screens/MoreScreen';
+import MoreScreen from '@/features/settings/screens/MoreScreen';
 import ProfileScreen from '@/features/settings/screens/ProfileScreen';
 import SecurityScreen from '@/features/settings/screens/SecurityScreen';
 import SettingsScreen from '@/features/settings/screens/SettingsScreen';
 import SupportScreen from '@/features/settings/screens/SupportScreen';
 import {useTheme} from '@/theme';
-import {FloatingTabBar} from './TabBar';
-import {stackScreenOptions, tabOptions, tabScreenOptions, type TabConfig} from './shell';
+import {AppTabBar} from './AppTabBar';
+import {useEmployeeNav} from './navItems';
+import {stackScreenOptions, tabOptions, tabScreenOptions} from './shell';
+import {withSplit} from './SplitView';
 import type {AppStackParamList, EmployeeTabParamList} from './types';
 
 const Tab = createBottomTabNavigator<EmployeeTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
+const CustomersList = withSplit(CustomerListScreen, {Customer: CustomerProfileScreen, Loan: LoanScreen});
+const LeadsList = withSplit(LeadListScreen, {Lead: LeadDetailScreen});
+
 function EmployeeMore() {
-  const {t} = useTranslation();
-  const {settings} = useSession();
-  const items: MoreItem[] = [
-    {key: 'payments', icon: 'cash-check', title: t('more.myPayments'), route: 'MyPayments'},
-    {key: 'overdue', icon: 'alert-decagram-outline', title: t('overdue.title'), route: 'Overdue'},
-    {
-      key: 'cash',
-      icon: 'hand-coin-outline',
-      title: t('cash.title'),
-      route: 'CashHandover',
-      visible: !!settings?.modules?.cashHandover,
-    },
-    {
-      key: 'calculator',
-      icon: 'calculator-variant-outline',
-      title: t('more.calculator'),
-      route: 'Calculator',
-      visible: brand.features.calculator,
-    },
-  ];
-  return <MoreScreen work={items} />;
+  const {work} = useEmployeeNav();
+  return <MoreScreen work={work} />;
 }
+
+const TAB_SCREENS: Record<keyof EmployeeTabParamList, React.ComponentType<any>> = {
+  Home: EmployeeHomeScreen,
+  Collect: CollectScreen,
+  Customers: CustomersList,
+  Leads: LeadsList,
+  More: EmployeeMore,
+};
 
 function EmployeeTabs() {
   const theme = useTheme();
-  const {t} = useTranslation();
-  const can = useCan();
-  const tabs: TabConfig<keyof EmployeeTabParamList>[] = [
-    {
-      name: 'Home',
-      label: t('nav.home'),
-      icon: 'home-outline',
-      iconFocused: 'home',
-      component: EmployeeHomeScreen,
-      header: false,
-    },
-    {
-      name: 'Collect',
-      label: t('nav.collect'),
-      icon: 'hand-coin-outline',
-      iconFocused: 'hand-coin',
-      component: CollectScreen,
-      header: false,
-    },
-    {
-      name: 'Customers',
-      label: t('nav.customers'),
-      icon: 'account-group-outline',
-      iconFocused: 'account-group',
-      component: CustomerListScreen,
-      header: false,
-    },
-    {
-      name: 'Leads',
-      label: t('nav.leads'),
-      icon: 'account-search-outline',
-      iconFocused: 'account-search',
-      component: LeadListScreen,
-      header: false,
-      visible: brand.features.leads && can('lead.create'),
-    },
-    {
-      name: 'More',
-      label: t('nav.more'),
-      icon: 'dots-horizontal-circle-outline',
-      iconFocused: 'dots-horizontal-circle',
-      component: EmployeeMore,
-      header: false,
-    },
-  ];
+  const {tabs} = useEmployeeNav();
   return (
-    <Tab.Navigator screenOptions={tabScreenOptions(theme)} tabBar={props => <FloatingTabBar {...props} />}>
+    <Tab.Navigator screenOptions={tabScreenOptions(theme)} tabBar={props => <AppTabBar {...props} />}>
       {tabs
         .filter(tab => tab.visible !== false)
         .map(tab => (
-          <Tab.Screen key={tab.name} name={tab.name} component={tab.component} options={tabOptions(tab)} />
+          <Tab.Screen key={tab.name} name={tab.name} component={TAB_SCREENS[tab.name]} options={tabOptions(tab)} />
         ))}
     </Tab.Navigator>
   );

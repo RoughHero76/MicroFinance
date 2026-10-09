@@ -3,7 +3,7 @@
 // explainer once after the first login, then the role's tabs.
 
 import React, {useEffect, useRef, useState} from 'react';
-import {View} from 'react-native';
+import {Platform, View} from 'react-native';
 import {NavigationContainer, type NavigationContainerRef} from '@react-navigation/native';
 import {useSession} from '@/features/auth/SessionProvider';
 import {PayQueueSync} from '@/features/collect/PayQueueSync';
@@ -16,10 +16,13 @@ import UpdateGate from '@/features/app/UpdateGate';
 import UpdateSheet from '@/features/app/UpdateSheet';
 import {PushBridge} from '@/features/notifications/PushBridge';
 import {readJson, writeJson} from '@/lib/storage';
+import {WebHosts} from '@/web/Hosts';
 import {navigationTheme, useTheme} from '@/theme';
 import {OfflineBanner} from '@/ui';
 import AdminNavigator from './AdminNavigator';
 import EmployeeNavigator from './EmployeeNavigator';
+import {documentTitle, linking} from './linking';
+import {WebShell} from './WebShell';
 
 const PERMISSIONS_SEEN = 'onboarding.permissionsSeen';
 const MIN_SPLASH_MS = 1000;
@@ -33,7 +36,9 @@ export default function RootNavigator() {
 
   useEffect(() => {
     const timer = setTimeout(() => setSplashDone(true), MIN_SPLASH_MS);
-    readJson<boolean>(PERMISSIONS_SEEN, false).then(setPermissionsSeen);
+    // The browser asks for the camera itself, so the web has no permissions step.
+    if (Platform.OS === 'web') setPermissionsSeen(true);
+    else readJson<boolean>(PERMISSIONS_SEEN, false).then(setPermissionsSeen);
     flushPendingReports();
     return () => clearTimeout(timer);
   }, []);
@@ -54,19 +59,24 @@ export default function RootNavigator() {
 
   return (
     <View style={{flex: 1, backgroundColor: theme.colors.bg}}>
-      <NavigationContainer
-        ref={navRef}
-        theme={navigationTheme(theme)}
-        onStateChange={() => setCurrentScreen(navRef.current?.getCurrentRoute()?.name)}>
-        <CrashBoundary onReset={() => navRef.current?.reset({index: 0, routes: [{name: 'Tabs' as never}]})}>
-          {role === 'admin' ? <AdminNavigator /> : <EmployeeNavigator />}
-        </CrashBoundary>
-      </NavigationContainer>
+      <WebShell navRef={navRef}>
+        <NavigationContainer
+          ref={navRef}
+          theme={navigationTheme(theme)}
+          linking={linking}
+          documentTitle={documentTitle}
+          onStateChange={() => setCurrentScreen(navRef.current?.getCurrentRoute()?.name)}>
+          <CrashBoundary onReset={() => navRef.current?.reset({index: 0, routes: [{name: 'Tabs' as never}]})}>
+            {role === 'admin' ? <AdminNavigator /> : <EmployeeNavigator />}
+          </CrashBoundary>
+        </NavigationContainer>
+      </WebShell>
       <OfflineBanner />
       <UpdateSheet />
       <UpdateGate />
       <PushBridge navRef={navRef} />
       <PayQueueSync />
+      <WebHosts />
     </View>
   );
 }

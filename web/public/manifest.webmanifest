@@ -1,0 +1,9 @@
+{
+  "name": "EviFinance",
+  "short_name": "EviFinance",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F6FA",
+  "theme_color": "#2C3E50",
+  "icons": [{"src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]
+}

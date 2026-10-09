@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2021", "dom", "dom.iterable"],
+    // `thing.web.ts` is chosen over `thing.ts`, like the web bundler does.
+    "moduleSuffixes": [".web", ""],
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["App.tsx", "web/**/*", "src/**/*", "brands/**/*.json"],
+  "exclude": ["node_modules", "web/vite.config.ts"]
+}

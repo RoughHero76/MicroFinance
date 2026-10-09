@@ -1,0 +1,13 @@
+/* The icon font the phone app uses (react-native-vector-icons). */
+@font-face {
+  font-family: 'MaterialCommunityIcons';
+  src: url('../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf') format('truetype');
+  font-display: block;
+}
+
+/* Inter, one family name per weight like the phone (see theme/tokens.ts).
+   Hindi falls back to the system font. */
+@font-face { font-family: 'Inter-Regular'; src: url('../android/app/src/main/assets/fonts/Inter-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Inter-Medium'; src: url('../android/app/src/main/assets/fonts/Inter-Medium.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Inter-SemiBold'; src: url('../android/app/src/main/assets/fonts/Inter-SemiBold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Inter-Bold'; src: url('../android/app/src/main/assets/fonts/Inter-Bold.ttf') format('truetype'); font-display: swap; }

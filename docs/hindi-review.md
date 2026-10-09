@@ -1130,3 +1130,24 @@ Placeholders like `{{name}}` (app) or `{name}` (server) must stay exactly as the
 The phone notification titles use the same Hindi as the app's notification list (`notifications.types.*` above).
 
 Server-only notification types carry their own Hindi in `MicroFinance-backend/src/helpers/pushText.js` (e.g. `collect.today`: "आज: 5 वसूली · ₹6,390"). Review new ones there.
+
+## Web version (`web.*` in `src/i18n/hi.json`)
+
+New strings for the browser: PIN unlock, the webcam, and the photo cropper. Drafted by Claude, to be checked by a native speaker.
+
+| Key | English | Hindi |
+| --- | --- | --- |
+| `web.appLockHint` | A 6-digit PIN when you reopen this site | साइट दोबारा खोलने पर 6 अंकों का पिन |
+| `web.pinTitle` | Choose a PIN | पिन चुनें |
+| `web.pinHint` | {{count}} digits. You will use it to reopen {{brand}} in this browser instead of your password. | {{count}} अंक। पासवर्ड की जगह इस ब्राउज़र में {{brand}} दोबारा खोलने के लिए इसका उपयोग करेंगे। |
+| `web.pinWrong` | Wrong PIN. {{count}} tries left | गलत पिन। {{count}} कोशिशें बाकी हैं |
+| `web.pinOn` | PIN unlock is on | पिन से खोलना चालू हो गया |
+| `web.cropProfile` | Crop profile photo | प्रोफ़ाइल फ़ोटो काटें |
+| `web.cropDocument` | Crop document | दस्तावेज़ काटें |
+| `web.shape.free` | Free | खुला |
+| `web.rotate` | Rotate | घुमाएँ |
+| `web.pickOne` | Select an item from the list to see it here | यहाँ देखने के लिए सूची में से कोई चुनें |
+| `adminHome.waiting` | Waiting for you | आपके लिए बाकी |
+| `adminHome.loansToApprove` | Loans to approve | मंज़ूरी के लिए ऋण |
+
+The remaining `web.*` keys (PIN fields, errors, backup text, camera help, crop hints) follow the same style; review them together in `src/i18n/hi.json`.

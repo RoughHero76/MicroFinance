@@ -81,3 +81,4 @@ dist/
 android/app/src/*/
 !android/app/src/main/
 !android/app/src/debug/
+dist-web/

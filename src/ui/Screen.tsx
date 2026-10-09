@@ -18,6 +18,7 @@ import {NavigationContext} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {FadeIn} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useBreakpoint} from '@/lib/useBreakpoint';
 import {makeStyles, statusBarStyle, useTheme, withAlpha} from '@/theme';
 import {BrandLogo} from './BrandLogo';
 import {HeaderSlot} from './headerSlot';
@@ -61,6 +62,9 @@ export function Header({
   const navigation = useContext(NavigationContext);
   const insets = useSafeAreaInsets();
   const canBack = back && (onBack || navigation?.canGoBack());
+  // The web sidebar already shows the logo.
+  const {wide} = useBreakpoint();
+  const showLogo = logo && !(wide && Platform.OS === 'web');
   // Pushed screens: the mock's centred title between two 36dp buttons.
   const centred = !large && !logo;
   return (
@@ -81,7 +85,7 @@ export function Header({
           <View style={s.spacer} />
         ) : null}
         <View style={[s.titles, centred && s.titlesCentred]}>
-          {logo ? <BrandLogo width={110} height={34} style={s.logo} /> : null}
+          {showLogo ? <BrandLogo width={110} height={34} style={s.logo} /> : null}
           {title && !logo ? (
             <View style={[s.titleLine, centred && s.titleLineCentred]}>
               <Text
@@ -140,8 +144,11 @@ function BandGradient({style}: {style?: StyleProp<ViewStyle>}) {
  */
 export function BandExtension({height = 64}: {height?: number}) {
   const s = useStyles();
+  // A wide browser window shows the screen as a centred column; the band
+  // ends in rounded corners there instead of a hard cut.
+  const wide = useBreakpoint().wide && Platform.OS === 'web';
   return (
-    <View style={[s.bandExtension, {height}]} pointerEvents="none">
+    <View style={[s.bandExtension, wide && s.bandExtensionWide, {height}]} pointerEvents="none">
       <BandGradient />
     </View>
   );
@@ -164,6 +171,8 @@ export interface ScreenProps {
    * then build the content, so the slide-in never stutters (W7).
    */
   defer?: boolean;
+  /** Web: how wide the centred column may grow (dashboards take more). */
+  maxWidth?: number;
 }
 
 export function Screen({
@@ -177,6 +186,7 @@ export function Screen({
   refreshControl,
   keyboard,
   defer,
+  maxWidth = 960,
 }: ScreenProps) {
   const t = useTheme();
   const s = useStyles();
@@ -205,6 +215,24 @@ export function Screen({
   );
   const glow = header && header.large && !header.band;
 
+  const column = (
+    <>
+      {header ? <Header {...header} /> : <View style={{height: insets.top}} />}
+      {banner}
+      {keyboard ? (
+        <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          {body}
+          {fab ? <View style={[s.fab, {bottom: 16 + insets.bottom}]}>{fab}</View> : null}
+        </KeyboardAvoidingView>
+      ) : (
+        <>
+          {body}
+          {fab ? <View style={[s.fab, {bottom: 16 + insets.bottom}]}>{fab}</View> : null}
+        </>
+      )}
+    </>
+  );
+
   return (
     <View style={s.screen}>
       <StatusBar
@@ -219,19 +247,9 @@ export function Screen({
           style={[s.glow, {height: 220 + insets.top}]}
         />
       ) : null}
-      {header ? <Header {...header} /> : <View style={{height: insets.top}} />}
-      {banner}
-      {keyboard ? (
-        <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          {body}
-          {fab ? <View style={[s.fab, {bottom: 16 + insets.bottom}]}>{fab}</View> : null}
-        </KeyboardAvoidingView>
-      ) : (
-        <>
-          {body}
-          {fab ? <View style={[s.fab, {bottom: 16 + insets.bottom}]}>{fab}</View> : null}
-        </>
-      )}
+      {/* On the web the background (and glow) fill the window; the content
+          is a centred column. */}
+      {Platform.OS === 'web' ? <View style={[s.column, {maxWidth}]}>{column}</View> : column}
     </View>
   );
 }
@@ -295,6 +313,8 @@ export function ActionRow({children, style}: {children: React.ReactNode; style?:
 
 const useStyles = makeStyles(t => ({
   screen: {flex: 1, backgroundColor: t.colors.bg},
+  // Web: a centred column, not stretched across a wide window.
+  column: {flex: 1, width: '100%', alignSelf: 'center'},
   flex: {flex: 1},
   padded: {padding: t.space.lg},
   header: {backgroundColor: t.colors.bg, paddingHorizontal: t.space.sm, paddingBottom: t.space.sm},
@@ -303,6 +323,7 @@ const useStyles = makeStyles(t => ({
   placeholder: {gap: t.space.md},
   band: {backgroundColor: t.colors.primary},
   bandExtension: {marginTop: -t.space.lg, marginHorizontal: -t.space.lg, marginBottom: 0},
+  bandExtensionWide: {borderBottomLeftRadius: t.radius.lg, borderBottomRightRadius: t.radius.lg, overflow: 'hidden'},
   headerRow: {flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingHorizontal: t.space.sm},
   spacer: {width: 36},
   titlesCentred: {alignItems: 'center', paddingHorizontal: t.space.sm},

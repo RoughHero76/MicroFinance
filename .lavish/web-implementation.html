@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en" data-theme="luxury">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Implementation Options</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, h4, li, .badge) { overflow-wrap: anywhere; }
+  body { background: var(--color-base-100); color: var(--color-base-content); font-family: Inter, system-ui, sans-serif; }
+  code { font-size: .85em; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 80px; }
+  h2.sec { font-size: 1.35rem; font-weight: 800; margin: 44px 0 6px; }
+  p.lede { opacity: .75; margin-bottom: 16px; max-width: 72ch; }
+  .doc-table { min-width: 760px; }
+  .doc-table th { white-space: nowrap; }
+  .doc-table td { vertical-align: top; overflow-wrap: normal; word-break: normal; }
+  .doc-table .badge { white-space: nowrap; height: auto; min-height: 1.4rem; padding-block: 2px; line-height: 1.3; }
+  .doc-table td:first-child { white-space: nowrap; font-weight: 600; }
+
+  /* ===== effort bars ===== */
+  .bar { display:flex; height: 22px; border-radius: 6px; overflow: hidden; background: color-mix(in oklab, var(--color-base-content) 10%, transparent); }
+  .bar > span { display:block; height:100%; }
+  .b-reuse { background: #4ade80; } .b-edit { background: #fbbf24; } .b-new { background: #f87171; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; opacity:.85; margin: 6px 0 14px; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+
+  /* ===== MOCK KIT (app theme) ===== */
+  .app { --on-p:#fff; font-family: Inter, system-ui, sans-serif; font-size: 12.5px; }
+  .app[data-mode="light"] { --bg:#F5F6FA; --surface:#FFFFFF; --surface2:#EEF0F6; --text:#0F172A; --muted:#64748B; --border:#E6E8EF; --success:#16A34A; --warning:#D97706; --danger:#DC2626; --p:#2C3E50; --p2:#5FA83F; --sbg:#e6f5ea; --wbg:#fdf0e1; --dbg:#fce8e8; }
+  .app[data-mode="dark"]  { --bg:#0B0F17; --surface:#151B26; --surface2:#1E2635; --text:#E7EBF2; --muted:#8B95A7; --border:#263042; --success:#4ADE80; --warning:#FBBF24; --danger:#F87171; --p:#7FB3E6; --p2:#7BC95A; --on-p:#0B0F17; --sbg:#16301f; --wbg:#33270f; --dbg:#3a1a1a; }
+  .app { background: var(--bg); color: var(--text); border-radius: 0 0 10px 10px; overflow: hidden; }
+  .m-muted { color: var(--muted); }
+  .m-shell { display:grid; grid-template-columns: 168px minmax(0,1fr); min-height: 430px; }
+  .m-side { background: var(--surface); border-right:1px solid var(--border); padding: 14px 10px; display:flex; flex-direction:column; gap:3px; }
+  .m-brand { font-weight:800; font-size:15px; color: var(--p); padding: 2px 8px 12px; } .m-brand small { color: var(--p2); font-weight:700; font-size:10px; display:block; }
+  .m-nav { padding: 7px 10px; border-radius: 8px; color: var(--muted); font-weight:600; display:flex; justify-content:space-between; align-items:center; gap:6px; white-space:nowrap; }
+  .m-nav.on { background: color-mix(in oklab, var(--p) 14%, transparent); color: var(--p); }
+  .m-nav b { background: var(--danger); color:#fff; border-radius:99px; font-size:10px; padding:0 6px; }
+  .m-main { padding: 16px; min-width:0; }
+  .m-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .m-h { font-size:17px; font-weight:800; }
+  .m-search { background: var(--surface); border:1px solid var(--border); border-radius:10px; padding:7px 12px; color: var(--muted); min-width: 180px; }
+  .m-card { background: var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px; min-width:0; }
+  .m-hero { background: linear-gradient(135deg, var(--p), var(--p2)); color: var(--on-p); border-radius: 14px; padding: 14px 16px; }
+  .m-hero .big { font-size: 26px; font-weight: 800; margin: 2px 0 8px; }
+  .m-hero .row { display:flex; gap: 22px; flex-wrap:wrap; } .m-hero .row div { opacity:.95 } .m-hero .row b { display:block; font-size:14px; }
+  .m-grid { display:grid; gap:12px; min-width:0; }
+  .g-23 { grid-template-columns: minmax(0,1.7fr) minmax(0,1fr); } .g-4 { grid-template-columns: repeat(4, minmax(0,1fr)); } .g-det { grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); }
+  .m-tile { background: var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; text-align:center; font-weight:600; position:relative; }
+  .m-tile em { position:absolute; top:-6px; right:-4px; background: var(--danger); color:#fff; font-style:normal; font-size:10px; border-radius:99px; padding:0 6px; }
+  .m-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--border); } .m-row:first-of-type { border-top:0; }
+  .m-av { width:30px; height:30px; flex:none; border-radius:50%; background: var(--surface2); display:grid; place-items:center; font-weight:700; font-size:11px; }
+  .m-grow { flex:1; min-width:0; } .m-grow b { display:block; } .m-grow span { color: var(--muted); font-size:11.5px; }
+  .m-pill { padding:2px 9px; border-radius:99px; font-weight:700; font-size:11px; white-space:nowrap; }
+  .p-ok { background: var(--sbg); color: var(--success); } .p-warn { background: var(--wbg); color: var(--warning); } .p-bad { background: var(--dbg); color: var(--danger); } .p-n { background: var(--surface2); color: var(--muted); }
+  .m-chip { padding:4px 11px; border-radius:99px; border:1px solid var(--border); background: var(--surface); color: var(--muted); font-weight:600; white-space:nowrap; }
+  .m-chip.on { background: var(--p); color: var(--on-p); border-color: var(--p); }
+  .m-chips { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; }
+  .m-btn { display:inline-block; padding:8px 14px; border-radius:10px; font-weight:700; background: var(--p); color: var(--on-p); text-align:center; white-space:nowrap; }
+  .m-btn.ghost { background: transparent; color: var(--p); border:1px solid var(--border); }
+  .m-tablewrap { overflow-x:auto; }
+  .m-table { width:100%; border-collapse: collapse; min-width: 440px; }
+  .m-table th { text-align:left; color: var(--muted); font-weight:600; font-size:11px; padding: 6px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .m-table td { padding: 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .m-table tr.sel td { background: color-mix(in oklab, var(--p) 10%, transparent); }
+  .m-field { background: var(--surface); border:1px solid var(--border); border-radius:10px; padding:9px 12px; margin: 4px 0 10px; color: var(--muted); }
+  .m-lbl { font-weight:700; font-size:11.5px; }
+  .m-seg { display:grid; grid-template-columns:1fr 1fr; background: var(--surface2); border-radius:10px; padding:3px; margin-bottom:12px; }
+  .m-seg span { text-align:center; padding:7px; border-radius:8px; font-weight:700; color: var(--muted); } .m-seg .on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .m-sheet { background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+  .m-center { min-height: 430px; display:grid; place-items:center; padding: 20px; }
+  .m-gutter { min-height: 520px; display:grid; place-items:center; background: repeating-linear-gradient(45deg, var(--bg), var(--bg) 10px, var(--surface2) 10px, var(--surface2) 11px); padding: 14px; }
+  .m-phone { width: 330px; max-width:100%; background: var(--bg); border:1px solid var(--border); border-radius: 16px; padding: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+  @media (max-width: 760px) { .m-shell { grid-template-columns: 1fr; } .m-side { flex-direction:row; overflow-x:auto; border-right:0; border-bottom:1px solid var(--border); } .m-brand { display:none; } .g-23, .g-det { grid-template-columns: 1fr; } .g-4 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .tag { font-size:11px; font-weight:700; padding:1px 8px; border-radius:99px; background:#3b82f633; color:#93c5fd; }
+
+  .m-sec { font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; padding:10px 10px 2px; }
+  .m-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .m-barr { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .m-bell { position:relative; } .m-bell em { position:absolute; top:-6px; right:-8px; background:var(--danger); color:#fff; font-style:normal; font-size:9px; border-radius:99px; padding:0 5px; }
+  .m-m { font-size:19px; font-weight:800; }
+  .m-photo { --s:30px; width:var(--s); height:var(--s); flex:none; border-radius:50%; display:inline-block; position:relative; background:
+      radial-gradient(circle at 50% 36%, var(--skin) 0 21%, transparent 22%),
+      radial-gradient(circle at 50% 30%, var(--hair) 0 27%, transparent 28%),
+      radial-gradient(ellipse at 50% 108%, var(--shirt) 0 46%, transparent 47%),
+      linear-gradient(#cfd8e3,#aab7c6); box-shadow: 0 0 0 1px var(--border); }
+  .m-photowrap { position:relative; display:inline-block; flex:none; }
+  .m-cam { position:absolute; right:-4px; bottom:-4px; width:22px; height:22px; border-radius:50%; background:var(--p); color:var(--on-p); display:grid; place-items:center; font-style:normal; font-size:10px; border:2px solid var(--surface); }
+  .m-split { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap:12px; align-items:start; }
+  .m-row.sel { background: color-mix(in oklab, var(--p) 10%, transparent); margin:0 -6px; padding-left:6px; padding-right:6px; border-radius:8px; }
+  .m-detail { background:var(--bg); min-width:0; }
+  .m-brandhdr { background: linear-gradient(135deg,var(--p),var(--p2)); color:var(--on-p); border-radius:14px 14px 0 0; padding:12px 14px 38px; display:flex; justify-content:space-between; font-weight:700; }
+  .m-profile { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin:-30px 10px 0; position:relative; box-shadow:0 6px 18px rgba(0,0,0,.08); }
+  .m-round { display:flex; gap:10px; justify-content:center; margin:12px 0; } .m-round span { width:34px; height:34px; border:1px solid var(--border); border-radius:50%; display:grid; place-items:center; background:var(--surface); }
+  .m-life { display:grid; grid-template-columns:repeat(3,1fr); text-align:center; border-top:1px solid var(--border); padding-top:10px; } .m-life b { display:block; font-size:15px; } .m-life span { color:var(--muted); font-size:11px; }
+  .m-utabs { display:flex; gap:18px; border-bottom:1px solid var(--border); margin-top:12px; font-weight:700; color:var(--muted); } .m-utabs span { padding:8px 0; } .m-utabs .on { color:var(--text); border-bottom:2px solid var(--p); }
+  .m-prog { height:7px; border-radius:9px; background:var(--surface2); margin:8px 0; overflow:hidden; } .m-prog i { display:block; height:100%; background:var(--p); border-radius:9px; }
+  .m-kv { display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid var(--border); } .m-kv:first-child { border-top:0; } .m-kv span { font-weight:600; } .m-kv b { color:var(--muted); font-weight:600; }
+  .m-docs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px; } .m-doc { aspect-ratio: 4/3; border-radius:10px; background: linear-gradient(135deg,var(--surface2),var(--border)); display:grid; place-items:center; font-size:11px; color:var(--muted); text-align:center; } .m-doc.add { background:transparent; border:1.5px dashed var(--border); }
+  .m-formcols { display:grid; grid-template-columns:230px minmax(0,1fr); gap:12px; } .m-two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .m-menu { text-align:left; border:1px solid var(--border); border-radius:10px; padding:4px 10px; } .m-menu div { padding:6px 0; border-top:1px solid var(--border); } .m-menu div:first-child { border-top:0; }
+  .m-scrim { position:absolute; inset:0; background:rgba(8,12,20,.55); display:grid; place-items:center; padding:12px; z-index:2; }
+  .m-dialog { background:var(--surface); border-radius:16px; padding:16px; box-shadow:0 20px 50px rgba(0,0,0,.4); }
+  .m-cropwrap { position:relative; height:210px; background:#111; border-radius:10px; overflow:hidden; display:grid; place-items:center; }
+  .m-cropimg { position:absolute; inset:14px; border-radius:8px; background: radial-gradient(circle at 50% 38%, #e3c4a6 0 12%, transparent 13%), radial-gradient(circle at 50% 33%, #2b1b12 0 16%, transparent 17%), radial-gradient(ellipse at 50% 105%, #7a3b4f 0 34%, transparent 35%), linear-gradient(#8a9bb0,#5b6b80); }
+  .m-cropbox { position:relative; width:170px; height:170px; border:2px solid #fff; box-shadow:0 0 0 999px rgba(0,0,0,.55); }
+  .m-range { flex:1; height:4px; background:var(--surface2); border-radius:9px; position:relative; } .m-range i { position:absolute; left:0; top:0; bottom:0; width:40%; background:var(--p); border-radius:9px; } .m-range u { position:absolute; left:40%; top:-5px; width:14px; height:14px; border-radius:50%; background:var(--p); }
+  .g-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .m-big { font-size:20px; font-weight:800; margin-top:2px; }
+  .m-bar2 { display:grid; grid-template-columns:44px minmax(0,1fr) 22px; gap:8px; align-items:center; margin:6px 0; } .m-bar2 div { height:8px; border-radius:9px; background:var(--surface2); } .m-bar2 i { display:block; height:100%; background:var(--p); border-radius:9px; } .m-bar2 b { text-align:right; }
+  .m-offline { background:var(--wbg); color:var(--warning); border-radius:10px; padding:8px 12px; font-weight:600; }
+  @media (max-width: 760px) { .m-split, .m-formcols { grid-template-columns:1fr; } .g-2 { grid-template-columns:1fr; } }
+  .g-hero { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr); } .g-3 { grid-template-columns: repeat(3, minmax(0,1fr)); align-items:start; }
+  .m-wkrow { display:flex; align-items:flex-end; gap:8px; height:90px; margin-top:8px; } .m-wk { flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:4px; font-size:10px; color:var(--muted); } .m-wk i { width:100%; background:var(--p); border-radius:5px 5px 0 0; opacity:.85; }
+  @media (max-width: 900px) { .g-hero, .g-3 { grid-template-columns:1fr; } }
+  .mockpanel { display:none; } .mockpanel.on { display:block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ HEADER / ANSWER ============ -->
+  <div class="flex items-center gap-2 flex-wrap">
+    <span class="badge badge-soft badge-primary">EviFinance · web</span>
+    <span class="badge badge-ghost">Planning only · nothing built or run</span>
+  </div>
+  <h1 class="text-3xl md:text-4xl font-extrabold mt-3">Can EviFinance run on the web?</h1>
+  <p class="lede mt-2">Yes. The app was built so that most of it is plain TypeScript, and the backend already accepts browser requests. The real question is how much of the phone UI you want to keep on a desktop screen.</p>
+
+  <div role="alert" class="alert alert-success alert-soft mb-4">
+    <div>
+      <b>Decided: Option 2, admin-first.</b> Run the existing app in the browser with <code>react-native-web</code>, then give the 5 admin screens that matter a real desktop layout.
+      About <b>3,700 lines</b> new or changed (≈17% of the 21k in <code>src/</code>), in roughly <b>55 files</b>, reusing the mobile screens and UI kit rather than redesigning them, <b>no change to the phone build</b>. Do a one-day spike first to confirm the animation library.
+    </div>
+  </div>
+
+  <div class="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-200">
+    <div class="stat"><div class="stat-title">App source today</div><div class="stat-value">21.3k</div><div class="stat-desc">lines in src/ · 150 files</div></div>
+    <div class="stat"><div class="stat-title">Already web-safe</div><div class="stat-value text-success">~85%</div><div class="stat-desc">TanStack Query, i18next, navigation, theme, formatting, API client</div></div>
+    <div class="stat"><div class="stat-title">Need a web stand-in</div><div class="stat-value text-warning">9</div><div class="stat-desc">native libraries, mostly one file each</div></div>
+    <div class="stat"><div class="stat-title">Backend changes</div><div class="stat-value">~5</div><div class="stat-desc">lines: CORS allow-list. No web files in the backend</div></div>
+  </div>
+
+  <!-- ============ OPTIONS ============ -->
+  <h2 class="sec">Three ways to do it</h2>
+  <p class="lede">Bars show how much of the result is reused as it is (green), edited in place (amber) or written new (red).</p>
+
+  <div class="legend"><span><i class="b-reuse"></i>Reused as is</span><span><i class="b-edit"></i>Edited</span><span><i class="b-new"></i>New code</span></div>
+
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="card card-border bg-base-200">
+      <div class="card-body">
+        <div class="flex justify-between items-start gap-2"><h3 class="card-title text-base">1 · Same app, in a browser</h3><span class="badge badge-soft badge-info">Quickest</span></div>
+        <p class="text-sm opacity-80">react-native-web, phone layout centred in a column. Installable on iPhones as a home-screen app.</p>
+        <div class="bar"><span class="b-reuse" style="width:91%"></span><span class="b-edit" style="width:4%"></span><span class="b-new" style="width:5%"></span></div>
+        <ul class="text-sm space-y-1 mt-2">
+          <li><b>~1,900</b> lines new or changed</li>
+          <li><b>~35</b> files, mostly new <code>*.web.ts</code> stand-ins</li>
+          <li>Feasibility: <span class="text-success font-bold">high</span></li>
+          <li class="opacity-80">Feels like a phone app on a big screen. Fine for employees on any phone, poor for an admin at a desk.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card card-border bg-base-200 border-success">
+      <div class="card-body">
+        <div class="flex justify-between items-start gap-2"><h3 class="card-title text-base">2 · Browser app + desktop layout</h3><span class="badge badge-success">Recommended</span></div>
+        <p class="text-sm opacity-80">Option 1, plus a sidebar and master-detail layouts on wide screens. Phones keep today's layout.</p>
+        <div class="bar"><span class="b-reuse" style="width:84%"></span><span class="b-edit" style="width:6%"></span><span class="b-new" style="width:10%"></span></div>
+        <ul class="text-sm space-y-1 mt-2">
+          <li><b>~3,700</b> lines new or changed (range 3,100 – 4,600)</li>
+          <li><b>~55</b> files (35 new, 20 edited)</li>
+          <li>Feasibility: <span class="text-success font-bold">high</span> after the spike</li>
+          <li class="opacity-80">One codebase, one set of fixes. Admin and employee both get web.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card card-border bg-base-200">
+      <div class="card-body">
+        <div class="flex justify-between items-start gap-2"><h3 class="card-title text-base">3 · Separate admin console</h3><span class="badge badge-soft badge-warning">Most work</span></div>
+        <p class="text-sm opacity-80">A new React + Vite site for admins only, sharing types, formatting and the API client through a shared package.</p>
+        <div class="bar"><span class="b-reuse" style="width:12%"></span><span class="b-edit" style="width:6%"></span><span class="b-new" style="width:82%"></span></div>
+        <ul class="text-sm space-y-1 mt-2">
+          <li><b>~10,000</b> new lines, +~25 app files edited to move shared code</li>
+          <li>~24 admin screens rebuilt as tables and forms</li>
+          <li>Feasibility: <span class="text-success font-bold">high</span>, but long</li>
+          <li class="opacity-80">Best desktop result. Two UIs to keep in step forever, and employees get nothing.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MOCKS ============ -->
+  <h2 class="sec">Mock screens</h2>
+  <p class="lede">Redrawn after your feedback: these are the <b>real mobile screens</b> (same cards, rows, chips, photos, headers) on a wider canvas, not a new desktop design. Lists and their detail screens sit side by side; the tab bar becomes a sidebar. Dark toggle on the right.</p>
+
+  <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+    <div role="tablist" class="tabs tabs-box" id="mocktabs">
+      <button role="tab" class="tab tab-active" data-p="p0">Home</button>
+      <button role="tab" class="tab" data-p="p1">Customers + profile</button>
+      <button role="tab" class="tab" data-p="p2">Photo + crop</button>
+      <button role="tab" class="tab" data-p="p3">Loan + payment</button>
+      <button role="tab" class="tab" data-p="p4">Reports</button>
+      <button role="tab" class="tab" data-p="p5">Employee · Collect</button>
+    </div>
+    <label class="flex items-center gap-2 text-sm cursor-pointer"><span>Dark</span><input type="checkbox" class="toggle toggle-sm" id="darkToggle"></label>
+  </div>
+
+  <div class="mockup-browser border border-base-300 bg-base-200">
+    <div class="mockup-browser-toolbar"><div class="input">https://admin.example.com/customers/1039</div></div>
+    <div class="mockpanel on" id="p0"><div class="app" data-mode="light"><div class="m-shell"><div class="m-side"><div class="m-brand">EVI<small>Small Finance</small></div><div class="m-nav on"><span>Home</span></div><div class="m-nav"><span>Customers</span></div><div class="m-nav"><span>Loans</span></div><div class="m-nav"><span>Leads</span><b>4</b></div><div class="m-sec">Manage</div><div class="m-nav"><span>Payments</span><b>9</b></div><div class="m-nav"><span>Employees</span></div><div class="m-nav"><span>Reports</span></div><div class="m-nav"><span>Portfolio risk</span></div><div class="m-nav"><span>Loan calculator</span></div><div class="m-nav"><span>Notifications</span></div><div class="m-sec">App</div><div class="m-nav"><span>Settings</span></div><div class="m-nav"><span>Help &amp; support</span></div><div class="m-nav" style="color:var(--danger)">Log out</div></div><div class="m-main"><div class="m-bar"><div class="m-h">Home</div><div class="m-barr"><div class="m-search">⌕ Search customers, loans…</div><span class="m-bell">🔔<em>3</em></span><span class="m-photo" style="--s:28px;--skin:#d9b08c;--shirt:#2c3e50;--hair:#4a2f1d"></span></div></div><div class="m-m" style="margin-bottom:10px">Welcome, <b>Arif</b></div>
+<div class="m-grid g-hero">
+ <div class="m-hero"><div style="opacity:.85">Market amount <span style="opacity:.7">(active + approved)</span></div><div class="big">₹18,40,000</div><div class="row"><div>Repaid<b>₹6.2L</b></div><div>Active loans<b>128</b></div><div>Customers<b>342</b></div></div></div>
+ <div class="m-card"><div class="m-muted">Collected today</div><div class="m-big">₹48,200</div><div class="m-prog"><i style="width:68%"></i></div><div class="m-muted">68% of ₹70,900 due · 31 of 46 customers</div></div>
+ <div class="m-card"><div class="m-muted">Needs attention</div><div class="m-kv"><span>Payments to approve</span><b style="color:var(--danger)">9 ›</b></div><div class="m-kv"><span>Overdue loans</span><b>17 ›</b></div><div class="m-kv"><span>NPA</span><b>3 ›</b></div></div>
+</div>
+<div class="m-grid g-4" style="margin:12px 0"><div class="m-tile"><em>9</em>Payments</div><div class="m-tile">Risk</div><div class="m-tile"><em>4</em>Leads</div><div class="m-tile">Reports</div></div>
+<div class="m-grid g-3">
+ <div class="m-card" style="align-self:start"><div class="m-top" style="margin:0 0 4px"><b>Recent customers</b><span class="m-muted">View all ›</span></div><div class="m-row"><span class="m-photo" style="--s:32px;--skin:#e3c4a6;--shirt:#7a3b4f;--hair:#2b1b12"></span><div class="m-grow"><b>Farhan Ali</b><span>Added today · by Ravi</span></div><span class="m-pill p-ok">Active</span></div><div class="m-row"><span class="m-photo" style="--s:32px;--skin:#c9996f;--shirt:#36506b;--hair:#1a1210"></span><div class="m-grow"><b>Pooja Nair</b><span>Added yesterday · by Meena S.</span></div><span class="m-pill p-warn">Pending</span></div><div class="m-row"><span class="m-photo" style="--s:32px;--skin:#d8b08a;--shirt:#4d6b3a;--hair:#2b1b12"></span><div class="m-grow"><b>Dinesh Yadav</b><span>Added 3 days ago · by Kiran</span></div><span class="m-pill p-ok">Active</span></div></div>
+ <div class="m-card"><div class="m-top" style="margin:0 0 4px"><b>Today by employee</b><span class="m-muted">Employees ›</span></div><div class="m-row"><span class="m-photo" style="--s:28px;--skin:#d8b08a;--shirt:#4d6b3a;--hair:#2b1b12"></span><div class="m-grow"><b>Meena S.</b><span>₹21,400 of ₹30,000</span><div class="m-prog" style="margin:4px 0 0;height:5px"><i style="width:71%"></i></div></div><b>71%</b></div><div class="m-row"><span class="m-photo" style="--s:28px;--skin:#c9996f;--shirt:#36506b;--hair:#1a1210"></span><div class="m-grow"><b>Ravi</b><span>₹18,200 of ₹25,000</span><div class="m-prog" style="margin:4px 0 0;height:5px"><i style="width:73%"></i></div></div><b>73%</b></div><div class="m-row"><span class="m-photo" style="--s:28px;--skin:#e0c3a5;--shirt:#a0522d;--hair:#3b2a1e"></span><div class="m-grow"><b>Kiran</b><span>₹8,600 of ₹15,900</span><div class="m-prog" style="margin:4px 0 0;height:5px"><i style="width:54%"></i></div></div><b>54%</b></div></div>
+ <div style="display:grid;gap:12px;align-content:start;min-width:0">
+  <div class="m-card"><div class="m-top" style="margin:0 0 6px"><b>New leads</b><span class="m-muted">View all ›</span></div><div class="m-row"><span class="m-photo" style="--s:28px;--skin:#e0c3a5;--shirt:#a0522d;--hair:#3b2a1e"></span><div class="m-grow"><b>Geeta Rao</b><span>Business · ₹50,000 · by Ravi</span></div><span class="m-pill p-n">New</span></div><div class="m-row"><span class="m-photo" style="--s:28px;--skin:#c9996f;--shirt:#36506b;--hair:#1a1210"></span><div class="m-grow"><b>Imran Sheikh</b><span>Vehicle · ₹1,20,000 · by Meena S.</span></div><span class="m-pill p-n">New</span></div></div>
+  <div class="m-card"><b>Collected this week</b><div class="m-wkrow"><div class="m-wk"><i style="height:55%"></i><span>Mon</span></div><div class="m-wk"><i style="height:70%"></i><span>Tue</span></div><div class="m-wk"><i style="height:48%"></i><span>Wed</span></div><div class="m-wk"><i style="height:82%"></i><span>Thu</span></div><div class="m-wk"><i style="height:64%"></i><span>Fri</span></div><div class="m-wk"><i style="height:90%"></i><span>Sat</span></div><div class="m-wk"><i style="height:38%"></i><span>Today</span></div></div></div>
+ </div>
+</div></div></div></div></div>
+    <div class="mockpanel" id="p1"><div class="app" data-mode="light"><div class="m-shell"><div class="m-side"><div class="m-brand">EVI<small>Small Finance</small></div><div class="m-nav"><span>Home</span></div><div class="m-nav on"><span>Customers</span></div><div class="m-nav"><span>Loans</span></div><div class="m-nav"><span>Leads</span><b>4</b></div><div class="m-sec">Manage</div><div class="m-nav"><span>Payments</span><b>9</b></div><div class="m-nav"><span>Employees</span></div><div class="m-nav"><span>Reports</span></div><div class="m-nav"><span>Portfolio risk</span></div><div class="m-nav"><span>Loan calculator</span></div><div class="m-nav"><span>Notifications</span></div><div class="m-sec">App</div><div class="m-nav"><span>Settings</span></div><div class="m-nav"><span>Help &amp; support</span></div><div class="m-nav" style="color:var(--danger)">Log out</div></div><div class="m-main"><div class="m-bar"><div class="m-h">Customers</div><div class="m-barr"><span class="m-btn" style="padding:6px 12px">+ Customer</span><div class="m-search">⌕ Search customers, loans…</div><span class="m-bell">🔔<em>3</em></span><span class="m-photo" style="--s:28px;--skin:#d9b08c;--shirt:#2c3e50;--hair:#4a2f1d"></span></div></div><div class="m-split">
+ <div class="m-card" style="padding:10px">
+  <div class="m-search" style="margin-bottom:8px">⌕ Name or phone</div>
+  <div class="m-chips"><span class="m-chip on">All · 342</span><span class="m-chip">Active</span><span class="m-chip">Pending</span><span class="m-chip">Overdue</span></div>
+  <div class="m-row sel"><span class="m-photo" style="--s:34px;--skin:#e3c4a6;--shirt:#7a3b4f;--hair:#2b1b12"></span><div class="m-grow"><b>Sunita Devi</b><span>98765 21045 · 2 loans</span></div><span class="m-pill p-bad">Overdue</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#c9996f;--shirt:#36506b;--hair:#1a1210"></span><div class="m-grow"><b>Mohan Patil</b><span>97654 88310 · 1 loan</span></div><span class="m-pill p-warn">Pending</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#d8b08a;--shirt:#4d6b3a;--hair:#2b1b12"></span><div class="m-grow"><b>Rekha Kumari</b><span>99871 10277 · 2 loans</span></div><span class="m-pill p-ok">Active</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#b98a64;--shirt:#2c3e50;--hair:#1a1210"></span><div class="m-grow"><b>Ajay Verma</b><span>90123 55612 · 1 loan</span></div><span class="m-pill p-bad">Overdue</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#e0c3a5;--shirt:#a0522d;--hair:#3b2a1e"></span><div class="m-grow"><b>Lata Shinde</b><span>88011 40193 · no loan</span></div><span class="m-pill p-n">No loan</span></div>
+ </div>
+ <div class="m-detail">
+  <div class="m-brandhdr"><span>‹ Customers</span><span>⋮</span></div>
+  <div class="m-profile">
+   <div style="display:flex;gap:12px;align-items:center"><span class="m-photowrap"><span class="m-photo" style="--s:60px;--skin:#e3c4a6;--shirt:#7a3b4f;--hair:#2b1b12"></span><i class="m-cam">📷</i></span><div class="m-grow"><b style="font-size:16px">Sunita Devi</b><span>@sunita.d · since Jun 2025</span></div></div>
+   <div class="m-round"><span>📞</span><span>💬</span><span>🟢</span><span>📍</span></div>
+   <div class="m-life"><div><b>₹40k</b><span>Borrowed</span></div><div><b style="color:var(--danger)">₹36.6k</b><span>Outstanding</span></div><div><b style="color:var(--success)">82%</b><span>On time</span></div></div>
+  </div>
+  <div class="m-utabs"><span class="on">Loans (2)</span><span>Details</span></div>
+  <div class="m-card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">₹25,000 <span class="m-muted" style="font-weight:500">#1039</span></b><span class="m-pill p-bad">● Overdue</span></div><div class="m-prog"><i style="width:26%"></i></div><div style="display:flex;justify-content:space-between;align-items:center" class="m-muted"><span>Next ₹1,065 · 03 Oct</span><span style="display:flex;gap:6px;align-items:center"><span class="m-photo" style="--s:20px;--skin:#d8b08a;--shirt:#4d6b3a;--hair:#2b1b12"></span> Meena S.</span></div></div>
+  <div style="display:flex;justify-content:flex-end;margin-top:10px"><span class="m-btn">+ Loan</span></div>
+ </div>
+</div></div></div></div></div><div class="mockpanel" id="p2"><div class="app" data-mode="light"><div class="m-shell"><div class="m-side"><div class="m-brand">EVI<small>Small Finance</small></div><div class="m-nav"><span>Home</span></div><div class="m-nav on"><span>Customers</span></div><div class="m-nav"><span>Loans</span></div><div class="m-nav"><span>Leads</span><b>4</b></div><div class="m-sec">Manage</div><div class="m-nav"><span>Payments</span><b>9</b></div><div class="m-nav"><span>Employees</span></div><div class="m-nav"><span>Reports</span></div><div class="m-nav"><span>Portfolio risk</span></div><div class="m-nav"><span>Loan calculator</span></div><div class="m-nav"><span>Notifications</span></div><div class="m-sec">App</div><div class="m-nav"><span>Settings</span></div><div class="m-nav"><span>Help &amp; support</span></div><div class="m-nav" style="color:var(--danger)">Log out</div></div><div class="m-main" style="position:relative"><div class="m-bar"><div class="m-h">New customer</div><div class="m-barr"><div class="m-search">⌕ Search customers, loans…</div><span class="m-bell">🔔<em>3</em></span><span class="m-photo" style="--s:28px;--skin:#d9b08c;--shirt:#2c3e50;--hair:#4a2f1d"></span></div></div><div class="m-formcols">
+ <div class="m-card" style="text-align:center;align-self:start"><span class="m-photowrap" style="display:inline-block"><span class="m-photo" style="--s:84px;--skin:#e3c4a6;--shirt:#7a3b4f;--hair:#2b1b12"></span><i class="m-cam" style="width:28px;height:28px;font-size:13px">📷</i></span>
+  <div class="m-muted" style="margin:8px 0 6px">Profile photo</div><div class="m-menu"><div>⬆ Upload a photo</div><div>📷 Take a photo <span class="m-muted">(webcam / phone camera)</span></div><div class="m-muted">…or drop an image here</div></div></div>
+ <div class="m-card"><div class="m-lbl m-muted" style="letter-spacing:.06em">PERSONAL</div>
+  <div class="m-two"><div class="m-field">Sunita</div><div class="m-field">Devi</div></div>
+  <div class="m-chips"><span class="m-chip on">Female</span><span class="m-chip">Male</span><span class="m-chip">Other</span></div>
+  <div class="m-field" style="border-color:var(--danger);color:var(--text)">98765</div><div style="color:var(--danger);font-size:11.5px;margin:-6px 0 8px">Enter a 10-digit mobile number</div>
+  <div class="m-two"><div class="m-field">Email</div><div class="m-field">Username</div></div>
+  <div class="m-lbl m-muted" style="letter-spacing:.06em">ADDRESS</div>
+  <div class="m-field">Address</div>
+  <div class="m-two"><div class="m-field">City</div><div class="m-field">State</div></div>
+  <div class="m-two"><div class="m-field" style="color:var(--text)">India</div><div class="m-field">Pincode</div></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><span class="m-btn ghost">Cancel</span><span class="m-btn">Save</span></div></div>
+</div><div class="m-scrim"><div class="m-dialog" style="width:min(560px,96%)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>Crop profile photo</b><span class="m-muted">✕</span></div>
+  <div class="m-cropwrap"><div class="m-cropimg"></div><div class="m-cropbox"></div></div>
+  <div style="display:flex;gap:12px;align-items:center;margin:10px 0 4px"><span class="m-muted">Zoom</span><div class="m-range"><i></i><u></u></div><span class="m-chip">⟲ Rotate</span></div>
+  <div class="m-muted" style="margin-bottom:10px">Square (1:1) · saved as JPEG 512px · ~70 KB. The full-size photo is never uploaded.</div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><span class="m-btn ghost">Cancel</span><span class="m-btn">Done</span></div>
+ </div></div></div></div></div></div><div class="mockpanel" id="p3"><div class="app" data-mode="light"><div class="m-shell"><div class="m-side"><div class="m-brand">EVI<small>Small Finance</small></div><div class="m-nav"><span>Home</span></div><div class="m-nav"><span>Customers</span></div><div class="m-nav on"><span>Loans</span></div><div class="m-nav"><span>Leads</span><b>4</b></div><div class="m-sec">Manage</div><div class="m-nav"><span>Payments</span><b>9</b></div><div class="m-nav"><span>Employees</span></div><div class="m-nav"><span>Reports</span></div><div class="m-nav"><span>Portfolio risk</span></div><div class="m-nav"><span>Loan calculator</span></div><div class="m-nav"><span>Notifications</span></div><div class="m-sec">App</div><div class="m-nav"><span>Settings</span></div><div class="m-nav"><span>Help &amp; support</span></div><div class="m-nav" style="color:var(--danger)">Log out</div></div><div class="m-main"><div class="m-bar"><div class="m-h">Loan #1039</div><div class="m-barr"><span class="m-btn" style="padding:6px 12px">Record payment</span><div class="m-search">⌕ Search customers, loans…</div><span class="m-bell">🔔<em>3</em></span><span class="m-photo" style="--s:28px;--skin:#d9b08c;--shirt:#2c3e50;--hair:#4a2f1d"></span></div></div><div class="m-grid g-det">
+ <div style="display:grid;gap:12px;min-width:0;align-content:start">
+  <div class="m-utabs"><span class="on">Overview</span><span>Schedule</span><span>Documents</span></div>
+  <div class="m-card"><div style="display:flex;gap:10px;align-items:center"><span class="m-photo" style="--s:38px;--skin:#e3c4a6;--shirt:#7a3b4f;--hair:#2b1b12"></span><div class="m-grow"><b>Sunita Devi</b><span>Collector Meena S.</span></div><span class="m-pill p-ok">● Active</span></div>
+   <div class="m-muted" style="margin-top:10px">Outstanding</div><div style="font-size:24px;font-weight:800">₹36,640</div><div class="m-prog"><i style="width:20%"></i></div><div class="m-muted">₹9,160 paid of ₹45,800</div></div>
+  <div class="m-card" style="padding:0 12px"><div class="m-kv"><span>Loan terms</span><b>₹25,000 · 300 days ›</b></div><div class="m-kv"><span>Business</span><b>Kirana Store ›</b></div><div class="m-kv"><span>Payment history</span><b>12 ›</b></div><div class="m-kv"><span>Penalties</span><b style="color:var(--danger)">₹600 ›</b></div></div>
+  <div class="m-card"><b>Documents</b><div class="m-docs"><div class="m-doc">ID front</div><div class="m-doc">Address proof</div><div class="m-doc add">+ Add<br><span class="m-muted">upload, drop or webcam</span></div></div></div>
+ </div>
+ <div style="display:grid;gap:12px;min-width:0;align-content:start">
+  <div class="m-sheet"><b style="font-size:14px">Record payment</b><div class="m-muted" style="margin-bottom:8px">Instalment 41 · due today · works offline</div>
+   <div class="m-lbl">Amount</div><div class="m-field" style="color:var(--text);font-weight:700">₹ 400</div>
+   <div class="m-lbl">Method</div><div class="m-chips" style="margin:4px 0 8px"><span class="m-chip on">Cash</span><span class="m-chip">UPI</span><span class="m-chip">Cheque</span></div>
+   <div class="m-muted" style="margin-bottom:8px">₹150 goes to instalment 40, ₹250 to 41.</div>
+   <div style="display:flex;gap:8px"><span class="m-btn" style="flex:1">Save payment</span><span class="m-btn ghost">Cancel</span></div></div>
+  <div class="m-card" style="padding:10px"><b>Schedule</b><div class="m-tablewrap"><table class="m-table" style="min-width:380px"><thead><tr><th>#</th><th>Due</th><th>Amount</th><th>Paid</th><th>Status</th></tr></thead><tbody><tr><td>38</td><td>3 Oct</td><td>₹250</td><td>₹250</td><td><span class="m-pill p-ok">Paid</span></td></tr><tr><td>39</td><td>4 Oct</td><td>₹250</td><td>₹250</td><td><span class="m-pill p-ok">Paid</span></td></tr><tr><td>40</td><td>5 Oct</td><td>₹250</td><td>₹100</td><td><span class="m-pill p-warn">Partial</span></td></tr><tr class=sel><td>41</td><td>6 Oct</td><td>₹250</td><td>—</td><td><span class="m-pill p-bad">Due today</span></td></tr><tr><td>42</td><td>7 Oct</td><td>₹250</td><td>—</td><td><span class="m-pill p-n">Pending</span></td></tr></tbody></table></div></div>
+ </div>
+</div></div></div></div></div><div class="mockpanel" id="p4"><div class="app" data-mode="light"><div class="m-shell"><div class="m-side"><div class="m-brand">EVI<small>Small Finance</small></div><div class="m-nav"><span>Home</span></div><div class="m-nav"><span>Customers</span></div><div class="m-nav"><span>Loans</span></div><div class="m-nav"><span>Leads</span><b>4</b></div><div class="m-sec">Manage</div><div class="m-nav"><span>Payments</span><b>9</b></div><div class="m-nav"><span>Employees</span></div><div class="m-nav on"><span>Reports</span></div><div class="m-nav"><span>Portfolio risk</span></div><div class="m-nav"><span>Loan calculator</span></div><div class="m-nav"><span>Notifications</span></div><div class="m-sec">App</div><div class="m-nav"><span>Settings</span></div><div class="m-nav"><span>Help &amp; support</span></div><div class="m-nav" style="color:var(--danger)">Log out</div></div><div class="m-main"><div class="m-bar"><div class="m-h">Reports</div><div class="m-barr"><div class="m-search">⌕ Search customers, loans…</div><span class="m-bell">🔔<em>3</em></span><span class="m-photo" style="--s:28px;--skin:#d9b08c;--shirt:#2c3e50;--hair:#4a2f1d"></span></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><div class="m-field" style="margin:0">📅 01 Sep</div><span class="m-muted">→</span><div class="m-field" style="margin:0">30 Sep</div>
+ <span class="m-chip on">This month</span><span class="m-chip">Last month</span><span class="m-chip">3 months</span><span class="m-chip">Custom</span><span style="flex:1"></span><span class="m-btn ghost">PDF</span><span class="m-btn ghost">Excel</span><span class="m-btn ghost">🕘 History</span></div>
+ <div class="m-grid g-4"><div class="m-card"><span class="m-muted">Total loans</span><div class="m-big">38</div></div><div class="m-card"><span class="m-muted">Total loan amount</span><div class="m-big">₹6,20,000</div></div><div class="m-card"><span class="m-muted">Total paid</span><div class="m-big">₹2,84,300</div></div><div class="m-card"><span class="m-muted">Total penalty</span><div class="m-big" style="color:var(--danger)">₹3,150</div></div></div>
+ <div class="m-grid g-2" style="margin-top:12px"><div class="m-card"><div class="m-top" style="margin-bottom:6px"><b>Loan amount distribution</b><span class="m-muted">Instalment ›</span></div><div class="m-bar2"><span>&lt;10k</span><div><i style="width:33%"></i></div><b>6</b></div><div class="m-bar2"><span>10–25k</span><div><i style="width:100%"></i></div><b>18</b></div><div class="m-bar2"><span>25–50k</span><div><i style="width:61%"></i></div><b>11</b></div><div class="m-bar2"><span>50k+</span><div><i style="width:17%"></i></div><b>3</b></div></div>
+ <div class="m-card"><div class="m-top" style="margin-bottom:6px"><b>Instalment distribution</b><span class="m-muted">Loan amount ›</span></div><div class="m-bar2"><span>&lt;10k</span><div><i style="width:33%"></i></div><b>6</b></div><div class="m-bar2"><span>10–25k</span><div><i style="width:100%"></i></div><b>18</b></div><div class="m-bar2"><span>25–50k</span><div><i style="width:61%"></i></div><b>11</b></div><div class="m-bar2"><span>50k+</span><div><i style="width:17%"></i></div><b>3</b></div></div></div></div></div></div></div><div class="mockpanel" id="p5"><div class="app" data-mode="light"><div class="m-shell"><div class="m-side"><div class="m-brand">EVI<small>Small Finance</small></div><div class="m-nav"><span>Home</span></div><div class="m-nav on"><span>Collect</span></div><div class="m-nav"><span>Customers</span></div><div class="m-nav"><span>Leads</span></div><div class="m-sec">Manage</div><div class="m-nav"><span>My payments</span></div><div class="m-nav"><span>Notifications</span></div><div class="m-sec">App</div><div class="m-nav"><span>Settings</span></div><div class="m-nav"><span>Help &amp; support</span></div><div class="m-nav" style="color:var(--danger)">Log out</div></div><div class="m-main"><div class="m-bar"><div class="m-h">Collect</div><div class="m-barr"><div class="m-search">⌕ Search customers, loans…</div><span class="m-bell">🔔<em>3</em></span><span class="m-photo" style="--s:28px;--skin:#d9b08c;--shirt:#2c3e50;--hair:#4a2f1d"></span></div></div><div class="m-offline">● Offline. 2 payments are saved on this device and will be sent when you are back online.</div>
+<div class="m-split" style="margin-top:10px">
+ <div class="m-card" style="padding:10px"><div class="m-chips"><span class="m-chip on">Today · 12</span><span class="m-chip">Overdue · 5</span><span class="m-chip">Done · 9</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#e3c4a6;--shirt:#7a3b4f;--hair:#2b1b12"></span><div class="m-grow"><b>Sunita Devi</b><span>#1039 · due today</span></div><b>₹1,065</b><span class="m-btn" style="padding:5px 12px">Pay</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#c9996f;--shirt:#36506b;--hair:#1a1210"></span><div class="m-grow"><b>Mohan Patil</b><span>#1044 · due today</span></div><b>₹520</b><span class="m-btn" style="padding:5px 12px">Pay</span></div><div class="m-row"><span class="m-photo" style="--s:34px;--skin:#d8b08a;--shirt:#4d6b3a;--hair:#2b1b12"></span><div class="m-grow"><b>Rekha Kumari</b><span>#1021 · overdue 2 days</span></div><b>₹1,300</b><span class="m-btn" style="padding:5px 12px">Pay</span></div></div>
+ <div class="m-sheet"><b style="font-size:14px">Record payment</b><div class="m-muted" style="margin-bottom:8px">Sunita Devi · #1039</div>
+  <div class="m-lbl">Amount</div><div class="m-field" style="color:var(--text);font-weight:700">₹ 1,065</div>
+  <div class="m-lbl">Method</div><div class="m-chips" style="margin:4px 0 8px"><span class="m-chip on">Cash</span><span class="m-chip">UPI</span></div>
+  <div style="display:flex;gap:8px"><span class="m-btn" style="flex:1">Save</span><span class="m-btn ghost">Penalty</span></div>
+  <div class="m-muted" style="margin-top:8px">After saving: send the receipt on WhatsApp (pre-filled) or copy it.</div></div>
+</div></div></div></div></div>
+  </div>
+
+  <div class="grid gap-3 md:grid-cols-2 mt-4" id="mocknotes">
+    <div class="alert alert-soft"><div><span class="tag">UI</span> <b id="noteTitle">Option 1 · phone column</b><p class="text-sm opacity-80 mt-1" id="noteBody">Zero layout work: the phone screen sits in a centred 480px column. The wide gutters are wasted space and tables are impossible, which is why it suits employees better than admins.</p></div></div>
+    <div class="alert alert-soft"><div><span class="tag">Code</span> <b>What it costs</b><p class="text-sm opacity-80 mt-1" id="noteCode">Included in the ~1,900-line base: build setup, web stand-ins and fixes.</p></div></div>
+  </div>
+
+  <!-- ============ FEASIBILITY ============ -->
+  
+  <h2 class="sec">Every mobile feature on the web</h2>
+  <p class="lede">All of the 70+ mobile screens and parts below are in the web build. "Same" means the same component renders in the browser; "Tweak" means the same screen with a small web adjustment; "Web variant" means something native is replaced by its browser equivalent.</p>
+  <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-200">
+    <table class="table table-sm doc-table">
+      <thead><tr><th>Feature area</th><th>Screens</th><th>On web</th><th>What changes</th></tr></thead>
+      <tbody><tr><td>Sign in, quick unlock</td><td>Login (Employee/Admin switch), Lock screen</td><td><span class="badge badge-warning badge-soft">Web variant</span></td><td>Login unchanged. Fingerprint becomes a PIN (or passkey) unlock.</td></tr><tr><td>Splash, permissions, update gate, crash</td><td>4 screens</td><td><span class="badge badge-warning badge-soft">Web variant</span></td><td>Splash stays. Permissions screen is not needed (the browser asks). Update gate becomes a "new version, reload" banner. Crash screen becomes an error boundary.</td></tr><tr><td>Home (admin, employee)</td><td>2 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Hero, tiles, badges, recent list.</td></tr><tr><td>Customers: list, profile, form, search</td><td>4 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Photo, camera badge, call/SMS/WhatsApp/map buttons, recent searches. Side-by-side with the list.</td></tr><tr><td>Leads: list, detail, new lead, convert</td><td>3 screens + convert steps</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Convert to customer (3 steps) unchanged.</td></tr><tr><td>Loans: list, loan, create (3 steps), close, calculator</td><td>5 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Create loan stepper, close loan and calculator unchanged.</td></tr><tr><td>Loan parts: schedule, installment sheets, edit installment, statement</td><td>5 components</td><td><span class="badge badge-info badge-soft">Tweak</span></td><td>Sheets open as side panels; the schedule gets a wider table layout. Statement becomes a PDF download.</td></tr><tr><td>Collect, overdue list, record payment, penalty</td><td>3 screens + sheets</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Offline queue (E-12) works through localStorage and the browser online event.</td></tr><tr><td>Payments (admin) and My payments (employee)</td><td>2 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Approve and history lists, side by side with details.</td></tr><tr><td>Reports: summary, collection performance, portfolio risk (NPA/SMA)</td><td>3 screens</td><td><span class="badge badge-info badge-soft">Tweak</span></td><td>PDF and Excel become browser downloads; download history stays. Wider grids for totals and bars.</td></tr><tr><td>Employees: list, profile, form, logins, move loans</td><td>5 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Includes login history and the move-loans sheet.</td></tr><tr><td>Cash handovers (optional module)</td><td>2 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Behind the same business setting.</td></tr><tr><td>Notifications and send notification</td><td>2 screens</td><td><span class="badge badge-info badge-soft">Tweak</span></td><td>The server list works. Bell badge is polled. Browser push is a later extra.</td></tr><tr><td>Settings: more, profile, settings, security, support, about, activity, business settings, diagnostics</td><td>9 screens</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Theme (palette × mode) and language switch work as they do now. Profile photo uses the same crop.</td></tr><tr><td>Offline banner, toasts, skeletons, empty and error states</td><td>shared</td><td><span class="badge badge-success badge-soft">Same</span></td><td>Part of the UI kit.</td></tr></tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mt-8 mb-2">Device features, one by one</h3>
+  <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-200">
+    <table class="table table-sm doc-table">
+      <thead><tr><th>Phone feature</th><th>On the web</th></tr></thead>
+      <tbody>
+        <tr><td>Camera photos</td><td>Phone browsers open the camera. On a computer: upload a file, drag and drop, or take a photo with the webcam.</td></tr>
+        <tr><td>Crop (profile and documents)</td><td>Same rules and the same output: a square 512px JPEG for profiles; free crop, rotate, A4 frame, at most 1600px for documents. The original is never uploaded.</td></tr>
+        <tr><td>Photo viewer, thumbnails, image cache</td><td>Same viewer, now with keyboard arrows and Esc. The browser cache replaces the file cache.</td></tr>
+        <tr><td>Call, SMS, WhatsApp, map</td><td>Phone browsers dial and text. On a computer, call and SMS copy the number; WhatsApp opens WhatsApp Web; map opens Google Maps.</td></tr>
+        <tr><td>Receipts</td><td>Share through a pre-filled WhatsApp link, the browser share sheet where it exists, or copy. No SMS permission is needed (already removed).</td></tr>
+        <tr><td>PDF, Excel, statements</td><td>Downloaded by the browser.</td></tr>
+        <tr><td>Offline payments</td><td>Saved in the browser and sent when the connection returns. Clearing browser data would lose unsent payments, so the app warns before logout.</td></tr>
+        <tr><td>Biometric / app lock</td><td>PIN (or passkey) as described below.</td></tr>
+        <tr><td>Haptics, push, permissions</td><td>Silent, skipped, and handled by the browser respectively.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mt-8 mb-2">UI kit reuse (36 components)</h3>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="card card-border bg-base-200 border-success"><div class="card-body"><h4 class="card-title text-base">Reused unchanged · 28</h4><p class="text-sm opacity-80">Text, Button, IconButton, Card, Section, ListRow, Avatar, StatusBadge, Chips, Tabs, TextField, MoneyField, SearchField, Facts, Hero, Steps, Toast, States, ConfirmSheet, Thumbnail, OptionRow, Switch and others.</p></div></div>
+    <div class="card card-border bg-base-200 border-warning"><div class="card-body"><h4 class="card-title text-base">Web variant · 6</h4><p class="text-sm opacity-80">BottomSheet (dialog or side panel on wide screens), Pickers (native date input), TabBar (sidebar), Screen header (top bar), PhotoViewer (keyboard), Appear and PressableScale (hover and focus states).</p></div></div>
+    <div class="card card-border bg-base-200"><div class="card-body"><h4 class="card-title text-base">New · 4</h4><p class="text-sm opacity-80">SplitView (list beside detail), Sidebar, wide-screen Schedule table, and the crop dialog with webcam capture.</p></div></div>
+  </div>
+
+  <h2 class="sec">Feasibility, library by library</h2>
+  <p class="lede">File counts are from a search of <code>src/</code>. "Stand-in" means a <code>*.web.ts</code> file next to the original: the web build picks it automatically and the phone build never sees it.</p>
+
+  <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-200">
+    <table class="table table-sm doc-table">
+      <thead><tr><th>Area</th><th>Files</th><th>On the web</th><th>Fit</th><th>Work</th></tr></thead>
+      <tbody>
+        <tr><td>TanStack Query, axios, i18next, react-navigation</td><td>40 · 66 · 46</td><td>Built for browsers. Navigation gains real URLs and the back button.</td><td><span class="badge badge-success badge-soft">Works</span></td><td>Linking config ~200 lines</td></tr>
+        <tr><td>Theme, format, can(), enums, types, UI kit</td><td>~70</td><td>Plain RN views and text, so react-native-web renders them.</td><td><span class="badge badge-success badge-soft">Works</span></td><td>Hover, focus, keyboard polish</td></tr>
+        <tr><td>Vector icons</td><td>1 (<code>Icon.tsx</code>)</td><td>Font loads through CSS.</td><td><span class="badge badge-success badge-soft">Works</span></td><td>~20 lines</td></tr>
+        <tr><td>AsyncStorage, NetInfo, safe-area</td><td>4 · 3 · 9</td><td>AsyncStorage uses localStorage. NetInfo uses <code>navigator.onLine</code>. Offline payment queue (E-12) keeps working.</td><td><span class="badge badge-success badge-soft">Works</span></td><td>Config only</td></tr>
+        <tr><td>Haptics, device-info</td><td>7 · 7</td><td>Haptics become no-ops (one wrapper, <code>lib/haptics.ts</code>). Device name for login history comes from the browser's user agent.</td><td><span class="badge badge-info badge-soft">Stand-in</span></td><td>~80 lines</td></tr>
+        <tr><td>Keychain (token), biometrics</td><td>1 · 1</td><td>No keychain in a browser. Keep the token in <code>sessionStorage</code> (ends with the tab). Fingerprint quick-unlock hidden on web.</td><td><span class="badge badge-info badge-soft">Stand-in</span></td><td>~150 lines, plus a security decision (see below)</td></tr>
+        <tr><td>Files: blob-util, fs, share, image picker</td><td>2 · 1 · 0 · 1</td><td>Downloads via an anchor tag, uploads via <code>&lt;input type=file&gt;</code>, photo crop via a small web cropper. Receipts still open WhatsApp through a <code>wa.me</code> link; SMS pre-fill does not exist on desktop.</td><td><span class="badge badge-info badge-soft">Stand-in</span></td><td>~300 lines</td></tr>
+        <tr><td>Linear gradient</td><td>7</td><td>react-native-web has none; a CSS gradient stand-in covers all 7.</td><td><span class="badge badge-info badge-soft">Stand-in</span></td><td>~60 lines</td></tr>
+        <tr><td>Firebase push</td><td>1 (+ push.ts, messaging.ts)</td><td>Drop on web. Notifications are a server list anyway (no push, per the plan). Web push can come later.</td><td><span class="badge badge-info badge-soft">Skip</span></td><td>No-op file</td></tr>
+        <tr><td>Bottom sheet (@gorhom)</td><td>3</td><td>Works poorly on web. Replace with a centred dialog on wide screens and keep the bottom sheet on narrow ones.</td><td><span class="badge badge-warning badge-soft">Rework</span></td><td>~250 lines</td></tr>
+        <tr><td>Reanimated + gesture-handler</td><td>20 · 3</td><td>v3 has web support, but entrance and press animations can misbehave. This is the one real unknown.</td><td><span class="badge badge-warning badge-soft">Test first</span></td><td>300 – 500 lines, depends on the spike</td></tr>
+        <tr><td>Build tooling</td><td>—</td><td>Metro here has no web target. Add Vite (or webpack) with <code>react-native</code> aliased to <code>react-native-web</code>.</td><td><span class="badge badge-info badge-soft">New</span></td><td>~300 lines, 6 files</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============ CODE CHANGES ============ -->
+  <h2 class="sec">Code changes for Option 2, by work package</h2>
+  <p class="lede">Estimates from counting files and reading the shared code, not from a prototype. A one-day spike on packages 1, 2 and 3 would tighten the range a lot.</p>
+
+  <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-200">
+    <table class="table table-sm doc-table">
+      <thead><tr><th>#</th><th>Package</th><th>New</th><th>Edited</th><th>Lines</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Build setup: Vite, aliases, <code>index.web</code>, HTML, PWA manifest</td><td>6</td><td>1</td><td>~300</td><td>Keeps <code>npm run android</code> untouched. Needs a CI step, not this machine.</td></tr>
+        <tr><td>2</td><td>Web stand-ins: session, files, haptics, push, device, gradient, plus the image pipeline (canvas crop, webcam, drag-and-drop)</td><td>13</td><td>1</td><td>~950</td><td>Crop is ~250 and the webcam ~80 of this. <code>api.ts</code> swaps device-info for a small helper.</td></tr>
+        <tr><td>3</td><td>Animation, gesture and sheet fixes</td><td>2</td><td>12</td><td>300 – 500</td><td>Depends on the spike. Fallback: disable entrance animations on web.</td></tr>
+        <tr><td>4</td><td>Navigation URLs, titles, back button</td><td>1</td><td>3</td><td>~200</td><td><code>/customers/42</code> deep links, shareable.</td></tr>
+        <tr><td>5</td><td>Responsive shell: sidebar at ≥1024px, max-width, <code>useBreakpoint</code></td><td>2</td><td>4</td><td>~600</td><td>Touches <code>TabBar</code>, <code>Screen</code>, <code>Sheet</code>, navigators.</td></tr>
+        <tr><td>6</td><td>Wide layouts: SplitView for Customers, Loans, Payments, Leads and Employees; wide Schedule and Reports grids</td><td>6</td><td>8</td><td>600 – 900</td><td>Reuses the mobile screens in both panes, so it is far less than a separate desktop UI.</td></tr>
+        <tr><td>7</td><td>Tests, web CI build, visual check at 360 / 768 / 1280</td><td>4</td><td>1</td><td>~300</td><td>Jest keeps one worker, as before.</td></tr>
+        <tr><td>8</td><td>Web PIN unlock (encrypted token, 6 digits, wipe after 5 tries)</td><td>2</td><td>1</td><td>~250</td><td>Replaces the keychain; skip it for a plain tab-session.</td></tr><tr><td>BE</td><td>Backend: CORS allow-list for the web origin only</td><td>0</td><td>1</td><td>~5</td><td>No web files in the backend. Deploys first; backward compatible.</td></tr>
+      </tbody>
+      <tfoot><tr><th></th><th>Total</th><th>~35</th><th>~25</th><th>~3,700</th><th>Range 3,100 – 4,600 · phone build unchanged</th></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2 mt-4">
+    <div class="card card-border bg-base-200"><div class="card-body">
+      <h3 class="card-title text-base">Where the lines go</h3>
+      <div class="space-y-2 text-sm">
+        <div><div class="flex justify-between"><span>Wide layouts (6)</span><span>~750</span></div><div class="bar"><span class="b-new" style="width:21%"></span></div></div>
+        <div><div class="flex justify-between"><span>Stand-ins + image pipeline (2)</span><span>~950</span></div><div class="bar"><span class="b-new" style="width:27%"></span></div></div>
+        <div><div class="flex justify-between"><span>Responsive shell (5)</span><span>~600</span></div><div class="bar"><span class="b-new" style="width:17%"></span></div></div>
+        <div><div class="flex justify-between"><span>Animation fixes (3)</span><span>~400</span></div><div class="bar"><span class="b-edit" style="width:11%"></span></div></div>
+        <div><div class="flex justify-between"><span>Build, nav, tests</span><span>~800</span></div><div class="bar"><span class="b-edit" style="width:22%"></span></div></div><div><div class="flex justify-between"><span>PIN unlock (8)</span><span>~250</span></div><div class="bar"><span class="b-edit" style="width:7%"></span></div></div>
+      </div>
+    </div></div>
+    <div class="card card-border bg-base-200"><div class="card-body">
+      <h3 class="card-title text-base">Stop points</h3>
+      <ul class="text-sm space-y-2">
+        <li><b>After 1 – 4, 7 (~1,900 lines):</b> Option 1 is done. Employees can use the app in any browser and install it on an iPhone.</li>
+        <li><b>After 5:</b> admins get the sidebar and wide cards, but still single-column screens.</li>
+        <li><b>After 6:</b> the full Option 2. Package 6 can be done one screen at a time, so it can stop whenever it is good enough.</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <!-- ============ SECURITY ============ -->
+  <h2 class="sec">Backend, security and hosting</h2>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="alert alert-warning alert-soft"><div><b>Token storage + PIN unlock</b><p class="text-sm mt-1">A browser has no keychain. Proposal: the token is stored encrypted with a key made from a PIN (Web Crypto, PBKDF2 + AES-GCM), so a closed tab asks for the PIN, not the password. Use 6 digits and wipe after 5 wrong tries. Caveat: someone who copies the stored data can guess a PIN offline, so this stops casual access, not a determined attacker. Stronger option: a passkey (WebAuthn, fingerprint or Windows Hello), similar effort.</p></div></div>
+    <div class="alert alert-warning alert-soft"><div><b>CORS is wide open</b><p class="text-sm mt-1"><code>app.use(cors())</code> allows every origin. Restrict it to the web origin before it goes live. The Bearer-token scheme means no CSRF protection is needed.</p></div></div>
+    <div class="alert alert-info alert-soft"><div><b>Hosting is separate</b><p class="text-sm mt-1">The web build is a static folder (HTML, JS, assets) with nothing server-side. Any static host works, and the backend repo gets no web files. Because it is a different origin, the CORS allow-list is required, not optional.</p></div></div>
+  </div>
+
+  <h2 class="sec">Risks</h2>
+  <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-200">
+    <table class="table table-sm doc-table">
+      <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td>Reanimated misbehaves on web</td><td>Medium</td><td>Up to +300 lines</td><td>Spike first. Fallback: turn entrance animations off on web.</td></tr>
+        <tr><td>Web build heavy for this machine</td><td>Certain</td><td>Slow or kills prod services</td><td>Build in CI or on your laptop only, never here.</td></tr>
+        <tr><td>Two layouts to test (phone and desktop)</td><td>Certain</td><td>Test matrix grows ×2</td><td>Add 768 and 1280 widths to the existing visual check.</td></tr>
+        <tr><td>Hindi strings need wider columns</td><td>Low</td><td>Truncation in tables</td><td>Review every table in <code>hi</code> at 1024px.</td></tr>
+        <tr><td>Web and backend versions drift</td><td>Medium</td><td>Old web bundle calls a changed API</td><td>Backend stays backward compatible (as the plan already requires); deploy the web build after the backend.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============ DECISIONS ============ -->
+  <h2 class="sec">Decisions so far</h2>
+  <div class="grid gap-3 md:grid-cols-2">
+    <div class="card card-border bg-base-200 border-success"><div class="card-body"><h3 class="card-title text-base">Option 2 · go</h3><p class="text-sm opacity-80">Confirmed. Admin-first: the desktop layouts (package 6) come before anything employee-specific, and the employee screens simply work in the phone layout.</p></div></div>
+    <div class="card card-border bg-base-200 border-success"><div class="card-body"><h3 class="card-title text-base">Hosting · outside the backend</h3><p class="text-sm opacity-80">No web files in the backend repo. The build is a static folder you can put on any static host or domain later. The backend only gets a CORS allow-list for that origin (~5 lines, no files).</p></div></div>
+    <div class="card card-border bg-base-200"><div class="card-body"><h3 class="card-title text-base">Session · PIN unlock (proposed)</h3><p class="text-sm opacity-80">Yes, this works: a tab-closing session plus a PIN, like the phone quick unlock. How it works is in the Token storage box above. It adds ~250 lines (package 8), and a PIN is weaker than the phone keychain.</p></div></div>
+    <div class="card card-border bg-base-200 border-success"><div class="card-body"><h3 class="card-title text-base">Branch · new, from main</h3><p class="text-sm opacity-80">The revamp is merged, so web starts on a new branch off <code>main</code> (<code>feat/web</code>). The spike lives there too.</p></div></div>
+  </div>
+
+  <div class="alert alert-soft mt-8"><div><b>Next step:</b> a one-day spike on <code>feat/web</code> (new, from <code>main</code>): package 1 plus the three riskiest screens (Home, a list, the payment sheet), built off this machine, with an admin-first order for everything after. It settles the reanimated question and turns the 3,000 – 4,500 range into a firmer number before anything bigger is committed.</div></div>
+</div>
+
+<script>
+  const panels = document.querySelectorAll('.mockpanel');
+  const notes = {
+    p0: ['Home', 'The phone Home (welcome, hero card, 4 shortcut tiles, recent customers) with the extra room used for what the phone puts behind taps: today\'s collection, what needs attention, collection by employee, new leads and the week\'s collection. All of it comes from queries the app already makes. The tabs and More items become the sidebar.', 'Reuses HeroCard, StatGrid, ListRow, Avatar and the dashboard, payments and leads queries. New: sidebar + top bar (package 5) and a 3-column Home arrangement (~100 lines).'],
+    p1: ['Customers + profile', 'The phone list and the phone profile side by side. The profile is the exact A3 screen: brand header, photo with camera badge, call, SMS, WhatsApp and map buttons, three lifetime numbers, Loans and Details tabs, collector photo, and the Loan button.', 'Both screens are reused as they are. New: one generic SplitView (~150 lines) that puts a list screen and a detail screen next to each other; on a phone it falls back to the normal stack.'],
+    p2: ['Photo + crop', 'Same rules as the phone (F-9). Tap the camera badge: upload from the computer, take a photo with the webcam (or the phone camera in a mobile browser), or drop an image. Every pick opens the crop dialog before upload. Profile photos are locked to a square at 512px; documents get free crop, rotate and an A4 frame at up to 1600px.', 'New: a web version of lib/image.ts with a canvas cropper (~250 lines) plus a webcam capture step (~80). The form itself is the A4 screen unchanged.'],
+    p3: ['Loan + payment', 'The A6 loan screen (photo, collector, outstanding, progress, Loan terms, Business, Payment history, Penalties) next to the schedule. Record payment is the same sheet, shown as a side panel. Documents show thumbnails with the same add and crop flow.', 'Reuses AdminLoanScreen, ScheduleView, CollectSheets and the payment mutation. New: a side-sheet variant of BottomSheet and a wide schedule layout (~250 lines).'],
+    p4: ['Reports', 'The A17 report with the same date fields, shortcut chips, 4 totals and both distributions, plus PDF, Excel and download history. Wide screens show the 4 totals in a row and the two distributions side by side.', 'Reuses ReportsScreen and the bar components. PDF and Excel become browser downloads (the files stand-in); only the wider grid is new.'],
+    p5: ['Employee · Collect', 'Employees get the same Collect, record-payment, penalty and offline queue. The offline banner and saved-on-device payments work through the browser, and receipts open WhatsApp pre-filled. Phones keep the single column.', 'Reuses CollectScreen, payQueue and receipt logic. Web stand-ins: online detection and the share action (wa.me link or copy).']
+  };
+  document.querySelectorAll('#mocktabs .tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('#mocktabs .tab').forEach(x => x.classList.toggle('tab-active', x === t));
+    panels.forEach(p => p.classList.toggle('on', p.id === t.dataset.p));
+    const n = notes[t.dataset.p];
+    document.getElementById('noteTitle').textContent = n[0];
+    document.getElementById('noteBody').textContent = n[1];
+    document.getElementById('noteCode').textContent = n[2];
+  }));
+  document.getElementById('darkToggle').addEventListener('change', e => {
+    document.querySelectorAll('.app').forEach(a => a.dataset.mode = e.target.checked ? 'dark' : 'light');
+  });
+</script>
+</body>
+</html>

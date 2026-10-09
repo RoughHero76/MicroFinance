@@ -8,5 +8,6 @@
     },
     "checkJs": false
   },
+  "exclude": ["node_modules", "web", "src/**/*.web.ts", "src/**/*.web.tsx"],
   "include": ["App.tsx", "index.js", "src/**/*", "brands/**/*.json", "__tests__/**/*", "jest.setup.ts", "scripts/**/*"]
 }

@@ -9,16 +9,19 @@ import {useNavigation} from '@react-navigation/native';
 import type {Theme} from '@/theme';
 import {Icon, IconButton} from '@/ui';
 
-export interface TabConfig<Name extends string> {
+export interface TabMeta<Name extends string> {
   name: Name;
   label: string;
   icon: string;
   iconFocused: string;
-  component: React.ComponentType<any>;
   /** New screens draw their own header; `false` hides the navigator's. */
   header?: {title: string; right?: HeaderAction[]} | false;
   badge?: number;
   visible?: boolean;
+}
+
+export interface TabConfig<Name extends string> extends TabMeta<Name> {
+  component: React.ComponentType<any>;
 }
 
 export interface HeaderAction {
@@ -63,7 +66,7 @@ export function tabScreenOptions(t: Theme): BottomTabNavigationOptions {
   };
 }
 
-export function tabOptions<N extends string>(tab: TabConfig<N>): BottomTabNavigationOptions {
+export function tabOptions<N extends string>(tab: TabMeta<N>): BottomTabNavigationOptions {
   return {
     title: tab.label,
     tabBarLabel: tab.label,

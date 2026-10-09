@@ -3,6 +3,7 @@
 // only: a full data backup (GET /admin/database/backup) saved to Downloads.
 
 import React, {useState} from 'react';
+import {Platform} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useMutation} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -10,7 +11,7 @@ import {brand} from '@/brand';
 import {errorMessage} from '@/lib/api';
 import {downloadToDownloads} from '@/lib/files';
 import {BACKUP_PATH, changeMyPassword} from '@/features/auth/api';
-import {LOCK_AFTER_OPTIONS} from '@/features/auth/lock';
+import {ensureLockReady, LOCK_AFTER_OPTIONS} from '@/features/auth/lock';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {passwordOk} from '@/features/staff/screens/EmployeeFormScreen';
 import {makeStyles} from '@/theme';
@@ -71,7 +72,7 @@ export default function SecurityScreen() {
         onProgress: p => toast.progress('backup', t('common.download'), p),
       });
       toast.hide('backup');
-      toast.success(t('security.backupSaved'));
+      toast.success(t(Platform.OS === 'web' ? 'web.backupSaved' : 'security.backupSaved'));
     } catch (error) {
       toast.hide('backup');
       toast.error(t('security.backupFailed'), {message: errorMessage(error, t)});
@@ -86,10 +87,16 @@ export default function SecurityScreen() {
           <OptionRow
             icon="fingerprint"
             title={t('security.appLock')}
-            hint={deviceLockAvailable ? t('security.appLockHint') : t('security.appLockUnavailable')}
+            hint={
+              deviceLockAvailable
+                ? t(Platform.OS === 'web' ? 'web.appLockHint' : 'security.appLockHint')
+                : t('security.appLockUnavailable')
+            }
             toggle={{
               value: lockSettings.enabled && deviceLockAvailable,
-              onChange: enabled => setLockSettings({...lockSettings, enabled}),
+              onChange: async enabled => {
+                if (await ensureLockReady(enabled)) setLockSettings({...lockSettings, enabled});
+              },
               disabled: !deviceLockAvailable,
             }}
           />
@@ -133,7 +140,10 @@ export default function SecurityScreen() {
                 onPress={() =>
                   confirm.ask({
                     title: t('security.backupConfirm'),
-                    message: t('security.backupMessage', {folder: brand.storageFolder}),
+                    message:
+                      Platform.OS === 'web'
+                        ? t('web.backupMessage')
+                        : t('security.backupMessage', {folder: brand.storageFolder}),
                     confirmLabel: t('common.download'),
                     onConfirm: backup,
                   })

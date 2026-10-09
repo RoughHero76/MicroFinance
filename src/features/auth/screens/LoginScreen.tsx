@@ -156,7 +156,15 @@ export default function LoginScreen() {
 
 const useStyles = makeStyles(t => ({
   screen: {flex: 1, backgroundColor: t.colors.bg},
-  content: {paddingHorizontal: t.space.xl, flexGrow: 1},
+  // A phone-width column, centred on a wide (browser) window.
+  content: {
+    paddingHorizontal: t.space.xl,
+    flexGrow: 1,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    ...(Platform.OS === 'web' ? {justifyContent: 'center' as const} : null),
+  },
   logo: {alignSelf: 'flex-start', marginBottom: t.space.xl},
   subtitle: {marginTop: t.space.xs, marginBottom: t.space.lg},
   reason: {

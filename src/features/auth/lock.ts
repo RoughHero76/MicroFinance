@@ -44,3 +44,11 @@ export async function promptUnlock(message: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Called before app lock is switched on. Always ready on the phone (its own
+ * fingerprint or PIN is used); the web asks for a PIN here (lock.web.ts).
+ */
+export async function ensureLockReady(_enabled: boolean): Promise<boolean> {
+  return true;
+}

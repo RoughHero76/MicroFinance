@@ -551,7 +551,9 @@
     "loanCount": "{{count}} loan",
     "showAmounts": "Show amounts",
     "hideAmounts": "Hide amounts",
-    "amountHidden": "Amount hidden"
+    "amountHidden": "Amount hidden",
+    "loansToApprove": "Loans to approve",
+    "waiting": "Waiting for you"
   },
   "loans": {
     "title": "Loans",
@@ -1230,5 +1232,34 @@
     "removeTitle": "Remove this saved payment?",
     "removeHint": "{{amount}} for #{{loan}} will not be recorded. Only do this if it was recorded another way.",
     "logoutUnsent": "{{count}} saved payments aren't sent yet. They stay on this phone and are sent when you sign in again."
+  },
+  "web": {
+    "appLockHint": "A 6-digit PIN when you reopen this site",
+    "pinTitle": "Choose a PIN",
+    "pinHint": "{{count}} digits. You will use it to reopen {{brand}} in this browser instead of your password.",
+    "pinNew": "New PIN",
+    "pinConfirm": "Confirm PIN",
+    "pinLength": "The PIN must be {{count}} digits",
+    "pinMismatch": "The PINs don't match",
+    "pinOn": "PIN unlock is on",
+    "pinPrompt": "Enter your PIN",
+    "pinWrong": "Wrong PIN. {{count}} tries left",
+    "backupMessage": "This can take a minute. Your browser saves the file to its Downloads folder.",
+    "backupSaved": "Backup downloaded",
+    "cameraBlockedHint": "Allow the camera for this site in the browser, then try again.",
+    "takePhoto": "Take a photo",
+    "capture": "Capture",
+    "cropProfile": "Crop profile photo",
+    "cropDocument": "Crop document",
+    "cropProfileHint": "Square photo, saved as a JPEG of at most 512 px. The full-size photo is never uploaded.",
+    "cropDocumentHint": "Drag the box or its handles. Saved as a JPEG of at most 1600 px. The full-size photo is never uploaded.",
+    "cropFailed": "This picture can't be opened. Try another one.",
+    "rotate": "Rotate",
+    "shape": {
+      "free": "Free",
+      "square": "1:1",
+      "a4": "A4"
+    },
+    "pickOne": "Select an item from the list to see it here"
   }
 }
