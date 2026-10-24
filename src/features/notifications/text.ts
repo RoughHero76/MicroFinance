@@ -86,6 +86,8 @@ export function notificationTarget(n: AppNotification): [string, object | undefi
       return link.id ? ['Lead', {id: link.id}] : null;
     case 'Customer':
       return link.id ? ['Customer', {id: link.id}] : null;
+    case 'Employee':
+      return link.id ? ['Employee', {uid: link.id}] : ['Employees', undefined];
     case 'Leads':
     case 'Collect':
     case 'Customers':
@@ -99,8 +101,43 @@ export function notificationTarget(n: AppNotification): [string, object | undefi
     case 'Overdue':
     case 'CashHandovers':
     case 'CashHandover':
+    case 'Employees':
+    case 'Performance':
+    case 'Logins':
+    case 'Security':
+    case 'About':
       return [link.screen, undefined];
     default:
       return null;
   }
+}
+
+type NavState = {routeNames?: string[]; routes?: {name: string; state?: NavState}[]} | undefined;
+
+/**
+ * F-02: can this role's navigator open the target? Some screens exist for
+ * one role only (Payments for admins, MyPayments for employees), and a tab
+ * can be switched off (Leads); navigating to a missing one does nothing.
+ */
+export function canOpen(state: NavState, [route, params]: [string, object | undefined]): boolean {
+  if (!state?.routeNames?.includes(route)) return false;
+  const tab = (params as {screen?: string} | undefined)?.screen;
+  if (route === 'Tabs' && tab) {
+    const tabs = state.routes?.find(r => r.name === 'Tabs')?.state;
+    if (tabs?.routeNames && !tabs.routeNames.includes(tab)) return false;
+  }
+  return true;
+}
+
+/** Opens the notification's screen, or the notification list when there is none. */
+export function openNotification(
+  navigation: {navigate: (...args: never[]) => void},
+  state: NavState,
+  n: AppNotification,
+  fallback = true,
+): void {
+  const target = notificationTarget(n);
+  const nav = navigation.navigate as (route: string, params?: object) => void;
+  if (target && canOpen(state, target)) nav(target[0], target[1]);
+  else if (fallback) nav('Notifications');
 }

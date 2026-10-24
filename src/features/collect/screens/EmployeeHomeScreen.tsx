@@ -11,6 +11,7 @@ import {useTranslation} from 'react-i18next';
 import {formatMoney} from '@/lib/format';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {NotificationBell} from '@/features/notifications/Bell';
+import {NotificationsOffBanner} from '@/features/notifications/NotificationsOffBanner';
 import {makeStyles} from '@/theme';
 import {
   Appear,
@@ -70,6 +71,7 @@ export default function EmployeeHomeScreen() {
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : (
         <>
+          <NotificationsOffBanner />
           {user?.fname ? (
             <Appear>
               <Text variant="h2" weight="bold" style={s.greeting}>
@@ -107,6 +109,46 @@ export default function EmployeeHomeScreen() {
               )}
             </HeroCard>
           </Appear>
+
+          {d?.month && (d.month.due > 0 || d.month.collected > 0) ? (
+            <Appear index={2}>
+              <Card onPress={() => go('MyPayments')} style={s.month} accessibilityLabel={t('home.month.title')}>
+                <View style={s.monthHead}>
+                  <Text variant="small" color="muted">
+                    {t('home.month.title')}
+                  </Text>
+                  {d.month.streak.count >= 2 ? (
+                    <View style={s.streak}>
+                      <Icon name="fire" size={16} color="warning" />
+                      <Text variant="caption" weight="semibold" color="warning">
+                        {t('home.month.streak', {count: d.month.streak.count})}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={s.monthRow}>
+                  <Text variant="h2" weight="bold" tabular>
+                    {d.month.percent != null ? `${d.month.percent}%` : formatMoney(d.month.collected)}
+                  </Text>
+                  <Text variant="small" color="muted" tabular style={s.flex}>
+                    {t('home.month.collectedOf', {
+                      collected: formatMoney(d.month.collected),
+                      due: formatMoney(d.month.due),
+                    })}
+                  </Text>
+                </View>
+                <ProgressBar
+                  value={d.month.due > 0 ? Math.min(1, d.month.collected / d.month.due) : 0}
+                  style={s.progress}
+                />
+                {d.month.streak.best >= 2 ? (
+                  <Text variant="caption" color="muted" style={s.best}>
+                    {t('home.month.best', {count: d.month.streak.best})}
+                  </Text>
+                ) : null}
+              </Card>
+            </Appear>
+          ) : null}
 
           <Appear index={2} style={s.tiles}>
             <Card onPress={() => go('Customers')} style={s.tile} accessibilityLabel={t('home.myCustomers')}>
@@ -186,6 +228,11 @@ const useStyles = makeStyles(t => ({
   heroFigure: {marginTop: t.space.xs},
   heroSkeleton: {gap: t.space.sm, marginTop: t.space.sm},
   progress: {marginTop: t.space.md},
+  month: {marginTop: t.space.md},
+  monthHead: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
+  monthRow: {flexDirection: 'row', alignItems: 'baseline', gap: t.space.sm, marginTop: t.space.xs},
+  streak: {flexDirection: 'row', alignItems: 'center', gap: 4},
+  best: {marginTop: t.space.sm},
   tiles: {flexDirection: 'row', gap: 10, marginTop: t.space.md},
   tile: {
     flex: 1,

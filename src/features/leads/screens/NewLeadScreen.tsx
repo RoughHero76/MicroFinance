@@ -3,9 +3,9 @@
 // state, loan type (7), amount, duration and purpose. Errors show under the
 // field; the form keeps a draft on the phone (P-15).
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {errorMessage} from '@/lib/api';
@@ -31,6 +31,7 @@ import {
   useConfirm,
 } from '@/ui';
 import {createLead, leadKeys} from '../api';
+import type {AppStackParamList} from '@/navigation/types';
 
 interface Form {
   picture: PickedImage | null;
@@ -66,7 +67,24 @@ export default function NewLeadScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [form, setForm] = useState<Form>(EMPTY);
+  const prefill = useRoute<RouteProp<AppStackParamList, 'NewLead'>>().params?.prefill;
+  // E-10: a customer offered a new loan starts with their details.
+  const start = useMemo<Form>(
+    () =>
+      prefill
+        ? {
+            ...EMPTY,
+            name: prefill.name ?? '',
+            phone: (prefill.phone ?? '').replace(/\D/g, '').slice(-10),
+            email: prefill.email ?? '',
+            address: prefill.address ?? '',
+            city: prefill.city ?? '',
+            state: prefill.state ?? '',
+          }
+        : EMPTY,
+    [prefill],
+  );
+  const [form, setForm] = useState<Form>(start);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const saved = useRef(false);
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm(f => ({...f, [key]: value}));
@@ -74,7 +92,8 @@ export default function NewLeadScreen() {
   const draft = useDraft('lead.new', form);
   useEffect(() => {
     if (!draft.checked) return;
-    if (draft.saved && JSON.stringify(draft.saved) !== JSON.stringify(EMPTY)) {
+    // Filled in from a customer: that wins over an old draft.
+    if (!prefill && draft.saved && JSON.stringify(draft.saved) !== JSON.stringify(EMPTY)) {
       setForm(draft.saved);
       toast.info(t('leads.draftRestored'), {
         action: {
@@ -92,7 +111,7 @@ export default function NewLeadScreen() {
 
   useEffect(() => {
     return navigation.addListener('beforeRemove', e => {
-      if (saved.current || JSON.stringify(form) === JSON.stringify(EMPTY)) return;
+      if (saved.current || JSON.stringify(form) === JSON.stringify(start)) return;
       e.preventDefault();
       confirm.ask({
         title: t('customerForm.leaveTitle'),
@@ -102,7 +121,7 @@ export default function NewLeadScreen() {
         onConfirm: () => navigation.dispatch(e.data.action),
       });
     });
-  }, [navigation, form, confirm, t]);
+  }, [navigation, form, start, confirm, t]);
 
   const pick = async (source: ImageSource) => {
     try {

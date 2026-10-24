@@ -44,7 +44,8 @@ export type AppStackParamList = {
   CustomerForm: Record<string, unknown> | undefined;
   Search: undefined;
   Lead: {id: string};
-  NewLead: undefined;
+  /** E-10: filled in from a customer whose loan is paid off. */
+  NewLead: {prefill?: {name?: string; phone?: string; email?: string; address?: string; city?: string; state?: string}} | undefined;
   Employees: undefined;
   Employee: {uid: string};
   EmployeeForm: Record<string, unknown> | undefined;

@@ -36,7 +36,9 @@ export async function getUnreadCount(): Promise<number> {
   return res.data?.count ?? 0;
 }
 
-export const markRead = (id: string) => api.post(`/shared/notifications/${id}/read`);
+/** source: where it was opened from, for the open rates admins see (P-05). */
+export const markRead = (id: string, source?: 'push' | 'list') =>
+  api.post(`/shared/notifications/${id}/read`, source ? {source} : undefined);
 export const markAllRead = () => api.post('/shared/notifications/read-all');
 
 export interface PushTestResult {

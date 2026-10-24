@@ -66,7 +66,7 @@ export default function RootNavigator() {
       <UpdateSheet />
       <UpdateGate />
       <PushBridge navRef={navRef} />
-      <PayQueueSync />
+      <PayQueueSync navRef={navRef} />
     </View>
   );
 }

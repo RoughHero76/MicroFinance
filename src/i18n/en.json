@@ -420,7 +420,13 @@
     "newLead": "New lead",
     "myOverdue": "My overdue loans",
     "overdueTotal": "{{amount}} overdue",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "month": {
+      "title": "This month",
+      "collectedOf": "{{collected}} of {{due}}",
+      "streak": "{{count}}-day streak",
+      "best": "Best streak: {{count}} days"
+    }
   },
   "overdue": {
     "title": "My overdue loans",
@@ -521,7 +527,8 @@
     "dueToday": "{{amount}} due today",
     "nextShort": "Next {{amount}} · {{date}}",
     "add": "Add customer",
-    "newLoan": "Loan"
+    "newLoan": "Loan",
+    "offerLoan": "Offer a new loan"
   },
   "myPayments": {
     "title": "My payments",
@@ -1063,7 +1070,32 @@
         }
       }
     },
-    "open": "Open"
+    "open": "Open",
+    "off": {
+      "title": "Notifications are off",
+      "hint": "You'll miss approvals, reminders and payment problems until you turn them on.",
+      "turnOn": "Turn on"
+    },
+    "prefs": {
+      "title": "Phone notifications for",
+      "alwaysOn": "Always on",
+      "quiet": "Quiet hours {{from}}–{{to}}: these wait until morning. Turned-off kinds still show in the app.",
+      "approvals": "Approvals",
+      "approvalsHint": "Payments, loans and cash waiting for you",
+      "work": "Your work",
+      "workHint": "Approved or rejected payments and loans, assignments",
+      "team": "Team",
+      "teamHint": "New leads, who hasn’t started, new phones",
+      "reminders": "Reminders",
+      "remindersHint": "Collections due, follow-ups, cash to hand over",
+      "summaries": "Daily and weekly summaries",
+      "summariesHint": "Morning brief, day close, your week",
+      "achievements": "Good news",
+      "achievementsHint": "All collected, loans back on track",
+      "announcements": "Announcements",
+      "announcementsHint": "Messages from admins, app updates",
+      "security": "Security"
+    }
   },
   "reports": {
     "title": "Reports",

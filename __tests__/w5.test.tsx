@@ -258,7 +258,7 @@ describe('X5 notifications', () => {
     await act(async () => {
       fireEvent.press(screen.getByText('9 payments need approval'));
     });
-    expect(postSpy).toHaveBeenCalledWith('/shared/notifications/payment.pending/read');
+    expect(postSpy).toHaveBeenCalledWith('/shared/notifications/payment.pending/read', {source: 'list'});
     await waitFor(() => expect(screen.getByText('at Payments {}')).toBeTruthy());
   });
 });

@@ -21,6 +21,35 @@ import {IconButton} from './IconButton';
 import {InSheet} from './sheetContext';
 import {Text} from './Text';
 
+// Every sheet that's open now, so all of them can be closed before the
+// screens under them go away (sign-out, app lock). A sheet whose screen
+// unmounts while it's open can stay stuck on top of the next screen.
+const openSheets = new Map<number, {dismiss: () => void; closed: Promise<void>; settle: () => void}>();
+let nextSheetId = 0;
+
+function trackOpen(id: number, dismiss: () => void) {
+  if (openSheets.has(id)) return;
+  let settle = () => {};
+  const closed = new Promise<void>(resolve => (settle = resolve));
+  openSheets.set(id, {dismiss, closed, settle});
+}
+
+function trackClosed(id: number) {
+  openSheets.get(id)?.settle();
+  openSheets.delete(id);
+}
+
+/** Closes every open sheet and waits (at most timeoutMs) for them to go. */
+export function closeAllSheets(timeoutMs = 600): Promise<void> {
+  if (!openSheets.size) return Promise.resolve();
+  const closing = [...openSheets.values()];
+  closing.forEach(sheet => sheet.dismiss());
+  return Promise.race([
+    Promise.all(closing.map(sheet => sheet.closed)).then(() => undefined),
+    new Promise<void>(resolve => setTimeout(resolve, timeoutMs)),
+  ]);
+}
+
 export interface SheetHandle {
   open: () => void;
   close: () => void;
@@ -47,12 +76,15 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
   const insets = useSafeAreaInsets();
   const modal = useRef<BottomSheetModal>(null);
   const navigation = useContext(NavigationContext);
+  const id = useRef(0);
+  if (!id.current) id.current = ++nextSheetId;
 
   useImperativeHandle(ref, () => ({
     // A tap that lands while the screen is already going back must not open
     // a sheet: it would outlive its screen and block every touch.
     open: () => {
       if (navigation && !navigation.isFocused()) return;
+      trackOpen(id.current, () => modal.current?.dismiss());
       modal.current?.present();
     },
     close: () => modal.current?.dismiss(),
@@ -63,11 +95,18 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
   useEffect(() => {
     const sheet = modal.current;
     const off = navigation?.addListener('blur', () => modal.current?.dismiss());
+    const sheetId = id.current;
     return () => {
       off?.();
       sheet?.dismiss();
+      trackClosed(sheetId);
     };
   }, [navigation]);
+
+  const handleDismiss = useCallback(() => {
+    trackClosed(id.current);
+    onClose?.();
+  }, [onClose]);
 
   // W7: sheets settle with a soft spring instead of a linear slide.
   const animationConfigs = useBottomSheetSpringConfigs({
@@ -95,7 +134,7 @@ export const BottomSheet = forwardRef<SheetHandle, BottomSheetProps>(function Bo
       snapPoints={snapPoints}
       enableDynamicSizing={!snapPoints}
       enablePanDownToClose={dismissible}
-      onDismiss={onClose}
+      onDismiss={handleDismiss}
       backdropComponent={backdrop}
       animationConfigs={animationConfigs}
       // A sheet opened from a sheet (a picker in the payment sheet) goes on

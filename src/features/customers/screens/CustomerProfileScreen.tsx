@@ -13,6 +13,7 @@ import {errorMessage} from '@/lib/api';
 import {pickImage, recropImage, type ImageSource} from '@/lib/image';
 import {formatDate, formatMoneyShort} from '@/lib/format';
 import {callPhone, openEmail, openMaps} from '@/lib/messaging';
+import {brand} from '@/brand';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {useCollect} from '@/features/loans/components/CollectSheets';
 import {makeStyles, useTheme} from '@/theme';
@@ -44,6 +45,9 @@ import {
 import {customerKeys, deleteCustomer, getCustomerProfile, uploadCustomerPhoto} from '../api';
 import {ContactActions, LoanCard} from '../components/CustomerParts';
 import {rememberCustomer} from '../recent';
+
+// A loan still being paid or waiting for approval: no new one to offer yet.
+const OPEN_LOAN: string[] = ['Pending', 'Approved', 'Active'];
 
 type Params = {Customer: {id?: string; uid?: string; customerId?: string}};
 
@@ -169,6 +173,28 @@ export default function CustomerProfileScreen() {
             icon="plus"
             label={t('customers.newLoan')}
             onPress={() => navigation.navigate('CreateLoan' as never, {customerUid: c.uid} as never)}
+          />
+        ) : c && can('lead.create') && brand.features.leads && !loans.some(l => OPEN_LOAN.includes(l.status)) ? (
+          // E-10: the loan is paid off; the employee offers the next one as a
+          // lead, with the customer's details filled in.
+          <Fab
+            icon="plus"
+            label={t('customers.offerLoan')}
+            onPress={() =>
+              navigation.navigate(
+                'NewLead' as never,
+                {
+                  prefill: {
+                    name: name,
+                    phone: c.phoneNumber ?? '',
+                    email: c.email ?? '',
+                    address: c.address ?? '',
+                    city: c.city ?? '',
+                    state: c.state ?? '',
+                  },
+                } as never,
+              )
+            }
           />
         ) : undefined
       }
