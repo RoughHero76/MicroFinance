@@ -51,6 +51,8 @@ export interface EmployeeDashboard {
     followUpsDue: number;
   };
   overdue: {sma0: number; sma1: number; sma2: number; npa: number; totalOverdue: number; loans: number};
+  /** E-05: this month so far and days in a row with everything collected (newer servers). */
+  month?: {due: number; collected: number; percent: number | null; streak: {count: number; best: number}};
 }
 
 export async function getEmployeeDashboard(): Promise<EmployeeDashboard> {

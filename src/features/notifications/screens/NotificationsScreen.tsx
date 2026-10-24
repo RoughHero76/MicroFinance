@@ -13,7 +13,7 @@ import {useInfiniteList} from '@/lib/useInfiniteList';
 import {makeStyles, useTheme} from '@/theme';
 import {Button, EmptyState, ErrorState, Icon, RefreshControl, Screen, SkeletonRows, Text, listProps} from '@/ui';
 import {getNotificationsPage, markAllRead, markRead, notificationKeys, type AppNotification} from '../api';
-import {notificationTarget, notificationText} from '../text';
+import {notificationText, openNotification} from '../text';
 
 const ICONS: Record<string, string> = {
   payment: 'cash-check',
@@ -22,6 +22,24 @@ const ICONS: Record<string, string> = {
   risk: 'alert-decagram-outline',
   cron: 'alert-circle-outline',
   cash: 'hand-coin-outline',
+  collect: 'calendar-check-outline',
+  security: 'shield-alert-outline',
+  account: 'shield-key-outline',
+  team: 'account-group-outline',
+  admin: 'chart-box-outline',
+  progress: 'chart-line',
+  app: 'cellphone-arrow-down',
+  work: 'briefcase-outline',
+  custom: 'bullhorn-outline',
+  test: 'bell-check-outline',
+};
+// Types whose prefix alone doesn't say enough.
+const TYPE_ICONS: Record<string, string> = {
+  'collect.allDone': 'party-popper',
+  'risk.recovered': 'trending-down',
+  'payment.offlineRefused': 'cloud-alert',
+  'loan.endingSoon': 'flag-checkered',
+  'loan.closed': 'flag-checkered',
 };
 
 export default function NotificationsScreen() {
@@ -37,10 +55,10 @@ export default function NotificationsScreen() {
 
   const open = async (n: AppNotification) => {
     if (!n.readAt) {
-      markRead(n._id).then(refreshCounts, () => undefined);
+      markRead(n._id, 'list').then(refreshCounts, () => undefined);
     }
-    const target = notificationTarget(n);
-    if (target) navigation.navigate(target[0] as never, target[1] as never);
+    // Already on the list: no fallback when the screen can't be opened.
+    openNotification(navigation as never, navigation.getState() as never, n, false);
   };
 
   const readAll = async () => {
@@ -103,7 +121,7 @@ export default function NotificationsScreen() {
                     .filter(Boolean)
                     .join(', ')}>
                   <View style={s.icon}>
-                    <Icon name={ICONS[item.type.split('.')[0]] ?? 'bell-outline'} size={20} color="primary" />
+                    <Icon name={TYPE_ICONS[item.type] ?? ICONS[item.type.split('.')[0]] ?? 'bell-outline'} size={20} color="primary" />
                   </View>
                   <View style={s.body}>
                     <Text variant="body" weight={item.readAt ? 'regular' : 'semibold'} numberOfLines={2}>

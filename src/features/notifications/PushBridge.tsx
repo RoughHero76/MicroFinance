@@ -8,17 +8,10 @@ import type {NavigationContainerRef} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useI18n} from '@/i18n';
-import {
-  initialPush,
-  onForegroundPush,
-  onPushOpened,
-  registerPush,
-  watchTokenRefresh,
-  type PushMessage,
-} from '@/lib/push';
+import {onForegroundPush, onPushOpened, registerPush, watchTokenRefresh, type PushMessage} from '@/lib/push';
 import {toast} from '@/ui';
 import {markRead, notificationKeys} from './api';
-import {notificationTarget} from './text';
+import {openNotification} from './text';
 
 type NavRef = RefObject<NavigationContainerRef<ReactNavigation.RootParamList>>;
 
@@ -31,22 +24,24 @@ export function PushBridge({navRef}: {navRef: NavRef}) {
     (message: PushMessage) => {
       const data = (message.data ?? {}) as Record<string, string | undefined>;
       if (data.notificationId) {
-        markRead(data.notificationId).catch(() => undefined);
+        // P-05: counted as opened from the phone notification.
+        markRead(data.notificationId, 'push').catch(() => undefined);
       }
       queryClient.invalidateQueries({queryKey: notificationKeys.all});
-      const target = notificationTarget({
+      const notification = {
         _id: data.notificationId ?? '',
         type: data.type ?? '',
         params: {},
         link: {screen: data.screen, id: data.id},
         readAt: null,
         createdAt: '',
-      });
-      // At a cold start the navigator may still be mounting.
+      };
+      // At a cold start (or right after unlock) the navigator may still be
+      // mounting.
       const go = (tries = 0) => {
-        if (navRef.current?.isReady()) {
-          if (target) navRef.current.navigate(target[0] as never, target[1] as never);
-          else navRef.current.navigate('Notifications' as never);
+        const nav = navRef.current;
+        if (nav?.isReady()) {
+          openNotification(nav as never, nav.getRootState() as never, notification);
         } else if (tries < 20) {
           setTimeout(() => go(tries + 1), 150);
         }
@@ -65,18 +60,17 @@ export function PushBridge({navRef}: {navRef: NavRef}) {
   useEffect(() => {
     const offForeground = onForegroundPush(message => {
       queryClient.invalidateQueries({queryKey: notificationKeys.all});
-      const title = message.notification?.title;
+      // Data-only messages carry their text in data.
+      const title = message.notification?.title ?? (message.data?.title as string | undefined);
       if (title) {
         toast.info(title, {
-          message: message.notification?.body,
+          message: message.notification?.body ?? (message.data?.body as string | undefined),
           action: {label: t('notifications.open'), onPress: () => open(message)},
         });
       }
     });
+    // Also the tap that started the app, or one that waited for unlock.
     const offOpened = onPushOpened(open);
-    initialPush().then(message => {
-      if (message) open(message);
-    });
     return () => {
       offForeground();
       offOpened();

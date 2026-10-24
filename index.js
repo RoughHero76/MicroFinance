@@ -4,7 +4,7 @@
 
 import {AppRegistry} from 'react-native';
 import {enableFreeze} from 'react-native-screens';
-import {registerBackgroundHandler} from './src/lib/push';
+import {listenForTaps, registerBackgroundHandler} from './src/lib/push';
 import App from './App';
 import {name as appName} from './app.json';
 
@@ -12,5 +12,7 @@ import {name as appName} from './app.json';
 enableFreeze(true);
 // Pushes that arrive while the app is closed are shown by Android itself.
 registerBackgroundHandler();
+// Taps are kept until the app is unlocked (src/lib/push.ts).
+listenForTaps();
 
 AppRegistry.registerComponent(appName, () => App);

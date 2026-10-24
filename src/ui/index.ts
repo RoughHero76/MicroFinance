@@ -21,7 +21,7 @@ export {EmptyState, ErrorState, Skeleton, SkeletonRows, OfflineBanner, useIsOffl
 export {Screen, Header, Fab, ActionRow, BandExtension} from './Screen';
 export {BrandLogo} from './BrandLogo';
 export {ToastHost, toast} from './Toast';
-export {BottomSheet, useSheet} from './Sheet';
+export {BottomSheet, closeAllSheets, useSheet} from './Sheet';
 export type {SheetHandle} from './Sheet';
 export {ConfirmSheet, useConfirm} from './ConfirmSheet';
 export type {ConfirmOptions} from './ConfirmSheet';

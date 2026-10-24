@@ -13,6 +13,8 @@ import {LANGUAGES, setLanguage, useI18n} from '@/i18n';
 import {useUpdates} from '@/features/app/updates';
 import {useCan} from '@/features/auth/SessionProvider';
 import {sendTestNotification} from '@/features/notifications/api';
+import {NotificationsOffBanner} from '@/features/notifications/NotificationsOffBanner';
+import {useNotificationPrefs} from '@/features/notifications/prefs';
 import {errorMessage} from '@/lib/api';
 import {isPushEnabled, registerPush, setPushEnabled} from '@/lib/push';
 import {makeStyles, palettes, useThemeSettings, type ModeSetting, type PaletteId} from '@/theme';
@@ -20,6 +22,17 @@ import {Card, Icon, OptionRow, PressableScale, Screen, Section, SegmentedControl
 import type {AppStackParamList} from '@/navigation/types';
 
 const TEST_DELAY_S = 5;
+
+const CATEGORY_ICONS: Record<string, string> = {
+  approvals: 'check-decagram-outline',
+  work: 'briefcase-outline',
+  team: 'account-group-outline',
+  reminders: 'alarm',
+  summaries: 'chart-box-outline',
+  achievements: 'party-popper',
+  announcements: 'bullhorn-outline',
+  security: 'shield-alert-outline',
+};
 
 export default function SettingsScreen() {
   const s = useStyles();
@@ -37,6 +50,7 @@ export default function SettingsScreen() {
     setPush(next);
     setPushEnabled(next, lang);
   };
+  const kinds = useNotificationPrefs();
   const [testing, setTesting] = useState(false);
   // Checks the whole chain on a live server: the server's key, this phone's
   // registration, and delivery.
@@ -63,6 +77,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen header={{title: t('settings.title')}} scroll>
+      <NotificationsOffBanner />
       <Section title={t('settings.appearance')}>
         <Card>
           <Text variant="label" weight="semibold" style={s.label}>
@@ -134,6 +149,32 @@ export default function SettingsScreen() {
         </Card>
       </Section>
 
+      {push && kinds.prefs ? (
+        <Section title={t('notifications.prefs.title')}>
+          <Card padded={false} dividers>
+            {kinds.prefs.categories.map(c => (
+              <OptionRow
+                key={c.key}
+                icon={CATEGORY_ICONS[c.key] ?? 'bell-outline'}
+                title={t(`notifications.prefs.${c.key}`, {defaultValue: c.key})}
+                hint={
+                  c.locked
+                    ? t('notifications.prefs.alwaysOn')
+                    : t(`notifications.prefs.${c.key}Hint`, {defaultValue: ''})
+                }
+                toggle={{value: c.on, onChange: on => kinds.toggle(c.key, on), disabled: c.locked}}
+              />
+            ))}
+          </Card>
+          <Text variant="small" color="muted" style={s.quiet}>
+            {t('notifications.prefs.quiet', {
+              from: `${String(kinds.prefs.quietHours.from).padStart(2, '0')}:00`,
+              to: `${String(kinds.prefs.quietHours.to).padStart(2, '0')}:00`,
+            })}
+          </Text>
+        </Section>
+      ) : null}
+
       <Section title={t('settings.about')}>
         <Card padded={false} dividers>
           <OptionRow
@@ -185,4 +226,5 @@ const useStyles = makeStyles(t => ({
   swatches: {flexDirection: 'row', gap: 10, flexWrap: 'wrap'},
   swatch: {padding: 3, borderRadius: 22, borderWidth: 2, borderColor: 'transparent'},
   dot: {width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center'},
+  quiet: {marginTop: t.space.sm, paddingHorizontal: t.space.xs},
 }));

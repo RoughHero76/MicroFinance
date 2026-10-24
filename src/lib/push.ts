@@ -12,6 +12,8 @@ import {
   getInitialNotification,
   getMessaging,
   getToken,
+  hasPermission,
+  AuthorizationStatus,
   onMessage,
   onNotificationOpenedApp,
   onTokenRefresh,
@@ -37,7 +39,15 @@ export async function registerPush(lang: string): Promise<void> {
   if (Platform.OS !== 'android' || !(await isPushEnabled())) return;
   try {
     const token = await getToken(getMessaging());
-    await api.post('/shared/devices', {token, lang, platform: Platform.OS, appVersion: getVersion()});
+    // F-04: the server lists people whose notifications are blocked.
+    const allowed = await notificationsAllowed();
+    await api.post('/shared/devices', {
+      token,
+      lang,
+      platform: Platform.OS,
+      appVersion: getVersion(),
+      ...(allowed === undefined ? {} : {notificationsAllowed: allowed}),
+    });
     await writeJson(REGISTERED_KEY, token);
   } catch {
     // Offline or Play services missing: try again next start.
@@ -81,17 +91,53 @@ export function onForegroundPush(listener: (message: PushMessage) => void): () =
   return onMessage(getMessaging(), listener);
 }
 
-/** Taps on a notification while the app was in the background. */
-export function onPushOpened(listener: (message: PushMessage) => void): () => void {
-  return onNotificationOpenedApp(getMessaging(), listener);
+// F-01: a tap is caught here, not in PushBridge. PushBridge only exists while
+// signed in and unlocked, so a tap that wakes a locked app used to be lost.
+// The tap waits until PushBridge is back (after unlock or sign-in).
+let pendingTap: PushMessage | null = null;
+let tapListener: ((message: PushMessage) => void) | null = null;
+let initialChecked = false;
+
+function deliverTap(message: PushMessage) {
+  if (tapListener) tapListener(message);
+  else pendingTap = message;
 }
 
-/** The notification that started the app from closed, if any (once). */
-export async function initialPush(): Promise<PushMessage | null> {
+/** index.js: start listening for taps before anything else mounts. */
+export function listenForTaps(): void {
+  onNotificationOpenedApp(getMessaging(), deliverTap);
+}
+
+/**
+ * Taps on a notification: the one that started the app (once per launch),
+ * one waiting since the app was locked, and every later one.
+ */
+export function onPushOpened(listener: (message: PushMessage) => void): () => void {
+  tapListener = listener;
+  if (pendingTap) {
+    const waiting = pendingTap;
+    pendingTap = null;
+    listener(waiting);
+  }
+  if (!initialChecked) {
+    initialChecked = true;
+    getInitialNotification(getMessaging())
+      .then(message => message && deliverTap(message))
+      .catch(() => undefined);
+  }
+  return () => {
+    if (tapListener === listener) tapListener = null;
+  };
+}
+
+/** Are notifications allowed for the app in Android settings? */
+export async function notificationsAllowed(): Promise<boolean | undefined> {
+  if (Platform.OS !== 'android') return undefined;
   try {
-    return await getInitialNotification(getMessaging());
+    const status = await hasPermission(getMessaging());
+    return status === AuthorizationStatus.AUTHORIZED || status === AuthorizationStatus.PROVISIONAL;
   } catch {
-    return null;
+    return undefined;
   }
 }
 

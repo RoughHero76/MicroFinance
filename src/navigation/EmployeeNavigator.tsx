@@ -4,10 +4,13 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {brand} from '@/brand';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import KitGallery from '@/dev/KitGallery';
+import {collectKeys, getEmployeeDashboard} from '@/features/collect/api';
+import {usePayQueue} from '@/features/collect/payQueue';
 import CollectScreen from '@/features/collect/screens/CollectScreen';
 import EmployeeHomeScreen from '@/features/collect/screens/EmployeeHomeScreen';
 import OverdueListScreen from '@/features/collect/screens/OverdueListScreen';
@@ -37,11 +40,28 @@ import type {AppStackParamList, EmployeeTabParamList} from './types';
 const Tab = createBottomTabNavigator<EmployeeTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
+// P-03: what's left to collect today on the Collect tab, and saved payments
+// not sent yet (or refused) on More → My payments. The same dashboard query
+// as Home, so no extra request.
+function useEmployeeBadges() {
+  const {status} = useSession();
+  const query = useQuery({
+    queryKey: collectKeys.dashboard,
+    queryFn: getEmployeeDashboard,
+    enabled: status === 'signedIn',
+    staleTime: 60 * 1000,
+    meta: {persist: true},
+  });
+  const queue = usePayQueue();
+  return {collect: query.data?.today.dueCount ?? 0, unsent: queue.length};
+}
+
 function EmployeeMore() {
   const {t} = useTranslation();
   const {settings} = useSession();
+  const badges = useEmployeeBadges();
   const items: MoreItem[] = [
-    {key: 'payments', icon: 'cash-check', title: t('more.myPayments'), route: 'MyPayments'},
+    {key: 'payments', icon: 'cash-check', title: t('more.myPayments'), route: 'MyPayments', badge: badges.unsent},
     {key: 'overdue', icon: 'alert-decagram-outline', title: t('overdue.title'), route: 'Overdue'},
     {
       key: 'cash',
@@ -65,6 +85,7 @@ function EmployeeTabs() {
   const theme = useTheme();
   const {t} = useTranslation();
   const can = useCan();
+  const badges = useEmployeeBadges();
   const tabs: TabConfig<keyof EmployeeTabParamList>[] = [
     {
       name: 'Home',
@@ -81,6 +102,7 @@ function EmployeeTabs() {
       iconFocused: 'hand-coin',
       component: CollectScreen,
       header: false,
+      badge: badges.collect,
     },
     {
       name: 'Customers',
@@ -106,6 +128,7 @@ function EmployeeTabs() {
       iconFocused: 'dots-horizontal-circle',
       component: EmployeeMore,
       header: false,
+      badge: badges.unsent,
     },
   ];
   return (

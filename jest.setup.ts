@@ -90,6 +90,8 @@ jest.mock('@react-native-firebase/messaging', () => {
     onNotificationOpenedApp: jest.fn(add('opened')),
     onTokenRefresh: jest.fn(add('token')),
     getInitialNotification: jest.fn(() => Promise.resolve(null)),
+    hasPermission: jest.fn(() => Promise.resolve(1)),
+    AuthorizationStatus: {NOT_DETERMINED: -1, DENIED: 0, AUTHORIZED: 1, PROVISIONAL: 2},
     setBackgroundMessageHandler: jest.fn(),
     __fire: (name: string, message: unknown) => (listeners[name] ?? []).forEach(fn => fn(message)),
   };

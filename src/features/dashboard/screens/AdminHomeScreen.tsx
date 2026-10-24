@@ -14,6 +14,7 @@ import {formatMoney, formatMoneyShort} from '@/lib/format';
 import {useCan, useSession} from '@/features/auth/SessionProvider';
 import {adminLoanKeys, getAdminDashboard} from '@/features/loans/adminApi';
 import {NotificationBell} from '@/features/notifications/Bell';
+import {NotificationsOffBanner} from '@/features/notifications/NotificationsOffBanner';
 import {makeStyles, useTheme, withAlpha} from '@/theme';
 import {
   Avatar,
@@ -98,6 +99,7 @@ export default function AdminHomeScreen() {
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : (
         <>
+          <NotificationsOffBanner />
           {user?.fname ? (
             <Text variant="h2" weight="bold" style={s.greeting}>
               {t('adminHome.welcome', {name: user.fname})}

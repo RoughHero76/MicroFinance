@@ -9,6 +9,7 @@ import {onSessionEnded, type SessionEndReason} from '@/lib/api';
 import {can, type Modules, type Permission} from '@/lib/can';
 import {clearQueryCache} from '@/lib/query';
 import {unregisterPush} from '@/lib/push';
+import {closeAllSheets} from '@/ui/Sheet';
 import {clearSession, loadSession, saveSession, updateSessionUser, type Role, type SessionUser} from '@/lib/session';
 import {clearPerUserStorage} from '@/lib/storage';
 import {getBusinessSettings, type BusinessSettings} from './api';
@@ -60,6 +61,9 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
   }, []);
 
   const signOut = useCallback(async (reason: LogoutReason = null) => {
+    // Close open sheets first (e.g. the logout confirmation): one whose
+    // screen disappears while it's open can stay on top of the login screen.
+    await closeAllSheets();
     setLogoutReason(reason);
     setUser(null);
     setStatus('signedOut');
@@ -87,7 +91,8 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
         const away = Date.now() - backgroundedAt.current;
         backgroundedAt.current = null;
         if (status === 'signedIn' && lockSettings.enabled && deviceLockAvailable && away >= lockSettings.afterMs) {
-          setStatus('locked');
+          // Same as sign-out: no sheet may outlive the screens under it.
+          closeAllSheets().then(() => setStatus(current => (current === 'signedIn' ? 'locked' : current)));
         }
       }
     });
